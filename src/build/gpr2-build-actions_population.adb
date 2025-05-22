@@ -15,11 +15,14 @@ with GPR2.Build.Actions.Archive_Table_List;
 with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Actions.Link_Options_Insert;
+with GPR2.Build.Actions.Link.Partial;
 with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Actions.Sets;
 pragma Warnings (Off);
 with GPR2.Build.Artifacts;
 with GPR2.Build.Artifacts.Library;
+with GPR2.Build.Artifacts.Files;
+with GPR2.Build.Artifacts.Object_File;
 with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
@@ -57,20 +60,45 @@ package body GPR2.Build.Actions_Population is
    type Bind_Array is
      array (Positive range <>) of GPR2.Build.Actions.Ada_Bind.Object;
 
-   type Library_Type is record
-      View                : GPR2.Project.View.Object;
-      Link                : GPR2.Build.Actions.Link.Object;
-      Bind                : GPR2.Build.Actions.Ada_Bind.Object;
-      Lib_Deps            : GPR2.View_Ids.Set.Set;
-      Link_Options_Insert : GPR2.Build.Actions.Link_Options_Insert.Object;
-   end record;
+   package Library_Helper is
+
+      type Object is tagged record
+         View                : GPR2.Project.View.Object;
+         Bind                : GPR2.Build.Actions.Ada_Bind.Object;
+         Lib_Deps            : GPR2.View_Ids.Set.Set;
+         Link_Options_Insert : GPR2.Build.Actions.Link_Options_Insert.Object;
+         Partially_Linked    : Boolean;
+         Partial_Link        : GPR2.Build.Actions.Link.Partial.Object;
+         Main_Link           : GPR2.Build.Actions.Link.Object;
+      end record;
+
+      function Initial_Link_Action
+        (Self : in out Object) return GPR2.Build.Actions.Link.Object'Class;
+
+      function Final_Link_Action
+        (Self : Object) return GPR2.Build.Actions.Link.Object'Class;
+
+   private
+
+      function Initial_Link_Action
+        (Self : in out Object) return GPR2.Build.Actions.Link.Object'Class
+      is (if Self.Partially_Linked then Self.Partial_Link else Self.Main_Link);
+
+      function Final_Link_Action
+        (Self : Object) return GPR2.Build.Actions.Link.Object'Class
+      is (Self.Main_Link);
+
+   end Library_Helper;
+
+   package LH renames Library_Helper;
+   use type LH.Object;
 
    package View_Id_Library_Map is new Ada.Containers.Ordered_Maps
      (Key_Type     => View_Ids.View_Id,
-      Element_Type => Library_Type,
+      Element_Type => LH.Object,
       "<"          => View_Ids."<");
    package Library_Vector is new Ada.Containers.Vectors
-     (Positive, Library_Type);
+     (Positive, LH.Object);
 
    package Library_Map is
       use GNATCOLL.Directed_Graph;
@@ -99,7 +127,7 @@ package body GPR2.Build.Actions_Population is
 
       procedure Include
         (Self    : in out Map;
-         Element : Library_Type);
+         Element : LH.Object);
 
       procedure Add_Successor
         (Self      : in out Map;
@@ -108,7 +136,7 @@ package body GPR2.Build.Actions_Population is
 
       procedure Replace
         (Self    : in out Map;
-         Element : Library_Type);
+         Element : LH.Object);
 
       function Serialize (Self : in out Map) return Library_Vector.Vector;
 
@@ -193,7 +221,7 @@ package body GPR2.Build.Actions_Population is
 
       procedure Include
         (Self    : in out Map;
-         Element : Library_Type)
+         Element : LH.Object)
       is
          New_Node : constant Node_Id := Self.DAG.Add_Node;
       begin
@@ -208,7 +236,7 @@ package body GPR2.Build.Actions_Population is
 
       procedure Replace
         (Self    : in out Map;
-         Element : Library_Type) is
+         Element : LH.Object) is
       begin
          Self.Values.Replace (Element.View.Id, Element);
       end Replace;
@@ -754,9 +782,31 @@ package body GPR2.Build.Actions_Population is
       Libs        : in out Library_Map.Map;
       SAL_Closure : in out Boolean) return Boolean
    is
-      Self    : Library_Type;
-      Closure : GPR2.Project.View.Set.Object;
-      Has_SAL : Boolean := False;
+      Self           : LH.Object;
+      Closure        : GPR2.Project.View.Set.Object;
+      Has_SAL        : Boolean := False;
+      Partial_Linker : constant GPR2.Project.Attribute.Object :=
+                         View.Attribute (PRA.Library_Partial_Linker);
+      Response_File  : constant GPR2.Project.Attribute.Object :=
+                         View.Attribute (PRA.Linker.Response_File_Format);
+      use type Ada.Containers.Count_Type;
+
+      Requires_Partial_Linking : constant Boolean :=
+        View.Is_Library_Standalone
+        and then (View.Is_Static_Library
+                  or else (Response_File.Is_Defined
+                           and then Response_File.Value.Text = "None"))
+        and then Partial_Linker.Is_Defined
+        and then (Partial_Linker.Values.Length > 0
+                  and then Partial_Linker.Values.First_Element.Text /= "");
+
+      Requires_Binding : constant Boolean :=
+        View.Is_Library_Standalone
+        and then (View.Language_Ids.Contains (Ada_Language)
+                  or else (View.Kind = K_Aggregate_Library
+                           and then (for some Agg of View.Aggregated =>
+                                       Agg.Language_Ids.Contains
+                                         (Ada_Language))));
 
    begin
       if View.Is_Extended or else Libs.Contains (View) then
@@ -767,12 +817,45 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       Self.View := View;
-      Self.Link.Initialize_Library (View, Options.No_Run_Path);
+      Self.Partially_Linked := Requires_Partial_Linking;
+
+      if Requires_Partial_Linking then
+         Self.Partial_Link.Initialize (View);
+         Self.Main_Link.Initialize
+           (Kind     => Actions.Link.Library,
+            Context  => View,
+            No_Rpath => Options.No_Run_Path);
+
+         if not Tree_Db.Add_Action (Self.Main_Link) then
+            return False;
+         end if;
+
+         --  If binding is required, a linker_options_insert action
+         --  may be inserted between the partial link and the final link.
+         --  This decision is made later in this function.
+         --  If binding is not required, the partial link can be directly
+         --  connected to the final link.
+         --
+         if not Requires_Binding then
+            Tree_Db.Add_Input
+              (Self.Main_Link.UID, Self.Partial_Link.Output, True);
+         end if;
+      else
+         Self.Main_Link.Initialize
+           (Kind     => Actions.Link.Library,
+            Context  => View,
+            No_Rpath => Options.No_Run_Path);
+      end if;
 
       --  Should not add the action is the view is externally built???
-      if not Tree_Db.Add_Action (Self.Link) then
-         return False;
-      end if;
+
+      declare
+         Link : Actions.Link.Object'Class := Self.Initial_Link_Action;
+      begin
+         if not Tree_Db.Add_Action (Link) then
+            return False;
+         end if;
+      end;
 
       --  Add the lib now to prevent infinite recursion in case of
       --  circular dependencies (e.g. A withes B that limited_withes A)
@@ -810,7 +893,7 @@ package body GPR2.Build.Actions_Population is
       if Self.View.Is_Shared_Library then
          for Id of Self.Lib_Deps loop
             declare
-               Sublib : constant Library_Type := Libs.Values.Element (Id);
+               Sublib : constant LH.Object := Libs.Values.Element (Id);
             begin
                --  In a shared lib context, the library dependencies are used
                --  to pre-check the link, and this part is necessary on windows
@@ -819,20 +902,14 @@ package body GPR2.Build.Actions_Population is
                --  populate the proper -l switches in the link command.
 
                Tree_Db.Add_Input
-                 (Self.Link.UID, Sublib.Link.Output, False);
+                 (Self.Initial_Link_Action.UID,
+                  Sublib.Final_Link_Action.Output,
+                  False);
             end;
          end loop;
       end if;
 
-      if View.Is_Library_Standalone
-        and then
-          (View.Language_Ids.Contains (Ada_Language)
-           or else
-             (View.Kind = K_Aggregate_Library
-              and then
-                (for some Agg of View.Aggregated =>
-                     Agg.Language_Ids.Contains (Ada_Language))))
-      then
+      if Requires_Binding then
          --  Create the binder action that will create the file in charge of
          --  elaborating and finalizing the lib. Used for standalone libraries.
 
@@ -847,29 +924,102 @@ package body GPR2.Build.Actions_Population is
             return False;
          end if;
 
-         Actions.Link.Object'Class
-           (Tree_Db.Action_Id_To_Reference
-              (Self.Link.UID).Element.all).Set_Bind_Action (Self.Bind);
+         --  Used by the linker so it can find its bind action easily. This is
+         --  used to export the bind symbols for standalone libraries.
 
-         Tree_Db.Add_Input
-           (Self.Link.UID, Self.Bind.Post_Bind.Object_File, True);
+         Actions.Link.Object'Class
+           (Tree_Db.Action_Id_To_Reference (Self.Initial_Link_Action.UID)
+              .Element.all)
+           .Set_Bind_Action (Self.Bind);
 
          if View.Is_Static_Library then
-            Self.Link_Options_Insert.Initialize
-            (Object_File => Self.Bind.Post_Bind.Object_File, View => View);
+            if Requires_Partial_Linking then
 
-            if not Tree_Db.Add_Action (Self.Link_Options_Insert) then
-               return False;
+               --  Post-Bind -> Partial link -> Link options insertion -> Link
+
+               Self.Link_Options_Insert.Initialize
+                 (Object_File =>
+                    Artifacts.Object_File.Object
+                      (GPR2.Build.Actions.Link.Partial.Object'Class
+                         (Self.Initial_Link_Action)
+                         .Output),
+                  View        => View);
+
+               if not Tree_Db.Add_Action (Self.Link_Options_Insert) then
+                  return False;
+               end if;
+
+               Tree_Db.Add_Input
+                 (Self.Initial_Link_Action.UID,
+                  Self.Bind.Post_Bind.Object_File,
+                  True);
+
+               Tree_Db.Add_Input
+                 (Self.Link_Options_Insert.UID,
+                  Self.Initial_Link_Action.Output,
+                  True);
+
+               --  Add a direct dependency between the binder and the
+               --  linker options insertion, so that the binder can find
+               --  it easily.
+
+               Tree_Db.Add_Input
+                 (Self.Link_Options_Insert.UID,
+                  Self.Bind.Generated_Body,
+                  True);
+
+               Tree_Db.Add_Input
+                 (Self.Final_Link_Action.UID,
+                  Self.Link_Options_Insert.Output_Object_File,
+                  True);
+            else
+               --  Post bind -> Link options insertion -> Link
+
+               Self.Link_Options_Insert.Initialize
+                 (Object_File => Self.Bind.Post_Bind.Object_File,
+                  View        => View);
+
+               if not Tree_Db.Add_Action (Self.Link_Options_Insert) then
+                  return False;
+               end if;
+
+               Tree_Db.Add_Input
+                 (Self.Link_Options_Insert.UID,
+                  Self.Bind.Post_Bind.Object_File,
+                  True);
+
+               --  Add a direct dependency between the binder and the
+               --  linker options insertion, so that the binder can find
+               --  it easily.
+
+               Tree_Db.Add_Input
+                 (Self.Link_Options_Insert.UID,
+                  Self.Bind.Generated_Body,
+                  True);
+
+               Tree_Db.Add_Input
+                 (Self.Initial_Link_Action.UID,
+                  Self.Link_Options_Insert.Output_Object_File,
+                  True);
             end if;
+         else
+            --  Linker options insertion not needed
 
             Tree_Db.Add_Input
-              (Self.Link_Options_Insert.UID,
-               Self.Bind.Generated_Body,
+              (Self.Initial_Link_Action.UID,
+               Self.Bind.Post_Bind.Object_File,
                True);
-            Tree_Db.Add_Input
-              (Self.Link.UID,
-               Self.Link_Options_Insert.Output_Object_File,
-               True);
+
+            if Requires_Partial_Linking then
+
+               --  Add a dependency between the partial link (Self.Link) and
+               --  the final link.
+
+               Tree_Db.Add_Input
+                 (Self.Final_Link_Action.UID,
+                  Self.Initial_Link_Action.Output,
+                  True);
+            end if;
          end if;
 
          --  Now gather the list of units that compose the interface
@@ -884,7 +1034,8 @@ package body GPR2.Build.Actions_Population is
                   return False;
                end if;
 
-               Tree_Db.Add_Input (Self.Link.UID, Comp.Object_File, False);
+               Tree_Db.Add_Input
+                 (Self.Initial_Link_Action.UID, Comp.Object_File, False);
                Tree_Db.Add_Input (Self.Bind.UID, Comp.Local_Ali_File, True);
             end;
          end loop;
@@ -905,7 +1056,7 @@ package body GPR2.Build.Actions_Population is
                      end if;
 
                      Tree_Db.Add_Input
-                       (Self.Link.UID, Comp.Object_File, False);
+                       (Self.Initial_Link_Action.UID, Comp.Object_File, False);
                   end;
                end loop;
             end loop;
@@ -921,7 +1072,8 @@ package body GPR2.Build.Actions_Population is
                      return False;
                   end if;
 
-                  Tree_Db.Add_Input (Self.Link.UID, Comp.Object_File, False);
+                  Tree_Db.Add_Input
+                    (Self.Initial_Link_Action.UID, Comp.Object_File, False);
                end;
             end loop;
          end if;
@@ -945,7 +1097,8 @@ package body GPR2.Build.Actions_Population is
                      return False;
                   end if;
 
-                  Tree_Db.Add_Input (Self.Link.UID, Comp.Object_File, False);
+                  Tree_Db.Add_Input
+                    (Self.Initial_Link_Action.UID, Comp.Object_File, False);
                end;
             end if;
          end loop;
@@ -970,12 +1123,12 @@ package body GPR2.Build.Actions_Population is
                end if;
 
                declare
-                  Lib : constant Library_Type :=
-                          View_Id_Library_Map.Element (C);
+                  Lib : constant LH.Object := View_Id_Library_Map.Element (C);
                begin
                   Tree_Db.Add_Input
-                    (Self.Link.UID,
-                     Lib.Link.Output, True);
+                    (Self.Initial_Link_Action.UID,
+                     Lib.Final_Link_Action.Output,
+                     True);
 
                   if Self.Bind.Is_Defined then
                      --  Make sure the libraries dependencies are bounded
@@ -983,7 +1136,7 @@ package body GPR2.Build.Actions_Population is
                      --  that copies the ali files to the library directory.
 
                      Tree_Db.Add_Input
-                       (Self.Bind.UID, Lib.Link.Output, False);
+                       (Self.Bind.UID, Lib.Final_Link_Action.Output, False);
                   end if;
                end;
             end if;
@@ -1093,10 +1246,11 @@ package body GPR2.Build.Actions_Population is
          for Main of Actual_Mains loop
             Source := Main.View.Visible_Source (Main.Source);
 
-            Link (Idx).Initialize_Executable
-              (Main,
-               Options.No_Run_Path,
-               -Options.Output_File);
+            Link (Idx).Initialize
+              (Kind     => Build.Actions.Link.Executable,
+               Src      => Main,
+               No_Rpath => Options.No_Run_Path,
+               Output   => -Options.Output_File);
 
             if Options.Create_Map_File then
                Attr := Main.View.Attribute (PRA.Linker.Map_File_Option);
@@ -1269,20 +1423,22 @@ package body GPR2.Build.Actions_Population is
             declare
 
                procedure Add_Archive_Table_List_Action
-                 (Lib : Library_Type; Link_Idx : Natural);
+                 (Lib      : LH.Object;
+                  Link_Idx : Natural);
 
                ----------------------------
                -- Add_Archive_Table_List --
                ----------------------------
 
                procedure Add_Archive_Table_List_Action
-                 (Lib : Library_Type; Link_Idx : Natural)
+                 (Lib      : LH.Object;
+                  Link_Idx : Natural)
                is
-                  Archive_Table_List :
-                    GPR2.Build.Actions.Archive_Table_List.Object;
+                  Archive_Table_List : Actions.Archive_Table_List.Object;
                begin
                   Archive_Table_List.Initialize
-                    (Artifacts.Library.Object (Lib.Link.Output), Main.View);
+                    (Artifacts.Library.Object (Lib.Final_Link_Action.Output),
+                     Main.View);
 
                   if not Tree_Db.Add_Action (Archive_Table_List) then
                      return;
@@ -1310,14 +1466,15 @@ package body GPR2.Build.Actions_Population is
                --  proper DAG serialisation though.
 
                for Lib of Libs.Serialize loop
-                  Tree_Db.Add_Input (Link (Idx).UID, Lib.Link.Output, True);
+                  Tree_Db.Add_Input
+                    (Link (Idx).UID, Lib.Final_Link_Action.Output, True);
 
-                  --  Make sure the bind action is executed after the libraries
-                  --  are linked, to have access to the ALI files in the lib
-                  --  directory.
+                  --  Make sure the bind action is executed after the
+                  --  libraries are linked, to have access to the ALI files
+                  --  in the lib directory.
                   if Bind (Idx).Is_Defined then
                      Tree_Db.Add_Input
-                       (Bind (Idx).UID, Lib.Link.Output, False);
+                       (Bind (Idx).UID, Lib.Final_Link_Action.Output, False);
                   end if;
 
                   --  For standalone static libraries, linker options must
@@ -1344,8 +1501,8 @@ package body GPR2.Build.Actions_Population is
                when GNATCOLL.Directed_Graph.DG_Error =>
                   declare
                      Msg   : Unbounded_String;
-                     Lib   : Library_Type;
-                     Prev  : Library_Type;
+                     Lib   : LH.Object;
+                     Prev  : LH.Object;
                      First : Boolean := True;
                   begin
                      Tree_Db.Reporter.Report
@@ -1388,37 +1545,38 @@ package body GPR2.Build.Actions_Population is
                             (Link (Idx).UID).Element.all),
                      True);
 
-                  for Lib of Libs.Values loop
-                     Tree_Db.Add_Input (Link (Idx).UID, Lib.Link.Output, True);
+               for Lib of Libs.Values loop
+                  Tree_Db.Add_Input
+                    (Link (Idx).UID, Lib.Final_Link_Action.Output, True);
 
-                     --  Make sure the bind action is executed after the
-                     --  libraries are linked, to have access to the ALI
-                     --  files in the lib directory.
+                  --  Make sure the bind action is executed after the
+                  --  libraries are linked, to have access to the ALI
+                  --  files in the lib directory.
 
-                     if Bind (Idx).Is_Defined then
-                        Tree_Db.Add_Input
-                          (Bind (Idx).UID, Lib.Link.Output, False);
-                     end if;
+                  if Bind (Idx).Is_Defined then
+                     Tree_Db.Add_Input
+                       (Bind (Idx).UID, Lib.Final_Link_Action.Output, False);
+                  end if;
 
-                     --  For standalone static libraries, linker options must
-                     --  be updated to ensure proper elaboration of the
-                     --  library. There are two possible scenarios:
-                     --  * If the library is not externally built, the linker
-                     --    options can be directly retrieved from the
-                     --    associated action.
-                     --  * If the library is externally built, the linker
-                     --    options are embedded within the library itself,
-                     --    typically in a custom section of the object file
-                     --    generated by the binder. An action is created to
-                     --    extract this information, as demonstrated above.
+                  --  For standalone static libraries, linker options must
+                  --  be updated to ensure proper elaboration of the
+                  --  library. There are two possible scenarios:
+                  --  * If the library is not externally built, the linker
+                  --    options can be directly retrieved from the
+                  --    associated action.
+                  --  * If the library is externally built, the linker
+                  --    options are embedded within the library itself,
+                  --    typically in a custom section of the object file
+                  --    generated by the binder. An action is created to
+                  --    extract this information, as demonstrated above.
 
-                     if Lib.View.Is_Library_Standalone
-                       and then Lib.View.Is_Static_Library
-                       and then Lib.View.Is_Externally_Built
-                     then
-                        Add_Archive_Table_List_Action (Lib, Idx);
-                     end if;
-                  end loop;
+                  if Lib.View.Is_Library_Standalone
+                    and then Lib.View.Is_Static_Library
+                    and then Lib.View.Is_Externally_Built
+                  then
+                     Add_Archive_Table_List_Action (Lib, Idx);
+                  end if;
+               end loop;
             end;
 
             Idx := Idx + 1;
@@ -1468,7 +1626,9 @@ package body GPR2.Build.Actions_Population is
                      --  if no symbol is used from them. Else the linker
                      --  uses all objects that are on the command line.
 
-                     Archive.Initialize_Global_Archive (View);
+                     Archive.Initialize
+                       (Kind     => Build.Actions.Link.Global_Archive,
+                        Context  => View);
 
                      if not Tree_Db.Add_Action (Archive) then
                         return False;

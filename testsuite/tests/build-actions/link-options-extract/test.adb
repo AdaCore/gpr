@@ -37,7 +37,9 @@ procedure Test is
               ("Failed to insert the link extract action to the DB");
          end if;
 
-         Link.Initialize_Library (Root, True);
+         Link.Initialize
+           (Kind    => GBA.Link.Library,
+            Context => Root);
 
          if not (Tree.Artifacts_Database.Add_Action (Link)) then
             Ada.Text_IO.Put_Line

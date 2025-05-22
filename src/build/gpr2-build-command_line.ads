@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2024, AdaCore
+--  Copyright (C) 2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -19,7 +19,7 @@ package GPR2.Build.Command_Line is
 
    procedure Set_Driver
      (Self : in out Object;
-      Arg   : String);
+      Arg  : String);
 
    procedure Set_Driver
      (Self : in out Object;
@@ -78,6 +78,7 @@ private
 
    type Object is tagged record
       Cmd_Line     : GNATCOLL.OS.Process.Argument_List;
+      Raw_Cmd_Line : GNATCOLL.OS.Process.Argument_List;
       Env          : GNATCOLL.OS.Process.Environment_Dict;
       In_Signature : Mode_Vectors.Vector;
       Total_Length : Natural := 0;
