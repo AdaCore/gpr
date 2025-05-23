@@ -2071,31 +2071,47 @@ package body GPR2.Project.View is
    is
       function Get_Simple_Name return Simple_Name;
 
+      ---------------------
+      -- Get_Simple_Name --
+      ---------------------
+
       function Get_Simple_Name return Simple_Name is
+         Shared_Ext   : constant String :=
+                          Self.Attribute
+                            (PRA.Shared_Library_Suffix).Value.Text;
+         SE_Len       : constant Positive := Shared_Ext'Length;
          Attr_Version : GPR2.Project.Attribute.Object;
       begin
          --  Attribute library_version is only available on unix for shared
-         --  libraries
+         --  libraries.
 
-         if not Self.Is_Static_Library
-           and then
-             Self.Attribute (PRA.Shared_Library_Suffix).Value.Text /= ".dll"
-         then
+         if not Self.Is_Static_Library and then Shared_Ext /= ".dll" then
             Attr_Version := Self.Attribute (PRA.Library_Version);
 
             if Attr_Version.Is_Defined then
-               if Without_Version then
-                  --  Remove the version part
-                  for J in Attr_Version.Value.Text'Range loop
-                     if Attr_Version.Value.Text (J) = '.' then
-                        return Simple_Name
-                          (Attr_Version.Value.Text
-                             (Attr_Version.Value.Text'First .. J - 1));
-                     end if;
-                  end loop;
-               end if;
+               declare
+                  V : constant String := Attr_Version.Value.Text;
+               begin
+                  if Without_Version then
+                     --  Remove the version part
+                     for J in V'Range loop
+                        if V (J) = '.' then
+                           --  The dot could separate the base name from
+                           --  the shared library extension (.so, .dylib)
+                           --  that we want to keep.
+                           if J + SE_Len - 1 > V'Last
+                             or else
+                               V (J .. J + SE_Len - 1) /= Shared_Ext
+                           then
+                              return Simple_Name (V (V'First .. J - 1));
+                           end if;
+                        end if;
+                     end loop;
 
-               return Simple_Name (Attr_Version.Value.Text);
+                  else
+                     return Simple_Name (V);
+                  end if;
+               end;
             end if;
          end if;
 
