@@ -1,7 +1,9 @@
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Text_IO;
 with GPR2.Build.Artifacts;
 with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Actions.Archive_Table_List;
+with GPR2.Containers;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
@@ -44,11 +46,34 @@ procedure Test is
 
    procedure Execute_Command (Cmd : Argument_List; Cwd : String := "") is
       Ret     : Integer;
-      Process : Process_Handle;
-      use FS;
+      Output  : Unbounded_String;
+      Lines   : GPR2.Containers.Value_Set;
+      Last    : Natural;
+      First   : Natural;
    begin
-      Process := Start (Args => Cmd, Cwd => Cwd, Stdout => FS.Standout, Stderr => FS.Standerr);
-      Ret := Wait (Process);
+      Output := Run (Args => Cmd, Cwd => Cwd, Status => Ret);
+
+      --  make sure the output is ordered to have consistent results
+      First := 1;
+      Last  := 0;
+
+      for J in 1 .. Length (Output) loop
+         if Element (Output, J) in ASCII.CR | ASCII.LF then
+            if Last < First then
+               Last := J - 1;
+               Lines.Include (Slice (Output, First, Last));
+            end if;
+         elsif First < Last then
+            First := J;
+         elsif J = Length (Output) then
+            Lines.Include (Slice (Output, First, J));
+         end if;
+      end loop;
+
+      for L of Lines loop
+         Ada.Text_IO.Put_Line (L);
+      end loop;
+
       if Ret /= 0 then
          Ada.Text_IO.Put_Line ("Action return code is different from 0");
       end if;

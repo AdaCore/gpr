@@ -30,7 +30,7 @@ procedure Test is
    procedure Init_Actions is
    begin
       for Root of Tree.Namespace_Root_Projects loop
-         Link_Extract.Initialize ("b__mylib.o", Root);
+         Link_Extract.Initialize ("o__mylib.o", Root);
 
          if not (Tree.Artifacts_Database.Add_Action (Link_Extract)) then
             Ada.Text_IO.Put_Line

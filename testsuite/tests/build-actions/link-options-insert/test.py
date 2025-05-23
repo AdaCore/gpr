@@ -10,7 +10,7 @@ bnr.build("test.gpr", args=['-p', '-q'])
 # Call the link-options-insert action and check that the new section has
 # correctly been added.
 bnr.call([os.path.join ("obj", "test")])
-output = bnr.call(["objdump", "-s", os.path.join("tree", "obj", "pkg-with-linker-options.o"), "--section=.GPR.linker_options"], quiet=True).out
+output = bnr.call(["objdump", "-s", os.path.join("tree", "obj", "o__mylib.o"), "--section=.GPR.linker_options"], quiet=True).out
 expected_output_lines = [
     "Contents of section .GPR.linker_options:",
     "Option1.--Option",

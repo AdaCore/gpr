@@ -48,9 +48,9 @@ def test(test_dir):
 
     # Check that the linker options and the binder object file content are
     # merged in a second object file, called
-    # <binder_object_file_name>-with-linker-options.o.
+    # o__<lib_name>.o
     binder_obj_with_linker_options = os.path.join(
-        test_dir, "obj", "lib", "p__demo-with-linker-options.o"
+        test_dir, "obj", "lib", "o__demo.o"
     )
     if os.path.isfile(binder_obj_with_linker_options):
         objdump_cmd = [
@@ -93,13 +93,13 @@ def test(test_dir):
                     )
                     print(job["command"])
             elif "ar csr" in job["command"]:
-                if "p__demo.o" in job["command"]:
+                if "p__demo.o" not in job["command"]:
                     print(
-                        "ERROR: p__demo-with-linker-options.o should be used instead of p__demo.o"
+                        "ERROR: p__demo.o is missing for the ar csr command"
                     )
-                elif "p__demo-with-linker-options.o" not in job["command"]:
+                if "o__demo.o" not in job["command"]:
                     print(
-                        "ERROR: p__demo-with-linker-options.o is missing from the ar csr command"
+                        "ERROR: o__demo.o is missing from the ar csr command"
                     )
 
     if not found:

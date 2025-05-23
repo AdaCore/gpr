@@ -1,3 +1,4 @@
+b__mylib.o
+o__mylib.o
 pkg1.o
 pkg2.o
-b__mylib.o
