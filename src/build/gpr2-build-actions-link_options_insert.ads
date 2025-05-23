@@ -34,8 +34,8 @@ package GPR2.Build.Actions.Link_Options_Insert is
       View        : GPR2.Project.View.Object);
    --  Initialize the link option add action.
    --  @param Self The action to initialize
-   --  @param Object_File The input object file that will be duplicated with
-   --     the new linker options added.
+   --  @param Object_File The input object file that will be used as template
+   --     the generate the object with linker options added.
    --  @param Options The options to add to the object file
    --  @param View The view that contains the action
 
@@ -85,7 +85,7 @@ private
 
    overriding
    function Action_Class (Self : Link_Options_Insert_Id) return Value_Type
-   is ("Link-Options-Insert");
+   is ("Add-Link-Options");
 
    overriding
    function Language (Self : Link_Options_Insert_Id) return Language_Id
@@ -103,21 +103,16 @@ private
    type Object is new Actions.Object with record
       Input_Object_File : Artifacts.Object_File.Object :=
         Artifacts.Object_File.Undefined;
-      --  The object file that will be copied. The copy will then contain
-      --  the new section with the provided linker options. A copy is made to
-      --  ensure that the action input is different from the output
+      --  The object file that will be used as a template for objcopy.
+      --  The result will then contain the new section with the provided linker
+      --  options but will not contain the other sections of the input file.
 
       Output_Object_File : Artifacts.Object_File.Object :=
         Artifacts.Object_File.Undefined;
-      --  Contains the content of the input object file with the added
-      --  linker section.
+      --  Contains the linker section.
 
       Ctxt : GPR2.Project.View.Object;
       --  The view defining the Main, or the library
-
-      Options_File : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined;
-      --  File where all the options are stored before being copied to the
-      --  object file.
 
       Options : Containers.Value_List := Containers.Empty_Value_List;
       --  Command line options added manually with the Add_Option procedure

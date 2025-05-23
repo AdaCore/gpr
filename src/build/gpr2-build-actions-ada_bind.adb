@@ -586,14 +586,14 @@ package body GPR2.Build.Actions.Ada_Bind is
       return Internal_Link (Self.Post_Bind.Object_File);
    end Link;
 
-   -------------------------
+   ---------------------
    -- Link_Opt_Insert --
-   -------------------------
+   ---------------------
 
    function Link_Opt_Insert
      (Self : Object) return Actions.Link_Options_Insert.Object is
    begin
-      for Action of Self.Tree.Successors (Self.Generated_Body) loop
+      for Action of Self.Tree.Successors (Self.Post_Bind.Object_File) loop
          if Action in GPR2.Build.Actions.Link_Options_Insert.Object'Class then
             return GPR2.Build.Actions.Link_Options_Insert.Object (Action);
          end if;

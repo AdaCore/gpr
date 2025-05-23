@@ -67,7 +67,6 @@ package body GPR2.Build.Actions_Population is
          Bind                : GPR2.Build.Actions.Ada_Bind.Object;
          Lib_Deps            : GPR2.View_Ids.Set.Set;
          Link_Options_Insert : GPR2.Build.Actions.Link_Options_Insert.Object;
-         Partially_Linked    : Boolean;
          Partial_Link        : GPR2.Build.Actions.Link.Partial.Object;
          Main_Link           : GPR2.Build.Actions.Link.Object;
       end record;
@@ -82,7 +81,9 @@ package body GPR2.Build.Actions_Population is
 
       function Initial_Link_Action
         (Self : in out Object) return GPR2.Build.Actions.Link.Object'Class
-      is (if Self.Partially_Linked then Self.Partial_Link else Self.Main_Link);
+      is (if Self.Partial_Link.Is_Defined
+          then Self.Partial_Link
+          else Self.Main_Link);
 
       function Final_Link_Action
         (Self : Object) return GPR2.Build.Actions.Link.Object'Class
@@ -817,45 +818,25 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       Self.View := View;
-      Self.Partially_Linked := Requires_Partial_Linking;
+
+      Self.Main_Link.Initialize
+        (Kind     => Actions.Link.Library,
+         Context  => View,
+         No_Rpath => Options.No_Run_Path);
+      if not Tree_Db.Add_Action (Self.Main_Link) then
+         return False;
+      end if;
 
       if Requires_Partial_Linking then
          Self.Partial_Link.Initialize (View);
-         Self.Main_Link.Initialize
-           (Kind     => Actions.Link.Library,
-            Context  => View,
-            No_Rpath => Options.No_Run_Path);
 
-         if not Tree_Db.Add_Action (Self.Main_Link) then
+         if not Tree_Db.Add_Action (Self.Partial_Link) then
             return False;
          end if;
 
-         --  If binding is required, a linker_options_insert action
-         --  may be inserted between the partial link and the final link.
-         --  This decision is made later in this function.
-         --  If binding is not required, the partial link can be directly
-         --  connected to the final link.
-         --
-         if not Requires_Binding then
-            Tree_Db.Add_Input
-              (Self.Main_Link.UID, Self.Partial_Link.Output, True);
-         end if;
-      else
-         Self.Main_Link.Initialize
-           (Kind     => Actions.Link.Library,
-            Context  => View,
-            No_Rpath => Options.No_Run_Path);
+         Tree_Db.Add_Input
+           (Self.Main_Link.UID, Self.Partial_Link.Output, True);
       end if;
-
-      --  Should not add the action is the view is externally built???
-
-      declare
-         Link : Actions.Link.Object'Class := Self.Initial_Link_Action;
-      begin
-         if not Tree_Db.Add_Action (Link) then
-            return False;
-         end if;
-      end;
 
       --  Add the lib now to prevent infinite recursion in case of
       --  circular dependencies (e.g. A withes B that limited_withes A)
@@ -932,95 +913,32 @@ package body GPR2.Build.Actions_Population is
               .Element.all)
            .Set_Bind_Action (Self.Bind);
 
-         if View.Is_Static_Library then
-            if Requires_Partial_Linking then
+         --  Save the linker options in the form of an object file with a
+         --  gpr-specific text section so that they can be retrieved later on
+         --  by the final link, when such linker option has been removed from
+         --  the project file (such as after an installation).
 
-               --  Post-Bind -> Partial link -> Link options insertion -> Link
+         Self.Link_Options_Insert.Initialize
+           (Object_File => Self.Bind.Post_Bind.Object_File,
+            View        => View);
 
-               Self.Link_Options_Insert.Initialize
-                 (Object_File =>
-                    Artifacts.Object_File.Object
-                      (GPR2.Build.Actions.Link.Partial.Object'Class
-                         (Self.Initial_Link_Action)
-                         .Output),
-                  View        => View);
-
-               if not Tree_Db.Add_Action (Self.Link_Options_Insert) then
-                  return False;
-               end if;
-
-               Tree_Db.Add_Input
-                 (Self.Initial_Link_Action.UID,
-                  Self.Bind.Post_Bind.Object_File,
-                  True);
-
-               Tree_Db.Add_Input
-                 (Self.Link_Options_Insert.UID,
-                  Self.Initial_Link_Action.Output,
-                  True);
-
-               --  Add a direct dependency between the binder and the
-               --  linker options insertion, so that the binder can find
-               --  it easily.
-
-               Tree_Db.Add_Input
-                 (Self.Link_Options_Insert.UID,
-                  Self.Bind.Generated_Body,
-                  True);
-
-               Tree_Db.Add_Input
-                 (Self.Final_Link_Action.UID,
-                  Self.Link_Options_Insert.Output_Object_File,
-                  True);
-            else
-               --  Post bind -> Link options insertion -> Link
-
-               Self.Link_Options_Insert.Initialize
-                 (Object_File => Self.Bind.Post_Bind.Object_File,
-                  View        => View);
-
-               if not Tree_Db.Add_Action (Self.Link_Options_Insert) then
-                  return False;
-               end if;
-
-               Tree_Db.Add_Input
-                 (Self.Link_Options_Insert.UID,
-                  Self.Bind.Post_Bind.Object_File,
-                  True);
-
-               --  Add a direct dependency between the binder and the
-               --  linker options insertion, so that the binder can find
-               --  it easily.
-
-               Tree_Db.Add_Input
-                 (Self.Link_Options_Insert.UID,
-                  Self.Bind.Generated_Body,
-                  True);
-
-               Tree_Db.Add_Input
-                 (Self.Initial_Link_Action.UID,
-                  Self.Link_Options_Insert.Output_Object_File,
-                  True);
-            end if;
-         else
-            --  Linker options insertion not needed
-
-            Tree_Db.Add_Input
-              (Self.Initial_Link_Action.UID,
-               Self.Bind.Post_Bind.Object_File,
-               True);
-
-            if Requires_Partial_Linking then
-
-               --  Add a dependency between the partial link (Self.Link) and
-               --  the final link.
-
-               Tree_Db.Add_Input
-                 (Self.Final_Link_Action.UID,
-                  Self.Initial_Link_Action.Output,
-                  True);
-            end if;
+         if not Tree_Db.Add_Action (Self.Link_Options_Insert) then
+            return False;
          end if;
+
+         --  The linker options object is added directly to the last link
+         --  phase so is skipped by the partial link that may not pick it up
+         --  since it is not referenced.
+
+         Tree_Db.Add_Input
+           (Self.Final_Link_Action.UID,
+            Self.Link_Options_Insert.Output_Object_File,
+            True);
+
+         Tree_Db.Add_Input
+           (Self.Initial_Link_Action.UID,
+            Self.Bind.Post_Bind.Object_File,
+            True);
 
          --  Now gather the list of units that compose the interface
 
