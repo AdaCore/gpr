@@ -1525,7 +1525,32 @@ package body GPR2.Build.Actions.Link is
                begin
                   CU.For_All_Part (On_Unit_Part'Access);
 
-                  exit when Has_Error;
+                  if Has_Error then
+                     return False;
+                  end if;
+               end;
+            end loop;
+
+            --  Also add the non-ada sources
+
+            for C in Self.Ctxt.Interface_Sources.Iterate loop
+               declare
+                  Path : constant Filename_Type :=
+                           GPR2.Containers.Source_Path_To_Sloc.Key (C);
+                  Src  : constant GPR2.Build.Source.Object :=
+                           Self.Ctxt.Visible_Source (Path);
+                  Dest : Path_Name.Object;
+               begin
+                  if Src.Language /= Ada_Language then
+                     Dest := Src_Dir.Compose (Src.Path_Name.Simple_Name);
+
+                     if not Self.Tree.Add_Output
+                       (Self.UID,
+                        GPR2.Build.Artifacts.Files.Create (Dest))
+                     then
+                        return False;
+                     end if;
+                  end if;
                end;
             end loop;
          end;
@@ -1859,6 +1884,44 @@ package body GPR2.Build.Actions.Link is
 
                      if Has_Error then
                         return False;
+                     end if;
+                  end;
+               end loop;
+
+               --  Also add the non-ada sources
+
+               for C in Self.Ctxt.Interface_Sources.Iterate loop
+                  declare
+                     Path : constant Filename_Type :=
+                              GPR2.Containers.Source_Path_To_Sloc.Key (C);
+                     Src  : constant GPR2.Build.Source.Object :=
+                              Self.Ctxt.Visible_Source (Path);
+                     Dest : Path_Name.Object;
+                  begin
+                     if Src.Language /= Ada_Language then
+                        Dest := Src_Dir.Compose (Src.Path_Name.Simple_Name);
+
+                        if not GNATCOLL.OS.FSUtil.Copy_File
+                          (Src.Path_Name.String_Value, Dest.String_Value)
+                        then
+                           Self.Tree.Reporter.Report
+                             (Message.Create
+                                (Message.Error,
+                                 "Cannot copy """ &
+                                   String (Src.Path_Name.Simple_Name) &
+                                   """ to the Library_Src_Dir """ &
+                                   Src_Dir.String_Value & '"',
+                                 Self.Ctxt.Attribute
+                                   (PRA.Library_Src_Dir).Value));
+                           return False;
+                        end if;
+
+                        if not Self.Tree.Add_Output
+                          (Self.UID,
+                           GPR2.Build.Artifacts.Files.Create (Dest))
+                        then
+                           return False;
+                        end if;
                      end if;
                   end;
                end loop;
