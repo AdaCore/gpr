@@ -35,6 +35,7 @@ package body GPR2.Build.Actions.Link.Partial is
       Signature_Only : Boolean)
    is
       pragma Unreferenced (Slot);
+      use type GPR2.Project.Standalone_Library_Kind;
 
       Objects : Tree_Db.Artifact_Sets.Set;
    begin
@@ -131,6 +132,13 @@ package body GPR2.Build.Actions.Link.Partial is
       if not Signature_Only then
          Self.Create_Response_File
            (String (Self.Partial_Object.Path.Simple_Name));
+
+         if Self.View.Library_Standalone /= GPR2.Project.No then
+            --  Don't issue warnings at this stage since they would be
+            --  duplicated when the main link occurs.
+            Self.Handle_Export_File
+              (Cmd_Line, Signature_Only, No_Warning => True);
+         end if;
       end if;
    end Compute_Command;
 

@@ -803,97 +803,7 @@ package body GPR2.Build.Actions.Link is
       --  For shared libs, use an export symbol file when possible
 
       if Self.Is_Library and then not Self.Is_Static then
-         declare
-            Object_Lister      : constant Project.Attribute.Object :=
-                                   Self.View.Attribute (PRA.Object_Lister);
-            Export_File_Switch : constant Project.Attribute.Object :=
-                                   Self.View.Attribute
-                                     (PRA.Linker.Export_File_Switch);
-            Symbol_File        : Path_Name.Object;
-            Export_Policy_Attr : constant Project.Attribute.Object :=
-                                   Self.View.Attribute
-                                     (PRA.Library_Symbol_Policy);
-            type Symbol_Policy is (Restricted, Unrestricted);
-            Export_Policy      : constant Symbol_Policy :=
-                                   (if not Export_Policy_Attr.Is_Defined
-                                    or else Name_Type
-                                      (Export_Policy_Attr.Value.Text) =
-                                      "restricted"
-                                    then Restricted
-                                    else Unrestricted);
-            use GPR2.Project;
-         begin
-            if Self.View.Library_Standalone /= No
-              and then not Signature_Only
-            then
-               if Export_Policy = Restricted then
-                  if Export_File_Switch.Is_Defined then
-                     if not Self.Lib_Symbol_File.Is_Defined then
-                        --  We will need to generate the exported symbols
-                        --  from the library interface: we thus need it to
-                        --  be up-to-date.
-
-                        Self.Check_Interface (No_Warnings => False);
-                     end if;
-
-                     declare
-                        Tmp_File : constant Filename_Optional :=
-                                     Self.Generate_Export_File
-                                       (Self.Lib_Symbol_File.Path);
-                     begin
-                        if Tmp_File'Length > 0 then
-                           Symbol_File := Path_Name.Create_File (Tmp_File);
-                        end if;
-                     end;
-
-                     if Symbol_File.Is_Defined then
-                        Cmd_Line.Add_Argument
-                          (Export_File_Switch.Value.Text &
-                             String (Symbol_File.Relative_Path
-                             (Self.Working_Directory)),
-                           Build.Command_Line.Ignore);
-                     end if;
-                  end if;
-               else
-                  --  unrestricted symbol policy: export all symbols. Warn if
-                  --  a symbol file is defined
-
-                  if Self.Lib_Symbol_File.Is_Defined then
-                     Self.Tree.Reporter.Report
-                       (GPR2.Message.Create
-                          (GPR2.Message.Warning,
-                           "Library_Symbol_File attribute is ignored",
-                           Self.View.Attribute
-                             (PRA.Library_Symbol_File).Value));
-                     Self.Tree.Reporter.Report
-                       (GPR2.Message.Create
-                          (GPR2.Message.Warning,
-                           "because Library_Symbol_Policy attribute has """ &
-                           Export_Policy_Attr.Value.Text & """ value",
-                           Export_Policy_Attr.Value));
-                  end if;
-               end if;
-            end if;
-
-            --  On Windows, if we are building a standard library or a library
-            --  with unrestricted symbol-policy make sure all symbols are
-            --  exported.
-
-            if Self.View.Tree.Is_Windows_Target
-              and then (Self.View.Library_Standalone = No
-                        or else Export_Policy = Unrestricted
-                        or else not Export_File_Switch.Is_Defined)
-            then
-               --  This is needed if an object contains a declspec(dllexport)
-               --  as in this case only the specified symbols will be exported.
-               --  That is the linker change from export-all to export only the
-               --  symbols specified as dllexport.
-
-               --  ??? Create a proper Linker attribute for that
-
-               Cmd_Line.Add_Argument ("-Wl,--export-all-symbols");
-            end if;
-         end;
+         Self.Handle_Export_File (Cmd_Line, Signature_Only, False);
       end if;
 
       --  Finally remove any duplicated --specs switch as this may cause
@@ -1301,6 +1211,115 @@ package body GPR2.Build.Actions.Link is
          return "";
       end if;
    end Generate_Export_File;
+
+   ------------------------
+   -- Handle_Export_File --
+   ------------------------
+
+   procedure Handle_Export_File
+     (Self           : in out Object;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean;
+      No_Warning     : Boolean)
+   is
+      Object_Lister      : constant Project.Attribute.Object :=
+                             Self.View.Attribute (PRA.Object_Lister);
+      Export_File_Switch : constant Project.Attribute.Object :=
+                             Self.View.Attribute
+                               (PRA.Linker.Export_File_Switch);
+      Symbol_File        : Path_Name.Object;
+      Export_Policy_Attr : constant Project.Attribute.Object :=
+                             Self.View.Attribute
+                               (PRA.Library_Symbol_Policy);
+      type Symbol_Policy is (Restricted, Unrestricted);
+      Export_Policy      : constant Symbol_Policy :=
+                             (if not Export_Policy_Attr.Is_Defined
+                              or else Name_Type
+                                (Export_Policy_Attr.Value.Text) =
+                                "restricted"
+                              then Restricted
+                              else Unrestricted);
+      use GPR2.Project;
+   begin
+      if Self.View.Library_Standalone = No then
+         --  On Windows, if we are building a standard library or a library
+         --  with unrestricted symbol-policy make sure all symbols are
+         --  exported.
+
+         if Self.View.Tree.Is_Windows_Target
+           and then (Export_Policy = Unrestricted
+                     or else not Export_File_Switch.Is_Defined)
+         then
+            --  This is needed if an object contains a declspec(dllexport)
+            --  as in this case only the specified symbols will be exported.
+            --  That is the linker change from export-all to export only the
+            --  symbols specified as dllexport.
+
+            --  ??? Create a proper Linker attribute for that
+
+            Cmd_Line.Add_Argument ("-Wl,--export-all-symbols");
+         end if;
+
+         return;
+      end if;
+
+      if Signature_Only then
+         --  Don't go further, as this generates a temporary file
+         return;
+      end if;
+
+      if Export_Policy = Unrestricted then
+         --  unrestricted symbol policy: export all symbols. Nothing to do
+         --  appart emitting a warning if a library symbol file is defined
+
+         if not No_Warning then
+            if Self.Lib_Symbol_File.Is_Defined then
+               Self.Tree.Reporter.Report
+                 (GPR2.Message.Create
+                    (GPR2.Message.Warning,
+                     "Library_Symbol_File attribute is ignored",
+                     Self.View.Attribute
+                       (PRA.Library_Symbol_File).Value));
+               Self.Tree.Reporter.Report
+                 (GPR2.Message.Create
+                    (GPR2.Message.Warning,
+                     "because Library_Symbol_Policy attribute has """ &
+                       Export_Policy_Attr.Value.Text & """ value",
+                     Export_Policy_Attr.Value));
+            end if;
+         end if;
+
+         return;
+      end if;
+
+      if Export_File_Switch.Is_Defined then
+         if not Self.Lib_Symbol_File.Is_Defined then
+            --  We will need to generate the exported symbols
+            --  from the library interface: we thus need it to
+            --  be up-to-date.
+
+            Self.Check_Interface (No_Warnings => No_Warning);
+         end if;
+
+         declare
+            Tmp_File : constant Filename_Optional :=
+                         Self.Generate_Export_File
+                           (Self.Lib_Symbol_File.Path);
+         begin
+            if Tmp_File'Length > 0 then
+               Symbol_File := Path_Name.Create_File (Tmp_File);
+            end if;
+         end;
+
+         if Symbol_File.Is_Defined then
+            Cmd_Line.Add_Argument
+              (Export_File_Switch.Value.Text &
+                 String
+                 (Symbol_File.Relative_Path (Self.Working_Directory)),
+               Build.Command_Line.Ignore);
+         end if;
+      end if;
+   end Handle_Export_File;
 
    ----------------
    -- Initialize --

@@ -174,6 +174,16 @@ private
       --  User-defined list of exported symbols
    end record;
 
+   procedure Handle_Export_File
+     (Self           : in out Object;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean;
+      No_Warning     : Boolean);
+   --  Generates the export file that lists the symbols to be exported
+   --  by the shared library and add the proper options to the command line.
+   --  This can have no effects if symbols cannot be filtered or if the
+   --  library symbol policy is unrestricted.
+
    overriding procedure Compute_Signature
      (Self      : in out Object;
       Load_Mode : Boolean);
