@@ -672,6 +672,7 @@ package body GPR2.Build.Actions.Link is
                            if C /= Self.View then
                               --  For self.View, use non-switch parts of
                               --  the linker option only.
+
                               if Starts_With (Arg, "-l") then
                                  Dash_l_Opts.Append (Arg);
                               else
