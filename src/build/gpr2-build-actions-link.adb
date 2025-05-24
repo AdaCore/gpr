@@ -1854,28 +1854,26 @@ package body GPR2.Build.Actions.Link is
                         Dest : constant Path_Name.Object :=
                                  Src_Dir.Compose (Path.Simple_Name);
                      begin
-                        if not Dest.Exists then
-                           if not GNATCOLL.OS.FSUtil.Copy_File
-                             (Path.String_Value, Dest.String_Value)
-                           then
-                              Self.Tree.Reporter.Report
-                                (Message.Create
-                                   (Message.Error,
-                                    "Cannot copy """ &
-                                      String (Path.Simple_Name) &
-                                      """ to the Library_Src_Dir """ &
-                                      Src_Dir.String_Value & '"',
-                                    Self.Ctxt.Attribute
-                                      (PRA.Library_Src_Dir).Value));
-                              Has_Error := True;
+                        if not GNATCOLL.OS.FSUtil.Copy_File
+                          (Path.String_Value, Dest.String_Value)
+                        then
+                           Self.Tree.Reporter.Report
+                             (Message.Create
+                                (Message.Error,
+                                 "Cannot copy """ &
+                                   String (Path.Simple_Name) &
+                                   """ to the Library_Src_Dir """ &
+                                   Src_Dir.String_Value & '"',
+                                 Self.Ctxt.Attribute
+                                   (PRA.Library_Src_Dir).Value));
+                           Has_Error := True;
+                        end if;
 
-                              if not Self.Tree.Add_Output
-                                (Self.UID,
-                                 GPR2.Build.Artifacts.Files.Create (Dest))
-                              then
-                                 Has_Error := True;
-                              end if;
-                           end if;
+                        if not Self.Tree.Add_Output
+                          (Self.UID,
+                           GPR2.Build.Artifacts.Files.Create (Dest))
+                        then
+                           Has_Error := True;
                         end if;
                      end On_Unit_Part;
 
