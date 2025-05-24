@@ -1331,7 +1331,9 @@ package body GPR2.Build.Actions.Link is
       Context  : GPR2.Project.View.Object       := GPR2.Project.View.Undefined;
       Src      : Compilation_Unit.Unit_Location := Compilation_Unit.No_Unit;
       No_Rpath : Boolean                        := True;
-      Output   : Filename_Optional              := "") is
+      Output   : Filename_Optional              := "")
+   is
+      Attr : GPR2.Project.Attribute.Object;
    begin
       case Kind is
          when Executable =>
@@ -1387,6 +1389,17 @@ package body GPR2.Build.Actions.Link is
             Self.Library    :=
               Artifacts.Library.Create (Context.Library_Filename);
             Self.No_Rpath   := No_Rpath;
+
+            Attr := Context.Attribute
+              (PRA.Library_Symbol_File);
+
+            if Attr.Is_Defined then
+               Self.Lib_Symbol_File :=
+                 Artifacts.Files.Create
+                   (Path_Name.Create_File
+                      (Filename_Type (Attr.Value.Text),
+                       Context.Dir_Name.Value));
+            end if;
       end case;
    end Initialize;
 
