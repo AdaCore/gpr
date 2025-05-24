@@ -31,6 +31,14 @@ package body GPR2.Build.Actions.Compile.Ada is
    function Artifacts_Base_Name
      (Unit : GPR2.Build.Compilation_Unit.Object) return Simple_Name;
 
+   function Can_Unit_Be_Imported
+     (Self : Object;
+      CU   : GPR2.Build.Compilation_Unit.Object) return Boolean;
+   --  Ensure that a unit coming from another project can be imported.
+   --  It is the case, if the unit is part of the Interfaces or the
+   --  Library_Interface attributes. Otherwise, this units is reserved for
+   --  internal project implementation.
+
    function Get_Attr
      (V       : GPR2.Project.View.Object;
       Name    : Q_Attribute_Id;
@@ -76,6 +84,88 @@ package body GPR2.Build.Actions.Compile.Ada is
          end;
       end if;
    end Artifacts_Base_Name;
+
+   --------------------------
+   -- Can_Unit_Be_Imported --
+   --------------------------
+
+   function Can_Unit_Be_Imported
+     (Self : Object;
+      CU   : GPR2.Build.Compilation_Unit.Object) return Boolean
+   is
+      use GPR2.Project.View;
+
+      CU_View : constant GPR2.Project.View.Object := CU.Owning_View;
+      Allowed : Boolean := True;
+      Src     : GPR2.Build.Source.Object;
+
+   begin
+      --  There is no restriction of units visibility inside the same view
+
+      if Self.View /= CU_View then
+         if CU_View.Has_Any_Interfaces
+           and then not CU_View.Interface_Closure.Contains (CU.Name)
+         then
+            --  Two cases here:
+            --  * The view is a standalone library: if the unit is not
+            --    listed by the Library_Interface, or its source by the
+            --    Interfaces attribute, then it can not be imported.Allowed
+            --  * The view is not a standalone library: if the unit source
+            --    is not listed by the Interfaces attribute, then it can
+            --   not be imported.
+
+            --  There's an exception for sources coming from --src-subdirs:
+            --  since this is for instrumented code, we need to loosen the
+            --  rule here and allow any source from this subdir.
+            Src := CU_View.Visible_Source (CU.Main_Part.Source);
+
+            if Src.From_Src_Subdirs then
+               return True;
+            end if;
+
+            Allowed := False;
+         end if;
+
+         if not Allowed then
+            Self.Tree.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  "unit """
+                  & String (Self.CU.Name)
+                  & """ can not import unit """
+                  & String (CU.Name)
+                  & """:" & ASCII.LF
+                  & " it is not part of the interfaces of the project "
+                  & String (CU_View.Name),
+                  GPR2.Source_Reference.Object
+                    (GPR2.Source_Reference.Create
+                         (Self.Ctxt.Path_Name.Value, 0, 0))));
+         end if;
+
+         if Allowed
+           and then Self.Tree.Build_Options.No_Indirect_Imports
+           and then not Self.View.Imports.Contains (CU_View)
+           and then not Self.View.Limited_Imports.Contains (CU_View)
+         then
+            Allowed := False;
+
+            Self.Tree.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  "unit """ & String (Self.CU.Name) &
+                    """ cannot import unit """ &
+                    String (CU.Name) & ":" &
+                    ASCII.LF &
+                    " """ & String (Self.View.Name) &
+                    """ does not directly import project """ &
+                    String (CU_View.Name) & """",
+                  GPR2.Source_Reference.Create
+                    (Self.Src.Path_Name.Value, 0, 0)));
+         end if;
+      end if;
+
+      return Allowed;
+   end Can_Unit_Be_Imported;
 
    --------------------------
    -- Change_Intf_Ali_File --
@@ -536,97 +626,7 @@ package body GPR2.Build.Actions.Compile.Ada is
      (Self : Object;
       Db   : in out GPR2.Build.Tree_Db.Object) return Boolean
    is
-      function Can_Unit_Be_Imported
-        (CU : GPR2.Build.Compilation_Unit.Object) return Boolean;
-      --  Ensure that a unit coming from another project can be imported.
-      --  It is the case, if the unit is part of the Interfaces or the
-      --  Library_Interface attributes. Otherwise, this units is reserved for
-      --  internal project implementation.
-
-      --------------------------
-      -- Can_Unit_Be_Imported --
-      --------------------------
-
-      function Can_Unit_Be_Imported
-        (CU : GPR2.Build.Compilation_Unit.Object) return Boolean
-      is
-         use GPR2.Project.View;
-
-         CU_View : constant GPR2.Project.View.Object := CU.Owning_View;
-         Allowed : Boolean := True;
-         Src     : GPR2.Build.Source.Object;
-
-      begin
-         --  There is no restriction of units visibility inside the same view
-
-         if Self.View /= CU_View then
-            if CU_View.Has_Any_Interfaces
-              and then not CU_View.Interface_Closure.Contains (CU.Name)
-            then
-               --  Two cases here:
-               --  * The view is a standalone library: if the unit is not
-               --    listed by the Library_Interface, or its source by the
-               --    Interfaces attribute, then it can not be imported.Allowed
-               --  * The view is not a standalone library: if the unit source
-               --    is not listed by the Interfaces attribute, then it can
-               --   not be imported.
-
-               --  There's an exception for sources coming from --src-subdirs:
-               --  since this is for instrumented code, we need to loosen the
-               --  rule here and allow any source from this subdir.
-               Src := CU_View.Visible_Source (CU.Main_Part.Source);
-
-               if Src.From_Src_Subdirs then
-                  return True;
-               end if;
-
-               Allowed := False;
-            end if;
-
-            if not Allowed then
-               Self.Tree.Reporter.Report
-                 (GPR2.Message.Create
-                    (GPR2.Message.Error,
-                     "unit """
-                     & String (Self.CU.Name)
-                     & """ can not import unit """
-                     & String (CU.Name)
-                     & """: it is not part of the interfaces of the project "
-                     & String (CU_View.Name),
-                     GPR2.Source_Reference.Object
-                       (GPR2.Source_Reference.Create
-                            (Self.Ctxt.Path_Name.Value, 0, 0))));
-            end if;
-
-            if Allowed then
-               if Self.Tree.Build_Options.No_Indirect_Imports
-                 and then not Self.View.Imports.Contains (CU_View)
-                 and then not Self.View.Limited_Imports.Contains (CU_View)
-               then
-                  Allowed := False;
-
-                  Self.Tree.Reporter.Report
-                    (GPR2.Message.Create
-                       (GPR2.Message.Error,
-                        "unit """ & String (Self.CU.Name) &
-                          """ cannot import unit """ &
-                          String (CU.Name) & ":" &
-                          ASCII.LF &
-                          """" & String (Self.View.Name) &
-                          """ does not directly import project """ &
-                          String (CU_View.Name) & """",
-                        GPR2.Source_Reference.Create
-                          (Self.Src.Path_Name.Value, 0, 0)));
-               end if;
-            end if;
-         end if;
-
-         return Allowed;
-      end Can_Unit_Be_Imported;
-
-      CU        : GPR2.Build.Compilation_Unit.Object;
       UID       : constant Actions.Action_Id'Class := Object'Class (Self).UID;
-      Result    : Boolean := True;
 
    begin
       if Self.Obj_File.Is_Defined then
@@ -645,15 +645,7 @@ package body GPR2.Build.Actions.Compile.Ada is
          return False;
       end if;
 
-      for Unit of Self.CU.Known_Dependencies loop
-         CU := Self.Ctxt.Namespace_Roots.First_Element.Unit (Unit);
-
-         if CU.Is_Defined then
-            Result := Can_Unit_Be_Imported (CU) and then Result;
-         end if;
-      end loop;
-
-      return Result;
+      return True;
    end On_Tree_Insertion;
 
    ------------------
@@ -670,85 +662,99 @@ package body GPR2.Build.Actions.Compile.Ada is
       use GPR2.Path_Name;
       Imports : GPR2.Containers.Name_Set;
       Binds   : Action_Id_Sets.Set;
+      CU      : Compilation_Unit.Object;
+      Result  : Boolean := True;
 
    begin
-      if Status = Skipped then
-         --  No need to post-process anything if the action was skipped
-         return True;
-      end if;
+      if Status /= Skipped then
+         --  If the .o and .ali stored in this action were inherited, and we
+         --  finally decided to compile, we need to now redirect to the new .o
+         --  and .ali
 
-      --  If the .o and .ali stored in this action were inherited, and we
-      --  finally decided to compile, we need to now redirect to the new .o
-      --  and .ali
+         if Self.Inh_From.Is_Defined then
+            declare
+               BN        : constant Simple_Name :=
+                             Artifacts_Base_Name (Self.CU);
+               O_Suff    : constant Simple_Name :=
+                             Simple_Name
+                               (Get_Attr
+                                  (Self.View, PRA.Compiler.Object_File_Suffix,
+                                   Ada_Language,
+                                   ".o"));
+               Ali_Suff  : constant Simple_Name := Self.Dep_File_Suffix;
+               Local_O   : Artifacts.Object_File.Object;
+               Local_Ali : Artifacts.Files.Object;
+               use type Artifacts.Object_File.Object;
 
-      declare
-         BN        : constant Simple_Name := Artifacts_Base_Name (Self.CU);
-         O_Suff    : constant Simple_Name :=
-                       Simple_Name
-                         (Get_Attr
-                            (Self.View, PRA.Compiler.Object_File_Suffix,
-                             Ada_Language,
-                             ".o"));
-         Ali_Suff  : constant Simple_Name := Self.Dep_File_Suffix;
-         Local_O   : Artifacts.Object_File.Object;
-         Local_Ali : Artifacts.Files.Object;
-         use type Artifacts.Object_File.Object;
+            begin
+               Local_O := Artifacts.Object_File.Create
+                 (Self.View.Object_Directory.Compose (BN & O_Suff));
 
-      begin
-         Local_O := Artifacts.Object_File.Create
-           (Self.View.Object_Directory.Compose (BN & O_Suff));
+               if Local_O /= Self.Obj_File then
+                  Local_Ali := Artifacts.Files.Create
+                    (Self.View.Object_Directory.Compose (BN & Ali_Suff));
 
-         if Local_O /= Self.Obj_File then
-            Local_Ali := Artifacts.Files.Create
-              (Self.View.Object_Directory.Compose (BN & Ali_Suff));
-
-            Self.Tree.Replace_Artifact (Self.Obj_File, Local_O);
-            Self.Tree.Replace_Artifact (Self.Dep_File, Local_Ali);
-            Self.Obj_File := Local_O;
-            Self.Dep_File := Local_Ali;
-            Self.Inh_From := GPR2.Project.View.Undefined;
+                  Self.Tree.Replace_Artifact (Self.Obj_File, Local_O);
+                  Self.Tree.Replace_Artifact (Self.Dep_File, Local_Ali);
+                  Self.Obj_File := Local_O;
+                  Self.Dep_File := Local_Ali;
+                  Self.Inh_From := GPR2.Project.View.Undefined;
+               end if;
+            end;
          end if;
-      end;
 
-      --  Now that we know the ALI file is correct, let the bind action know
-      --  the actual list of imported units from this dependency file.
+         --  Now that we know the ALI file is correct, let the bind action know
+         --  the actual list of imported units from this dependency file.
 
-      if not GPR2.Build.ALI_Parser.Imports (Self.Dep_File.Path, Imports)
-      then
-         Self.Tree.Reporter.Report
-           (GPR2.Message.Create
-              (GPR2.Message.Error,
-               "failure to analyze the produced ali file",
-               GPR2.Source_Reference.Object
-                 (GPR2.Source_Reference.Create
-                      (Self.Dep_File.Path.Value, 0, 0))));
-         return False;
-      end if;
-
-      for Action of Self.Tree.Successors (Self.Dep_File) loop
-         if Action in GPR2.Build.Actions.Ada_Bind.Object'Class then
-            --  Note: do not call On_Ali_Parsed from this loop since we're
-            --  iterating over Self.Tree.Successors so any modification to
-            --  the tree within this loop may raise a Program_Error "attempt
-            --  to tamper with cursors".
-            Binds.Include (Action.UID);
+         if not GPR2.Build.ALI_Parser.Imports (Self.Dep_File.Path, Imports)
+         then
+            Self.Tree.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  "failure to analyze the produced ali file",
+                  GPR2.Source_Reference.Object
+                    (GPR2.Source_Reference.Create
+                         (Self.Dep_File.Path.Value, 0, 0))));
+            return False;
          end if;
-      end loop;
 
-      for UID of Binds loop
-         declare
-            Bind : constant access Actions.Ada_Bind.Object'Class :=
-                     Actions.Ada_Bind.Object'Class
-                       (Self.Tree.Action_Id_To_Reference
-                          (UID).Element.all)'Access;
-         begin
-            if not Bind.On_Ali_Parsed (Imports) then
-               return False;
+         for Action of Self.Tree.Successors (Self.Dep_File) loop
+            if Action in GPR2.Build.Actions.Ada_Bind.Object'Class then
+               --  Note: do not call On_Ali_Parsed from this loop since we're
+               --  iterating over Self.Tree.Successors so any modification to
+               --  the tree within this loop may raise a Program_Error "attempt
+               --  to tamper with cursors".
+               Binds.Include (Action.UID);
             end if;
-         end;
+         end loop;
+
+         for UID of Binds loop
+            declare
+               Bind : constant access Actions.Ada_Bind.Object'Class :=
+                        Actions.Ada_Bind.Object'Class
+                          (Self.Tree.Action_Id_To_Reference
+                             (UID).Element.all)'Access;
+            begin
+               if not Bind.On_Ali_Parsed (Imports) then
+                  return False;
+               end if;
+            end;
+         end loop;
+      end if;
+
+      --  Check if the dependencies of the just compiled unit are allowed
+      --  (direct import if --no-indirect-import is specified, or part of
+      --  the interface if the owning view is a standalone library.
+
+      for Unit of Self.CU.Known_Dependencies loop
+         CU := Self.Ctxt.Namespace_Roots.First_Element.Unit (Unit);
+
+         if CU.Is_Defined then
+            Result := Self.Can_Unit_Be_Imported (CU) and then Result;
+         end if;
       end loop;
 
-      return True;
+      return Result;
    end Post_Command;
 
    ------------------
