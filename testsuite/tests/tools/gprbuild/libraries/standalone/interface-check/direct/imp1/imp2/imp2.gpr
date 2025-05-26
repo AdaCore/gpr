@@ -1,0 +1,5 @@
+project Imp2 is
+   for Languages use ("Ada", "C");
+   for Interfaces use ("pkg2.ads");
+end Imp2;
+

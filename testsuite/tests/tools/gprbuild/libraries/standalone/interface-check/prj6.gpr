@@ -1,0 +1,5 @@
+with "prj5.gpr";
+project Prj6 is
+   for Main use ("main.adb");
+end Prj6;
+

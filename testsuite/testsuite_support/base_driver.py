@@ -1,14 +1,14 @@
 import os
 import os.path
 import re
-from shutil import which
 from subprocess import check_output
 from typing import NoReturn
 
 from e3.env import Env
 from e3.fs import mkdir
+from e3.os.process import which
 from e3.testsuite.driver.classic import TestAbortWithError
-from e3.testsuite.driver.diff import DiffTestDriver, ReplacePath, Substitute
+from e3.testsuite.driver.diff import DiffTestDriver, ReplacePath, Substitute, PatternSubstitute
 
 
 # create_fake_ada_compiler routine copied from gprbuild-internal testsuite
@@ -223,13 +223,14 @@ class BaseDriver(DiffTestDriver):
         # separators, no drive letter).
         return super().output_refiners + [
             ReplacePath(self.working_dir(), replacement=""),
+            ReplacePath(gcc_install, replacement="<gcc>"),
+            Substitute("c:<gcc>", replacement="<gcc>"),
+            Substitute("\\", "/"),
+            ReplacePath("C:/", "/"),
+            Substitute(".exe", ""),
+            Substitute(gcc_version, "(gcc-version)"),
             Substitute("gpr2build", replacement="gprbuild"),
             Substitute("gpr2clean", replacement="gprclean"),
-            Substitute(gcc_install, replacement="<gcc>"),
-            Substitute(gcc_version, "(gcc-version)"),
-            Substitute("\\", "/"),
-            Substitute("C:/", "/"),
-            Substitute(".exe", ""),
             Substitute("aarch64-linux-gnu", replacement="(host)"),
             Substitute("x86_64-pc-linux-gnu", replacement="(host)"),
             Substitute("i686-pc-linux-gnu", replacement="(host)"),
@@ -238,8 +239,10 @@ class BaseDriver(DiffTestDriver):
             Substitute("aarch64-linux", replacement="(host)"),
             Substitute("x86_64-linux", replacement="(host)"),
             Substitute("x86-linux", replacement="(host)"),
+            Substitute("x86_64-windows64", replacement="(host)"),
             Substitute("x86_64-windows", replacement="(host)"),
             Substitute("x86-windows", replacement="(host)"),
+            PatternSubstitute(r"[.]text\+0x[0-9a-f]+", ".text+0x<nn>"),
         ]
 
     # Convenience path builders

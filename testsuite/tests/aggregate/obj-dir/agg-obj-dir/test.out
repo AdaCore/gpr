@@ -1,9 +1,0 @@
-loading files/aggl1.gpr
-testing aggl1.gpr
-A.Object_Dir:
-B.Object_Dir:/files/b
-loading files/aggl.gpr
-aggl.gpr: error: aggregate library directory cannot be shared with object directory of aggregated project "a"
-testing aggl1.gpr
-A.Object_Dir:
-B.Object_Dir:/files/b

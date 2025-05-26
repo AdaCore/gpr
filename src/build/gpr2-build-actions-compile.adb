@@ -1079,42 +1079,98 @@ package body GPR2.Build.Actions.Compile is
       Stdout : Unbounded_String := Null_Unbounded_String;
       Stderr : Unbounded_String := Null_Unbounded_String) return Boolean
    is
+      Result   : Boolean := True;
    begin
-      if Status = Skipped or else not Self.Inh_From.Is_Defined then
-         --  No need to post-process anything if the action was skipped
-         --  or is not overloading an inherited action
-         return True;
-      end if;
-
       --  If the .o and .d stored in this action were inherited, and we
       --  finally decided to compile, we need to now redirect to the new .o
 
-      declare
-         BN        : constant Simple_Name := Self.Src.Path_Name.Base_Filename;
-         O_Suff    : constant Simple_Name :=
-                       Simple_Name
-                         (Self.Ctxt.Attribute
-                            (PRA.Compiler.Object_File_Suffix,
-                             PAI.Create (Self.Lang)).Value.Text);
-         Dep_Suff  : constant Simple_Name := Self.Dep_File_Suffix;
-         Local_O   : Artifacts.Object_File.Object;
-         Local_Dep : Artifacts.Files.Object;
+      if Status = Success and then Self.Inh_From.Is_Defined then
+         declare
+            BN        : constant Simple_Name :=
+                          Self.Src.Path_Name.Base_Filename;
+            O_Suff    : constant Simple_Name :=
+                          Simple_Name
+                            (Self.Ctxt.Attribute
+                               (PRA.Compiler.Object_File_Suffix,
+                                PAI.Create (Self.Lang)).Value.Text);
+            Dep_Suff  : constant Simple_Name := Self.Dep_File_Suffix;
+            Local_O   : Artifacts.Object_File.Object;
+            Local_Dep : Artifacts.Files.Object;
 
-      begin
-         Local_O := Artifacts.Object_File.Create
-           (Self.View.Object_Directory.Compose (BN & O_Suff));
+         begin
+            Local_O := Artifacts.Object_File.Create
+              (Self.View.Object_Directory.Compose (BN & O_Suff));
 
-         Local_Dep := Artifacts.Files.Create
-           (Self.View.Object_Directory.Compose (BN & Dep_Suff));
+            Local_Dep := Artifacts.Files.Create
+              (Self.View.Object_Directory.Compose (BN & Dep_Suff));
 
-         Self.Tree.Replace_Artifact (Self.Obj_File, Local_O);
-         Self.Tree.Replace_Artifact (Self.Dep_File, Local_Dep);
-         Self.Obj_File := Local_O;
-         Self.Dep_File := Local_Dep;
-         Self.Inh_From := GPR2.Project.View.Undefined;
-      end;
+            Self.Tree.Replace_Artifact (Self.Obj_File, Local_O);
+            Self.Tree.Replace_Artifact (Self.Dep_File, Local_Dep);
+            Self.Obj_File := Local_O;
+            Self.Dep_File := Local_Dep;
+            Self.Inh_From := GPR2.Project.View.Undefined;
+         end;
+      end if;
 
-      return True;
+      for Path of Self.Dependencies loop
+         declare
+            Src      : constant GPR2.Build.Source.Object :=
+                         Self.Ctxt.Visible_Source
+                           (Path_Name.Simple_Name (Path));
+            Root_Dir : constant Path_Name.Object :=
+                         Self.Ctxt.Tree.Root_Project.Dir_Name;
+            use type GPR2.Project.View.Object;
+
+         begin
+            if Src.Is_Defined
+              and then not Src.Has_Units
+              and then Src.Kind = S_Spec
+              and then Src.Owning_View /= Self.Ctxt
+            then
+               if Src.Owning_View.Has_Interfaces
+                 and then not Src.Owning_View.Interface_Sources.Contains
+                   (Src.Path_Name.Simple_Name)
+               then
+                  Self.Tree.Reporter.Report
+                    (GPR2.Message.Create
+                       (GPR2.Message.Error,
+                        '"'
+                        & String (Self.Src.Path_Name.Relative_Path (Root_Dir))
+                        & """ cannot import """
+                        & String (Src.Path_Name.Relative_Path (Root_Dir))
+                        & """:" & ASCII.LF
+                        & " it is not part of the interfaces of its "
+                        & "project """ & String (Src.Owning_View.Name) & '"',
+                        GPR2.Source_Reference.Create
+                          (Self.Ctxt.Path_Name.Value, 0, 0)));
+                  Result := False;
+               end if;
+
+               if Self.Tree.Build_Options.No_Indirect_Imports
+                 and then not Self.View.Imports.Contains (Src.Owning_View)
+                 and then
+                   not Self.View.Limited_Imports.Contains (Src.Owning_View)
+               then
+                  Self.Tree.Reporter.Report
+                    (GPR2.Message.Create
+                       (GPR2.Message.Error,
+                        '"'
+                        & String (Self.Src.Path_Name.Relative_Path (Root_Dir))
+                        & """ cannot import """
+                        & String (Src.Path_Name.Relative_Path (Root_Dir))
+                        & ":" & ASCII.LF
+                        & " """ & String (Self.View.Name)
+                        & """ does not directly import project """ &
+                          String (Src.Owning_View.Name) & """",
+                        GPR2.Source_Reference.Create
+                          (Self.Ctxt.Path_Name.Value, 0, 0)));
+                  Result := False;
+               end if;
+            end if;
+         end;
+      end loop;
+
+      return Result;
    end Post_Command;
 
    ---------

@@ -1,0 +1,2 @@
+description: verify that references not part of a SAL interface are rejected
+driver: python_script

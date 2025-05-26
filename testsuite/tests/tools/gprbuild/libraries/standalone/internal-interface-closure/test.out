@@ -1,5 +1,92 @@
-$ gprbuild -Plibrary_interface/app.gpr -p -q
+========================
+lib attribute: library_interface
+app sources: app
+symbol policy: restricted
+$ gprbuild -Plibrary_interface/app.gpr -XSRC_DIR=app -XSYM_POLICY=restricted -f -q
 demo.gpr: warning: unit "Goo" is not in the interface set, but it is needed by "FOO"
-$ gprbuild -Pinterfaces/app.gpr -p -q
+$ ./main
+Foo!
+Goo
+Hoo
+Ioo
+
+========================
+lib attribute: library_interface
+app sources: app
+symbol policy: unrestricted
+$ gprbuild -Plibrary_interface/app.gpr -XSRC_DIR=app -XSYM_POLICY=unrestricted -f -q
+demo.gpr: warning: unit "Goo" is not in the interface set, but it is needed by "FOO"
+$ ./main
+Foo!
+Goo
+Hoo
+Ioo
+
+========================
+lib attribute: library_interface
+app sources: app2
+symbol policy: restricted
+$ gprbuild -Plibrary_interface/app.gpr -XSRC_DIR=app2 -XSYM_POLICY=restricted -f -q
+demo.gpr: warning: unit "Goo" is not in the interface set, but it is needed by "FOO"
+<gcc>/bin/../lib/gcc/(host)/(gcc-version)/../../../../(host)/bin/ld: library_interface/obj/app/main.o: in function `_ada_main':
+main.adb:(.text+0x<nn>): undefined reference to `ioo'
+collect2: error: ld returned 1 exit status
+app.gpr: warning: [Link] main (app.gpr) failed with status 1
+========================
+lib attribute: library_interface
+app sources: app2
+symbol policy: unrestricted
+$ gprbuild -Plibrary_interface/app.gpr -XSRC_DIR=app2 -XSYM_POLICY=unrestricted -f -q
+demo.gpr: warning: unit "Goo" is not in the interface set, but it is needed by "FOO"
+$ ./main
+Foo!
+Ioo
+
+========================
+lib attribute: interfaces
+app sources: app
+symbol policy: restricted
+$ gprbuild -Pinterfaces/app.gpr -XSRC_DIR=app -XSYM_POLICY=restricted -f -q
 demo.gpr: warning: unit "Goo" is not in the interface set, but it is needed by "FOO"
 demo.gpr: warning: unit "Ioo" is not in the interface set, but it is needed by "HOO"
+$ ./main
+Foo!
+Goo
+Hoo
+Ioo
+
+========================
+lib attribute: interfaces
+app sources: app
+symbol policy: unrestricted
+$ gprbuild -Pinterfaces/app.gpr -XSRC_DIR=app -XSYM_POLICY=unrestricted -f -q
+demo.gpr: warning: unit "Goo" is not in the interface set, but it is needed by "FOO"
+demo.gpr: warning: unit "Ioo" is not in the interface set, but it is needed by "HOO"
+$ ./main
+Foo!
+Goo
+Hoo
+Ioo
+
+========================
+lib attribute: interfaces
+app sources: app2
+symbol policy: restricted
+$ gprbuild -Pinterfaces/app.gpr -XSRC_DIR=app2 -XSYM_POLICY=restricted -f -q
+demo.gpr: warning: unit "Goo" is not in the interface set, but it is needed by "FOO"
+demo.gpr: warning: unit "Ioo" is not in the interface set, but it is needed by "HOO"
+$ ./main
+Foo!
+Ioo
+
+========================
+lib attribute: interfaces
+app sources: app2
+symbol policy: unrestricted
+$ gprbuild -Pinterfaces/app.gpr -XSRC_DIR=app2 -XSYM_POLICY=unrestricted -f -q
+demo.gpr: warning: unit "Goo" is not in the interface set, but it is needed by "FOO"
+demo.gpr: warning: unit "Ioo" is not in the interface set, but it is needed by "HOO"
+$ ./main
+Foo!
+Ioo
+
