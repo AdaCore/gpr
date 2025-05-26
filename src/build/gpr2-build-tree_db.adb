@@ -640,9 +640,10 @@ package body GPR2.Build.Tree_Db is
    -----------------------------
 
    function Get_Or_Create_Temp_File
-     (Self     : Object;
-      For_View : GPR2.Project.View.Object;
-      Purpose  : Simple_Name) return Temp_File
+     (Self      : Object;
+      For_View  : GPR2.Project.View.Object;
+      Purpose   : Simple_Name;
+      Extension : Simple_Name := ".tmp") return Temp_File
    is
       Data : constant View_Tables.View_Data_Ref :=
                View_Tables.Get_Ref (Self.Build_Dbs (For_View.Id));
@@ -656,7 +657,7 @@ package body GPR2.Build.Tree_Db is
       if not View_Tables.Temp_File_Maps.Has_Element (C) then
          declare
             BN : constant Simple_Name :=
-                   "." & Purpose & ".tmp";
+                   "." & Purpose & Extension;
          begin
             Dest := For_View.Object_Directory.Compose (BN);
             Data.Temp_Files.Insert (Purpose, Dest.Value, C, Done);

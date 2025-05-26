@@ -112,19 +112,20 @@ package body GPR2.Build.Actions is
    -----------------------------
 
    function Get_Or_Create_Temp_File
-     (Self    : in out Object'Class;
-      Purpose : Filename_Type;
-      Scope   : Temp_File_Scope) return Tree_Db.Temp_File
+     (Self      : in out Object'Class;
+      Purpose   : Filename_Type;
+      Scope     : Temp_File_Scope;
+      Extension : Simple_Name := ".tmp") return Tree_Db.Temp_File
    is
    begin
       if Scope = Global then
          return Self.Tree.Get_Or_Create_Temp_File
-           (Self.View, Purpose);
+           (Self.View, Purpose, Extension);
       else
          declare
             --  ??? Naive implementation as first try
             BN   : constant Filename_Type :=
-                     Self.UID.Db_Filename (True) & "-" & Purpose & ".tmp";
+                     Self.UID.Db_Filename (True) & "-" & Purpose & Extension;
             Dest : constant GPR2.Path_Name.Object :=
                      Self.View.Object_Directory.Compose (BN);
             FD   : GNATCOLL.OS.FS.File_Descriptor;

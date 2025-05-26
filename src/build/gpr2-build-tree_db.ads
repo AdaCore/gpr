@@ -255,9 +255,10 @@ package GPR2.Build.Tree_Db is
    end record;
 
    function Get_Or_Create_Temp_File
-     (Self     : Object;
-      For_View : GPR2.Project.View.Object;
-      Purpose  : Simple_Name) return Temp_File
+     (Self      : Object;
+      For_View  : GPR2.Project.View.Object;
+      Purpose   : Simple_Name;
+      Extension : Simple_Name := ".tmp") return Temp_File
    with Pre => For_View.Kind in With_Object_Dir_Kind;
 
    procedure Clear_Temp_Files (Self : Object);

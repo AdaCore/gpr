@@ -238,9 +238,10 @@ package GPR2.Build.Actions is
    type Temp_File_Scope is (Local, Global);
 
    function Get_Or_Create_Temp_File
-     (Self    : in out Object'Class;
-      Purpose : Filename_Type;
-      Scope   : Temp_File_Scope) return Tree_Db.Temp_File;
+     (Self      : in out Object'Class;
+      Purpose   : Filename_Type;
+      Scope     : Temp_File_Scope;
+      Extension : Simple_Name := ".tmp") return Tree_Db.Temp_File;
    --  Create a temporary file. If the scope is local, it will be automatically
    --  recalled upon termination of the Action, otherwise the cleanup is done
    --  at the end of the DAG execution.
