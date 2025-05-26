@@ -1183,26 +1183,51 @@ package body GPR2.Build.Actions.Link is
 
       if not Syms.Is_Empty then
          declare
-            Tmp : Tree_Db.Temp_File :=
-                    Actions.Get_Or_Create_Temp_File
-                      (Self,
-                       "syms_export",
-                       Local);
+            type Supported_Export_File_Format is (Flat, GNU, DEF);
+
+            File_Format : Supported_Export_File_Format := GNU;
+            Attr        : constant GPR2.Project.Attribute.Object :=
+                            Self.View.Attribute
+                              (PRA.Linker.Export_File_Format);
+            Tmp         : Tree_Db.Temp_File :=
+                            Actions.Get_Or_Create_Temp_File
+                              (Self,
+                               "syms_export",
+                               Local,
+                               ".def");
          begin
-            GNATCOLL.OS.FS.Write
-              (Tmp.FD,
-               "SYMS {" & ASCII.LF &
-                 "   global:" & ASCII.LF);
+            if Attr.Is_Defined then
+               File_Format :=
+                 Supported_Export_File_Format'Value (Attr.Value.Text);
+            end if;
+
+            if File_Format = GNU then
+               GNATCOLL.OS.FS.Write
+                 (Tmp.FD,
+                  "SYMS {" & ASCII.LF &
+                    "   global:" & ASCII.LF);
+            elsif File_Format = DEF then
+               GNATCOLL.OS.FS.Write
+                 (Tmp.FD,
+                  "EXPORTS" & ASCII.LF);
+            end if;
 
             for S of Syms loop
-               GNATCOLL.OS.FS.Write
-                 (Tmp.FD, S & ";" & ASCII.LF);
+               GNATCOLL.OS.FS.Write (Tmp.FD, S);
+
+               if File_Format = GNU then
+                  GNATCOLL.OS.FS.Write (Tmp.FD, ";");
+               end if;
+
+               GNATCOLL.OS.FS.Write (Tmp.FD, "" & ASCII.LF);
             end loop;
 
-            GNATCOLL.OS.FS.Write
-              (Tmp.FD,
-               "   local: *;" & ASCII.LF &
-                 "};" & ASCII.LF);
+            if File_Format = GNU then
+               GNATCOLL.OS.FS.Write
+                 (Tmp.FD,
+                  "   local: *;" & ASCII.LF &
+                    "};" & ASCII.LF);
+            end if;
 
             GNATCOLL.OS.FS.Close (Tmp.FD);
 
