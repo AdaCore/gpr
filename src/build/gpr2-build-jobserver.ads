@@ -1,52 +1,32 @@
 --
---  Copyright (C) 2024, AdaCore
+--  Copyright (C) 2024-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GNATCOLL.OS.FS;
-with GNATCOLL.OS.Process;
-with GNATCOLL.OS.Stat;
-with GNATCOLL.Traces;
+private with Ada.Containers.Indefinite_Holders;
+private with Ada.Containers.Vectors;
+private with Ada.Finalization;
+
+private with GPR2.Build.Jobserver_Protocol;
 
 package GPR2.Build.Jobserver is
 
-   JS_Access_Error     : exception;
-   --  Error exception raised when jobserver's read or write fails
-   JS_Initialize_Error : exception;
-   --  Error exception raised when jobserver's initialization fails
+   pragma Elaborate_Body;
 
-   package GOF renames GNATCOLL.OS.FS;
-   package GOP renames GNATCOLL.OS.Process;
-   package GOS renames GNATCOLL.OS.Stat;
+   type Object is tagged limited private;
 
-   type Object is abstract tagged private;
+   function Is_Available (Self : Object) return Boolean;
+   --  Tell if a make job server is available
 
-   type Jobserver_Method is
-     (JM_Undefined, JM_Named_Pipe, JM_Simple_Pipe, JM_Semaphore);
+   procedure Initialize_Protocol (Self : in out Object);
+   --  Initialize the jobserver protocol
 
-   function Initialize return Object'Class;
-   --  Initialize a Jobserver object, the resulting object contains the proper
-   --  way to interface with the current jobserver. Otherwise a
-   --  Jobserver.No_Method dummy object is returned.
+   function Dry_Run (Self : Object) return Boolean;
+   --  make was called with -n: we shouln't execute anything
 
-   function Register
-     (Self : Object;
-      Char : out Character) return Boolean is abstract;
-   --  Used to properly read into the jobserver file depending on the object
-   --  implementation.
-
-   function Release
-     (Self : Object;
-      Char : Character) return Boolean is abstract;
-   --  Used to properly write into the jobserver file depending on the object
-   --  implementation.
-
-   function Is_Integrous (Self : Object) return Boolean is abstract;
-   --  Used to check if the object implementation is integrous at the moment
-   --  of the call.
-
-   function Preorder_Token (Self : in out Object'Class) return Boolean;
+   function Request_Token (Self : in out Object) return Boolean
+     with Pre => Self.Is_Available;
    --  Read a token from the jobserver :
    --     True  : A token is available, a process can be spawned.
    --     Flase : No available token, no process must be spawned.
@@ -55,109 +35,87 @@ package GPR2.Build.Jobserver is
    --  In the case of actually spawning a process, Register_Token should be
    --  called in order to associate the two.
 
-   function Register_Token
-     (Self : in out Object'Class; Proc_Id : GOP.Process_Handle) return Boolean;
-   --  Associate the current token to the process id.
-   --     True  : The token has properly been registered to the process id.
-   --     False : Register_Token has been called without any token available.
+   procedure Release_Token (Self : in out Object);
+   --  Releases a token that was given by Request_Token.
 
-   function Unregister_Token
-     (Self       : in out Object'Class;
-      Proc_Id    : GOP.Process_Handle := GOP.Invalid_Handle;
-      Identified : Boolean            := True) return Boolean;
-   --  Write the process id associated token back to the jobserver.
-   --  Calling Unregister_Token (Identified => False) allows to write and
-   --  unidentified token back to the jobserver. This can be useful when we
-   --  pre-ordered a token and the process we tried to launch failed for some
-   --  reason.
-
-   procedure Unregister_Tokens (Self : in out Object'Class);
-   --  This is a safeguard, allows to unregister all registered tokens, the
-   --  unidentified token included.
-
-   function Dry_Run (Self : Object) return Boolean;
-   --  Is the jobserver in a "dry_run" mode
-
-   function Active (Self : Object) return Boolean;
-   --  Is the jobserver active, meaning we have a proper implementation of it
-   --  available.
-
-   function Has_Registered_Tokens (Self : Object) return Boolean;
-   --  Do we have registered tokens available
-
-   function Has_Unidentified_Token (Self : Object) return Boolean;
-   --  Do we have an unidentified token available
-
-   procedure Finalize (Self : Object);
-   --  Finalize the token reading task
-
-   function Busy (Self : Object) return Boolean;
-   --  Returns whether or not Self.Busy_Count > Max_Busy_Count
-
-   function Kind (Self : Object) return Jobserver_Method;
-   --  Returns what kind of jobserver is used
+   function Has_Protocol_Error (Self : Object) return Boolean;
+   --  Returns whether or not there is an internal error.
+   --  This could be and error at the initialization or the jobserver or during
+   --  protocol usage.
 
 private
 
-   package GT renames GNATCOLL.Traces;
+   package Protocol_Holder is new Ada.Containers.Indefinite_Holders
+     (Jobserver_Protocol.Object'Class, Jobserver_Protocol."=");
 
-   subtype Valid_Jobserver_Method
-     is Jobserver_Method range JM_Named_Pipe .. JM_Semaphore;
+   package Token_Vector is new Ada.Containers.Vectors
+     (Positive, Character);
 
-   type Process_Handle_Identifier is record
-      Identified     : Boolean;
-      Process_Handle : GOP.Process_Handle;
-   end record;
+   task type Token_Reader (Self : access Object) is
+      pragma Priority (System.Default_Priority + 1);
+   end Token_Reader;
 
-   Unidentified   : constant Process_Handle_Identifier :=
-                      (Identified     => False,
-                       Process_Handle => GOP.Invalid_Handle);
+   type Wake_Up_Reason is
+     (Terminate_Task,
+      Fetch_Token);
 
-   Max_Busy_Count : constant := 20;
+   protected type Token_Holder is
+      entry Wake_Up (Reason : out Wake_Up_Reason);
+      --  Tell the Token_Reader task to go fetch a new token
 
-   function Hash
-     (Key : Process_Handle_Identifier) return Ada.Containers.Hash_Type;
-   function Hash
-     (Key : Process_Handle_Identifier) return Ada.Containers.Hash_Type is
-     (if Key.Identified
-      then Ada.Containers.Hash_Type (Key.Process_Handle)
-      else 0);
+      procedure Ask_Termination;
+      --  Tell the task to terminate
 
-   package Token_Id is new Ada.Containers.Indefinite_Hashed_Maps
-     (Process_Handle_Identifier, Character, Hash, "=");
+      procedure Get
+        (Token     : out Character;
+         Available : out Boolean);
+      --  If a token is available, then Token will be set to its value and
+      --  available will be true, else a request will be done for a new token
+      --  and available with be False.
 
-   type Object is abstract tagged record
-      Self          : access Object := null;
-      --  Self reference in order to initalize the token reading task to
-      --  properly dispatch the jobserver reading implementation.
+      entry Set (Char : Character);
+      --  Used by the Token_Reader to store a newly available token
 
-      Task_Launched : Boolean := False;
+   private
+      Token         : Character := ASCII.NUL;
+      Is_Set        : Boolean := False;
+      Is_Processing : Boolean := False;
+      Has_Event     : Boolean := False;
+      Event         : Wake_Up_Reason;
+   end Token_Holder;
+
+   type Token_Reader_Access is access Token_Reader;
+
+   type Object is new Ada.Finalization.Limited_Controlled with record
+      Self          : access Object;
+      --  Allows easy self-referencing
+
+      Dry_Run       : Boolean := False;
+      --  make was called with the -n switch
+
+      Current_Token : Token_Holder;
+
+      Reader        : Token_Reader_Access;
+      --  The task responsible for waiting for a new token
+
+      Task_Launched : Boolean := False with Atomic;
       --  Is the token reading task launched
 
-      Busy_Count    : Integer := 0;
-      --  Counts the number of time a preorder resulted in False before
-      --  returning True
+      Protocol      : Protocol_Holder.Holder;
 
-      Kind          : Jobserver_Method := JM_Undefined;
-      --  Jobserver kind
-
-      Tokens        : Token_Id.Map     := Token_Id.Empty_Map;
+      Tokens        : Token_Vector.Vector;
       --  Tokens / Process id map
 
-      Traces        : GT.Trace_Handle  := GT.Create ("JOBSERVER");
+      Error         : Boolean := False;
    end record;
 
-   function Dry_Run (Self : Object) return Boolean is (False);
+   overriding procedure Finalize (Self : in out Object);
 
-   function Active (Self : Object) return Boolean is
-     (Self.Kind in Valid_Jobserver_Method);
+   function Dry_Run (Self : Object) return Boolean is (Self.Dry_Run);
 
-   function Has_Registered_Tokens (Self : Object) return Boolean is
-     (not Self.Tokens.Is_Empty);
+   function Is_Available (Self : Object) return Boolean is
+     (not Self.Protocol.Is_Empty and then Self.Protocol.Element.Is_Available);
 
-   function Busy (Self : Object) return Boolean is
-     (Self.Busy_Count > Max_Busy_Count);
-
-   function Kind (Self : Object) return Jobserver_Method is (Self.Kind);
+   function Has_Protocol_Error (Self : Object) return Boolean is (Self.Error);
 
 end GPR2.Build.Jobserver;

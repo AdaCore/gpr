@@ -47,7 +47,7 @@ library project GPR2 extends "gpr2_shared.gpr" is
             "GPR2.Build.Compilation_Unit",
             "GPR2.Build.Compilation_Unit.Maps",
             "GPR2.Build.External_Options",
-            "GPR2.Build.Jobserver.Semaphore",
+            "GPR2.Build.Jobserver_Protocol.Semaphore",
             "GPR2.Build.Options",
             "GPR2.Build.Process_Manager",
             "GPR2.Build.Process_Manager.JSON",
@@ -161,11 +161,11 @@ library project GPR2 extends "gpr2_shared.gpr" is
    package Naming is
       case Target is
          when "Windows_NT" =>
-            for Body ("GPR2.Build.Jobserver.Semaphore") use
-              "gpr2-build-jobserver-semaphore__win.adb";
+            for Body ("GPR2.Build.Jobserver_Protocol.Semaphore") use
+              "gpr2-build-jobserver_protocol-semaphore.adb";
          when "UNIX" =>
-            for Body ("GPR2.Build.Jobserver.Semaphore") use
-              "gpr2-build-jobserver-semaphore.adb";
+            for Body ("GPR2.Build.Jobserver_Protocol.Semaphore") use
+              "gpr2-build-jobserver_protocol-semaphore__dummy.adb";
       end case;
    end Naming;
 

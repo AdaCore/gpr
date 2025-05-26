@@ -16,10 +16,11 @@ package body GPR2.Build.Process_Manager.JSON is
    -----------------
 
    overriding function Collect_Job
-      (Self           : in out Object;
-       Job            : in out Actions.Object'Class;
-       Proc_Handler   : Process_Handler;
-       Stdout, Stderr : Unbounded_String)
+     (Self           : in out Object;
+      Job            : in out Actions.Object'Class;
+      Context        : in out Process_Execution_Context;
+      Proc_Handler   : Process_Handler;
+      Stdout, Stderr : Unbounded_String)
       return Collect_Status
    is
       Job_Summary : constant JSON_Value := Create_Object;
@@ -101,7 +102,7 @@ package body GPR2.Build.Process_Manager.JSON is
       end if;
 
       return GPR2.Build.Process_Manager.Object (Self).Collect_Job
-        (Job, Proc_Handler, Stdout, Stderr);
+        (Job, Context, Proc_Handler, Stdout, Stderr);
    end Collect_Job;
 
      ----------------------------
