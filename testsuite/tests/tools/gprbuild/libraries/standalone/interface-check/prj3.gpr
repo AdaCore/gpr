@@ -1,0 +1,6 @@
+with "imp/imp2.gpr";
+project Prj3 is
+   for Main use ("main2.adb");
+   for Interfaces use ();
+end Prj3;
+

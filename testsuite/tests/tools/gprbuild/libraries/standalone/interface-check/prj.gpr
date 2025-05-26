@@ -1,0 +1,6 @@
+with "imp/imp.gpr";
+project Prj is
+   for Languages use ("C");
+   for Main use ("main.c");
+end Prj;
+

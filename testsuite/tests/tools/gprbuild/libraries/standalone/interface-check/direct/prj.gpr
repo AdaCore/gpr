@@ -1,0 +1,6 @@
+with "imp1/imp1.gpr";
+project Prj is
+   for Languages use ("Ada", "C");
+   for Main use ("main.adb", "main2.adb");
+end Prj;
+

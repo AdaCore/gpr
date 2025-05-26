@@ -1,0 +1,5 @@
+with "imp1/imp1.gpr";
+project Prj2 is
+   for Main use ("main2.adb");
+end Prj2;
+

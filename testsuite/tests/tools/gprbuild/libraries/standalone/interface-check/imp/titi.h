@@ -1,0 +1,2 @@
+extern void titi(void);
+

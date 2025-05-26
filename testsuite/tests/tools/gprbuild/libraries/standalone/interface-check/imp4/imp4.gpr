@@ -1,0 +1,4 @@
+project Imp4 extends "../imp/imp2.gpr" is
+   for Interfaces use ("pkg2.ads");
+end Imp4;
+

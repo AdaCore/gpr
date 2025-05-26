@@ -1,0 +1,6 @@
+with "imp2/imp2.gpr";
+project Imp1 is
+   for Languages use ("Ada", "C");
+   for Interfaces use ("pkg.ads", "tutu.h");
+end Imp1;
+

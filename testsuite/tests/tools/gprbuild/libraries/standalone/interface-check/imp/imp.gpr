@@ -1,0 +1,6 @@
+project Imp is
+   for Languages use ("C");
+
+   for Interfaces use ("toto.h");
+end Imp;
+
