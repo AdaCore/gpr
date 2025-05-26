@@ -1201,17 +1201,13 @@ package body GPR2.Tree_Internal is
       --  Returns True if the Import_Path is a limited with in View
 
       procedure Propagate_Aggregate
-        (View                 : in out GPR2.Project.View.Object;
-         Root                 : GPR2.View_Ids.View_Id;
-         Is_Aggregate_Library : Boolean) with Inline;
+        (View : in out GPR2.Project.View.Object;
+         Root : GPR2.View_Ids.View_Id) with Inline;
       --  Make sure that all views in the subtree of View reference the
-      --  Aggregate Library (if set), or set their namespace root to Root.
+      --  namespace root project "Root".
       --
-      --  In case of Aggregate Libraries, this is needed if several aggregate
-      --  libraries exist in the tree and they reference the same project.
-      --
-      --  This is also needed for both aggregate and aggregate library cases
-      --  if a subproject is withed from several subtrees of the aggregate.
+      --  This is also needed if a subproject is withed from several subtrees
+      --  of the aggregate.
 
       --------------
       -- Internal --
@@ -1350,13 +1346,16 @@ package body GPR2.Tree_Internal is
                   Data.Root_Views :=
                     View_Internal.Get_RO (Parent).Root_Views;
 
-                  Data.Agg_Libraries :=
-                    View_Internal.Get_RO (Parent).Agg_Libraries;
-
                   if Parent.Kind = K_Aggregate_Library
                     and then Status = Aggregated
                   then
-                     Data.Agg_Libraries.Include (Parent.Id);
+                     if not Parent.Is_Aggregated_In_Library then
+                        Data.Agg_Libraries.Include (Parent.Id);
+                     else
+                        for V of Parent.Aggregate_Libraries loop
+                           Data.Agg_Libraries.Include (V.Id);
+                        end loop;
+                     end if;
                   end if;
                end if;
 
@@ -1545,17 +1544,22 @@ package body GPR2.Tree_Internal is
               and then Status = Aggregated
             then
                --  We need to keep track of aggregate libraries
-               --  closure, and namespace root views
-
-               Propagate_Aggregate (View, Parent.Id, True);
+               if not Parent.Is_Aggregated_In_Library then
+                  View_Internal.Get_RW (View).Agg_Libraries.Include
+                    (Parent.Id);
+               else
+                  for V of Parent.Aggregate_Libraries loop
+                     View_Internal.Get_RW (View).Agg_Libraries.Include (V.Id);
+                  end loop;
+               end if;
             end if;
 
             if Parent.Is_Defined and then Parent.Kind /= K_Aggregate then
                for Root of Parent.Namespace_Roots loop
-                  Propagate_Aggregate (View, Root.Id, False);
+                  Propagate_Aggregate (View, Root.Id);
                end loop;
             elsif Status = Aggregated then
-               Propagate_Aggregate (View, View.Id, False);
+               Propagate_Aggregate (View, View.Id);
             end if;
          end if;
 
@@ -1686,9 +1690,8 @@ package body GPR2.Tree_Internal is
       -------------------------
 
       procedure Propagate_Aggregate
-        (View                 : in out GPR2.Project.View.Object;
-         Root                 : GPR2.View_Ids.View_Id;
-         Is_Aggregate_Library : Boolean)
+        (View : in out GPR2.Project.View.Object;
+         Root : GPR2.View_Ids.View_Id)
       is
          Data     : constant GPR2.View_Internal.Ref :=
                       View_Internal.Get_RW (View);
@@ -1696,35 +1699,29 @@ package body GPR2.Tree_Internal is
          Inserted : Boolean := False;
 
       begin
-         if Is_Aggregate_Library then
-            Data.Agg_Libraries.Insert (Root, Position, Inserted);
-         else
-            Data.Root_Views.Insert (Root, Position, Inserted);
-         end if;
+         Data.Root_Views.Insert (Root, Position, Inserted);
 
          if not Inserted then
+            --  Already a known namespace root project
             return;
          end if;
 
          if Data.Extended_Root.Is_Defined then
-            Propagate_Aggregate
-              (Data.Extended_Root, Root, Is_Aggregate_Library);
+            Propagate_Aggregate (Data.Extended_Root, Root);
          end if;
 
          for Import of Data.Imports loop
-            Propagate_Aggregate (Import, Root, Is_Aggregate_Library);
+            Propagate_Aggregate (Import, Root);
          end loop;
 
          for Import of Data.Limited_Imports loop
-            Propagate_Aggregate (Import, Root, Is_Aggregate_Library);
+            Propagate_Aggregate (Import, Root);
          end loop;
 
-         if not Is_Aggregate_Library
-           and then Data.Kind = K_Aggregate_Library
-         then
+         if Data.Kind = K_Aggregate_Library then
             --  Propagate the namespace root
             for Agg of Data.Aggregated loop
-               Propagate_Aggregate (Agg, Root, False);
+               Propagate_Aggregate (Agg, Root);
             end loop;
          end if;
       end Propagate_Aggregate;
