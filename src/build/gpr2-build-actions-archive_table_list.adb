@@ -109,13 +109,9 @@ package body GPR2.Build.Actions.Archive_Table_List is
 
          begin
             if Object_To_Extract'Length > 3
-              and then (Object_To_Extract
+              and then Object_To_Extract
                          (Object_To_Extract'First
-                          .. Object_To_Extract'First + 2)
-                       = "b__" or else
-                         Object_To_Extract
-                         (Object_To_Extract'First
-                          .. Object_To_Extract'First + 2) = "p__")
+                          .. Object_To_Extract'First + 2) = "o__"
             then
                Archive_Extract.Initialize
                  (Self.Archive, Simple_Name (Object_To_Extract), Self.Ctxt);

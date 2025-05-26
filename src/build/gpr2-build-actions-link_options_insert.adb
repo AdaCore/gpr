@@ -36,8 +36,10 @@ package body GPR2.Build.Actions.Link_Options_Insert is
       Signature_Only : Boolean)
    is
       pragma Unreferenced (Slot);
+      GPR_Section  : constant String := ".GPR.linker_options";
+      Options_File : Path_Name.Object;
    begin
-      if not Signature_Only and then not Self.Options_File.Is_Defined then
+      if not Signature_Only then
          declare
             File                      : constant Tree_Db.Temp_File :=
               Self.Get_Or_Create_Temp_File ("linker_options", Local);
@@ -57,7 +59,7 @@ package body GPR2.Build.Actions.Link_Options_Insert is
                raise Action_Error;
             end if;
 
-            Self.Options_File := GPR2.Path_Name.Create_File (File.Path);
+            Options_File := GPR2.Path_Name.Create_File (File.Path);
 
             for Option of Self.Options loop
                Write (File.FD, Option);
@@ -75,11 +77,13 @@ package body GPR2.Build.Actions.Link_Options_Insert is
       end if;
 
       Cmd_Line.Set_Driver ("objcopy");
+      Cmd_Line.Add_Argument ("-j");
+      Cmd_Line.Add_Argument (GPR_Section);
       Cmd_Line.Add_Argument ("--add-section");
 
       if not Signature_Only then
          Cmd_Line.Add_Argument
-         (".GPR.linker_options=" & String (Self.Options_File.Simple_Name),
+           (GPR_Section & "=" & String (Options_File.Simple_Name),
             GPR2.Build.Command_Line.Ignore);
       end if;
 
@@ -100,6 +104,15 @@ package body GPR2.Build.Actions.Link_Options_Insert is
          return;
       end if;
 
+      for Opt of Self.Options loop
+         if not Self.Signature.Add_Input
+           (Artifacts.Key_Value.Create ("linker-option", Opt))
+           and then Load_Mode
+         then
+            return;
+         end if;
+      end loop;
+
       if not Self.Signature.Add_Output (Self.Output_Object_File)
         and then Load_Mode
       then
@@ -115,15 +128,14 @@ package body GPR2.Build.Actions.Link_Options_Insert is
      (Self        : in out Object;
       Object_File : Artifacts.Object_File.Object;
       Options     : Containers.Value_List := Containers.Empty_Value_List;
-      View        : GPR2.Project.View.Object) is
+      View        : GPR2.Project.View.Object)
+   is
    begin
       Self.Input_Object_File := Object_File;
       Self.Output_Object_File :=
         Artifacts.Object_File.Create
-          (Filename_Type (Object_File.Path.Dir_Name)
-           & Filename_Type (Object_File.Path.Base_Name)
-           & "-with-linker-options"
-           & Object_File.Path.Extension);
+          (View.Object_Directory.Compose
+             ("o__" & View.Library_Name & Object_File.Path.Extension));
       Self.Options := Options;
       Self.Ctxt := View;
    end Initialize;
@@ -180,7 +192,8 @@ package body GPR2.Build.Actions.Link_Options_Insert is
 
    overriding
    function UID (Self : Object) return Actions.Action_Id'Class is
-      BN     : constant Simple_Name := Self.Input_Object_File.Path.Simple_Name;
+      BN     : constant Simple_Name :=
+                 Self.Output_Object_File.Path.Simple_Name;
       Result : constant Link_Options_Insert_Id :=
         (Name_Len => BN'Length, View => Self.Ctxt, Object_File => BN);
    begin

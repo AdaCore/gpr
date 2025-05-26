@@ -2,14 +2,14 @@ regular run:
 $ gprbuild -Pprj -p -j1
 "obj/prj" created
 [Ada Compile]     pkg.ads
-$ gpr2clean -Pprj
+$ gprclean -Pprj
 
 read only obj dir:
 $ chmod 0x555 obj/prj
 $ gprbuild -Pprj -p -j1
 Problem accessing the object directory for project "Prj"
 Command '[Ada Compile] pkg.ads (prj.gpr)' failed.
-$ gpr2clean -Pprj -v
+$ gprclean -Pprj -v
 
 read only obj dir with built project
 $ chmod 0x777 obj/prj
@@ -22,23 +22,23 @@ $ gprbuild -Plib -XPRJ_RO=True -p -j1
 [Ada Compile]     pkg2.ads
 [Ada Bind]        lib
 [Ada Post-Bind]   b__lib.adb
+[Add-Link-Options] o__lib.o
 [Partial Link]    p__lib.o
-[Link-Options-Insert] p__lib.o
 [Archive]         liblib.a
 - with regular dependency
 $ gprbuild -Plib -XPRJ_RO=False -p -j1
 $ chmod 0x777 obj/prj
 
 read only lib dir
-$ gpr2clean -Plib -r -q
+$ gprclean -Plib -r -q
 $ chmod 0x555 lib/lib
 $ gprbuild -Plib -j1
 [Ada Compile]     pkg2.ads
 [Ada Compile]     pkg.ads
 [Ada Bind]        lib
 [Ada Post-Bind]   b__lib.adb
+[Add-Link-Options] o__lib.o
 [Partial Link]    p__lib.o
-[Link-Options-Insert] p__lib.o
 lib.gpr: error: could not copy ali file pkg2.ali to the library directory
 Command '[Archive] liblib.a (lib.gpr)' failed.
 $ chmod 0x777 lib/lib
@@ -49,7 +49,7 @@ $ gprbuild -Plib -f -j1
 [Ada Compile]     pkg.ads
 [Ada Bind]        lib
 [Ada Post-Bind]   b__lib.adb
+[Add-Link-Options] o__lib.o
 [Partial Link]    p__lib.o
-[Link-Options-Insert] p__lib.o
 lib.gpr: error: cannot remove the old archive liblib.a
 Command '[Archive] liblib.a (lib.gpr)' failed.

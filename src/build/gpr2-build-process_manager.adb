@@ -338,6 +338,7 @@ package body GPR2.Build.Process_Manager is
 
       Script_FD        : GNATCOLL.OS.FS.File_Descriptor := Null_FD;
       Script_Dir       : Path_Name.Object;
+      Do_Collect       : Boolean;
 
    begin
       Self.Tree_Db      := Tree_Db;
@@ -365,6 +366,8 @@ package body GPR2.Build.Process_Manager is
       loop
          --  Launch as many process as possible
          while Active_Jobs < Max_Jobs and then not End_Of_Iteration loop
+            Do_Collect := False;
+
             begin
                if not (Proc_Handler_L.Status = Pending) then
                   End_Of_Iteration := not Context.Graph.Next (Node);
@@ -499,31 +502,12 @@ package body GPR2.Build.Process_Manager is
                      Act.Cleanup_Temp_Files (Scope => Actions.Local);
                   end if;
 
-                  Job_Status :=
-                    Collect_Job
-                      (Object'Class (Self),
-                       Job          => Act,
-                       Proc_Handler => Proc_Handler_L,
-                       Stdout       => Act.Saved_Stdout,
-                       Stderr       =>
-                         (if Proc_Handler_L.Status = Failed_To_Launch
-                          then Proc_Handler_L.Error_Message
-                          else Act.Saved_Stderr));
+                  --  Since the job hasn't run we need to call Collect_Job on
+                  --  it. However we cannot do it in this context since we
+                  --  hold a reference on the action, so any modification to
+                  --  the DAG may raise a tampering error.
 
-                  if Job_Status = Abort_Execution then
-                     if Proc_Handler_L.Status in Skipped | Deactivated then
-                        if Context.Status /= Failed then
-                           Context.Status := Errors;
-                        end if;
-                     else
-                        Context.Status := Failed;
-                     end if;
-
-                     if Options.Stop_On_Fail then
-                        End_Of_Iteration := True;
-                        exit;
-                     end if;
-                  end if;
+                  Do_Collect := True;
                end if;
 
             exception
@@ -544,6 +528,43 @@ package body GPR2.Build.Process_Manager is
                      To_Stderr => True);
                   pragma Annotate (Xcov, Exempt_Off);
             end;
+
+            if Do_Collect then
+               declare
+                  UID : constant Actions.Action_Id'Class :=
+                          Context.Actions (Node);
+                  Act : Actions.Object'Class :=
+                          Self.Tree_Db.Action (UID);
+               begin
+                  Job_Status :=
+                    Collect_Job
+                      (Object'Class (Self),
+                       Job          => Act,
+                       Proc_Handler => Proc_Handler_L,
+                       Stdout       => Act.Saved_Stdout,
+                       Stderr       =>
+                         (if Proc_Handler_L.Status = Failed_To_Launch
+                          then Proc_Handler_L.Error_Message
+                          else Act.Saved_Stderr));
+
+                  Self.Tree_Db.Action_Id_To_Reference (UID) := Act;
+               end;
+
+               if Job_Status = Abort_Execution then
+                  if Proc_Handler_L.Status in Skipped | Deactivated then
+                     if Context.Status /= Failed then
+                        Context.Status := Errors;
+                     end if;
+                  else
+                     Context.Status := Failed;
+                  end if;
+
+                  if Options.Stop_On_Fail then
+                     End_Of_Iteration := True;
+                     exit;
+                  end if;
+               end if;
+            end if;
          end loop;
 
          --  Defensive code : If we leave the process launching loop with an
