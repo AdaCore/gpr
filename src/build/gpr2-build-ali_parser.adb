@@ -354,7 +354,7 @@ package body GPR2.Build.ALI_Parser is
                when 'D' =>
                   Parse_Dep (Reader);
 
-               when 'W' =>
+               when 'W' | 'Y' =>
                   Parse_With (Reader);
 
                when 'X' =>
@@ -453,7 +453,7 @@ package body GPR2.Build.ALI_Parser is
                exit;
                --  ??? Add other cases that are after the withed units
 
-               when 'W' =>
+               when 'W' | 'Y' =>
                Parse_With (Reader);
 
             when others =>
