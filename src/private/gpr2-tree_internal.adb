@@ -2712,6 +2712,13 @@ package body GPR2.Tree_Internal is
                      --  Ignore the checks here
                      null;
 
+                  elsif View.Kind = K_Aggregate_Library
+                    and then View.Aggregated.Contains (Imported)
+                  then
+                     --  Kill any warning or error here: aggregated projects
+                     --  will comply to the aggregating project.
+                     null;
+
                   elsif Imported.Is_Abstract then
                      --  Need to check the importes of the abstract project
                      To_Check.Union (Imported.Imports);
