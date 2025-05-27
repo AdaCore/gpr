@@ -333,13 +333,13 @@ package Builder of the main project:
 
       .
       ├── obj
-      │   └── [compilation artifacts (.ali, .o, .stderr, .stdout, .lexch)]
+      │   └── [compilation artifacts]
       ├── ops_lib
       │   ├── lib
       │   │   ├── libopslib.so
       │   │   └── ops.ali
       │   ├── obj
-      │   │   └── [compilation artifacts (.ali, .o, .stderr, .stdout, .lexch)]
+      │   │   └── [compilation artifacts]
       │   ├── ops_lib.gpr
       │   └── src
       │       ├── ops.adb
@@ -370,13 +370,13 @@ package Builder of the main project:
       │   └── main.adb
       └── build
           ├── obj
-          │   └── [compilation artifacts (.ali, .o, .stderr, .stdout, .lexch)]
+          │   └── [compilation artifacts]
           └── ops_lib
               ├── lib
               │   ├── libopslib.so
               │   └── ops.ali
               └── obj
-                  └── [compilation artifacts (.ali, .o, .stderr, .stdout, .lexch)]
+                  └── [compilation artifacts]
 
 
 
@@ -462,11 +462,11 @@ package Builder of the main project:
           │   │   ├── libopslib.so
           │   │   └── ops.ali
           │   └── obj
-          │       └── [compilation artifacts (.ali, .o, .stderr, .stdout, .lexch)]
+          │       └── [compilation artifacts]
           └── prj
               └── subdir
                   └── obj
-                      └── [compilation artifacts (.ali, .o, .stderr, .stdout, .lexch)]
+                      └── [compilation artifacts]
 
 
 
