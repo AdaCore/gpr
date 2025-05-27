@@ -16,6 +16,7 @@ with Ada.Unchecked_Deallocation;
 
 with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
 with GNATCOLL.Directed_Graph; use GNATCOLL.Directed_Graph;
+with GNATCOLL.Traces;
 
 with GPR2.Build.Actions; use GPR2.Build.Actions;
 with GPR2.Build.Actions.Link;
@@ -38,6 +39,11 @@ package body GPR2.Build.Process_Manager is
      (Command    : Argument_List;
       For_Script : Boolean := False) return String;
    --  Return the representation of the command
+
+   Traces : constant GNATCOLL.Traces.Logger :=
+              GNATCOLL.Traces.Create
+                ("GPR.PROCESS_MANAGER",
+                 GNATCOLL.Traces.Off);
 
    --------------
    -- Listener --
@@ -94,6 +100,7 @@ package body GPR2.Build.Process_Manager is
    function Collect_Job
      (Self           : in out Object;
       Job            : in out Actions.Object'Class;
+      Context        : in out Process_Execution_Context;
       Proc_Handler   : Process_Handler;
       Stdout, Stderr : Unbounded_String)
       return Collect_Status
@@ -101,9 +108,16 @@ package body GPR2.Build.Process_Manager is
       Failed_Status : Boolean;
    begin
       pragma Assert
-        (Proc_Handler.Status /= Running,
+        (Proc_Handler.Status not in Running | Pending,
          "The process linked to the action '" & Job.UID.Image &
-           "' is still running. Cannot collect the job before it finishes");
+           "' is still running or pending. Cannot collect the job before it" &
+           " finishes");
+
+      if Proc_Handler.Status not in Skipped | Deactivated
+        and then Context.Make_JS.Is_Available
+      then
+         Context.Make_JS.Release_Token;
+      end if;
 
       if Length (Stdout) > 0 and then Job.Display_Output then
          Self.Tree_Db.Reporter.Report
@@ -120,8 +134,8 @@ package body GPR2.Build.Process_Manager is
             return Abort_Execution;
 
          when Finished =>
-            if Self.Traces.Is_Active then
-               Self.Traces.Trace
+            if Traces.Is_Active then
+               Traces.Trace
                  ("Job '" & Job.UID.Image & "' returned. Status:" &
                     Proc_Handler.Process_Status'Img);
             end if;
@@ -226,10 +240,6 @@ package body GPR2.Build.Process_Manager is
       Max_Jobs        : constant Natural :=
                           Effective_Job_Number (Options.Jobs);
       --  Effective max number of silmutaneous jobs
-
-      JS              : Build.Jobserver.Object'Class :=
-                          Build.Jobserver.Initialize;
-      --  The potential jobserver to get token on
 
       Active_Procs    : GOP.Process_Array (1 .. Max_Jobs) :=
                           (others => GOP.Invalid_Handle);
@@ -361,6 +371,20 @@ package body GPR2.Build.Process_Manager is
          end if;
       end if;
 
+      Context.Make_JS.Initialize_Protocol;
+
+      if Context.Make_JS.Dry_Run then
+         return;
+      end if;
+
+      if Options.Force_Jobserver and then Context.Make_JS.Has_Protocol_Error
+      then
+         Tree_Db.Reporter.Report
+           ("error: jobserver fifo protocol not supported, please use "
+            & "--jobserver-style=pipe on your make command");
+         return;
+      end if;
+
       Context.Graph.Start_Iterator (Enable_Visiting_State => True);
 
       loop
@@ -378,8 +402,8 @@ package body GPR2.Build.Process_Manager is
                   Tree_Db.Reporter.Report
                     ("error: internal error in the process manager (" &
                        Ada.Exceptions.Exception_Message (E) & ")");
-                  Self.Traces.Trace ("!!! Internal error in the DAG");
-                  Self.Traces.Trace
+                  Traces.Trace ("!!! Internal error in the DAG");
+                  Traces.Trace
                     (Ada.Exceptions.Exception_Information (E));
                   End_Of_Iteration := True;
                   pragma Annotate (Xcov, Exempt_Off);
@@ -403,8 +427,8 @@ package body GPR2.Build.Process_Manager is
                end loop;
 
                Self.Launch_Job
-                 (JS, Act, Available_Slot, Options.Force, Proc_Handler_L,
-                  P_Stdout, P_Stderr);
+                 (Act, Available_Slot, Options.Force, Context.all,
+                  Proc_Handler_L, P_Stdout, P_Stderr);
 
                if Proc_Handler_L.Status /= Pending then
                   Self.Stats.Total_Jobs := Self.Stats.Total_Jobs + 1;
@@ -448,15 +472,6 @@ package body GPR2.Build.Process_Manager is
                           ASCII.LF);
                   end if;
 
-                  --  If we have a Jobserver, associate the pre-ordered token
-                  --  to the process id.
-                  if JS.Active
-                    and then not JS.Register_Token (Proc_Handler_L.Handle)
-                  then
-                     Tree_Db.Reporter.Report
-                       ("error: could not register identified token");
-                  end if;
-
                   Active_Jobs := Active_Jobs + 1;
                   Active_Procs (Active_Jobs) := Proc_Handler_L.Handle;
                   States (Active_Jobs).Node  := Node;
@@ -469,18 +484,14 @@ package body GPR2.Build.Process_Manager is
                   end if;
 
                elsif Proc_Handler_L.Status = Pending then
-                  --  We asked for a token but did not have a positive response
-                  --  and we internally have an active job, try to wait for it
-                  --  to end to free a token.
-                  exit when
-                    (JS.Active and then JS.Busy) and then Active_Jobs > 0;
+                  exit when Active_Jobs > 0;
 
                else
                   Executed := Executed + 1;
 
                   if Proc_Handler_L.Status = Finished then
                      pragma Annotate (Xcov, Exempt_On, "Defensive code");
-                     Self.Traces.Trace
+                     Traces.Trace
                        ("Error: Process handler status shall not be " &
                           "'Finished' at this stage");
                      raise Process_Manager_Error with
@@ -540,6 +551,7 @@ package body GPR2.Build.Process_Manager is
                     Collect_Job
                       (Object'Class (Self),
                        Job          => Act,
+                       Context      => Context.all,
                        Proc_Handler => Proc_Handler_L,
                        Stdout       => Act.Saved_Stdout,
                        Stderr       =>
@@ -567,18 +579,6 @@ package body GPR2.Build.Process_Manager is
             end if;
          end loop;
 
-         --  Defensive code : If we leave the process launching loop with an
-         --  unidentified token, release it. This should be reachable only if a
-         --  process was spawned but with a non-running status, in this case
-         --  the process manager will stop and we have to release the token to
-         --  the jobserver.
-         if JS.Active and then JS.Has_Unidentified_Token then
-            if not JS.Unregister_Token (Identified => False) then
-               Self.Traces.Trace
-                 ("error: could not unregister unidentifier token");
-            end if;
-         end if;
-
          --  Exit when no active jobs
 
          exit when Active_Jobs = 0;
@@ -590,16 +590,9 @@ package body GPR2.Build.Process_Manager is
            (Active_Procs (1 .. Active_Jobs), Timeout => 3600.0);
 
          if Proc_Id > 0 then
-            --  The process stopped, release the associated token
-            if JS.Active
-              and then not JS.Unregister_Token (Active_Procs (Proc_Id))
-            then
-               Tree_Db.Reporter.Report
-                 ("error: could not unregister jobserver token");
-            end if;
-
             --  A process has finished. Call wait to finalize it and get
             --  the final process status.
+
             Proc_Handler_T :=
               (Status         => Finished,
                Process_Status => GOP.Wait (Active_Procs (Proc_Id)));
@@ -621,6 +614,7 @@ package body GPR2.Build.Process_Manager is
                Job_Status := Collect_Job
                  (Object'Class (Self),
                   Job          => Act,
+                  Context      => Context.all,
                   Proc_Handler => Proc_Handler_T,
                   Stdout       => Stdout,
                   Stderr       => Stderr);
@@ -677,20 +671,6 @@ package body GPR2.Build.Process_Manager is
 
          exit when End_Of_Iteration and then Active_Jobs = 0;
       end loop;
-
-      --  End of the process manager execution
-      if JS.Active then
-         --  Defensive code : We reached the end of the process manager
-         --  execution and we still have registered token, release them in
-         --  order to not block any other processes.
-         if JS.Has_Registered_Tokens then
-            Self.Traces.Trace
-              ("error: Unregister remaining tokens");
-            JS.Unregister_Tokens;
-         end if;
-         --  Finalize the jobserver token reading task
-         JS.Finalize;
-      end if;
 
       --  Close the script file if needed
       if Script_FD /= Null_FD then
@@ -754,10 +734,10 @@ package body GPR2.Build.Process_Manager is
 
    procedure Launch_Job
      (Self           : in out Object;
-      JS             : in out Build.Jobserver.Object'Class;
       Job            : in out Actions.Object'Class;
       Slot_Id        :        Positive;
       Force          :        Boolean;
+      Context        : in out Process_Execution_Context;
       Proc_Handler   : in out Process_Handler;
       Capture_Stdout :    out File_Descriptor;
       Capture_Stderr :    out File_Descriptor)
@@ -814,9 +794,9 @@ package body GPR2.Build.Process_Manager is
    begin
       if Proc_Handler.Status /= Pending then
          if Job.View.Is_Externally_Built then
-            if Self.Traces.Is_Active then
+            if Traces.Is_Active then
                pragma Annotate (Xcov, Exempt_On, "debug code");
-               Self.Traces.Trace
+               Traces.Trace
                  ("job externally built: " & Job.UID.Image);
                pragma Annotate (Xcov, Exempt_Off);
             end if;
@@ -837,9 +817,9 @@ package body GPR2.Build.Process_Manager is
                --  action has all its output correct (so that we can unblock
                --  depending non-deactivated actions).
 
-               if Self.Traces.Is_Active then
+               if Traces.Is_Active then
                   pragma Annotate (Xcov, Exempt_On, "debug code");
-                  Self.Traces.Trace
+                  Traces.Trace
                     ("job is deactivated: " & Job.UID.Image);
                   pragma Annotate (Xcov, Exempt_Off);
                end if;
@@ -849,9 +829,9 @@ package body GPR2.Build.Process_Manager is
                return;
 
             elsif Job.Skip then
-               if Self.Traces.Is_Active then
+               if Traces.Is_Active then
                   pragma Annotate (Xcov, Exempt_On, "debug code");
-                  Self.Traces.Trace
+                  Traces.Trace
                     ("job asked to be skipped: " & Job.UID.Image);
                   pragma Annotate (Xcov, Exempt_Off);
                end if;
@@ -862,9 +842,9 @@ package body GPR2.Build.Process_Manager is
             end if;
 
             if not Force and then Job.Valid_Signature then
-               if Self.Traces.Is_Active then
+               if Traces.Is_Active then
                   pragma Annotate (Xcov, Exempt_On, "debug code");
-                  Self.Traces.Trace
+                  Traces.Trace
                     ("Signature is valid, do not execute the job '" &
                        Job.UID.Image & "'");
                   pragma Annotate (Xcov, Exempt_Off);
@@ -878,9 +858,9 @@ package body GPR2.Build.Process_Manager is
             Job.Update_Command_Line (Slot_Id);
 
             if Job.Command_Line.Argument_List.Is_Empty then
-               if Self.Traces.Is_Active then
+               if Traces.Is_Active then
                   pragma Annotate (Xcov, Exempt_On, "debug code");
-                  Self.Traces.Trace
+                  Traces.Trace
                     ("job arguments is empty, skipping '"  & Job.UID.Image &
                        "'");
                   pragma Annotate (Xcov, Exempt_Off);
@@ -921,7 +901,9 @@ package body GPR2.Build.Process_Manager is
          end;
       end if;
 
-      if not JS.Active or else JS.Preorder_Token then
+      if not Context.Make_JS.Is_Available
+        or else Context.Make_JS.Request_Token
+      then
          FS.Open_Pipe (P_Ro, P_Wo);
          FS.Open_Pipe (P_Re, P_We);
 

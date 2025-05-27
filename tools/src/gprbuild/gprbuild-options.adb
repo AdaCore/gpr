@@ -576,9 +576,12 @@ package body GPRbuild.Options is
          Result.PM_Options.Keep_Temp_Files := True;
 
       elsif Arg = "--autodetect-jobserver" then
-         --  ??? : Emit a warning to inform the user this switch is no longer
-         --  mandatory to detect and connect to a jobserver ?
-         null;
+         --  This is now the default mode of gprbuild. This switch is not used
+         --  per se, but an error will be emitted if the jobserver style is
+         --  "named_pipe" (or "--jobserver-style=fifo" used) when this option
+         --  is on the command line. Otherwise we can fallback to the normal
+         --  gprbuild mode (spawn as many process as the -jX option allows)
+         Result.PM_Options.Force_Jobserver := True;
 
       elsif Arg = "-nostdinc" then
          Add_Ada_Compiler_Option (String (Arg));

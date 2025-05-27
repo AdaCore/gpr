@@ -1,27 +1,23 @@
 with Ada.Exceptions;
 with Ada.Text_IO; use Ada.Text_IO;
 
+with GNATCOLL.Traces;
+
 with GPR2.Build.Jobserver; use GPR2;
 
 function Main return Integer is
    package BJ renames Build.Jobserver;
-
-   JS : BJ.Object'Class := BJ.Initialize;
-
-   Char : Character;
 begin
-   Put_Line ("[ " & JS.Kind'Img & " ]");
-   Put_Line ("   - Dry_Run    : " & JS.Dry_Run'Img);
-   Put_Line ("   - Active     : " & JS.Active'Img);
+   GNATCOLL.Traces.Parse_Config_File;
 
-   case JS.Kind is
-      when BJ.JM_Undefined =>
-         Put_Line ("   - Register   : " & JS.Register (Char)'Img);
-         Put_Line ("   - Release    : " & JS.Release (Char)'Img);
-         Put_Line ("   - Integrous  : " & JS.Is_Integrous'Img);
-      when others =>
-         null;
-   end case;
+   declare
+      JS : BJ.Object;
+   begin
+      JS.Initialize_Protocol;
+      Put_Line ("   - Dry_Run    : " & JS.Dry_Run'Img);
+      Put_Line ("   - Active     : " & JS.Is_Available'Img);
+      Put_Line ("   - Error      : " & JS.Has_Protocol_Error'Img);
+   end;
 
    return 0;
 exception

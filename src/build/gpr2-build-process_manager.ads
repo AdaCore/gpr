@@ -16,8 +16,6 @@ with GPR2.Build.Jobserver;
 limited with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
 
-private with GNATCOLL.Traces;
-
 package GPR2.Build.Process_Manager is
 
    Process_Manager_Error : exception;
@@ -44,6 +42,10 @@ package GPR2.Build.Process_Manager is
       Show_Progress   : Boolean := False;
       --  Displays extra information on the number of executed action and
       --  the total number of actions.
+
+      Force_Jobserver : Boolean := False;
+      --  When set, if we don't have a jobserver protocol defined, stop the
+      --  process manager.
    end record;
 
    type Collect_Status is
@@ -95,6 +97,9 @@ package GPR2.Build.Process_Manager is
       Graph   : GNATCOLL.Directed_Graph.Directed_Graph;
       Actions : Node_Action_Maps.Map;
       Nodes   : Action_Node_Maps.Map;
+      Make_JS : GPR2.Build.Jobserver.Object;
+      --  When used from make, the make job server to limit our number of
+      --  simultaneous processes to what make accepts.
       Status  : Execution_Status := Success;
    end record;
 
@@ -103,16 +108,17 @@ package GPR2.Build.Process_Manager is
    function Collect_Job
      (Self           : in out Object;
       Job            : in out Actions.Object'Class;
+      Context        : in out Process_Execution_Context;
       Proc_Handler   : Process_Handler;
       Stdout, Stderr : Unbounded_String)
       return Collect_Status;
 
    procedure Launch_Job
      (Self           : in out Object;
-      JS             : in out Build.Jobserver.Object'Class;
       Job            : in out Actions.Object'Class;
       Slot_Id        :        Positive;
       Force          :        Boolean;
+      Context        : in out Process_Execution_Context;
       Proc_Handler   : in out Process_Handler;
       Capture_Stdout :    out File_Descriptor;
       Capture_Stderr :    out File_Descriptor);
@@ -160,9 +166,6 @@ private
    type Object is tagged limited record
       Stats   : Process_Manager_Stats := Empty_Stats;
       Tree_Db : access GPR2.Build.Tree_Db.Object;
-      Traces  : GNATCOLL.Traces.Trace_Handle :=
-                  GNATCOLL.Traces.Create ("PROCESS_MANAGER",
-                                          GNATCOLL.Traces.Off);
    end record;
 
 end GPR2.Build.Process_Manager;

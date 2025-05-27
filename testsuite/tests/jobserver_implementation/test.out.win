@@ -1,78 +1,91 @@
 Testcase - Makeflags = "--jobserver-auth=-1,2"
-
-raised GPR2.BUILD.JOBSERVER.JS_INITIALIZE_ERROR : Invalid file descriptor to perform a connection to the jobserver. Make sure you prefixed your gprbuild command with a "+" in your makefile.
+[GPR.BUILD.JOBSERVER] Makeflags : "--jobserver-auth=-1,2"
+[GPR.BUILD.JOBSERVER.PROTOCOL.PIPE] invalid FDs received-1 2
+   - Dry_Run    : FALSE
+   - Active     : FALSE
+   - Error      : FALSE
 
 Testcase - Makeflags = "--jobserver-auth=1,-2"
-
-raised GPR2.BUILD.JOBSERVER.JS_INITIALIZE_ERROR : Invalid file descriptor to perform a connection to the jobserver. Make sure you prefixed your gprbuild command with a "+" in your makefile.
+[GPR.BUILD.JOBSERVER] Makeflags : "--jobserver-auth=1,-2"
+[GPR.BUILD.JOBSERVER.PROTOCOL.PIPE] invalid FDs received 1-2
+   - Dry_Run    : FALSE
+   - Active     : FALSE
+   - Error      : FALSE
 
 Testcase - Makeflags = "--jobserver-auth=-1,-2"
-
-raised GPR2.BUILD.JOBSERVER.JS_INITIALIZE_ERROR : Invalid file descriptor to perform a connection to the jobserver. Make sure you prefixed your gprbuild command with a "+" in your makefile.
+[GPR.BUILD.JOBSERVER] Makeflags : "--jobserver-auth=-1,-2"
+[GPR.BUILD.JOBSERVER.PROTOCOL.PIPE] invalid FDs received-1-2
+   - Dry_Run    : FALSE
+   - Active     : FALSE
+   - Error      : FALSE
 
 Testcase - Makeflags = "--jobserver-auth=fifo:prj.gpr"
-[ JM_NAMED_PIPE ]
+[GPR.BUILD.JOBSERVER] Makeflags : "--jobserver-auth=fifo:prj.gpr"
    - Dry_Run    : FALSE
-   - Active     : TRUE
+   - Active     : FALSE
+   - Error      : TRUE
 
 Testcase - Makeflags = "--jobserver-auth=fifo:prj.gpr "
-[ JM_NAMED_PIPE ]
+[GPR.BUILD.JOBSERVER] Makeflags : "--jobserver-auth=fifo:prj.gpr "
    - Dry_Run    : FALSE
-   - Active     : TRUE
+   - Active     : FALSE
+   - Error      : TRUE
 
 Testcase - Makeflags = "--jobserver-auth=fifo:unknown"
-
-raised GPR2.BUILD.JOBSERVER.JS_INITIALIZE_ERROR : Invalid named pipe descriptor to perform a connection to the jobserver. Make sure you prefixed your gprbuild command with a "+" in your makefile.
+[GPR.BUILD.JOBSERVER] Makeflags : "--jobserver-auth=fifo:unknown"
+   - Dry_Run    : FALSE
+   - Active     : FALSE
+   - Error      : TRUE
 
 Testcase - Makeflags = "--jobserver-auth=bla"
-[ JM_SEMAPHORE ]
+[GPR.BUILD.JOBSERVER] Makeflags : "--jobserver-auth=bla"
+[GPR.BUILD.JOBSERVER.PROTOCOL.SEMAPHORE] opening a semaphore protocol for bla
    - Dry_Run    : FALSE
-   - Active     : TRUE
+   - Active     : FALSE
+   - Error      : FALSE
 
 Testcase - Makeflags = "--jobserver-auth=bla "
-[ JM_SEMAPHORE ]
+[GPR.BUILD.JOBSERVER] Makeflags : "--jobserver-auth=bla "
+[GPR.BUILD.JOBSERVER.PROTOCOL.SEMAPHORE] opening a semaphore protocol for bla 
    - Dry_Run    : FALSE
-   - Active     : TRUE
+   - Active     : FALSE
+   - Error      : FALSE
 
 Testcase - Makeflags = "n --jobserver-auth=1,2"
-[ JM_UNDEFINED ]
+[GPR.BUILD.JOBSERVER] Makeflags : "n --jobserver-auth=1,2"
    - Dry_Run    : TRUE
    - Active     : FALSE
-   - Register   : FALSE
-   - Release    : FALSE
-   - Integrous  : TRUE
+   - Error      : FALSE
 
 Testcase - Makeflags = UNSET
-[ JM_UNDEFINED ]
+[GPR.BUILD.JOBSERVER] Makeflags : ""
    - Dry_Run    : FALSE
    - Active     : FALSE
-   - Register   : FALSE
-   - Release    : FALSE
-   - Integrous  : TRUE
+   - Error      : FALSE
 
 Testcase - Makeflags = ""
-[ JM_UNDEFINED ]
+[GPR.BUILD.JOBSERVER] Makeflags : ""
    - Dry_Run    : FALSE
    - Active     : FALSE
-   - Register   : FALSE
-   - Release    : FALSE
-   - Integrous  : TRUE
+   - Error      : FALSE
 
 Testcase - Makeflags = "--foo-bar=1,2"
-[ JM_UNDEFINED ]
+[GPR.BUILD.JOBSERVER] Makeflags : "--foo-bar=1,2"
+[GPR.BUILD.JOBSERVER] MAKEFLAGS doesn't have --jobserver-auth= in "--foo-bar=1,2"
    - Dry_Run    : FALSE
    - Active     : FALSE
-   - Register   : FALSE
-   - Release    : FALSE
-   - Integrous  : TRUE
+   - Error      : FALSE
 
 Testcase - Makeflags = "--jobserver-auth=1,2 --jobserver-auth=fifo:prj.gpr"
-[ JM_NAMED_PIPE ]
+[GPR.BUILD.JOBSERVER] Makeflags : "--jobserver-auth=1,2 --jobserver-auth=fifo:prj.gpr"
    - Dry_Run    : FALSE
-   - Active     : TRUE
+   - Active     : FALSE
+   - Error      : TRUE
 
 Testcase - Makeflags = "--jobserver-auth=1,2 --jobserver-auth=prj.gpr"
-[ JM_SEMAPHORE ]
+[GPR.BUILD.JOBSERVER] Makeflags : "--jobserver-auth=1,2 --jobserver-auth=prj.gpr"
+[GPR.BUILD.JOBSERVER.PROTOCOL.SEMAPHORE] opening a semaphore protocol for prj.gpr
    - Dry_Run    : FALSE
-   - Active     : TRUE
+   - Active     : FALSE
+   - Error      : FALSE
 
