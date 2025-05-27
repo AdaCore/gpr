@@ -1,5 +1,8 @@
 aggregate library project Agglib is
 
+   Lib_Kind := external("AGG_LIBRARY_KIND", "static");
+
+   for Library_Kind use Lib_Kind;
    for Library_Name use "demo";
    for Library_Dir use "lib/agglib";
    for Object_Dir use "obj/agglib";
