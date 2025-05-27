@@ -31,8 +31,10 @@ class PythonScriptDriver(BaseDriver):
         else:
             env['PYTHONPATH'] = str(self.env.root_dir) + \
                                 os.path.pathsep + os.environ['PYTHONPATH']
-        builder_and_runner.insert_build_and_runner_parameters(env)
-
         env["root_dir"] = self.env.root_dir
 
-        self.shell(cmd, env=env)
+        if self.fake_ada_target:
+            self.create_fake_ada_compilers(env)
+
+        builder_and_runner.insert_build_and_runner_parameters(env)
+        builder_and_runner.run(cmd, env)

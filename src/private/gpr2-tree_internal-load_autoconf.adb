@@ -785,13 +785,27 @@ begin
            (GPR2.KB.Default_Flags, Environment => Environment);
       end if;
 
-      Conf := Project.Configuration.Create
-        (Pre_Conf_Description.Element,
-         Actual_Target,
-         Project_Path,
-         Self.Base,
-         Save_Name   => Config_Project,
-         Environment => Environment);
+
+      declare
+         Current_Target : constant Name_Type := Actual_Target;
+      begin
+
+      --  At this moment, no configuration has been loaded, so the target
+      --  can not come from it. So, this is the perfect moment to determine
+      --  if the target has been explicitly provided by the user.
+
+         if Current_Target = "all" then
+            Self.Has_Explicit_Target := False;
+         end if;
+
+         Conf := Project.Configuration.Create
+         (Pre_Conf_Description.Element,
+            Current_Target,
+            Project_Path,
+            Self.Base,
+            Save_Name   => Config_Project,
+            Environment => Environment);
+      end;
    end if;
 
    if Conf.Has_Error then

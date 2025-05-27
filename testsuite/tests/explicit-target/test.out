@@ -1,0 +1,13 @@
+Loaded projects/target_in_project_file.gpr
+  - Has an explicit target: TRUE
+Loaded projects/target_in_project_file.gpr
+  - target switch: linux-fake-target
+  - Has an explicit target: TRUE
+Loaded projects/no_target.gpr
+  - target switch: linux-fake-target
+  - Has an explicit target: TRUE
+Loaded projects/no_target.gpr
+  - config file: linux-fake-target.cgpr
+  - Has an explicit target: TRUE
+Loaded projects/no_target.gpr
+  - Has an explicit target: FALSE

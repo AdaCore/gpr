@@ -1,0 +1,5 @@
+project Target_In_Project_File is
+   for Source_Dirs use ("src");
+   for Target use "linux-fake-target";
+   for Runtime ("Ada") use "native";
+end Target_In_Project_File;

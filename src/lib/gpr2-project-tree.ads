@@ -231,6 +231,10 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined;
    --  Returns the target for the project tree
 
+   function Has_Explicit_Target (Self : Object) return Boolean;
+   --  Returns True if the target was explicitly set, either on the command
+   --  line, in the project file, or in a provided configuration file.
+
    function Runtime
      (Self : Object; Language : Language_Id) return Optional_Name_Type
      with Pre => Self.Is_Defined;
@@ -557,6 +561,9 @@ private
    function Target
      (Self : Object; Canonical : Boolean := False) return Name_Type
    is (Self.Tree.Target (Canonical));
+
+   function Has_Explicit_Target (Self : Object) return Boolean
+   is (Self.Tree.Has_Explicit_Target);
 
    function Runtime
      (Self : Object; Language : Language_Id) return Optional_Name_Type
