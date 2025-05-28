@@ -1248,6 +1248,7 @@ package body GPR2.Build.Actions.Link is
       Signature_Only : Boolean;
       No_Warning     : Boolean)
    is
+      use GPR2.Project;
       Object_Lister      : constant Project.Attribute.Object :=
                              Self.View.Attribute (PRA.Object_Lister);
       Export_File_Switch : constant Project.Attribute.Object :=
@@ -1265,7 +1266,7 @@ package body GPR2.Build.Actions.Link is
                                 "restricted"
                               then Restricted
                               else Unrestricted);
-      use GPR2.Project;
+
    begin
       if Self.View.Library_Standalone = No then
          --  On Windows, if we are building a standard library or a library
@@ -1274,6 +1275,7 @@ package body GPR2.Build.Actions.Link is
 
          if Self.View.Tree.Is_Windows_Target
            and then (Export_Policy = Unrestricted
+                     or else Self.Ctxt.Library_Standalone = No
                      or else not Export_File_Switch.Is_Defined)
          then
             --  This is needed if an object contains a declspec(dllexport)
