@@ -50,7 +50,6 @@ package body GPR2.Build.ALI_Parser is
         (File : in out GB.Reader;
          EOL  :    out Boolean) return String
       is
-
          subtype End_Of_Line is Character
            with Static_Predicate =>
              End_Of_Line in ASCII.CR | ASCII.LF | ASCII.EOT;
@@ -69,11 +68,11 @@ package body GPR2.Build.ALI_Parser is
          ---------------------
 
          function Get_Quoted_Word return String is
-            C  : Character := ASCII.NUL;
+            C     : Character := ASCII.NUL;
             First : Long_Long_Integer := GB.Current_Position (File);
             Last  : Long_Long_Integer := First;
 
-            QN : Natural   := 1;
+            QN    : Natural   := 1;
             --  Number of quotes seen
          begin
             --  Skip the first double quote
@@ -108,18 +107,16 @@ package body GPR2.Build.ALI_Parser is
                      EOL := C in End_Of_Line;
 
                      declare
-                        Token  : constant String :=
-                                   GB.Token (File, First, Last);
-                        Result : String := Token;
+                        Token               : constant String :=
+                                                GB.Token (File, First, Last);
+                        Result              : String := Token;
                         Tok_Idx, Result_Idx : Natural := Token'First;
                      begin
                         while Tok_Idx <= Token'Last loop
                            Result (Result_Idx) := Token (Tok_Idx);
 
                            if Token (Tok_Idx) = '"' then
-
                               --  Skip the second double quote
-
                               Tok_Idx := Tok_Idx + 1;
                            end if;
 
@@ -129,19 +126,20 @@ package body GPR2.Build.ALI_Parser is
 
                         return Result (Result'First .. Result_Idx - 1);
                      end;
-                  else
 
+                  else
                      --  Had an ending quote followed by regular characters:
                      --  error !
 
-                     raise Scan_ALI_Error with
-                       "wrong quoted format of '"
-                       & GB.Token (File, First, Last) & ''';
+                     raise Scan_ALI_Error
+                       with "wrong quoted format of '"
+                          & GB.Token (File, First, Last) & ''';
                   end if;
+
                elsif C in ASCII.LF then
-                  raise Scan_ALI_Error with
-                    "wrong quoted format of '"
-                    & GB.Token (File, First, Last) & ''';
+                  raise Scan_ALI_Error
+                    with "wrong quoted format of '"
+                       & GB.Token (File, First, Last) & ''';
                else
                   Last := Last + 1;
                end if;
@@ -153,9 +151,10 @@ package body GPR2.Build.ALI_Parser is
          --------------
 
          function Get_Word return String is
-            C     : Character       := ASCII.NUL;
-            First : constant Long_Long_Integer := GB.Current_Position (File);
-            Last  : Long_Long_Integer         := First;
+            C                       : Character := ASCII.NUL;
+            First                   : constant Long_Long_Integer :=
+                                        GB.Current_Position (File);
+            Last                    : Long_Long_Integer := First;
             Previous_Token_Is_Space : Boolean := False;
          begin
             loop
@@ -172,6 +171,7 @@ package body GPR2.Build.ALI_Parser is
                   else
                      Previous_Token_Is_Space := True;
                   end if;
+
                else
                   Previous_Token_Is_Space := False;
                end if;
@@ -180,7 +180,6 @@ package body GPR2.Build.ALI_Parser is
                   EOL := C in End_Of_Line;
                   exit;
                end if;
-
 
                Last := Last + 1;
             end loop;
@@ -194,7 +193,6 @@ package body GPR2.Build.ALI_Parser is
          EOL := False;
 
          Read_Token : loop
-
             if not GB.Next (File, C) then
                return "";
             end if;
@@ -217,13 +215,10 @@ package body GPR2.Build.ALI_Parser is
       -- Next_Line --
       ---------------
 
-      procedure Next_Line (File : in out GB.Reader; Header : out Character)
-      is
+      procedure Next_Line (File : in out GB.Reader; Header : out Character) is
       begin
-
          if File.Is_End_Of_Data then
             Header := ASCII.NUL;
-
             return;
          end if;
 
@@ -233,9 +228,9 @@ package body GPR2.Build.ALI_Parser is
 
             if not GB.Next (File, Header) then
                Header := ASCII.NUL;
-
                return;
             end if;
+
          else
             Header := File.Current_Char;
 
@@ -244,7 +239,6 @@ package body GPR2.Build.ALI_Parser is
 
                if not GB.Next (File, Header) then
                   Header := ASCII.NUL;
-
                   return;
                end if;
             end loop;
@@ -253,13 +247,13 @@ package body GPR2.Build.ALI_Parser is
          loop
             if not GB.Next (File, Header) then
                Header := ASCII.NUL;
-
                return;
             end if;
 
             exit when Header not in ASCII.CR | ASCII.LF;
          end loop;
       end Next_Line;
+
    end IO;
 
    ------------------
@@ -330,59 +324,55 @@ package body GPR2.Build.ALI_Parser is
       end Parse_With;
 
       Reader : GB.Reader :=  GB.Open (String (ALI_File.Value));
+      Word   : Character := ASCII.NUL;
    begin
-      declare
-         Word : Character := ASCII.NUL;
-      begin
+      --  Only the dependencies lines "D" are of interest, as they contain
+      --  dependencies source names.
 
-         --  Only the dependencies lines "D" are of interest, as they contain
-         --  dependencies source names.
+      loop
+         if not EOL then
+            IO.Next_Line (Reader, Word);
+         elsif not GB.Next (Reader, Word) then
+            return True;
+         end if;
 
-         loop
-            if not EOL then
-               IO.Next_Line (Reader, Word);
-            elsif not GB.Next (Reader, Word) then
-               return True;
-            end if;
+         EOL := False;
 
-            EOL := False;
+         case Word is
+            when ASCII.NUL   =>
+               exit;
 
-            case Word is
-               when ASCII.NUL   =>
-                  exit;
+            when 'D' =>
+               Parse_Dep (Reader);
 
-               when 'D' =>
-                  Parse_Dep (Reader);
-
-               when 'W' | 'Y' =>
+            when 'W' | 'Y' =>
                   Parse_With (Reader);
 
-               when 'X' =>
-                  exit;
+            when 'X' =>
+               exit;
 
-               when others =>
-                  null;
-            end case;
-         end loop;
+            when others =>
+               null;
+         end case;
+      end loop;
 
+      GB.Finalize (Reader);
+
+      return True;
+
+   exception
+      when E : others =>
+         GNATCOLL.Traces.Trace
+           (Traces,
+            "ALI parser error: " & Ada.Exceptions.Exception_Message (E));
          GB.Finalize (Reader);
 
-         return True;
-
-      exception
-         when E : others =>
-            GNATCOLL.Traces.Trace
-              (Traces,
-               "ALI parser error: " & Ada.Exceptions.Exception_Message (E));
-            GB.Finalize (Reader);
-
-            return False;
-      end;
+         return False;
    end Dependencies;
 
-   ------------------
+   -------------
    -- Imports --
-   ------------------
+   -------------
 
    function Imports
      (ALI_File : GPR2.Path_Name.Object;
@@ -401,8 +391,9 @@ package body GPR2.Build.ALI_Parser is
       procedure Parse_With (Reader : in out GB.Reader) is
       begin
          if not GB.Check (Reader, " ") then
-            raise Scan_ALI_Error with "space expected after the 'W'"
-              & " withed unit character";
+            raise Scan_ALI_Error
+              with "space expected after the 'W'"
+                 & " withed unit character";
          end if;
 
          --  ??? Not backward compatible with ali files produced by
@@ -415,9 +406,9 @@ package body GPR2.Build.ALI_Parser is
                raise Scan_ALI_Error with "missed withed unit name";
             end if;
 
-            if Unit_Name'Length >= 3 and then
-               Unit_Name (Unit_Name'Last) in 's' | 'b' and then
-               Unit_Name (Unit_Name'Last - 1) = '%'
+            if Unit_Name'Length >= 3
+              and then Unit_Name (Unit_Name'Last) in 's' | 'b'
+              and then Unit_Name (Unit_Name'Last - 1) = '%'
             then
                Imports.Include
                  (Name_Type
@@ -449,11 +440,11 @@ package body GPR2.Build.ALI_Parser is
             when ASCII.NUL =>
                exit;
 
-               when 'D' =>
+            when 'D' =>
                exit;
                --  ??? Add other cases that are after the withed units
 
-               when 'W' | 'Y' =>
+            when 'W' | 'Y' =>
                Parse_With (Reader);
 
             when others =>
@@ -521,6 +512,216 @@ package body GPR2.Build.ALI_Parser is
          return Result;
    end Switches;
 
+   ----------------
+   -- Unit_Flags --
+   ----------------
+
+   function Unit_Flags
+     (ALI_File : GPR2.Path_Name.Object) return Units_Flags_Set
+   is
+
+      procedure Parse_Flags (Reader : in out GB.Reader);
+      --  Parse the source file name of the current dependency line
+
+      R   : Units_Flags_Set := (others => (others => False));
+      EOL : Boolean := False;
+
+      -----------------
+      -- Parse_Flase --
+      -----------------
+
+      procedure Parse_Flags (Reader : in out GB.Reader) is
+         pragma Warnings (Off);
+      begin
+         if not GB.Check (Reader, " ") then
+            raise Scan_ALI_Error
+              with "space expected after the 'U'"
+                 & " withed unit character";
+         end if;
+
+         declare
+            Unit_Name : constant String := IO.Get_Token (Reader, EOL);
+         begin
+            if Unit_Name = "" then
+               raise Scan_ALI_Error with "missed unit name";
+            end if;
+
+            if Unit_Name'Length >= 3
+              and then Unit_Name (Unit_Name'Last) in 's' | 'b'
+              and then Unit_Name (Unit_Name'Last - 1) = '%'
+            then
+               --  Read the flags at end of line
+               declare
+                  SB : constant Spec_Body :=
+                         (if Unit_Name (Unit_Name'Last) = 's'
+                          then U_Spec
+                          else U_Body);
+                  S  : constant String := IO.Get_Token (Reader, EOL)
+                    with Unreferenced;
+                  --  Source
+                  F  : constant String := IO.Get_Token (Reader, EOL)
+                    with Unreferenced;
+                  --  Checksum & flags
+                  I  : Positive := F'First;
+               begin
+                  --  Skip checksum
+
+                  while F (I) not in ' ' | ASCII.HT | ASCII.LF loop
+                     I := I + 1;
+                  end loop;
+
+                  I := I + 1;
+
+                  --  Read flags
+
+                  while I < F'Last loop
+                     case F (I) is
+                        when 'B' =>
+                           case F (I + 1) is
+                              when 'N' =>
+                                 R (SB) (Body_Needed_For_SAL) := True;
+                              when 'D' =>
+                                 R (SB) (Elaborate_Body_Desirable) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'D' =>
+                           case F (I + 1) is
+                              when 'E' =>
+                                 R (SB) (Dynamic_Elab) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'E' =>
+                           case F (I + 1) is
+                              when 'B' =>
+                                 R (SB) (Elaborate_Body) := True;
+                              when 'E' =>
+                                 R (SB) (Set_Elab_Entity) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'G' =>
+                           case F (I + 1) is
+                              when 'E' =>
+                                 R (SB) (Is_Generic) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'I' =>
+                           case F (I + 1) is
+                              when 'S' =>
+                                 R (SB) (Init_Scalars) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'N' =>
+                           case F (I + 1) is
+                              when 'E' =>
+                                 R (SB) (No_Elab) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'P' =>
+                           case F (I + 1) is
+                              when 'F' =>
+                                 R (SB) (Has_Finalizer) := True;
+                              when 'R' =>
+                                 R (SB) (Preelab) := True;
+                              when 'U' =>
+                                 R (SB) (Pure) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'R' =>
+                           case F (I + 1) is
+                              when 'A' =>
+                                 R (SB) (Has_RACW) := True;
+                              when 'C' =>
+                                 R (SB) (RCI) := True;
+                              when 'T' =>
+                                 R (SB) (Remote_Types) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when 'S' =>
+                           case F (I + 1) is
+                              when 'E' =>
+                                 R (SB) (Serious_Errors) := True;
+                              when 'P' =>
+                                 R (SB) (Shared_Passive) := True;
+                              when others =>
+                                 null;
+                           end case;
+
+                        when others =>
+                           null;
+                     end case;
+
+                     I := I + 2;
+                  end loop;
+               end;
+
+            else
+               raise Scan_ALI_Error with
+                 "withed unit name does not end with '%s'";
+            end if;
+         end;
+      end Parse_Flags;
+
+      Reader : GB.Reader := GB.Open (String (ALI_File.Value));
+      Word   : Character := ASCII.NUL;
+
+   begin
+      --  Only the units lines "U" are of interest, as they contain
+      --  flags for source spec/body.
+
+      loop
+         if not EOL then
+            IO.Next_Line (Reader, Word);
+         elsif not GB.Next (Reader, Word) then
+            return R;
+         end if;
+
+         EOL := False;
+
+         case Word is
+            when ASCII.NUL =>
+               exit;
+
+            when 'D' =>
+               exit;
+               --  Units are before dependencies
+
+            when 'U' =>
+               Parse_Flags (Reader);
+
+            when others =>
+               null;
+         end case;
+      end loop;
+
+      GB.Finalize (Reader);
+
+      return R;
+   exception
+      when E : others =>
+         GNATCOLL.Traces.Trace
+           (Traces,
+            "ALI parser error: " & Ada.Exceptions.Exception_Message (E));
+         GB.Finalize (Reader);
+
+         return R;
+   end Unit_Flags;
+
    -------------
    -- Version --
    -------------
@@ -528,9 +729,9 @@ package body GPR2.Build.ALI_Parser is
    function Version (ALI_File : GPR2.Path_Name.Object) return String is
       use Ada.Text_IO;
 
-      File : File_Type;
-      Line : String (1 .. 1_000);
-      Last : Natural;
+      File  : File_Type;
+      Line  : String (1 .. 1_000);
+      Last  : Natural;
       Start : Natural;
    begin
       if not ALI_File.Exists then

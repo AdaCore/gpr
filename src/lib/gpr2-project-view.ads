@@ -859,7 +859,7 @@ package GPR2.Project.View is
    --  False.
 
    procedure Check_Mains
-     (Self : Object;
+     (Self     : Object;
       Messages : in out Log.Object)
      with Pre => Self.Is_Defined and then Self.Is_Namespace_Root;
    --  Check the validity of the Main attribute values and fill appropriate

@@ -178,7 +178,7 @@ package body GPR2.Build.Source.Sets is
    --------------
 
    function Is_Empty (Self : Object) return Boolean is
-     (Get_Ref (Self.Db).Sources.Is_Empty);
+     (Self = Empty_Set or else Get_Ref (Self.Db).Sources.Is_Empty);
 
    -------------
    -- Iterate --

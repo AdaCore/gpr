@@ -8,6 +8,8 @@ with Ada.Strings.UTF_Encoding.Wide_Wide_Strings;
 with Ada.Strings.Wide_Wide_Maps.Wide_Wide_Constants;
 
 with GNAT.UTF_32;
+
+with GPR2.Build.ALI_Parser;
 with GPR2.Message;
 with GPR2.Tree_Internal;
 with GPR2.Build.Tree_Db;
@@ -304,6 +306,43 @@ package body GPR2.Build.Compilation_Unit is
             return Self.Separates.Element (Sep_Name);
       end case;
    end Get;
+
+   ----------------------------
+   -- Is_Body_Needed_For_SAL --
+   ----------------------------
+
+   function Is_Body_Needed_For_SAL (Self : Object) return Boolean is
+      Tree : constant access GPR2.Tree_Internal.Object :=
+               View_Internal.Get_RO (Self.Root_View).Tree;
+      Main : constant Unit_Location := Self.Main_Part;
+      BN   : constant Simple_Name := Main.Source.Base_Filename;
+   begin
+      if Main.Index = No_Index then
+         declare
+            use ALI_Parser;
+
+            Dir : constant Path_Name.Object :=
+                    (if Main.View.Is_Library
+                     then Main.View.Library_Ali_Directory
+                     else Main.View.Object_Directory);
+
+            ALI : constant GPR2.Path_Name.Object :=
+                    Path_Name.Create_File
+                      (BN & Tree.Dependency_Suffix (Ada_Language),
+                       Dir.Value);
+         begin
+            if ALI.Exists then
+               return ALI_Parser.Unit_Flags
+                        (ALI) (U_Spec) (Body_Needed_For_SAL);
+            else
+               return True;
+            end if;
+         end;
+
+      else
+         return False;
+      end if;
+   end Is_Body_Needed_For_SAL;
 
    ------------------------
    -- Known_Dependencies --

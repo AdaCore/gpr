@@ -1436,7 +1436,7 @@ package body GPR2.Build.Actions.Link is
    function Interface_Units
      (Self : Object'Class) return Compilation_Unit.Maps.Map
    is
-      Units     : Compilation_Unit.Maps.Map;
+      Units : Compilation_Unit.Maps.Map;
    begin
       if Self.Ctxt.Is_Library_Standalone then
          Units := Self.Ctxt.Interface_Closure;

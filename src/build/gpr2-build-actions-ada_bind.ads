@@ -8,8 +8,6 @@ limited with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Path_Name; use GPR2.Path_Name;
 
-with Ada.Containers.Hashed_Sets;
-
 with GNATCOLL.OS.Process;
 
 package GPR2.Build.Actions.Ada_Bind is
@@ -38,14 +36,9 @@ package GPR2.Build.Actions.Ada_Bind is
    --            and will consider the action valid (e.g. the signature
    --            is not checked). Used with --no-sal-binding option.
 
-   package Path_Name_Sets is
-     new Ada.Containers.Hashed_Sets
-       (GPR2.Path_Name.Object, Hash => GPR2.Path_Name.Hash,
-        Equivalent_Elements => GPR2.Path_Name."=");
-
    overriding function On_Tree_Insertion
-     (Self     : Object;
-      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
+     (Self : Object;
+      Db   : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
    overriding procedure Compute_Command
      (Self           : in out Object;
