@@ -85,24 +85,6 @@ test_gpr2:
     reports:
       junit: testgpr2_result.xml
 
-##################################
-## GPR2 TESTSUITE WITH GPR2BUILD #
-##################################
-
-test_gpr2_with_gpr2build:
-  extends: .gpr2_test_template
-  script:
-    - install_cache
-    - run_testsuite gpr2 -Qgpr2build test_gpr2build
-  when: manual
-  artifacts:
-    when:
-      always
-    paths:
-      - testgpr2build_result.xml
-    reports:
-      junit: testgpr2build_result.xml
-
 ############################
 ## GPR2 WINDOWS TESTSUITE ##
 ############################
@@ -121,7 +103,7 @@ build_and_test_gpr2_windows:
   variables:
     JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
   script:
-    - exec anod build gpr2
+    - exec anod build gpr2 -Qgpr2build
     - run_testsuite gpr2 "" test_gpr2_windows
   artifacts:
     when:
