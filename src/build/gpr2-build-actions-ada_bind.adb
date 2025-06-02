@@ -306,15 +306,15 @@ package body GPR2.Build.Actions.Ada_Bind is
       -- Resolve_Binder --
       --------------------
 
-      function Resolve_Binder return String
-      is
+      function Resolve_Binder return String is
          Default_Binder_Name : constant String :=
-                                 "gnatbind" &
-                                 (if GPR2.On_Windows then ".exe" else "");
+           Self.View.Compiler_Prefix (Ada_Language)
+           & "gnatbind"
+           & (if GPR2.On_Windows then ".exe" else "");
          Binder_Path         : Path_Name.Object;
       begin
          --  if "gnatbind_prefix=", "--gnatbind_path=" or "ada_binder=" weren't
-         --  found, default to "gnatbind".
+         --  found, default to "<prefix->gnatbind".
 
          if Length (Binder_From_Attrs) = 0 then
             Binder_From_Attrs := +Default_Binder_Name;

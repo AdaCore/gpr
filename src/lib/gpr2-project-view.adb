@@ -1202,6 +1202,34 @@ package body GPR2.Project.View is
       return Closure_Views;
    end Closure;
 
+
+   ---------------------
+   -- Compiler_Prefix --
+   ---------------------
+
+   function Compiler_Prefix (Self : Object; Language : Language_Id)
+     return String is
+      Driver_Attr : constant Project.Attribute.Object :=
+        Self.Attribute
+         (Name  => PRA.Compiler.Driver,
+          Index => PAI.Create (Language));
+      Compiler_Driver_Path : constant GPR2.Path_Name.Object :=
+                                   GPR2.Path_Name.Create_File
+                                     (Filename_Type (Driver_Attr.Value.Text));
+   begin
+      declare
+         Driver : constant String := String (Compiler_Driver_Path.Base_Name);
+      begin
+         if Driver'Length > 3
+            and then Driver (Driver'Last - 2 .. Driver'Last) = "gcc"
+         then
+            return Driver (Driver'First .. Driver'Last - 3);
+         end if;
+      end;
+
+      return "";
+   end Compiler_Prefix;
+
    -------------
    -- Context --
    -------------
