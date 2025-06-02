@@ -119,8 +119,6 @@ Testing trees/agg2/agg.gpr
  - Shared (K_STANDARD) **
    - Root project(s):
      - Prj2
-   - Aggregated in library:
-     - Prj2
  - Prj3 (K_STANDARD) **
    - Root project(s):
      - Prj2

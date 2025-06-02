@@ -607,11 +607,63 @@ package body GPR2.Build.Actions.Compile is
          Cmd_Line.Add_Argument (Arg);
       end loop;
 
-      if Self.View.Is_Library
-        and then Self.View.Library_Kind /= "static"
-      then
-         Add_Attr (PRA.Compiler.Pic_Option, Lang_Idx, True, True);
-      end if;
+      --  Add -fPIC when compiling in the context of a shared or static-pic
+      --  library.
+      --
+      --  ??? The aggregate library context is a bit weird here, since
+      --  aggregated views that should be independent of their aggregating
+      --  project also need to comply with the library kind of the aggregating
+      --  view. We don't make virtual copies here of the views, and have no
+      --  mechanism to differentiate objects from their original view and the
+      --  ones modified because of the library_kind influence...
+
+      declare
+         type In_Lib_Kind is (Undefined, With_Fpic, No_Fpic);
+         Use_Fpic : In_Lib_Kind := Undefined;
+      begin
+         if not Self.View.Is_Aggregated_In_Library then
+            if Self.View.Is_Library
+              and then Self.View.Library_Kind /= "static"
+            then
+               Use_Fpic := With_Fpic;
+            else
+               Use_Fpic := No_Fpic;
+            end if;
+
+         elsif Self.View.Is_Aggregated_In_Library then
+            --  Try to comply with the aggregating library, but detect
+            --  incoherences.
+
+            for V of Self.View.Aggregate_Libraries loop
+               if V.Library_Kind /= "static" then
+                  if Use_Fpic = Undefined then
+                     Use_Fpic := With_Fpic;
+                  elsif Use_Fpic = No_Fpic then
+                     --  Error ?
+                     Use_Fpic := Undefined;
+                  end if;
+               else
+                  if Use_Fpic = Undefined then
+                     Use_Fpic := No_Fpic;
+                  elsif Use_Fpic = With_Fpic then
+                     --  Error ?
+                     Use_Fpic := Undefined;
+                  end if;
+               end if;
+
+               pragma Assert
+                 (Use_Fpic /= Undefined,
+                  "Aggregated view "
+                  & String (Self.View.Name)
+                  & " is used both in a static lib context and a shared"
+                  & " library context");
+            end loop;
+         end if;
+
+         if Use_Fpic = With_Fpic then
+            Add_Attr (PRA.Compiler.Pic_Option, Lang_Idx, True, True);
+         end if;
+      end;
 
       declare
          Attr : constant Project.Attribute.Object :=

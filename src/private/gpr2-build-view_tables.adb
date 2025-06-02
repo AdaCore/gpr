@@ -169,6 +169,10 @@ package body GPR2.Build.View_Tables is
       New_Set : Project.View.Set.Object;
 
    begin
+      Traces.Trace ("Add_Unit_Ownership:" & ASCII.LF &
+                      " - To: " & To.View.Path_Name.String_Value & ASCII.LF &
+                      " - CU: " & String (CU) & ASCII.LF &
+                      " - Root: " & Root.View.Path_Name.String_Value);
       C := To.Own_CUs.Find (CU);
 
       if Unit_Maps.Has_Element (C) then
