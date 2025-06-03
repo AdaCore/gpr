@@ -1,4 +1,5 @@
 description: Check that a warning is raised when internal interface closure is not complete
 driver: python_script
+timeout: 600
 output:
   - ["test.out.win", "'windows' in env.host.platform"]
