@@ -63,7 +63,7 @@ private
      (-Self.Key);
 
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type is
-     (Ada.Strings.Hash (-Self.Key));
+     (Ada.Strings.Hash (-Self.Key & (-Self.Value)));
 
    overriding function Image (Self : Object) return String is
       (Self.Protocol & "(" & To_String (Self.Key) & ", "
