@@ -46,8 +46,11 @@ private
    overriding function Protocol (Self : Object) return String is
      ("file");
 
+   overriding function "=" (L, R : Object) return Boolean is
+      (L.Path = R.Path);
+
    overriding function "<" (L, R : Object) return Boolean is
-      (L.Path.Value < R.Path.Value);
+      (L.Path < R.Path);
 
    Undefined : constant Object := (others => <>);
 
@@ -70,7 +73,7 @@ private
      (Self.Path.String_Value);
 
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type is
-     (Hash (Self.Path.Value));
+     (Self.Path.Hash);
 
    overriding function Image (Self : Object) return String is
       (String (Self.Path.Simple_Name));
