@@ -1,5 +1,0 @@
-description:
-    Check MD5 checksum
-driver: build_and_run
-project_file: md5
-main: main
