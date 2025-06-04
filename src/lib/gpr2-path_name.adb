@@ -15,8 +15,6 @@ with Ada.Strings.Maps;
 with GNAT.OS_Lib;
 with GNAT.Regexp;
 
-with System;
-
 package body GPR2.Path_Name is
 
    use GNAT;
@@ -447,30 +445,6 @@ package body GPR2.Path_Name is
                Base_Name => +Base_Name (Name),
                Dir_Name  => +Ensure_Directory (Pseudo_Dir));
    end Create_Pseudo_File;
-
-   ---------------------
-   -- Create_Sym_Link --
-   ---------------------
-
-   procedure Create_Sym_Link (Self, To : Object) is
-
-      function Symlink
-        (Oldpath : System.Address;
-         Newpath : System.Address) return Integer;
-      pragma Import (C, Symlink, "__gnat_symlink");
-
-      C_From  : constant String := To_String (Self.Value) & ASCII.NUL;
-      pragma Warnings (Off, "*actuals for this call may be in wrong order*");
-      C_To    : constant String :=
-                  String (Relative_Path (To, Self)) & ASCII.NUL;
-      Result  : Integer;
-      Success : Boolean;
-      pragma Unreferenced (Result);
-
-   begin
-      OS_Lib.Delete_File (To_String (Self.Value), Success);
-      Result := Symlink (C_To'Address, C_From'Address);
-   end Create_Sym_Link;
 
    ------------
    -- Exists --
