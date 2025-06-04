@@ -316,32 +316,6 @@ package body GPR2.Path_Name is
       return To_OS_Case (Root) = To_OS_Case (Target (Root'First .. Root'Last));
    end Contains;
 
-   -----------------
-   -- Content_MD5 --
-   -----------------
-
-   function Content_MD5 (Self : Object) return GNAT.MD5.Message_Digest is
-      use Ada.Streams;
-      use GNAT.MD5;
-
-      C : Context;
-      S : Stream_IO.File_Type;
-      B : Stream_Element_Array (1 .. 100 * 1024);
-      --  Buffer to read chunk of data
-      L : Stream_Element_Offset;
-   begin
-      Stream_IO.Open (S, Stream_IO.In_File, To_String (Self.Value));
-
-      while not Stream_IO.End_Of_File (S) loop
-         Stream_IO.Read (S, B, L);
-         Update (C, B (1 .. L));
-      end loop;
-
-      Stream_IO.Close (S);
-
-      return Digest (C);
-   end Content_MD5;
-
    ------------
    -- Create --
    ------------
