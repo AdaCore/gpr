@@ -168,9 +168,6 @@ package GPR2.Path_Name is
           Post => Dir_Name'Result (Dir_Name'Result'Last) in '/' | '\';
    --  Returns the directory part for Self
 
-   function Temporary_Directory return Object;
-   --  Returns the current temporary directory
-
    function Compose
      (Self      : Object;
       Name      : Filename_Type;

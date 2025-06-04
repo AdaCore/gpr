@@ -6,7 +6,6 @@
 
 with Ada.Characters.Handling;
 with Ada.Directories.Hierarchical_File_Names;
-with Ada.Environment_Variables;
 with Ada.IO_Exceptions;
 with Ada.Streams.Stream_IO;
 
@@ -45,17 +44,9 @@ package body GPR2.Path_Name is
    Root_Path : constant GNAT.Regexp.Regexp :=
                  Compile ("/+|[A-Z]:\\+", Case_Sensitive => False);
 
-   Temp_Directory : Object;
-   --  The name of the temporary directory, computed once at elaboration time
-
    Dir_Seps : constant Ada.Strings.Maps.Character_Set :=
                 Strings.Maps.To_Set ("/\");
    --  UNIX and DOS style directory separators
-
-   --  From old GPR
-
-   procedure Determine_Temporary_Directory;
-   --  Determine temporary directory
 
    function Ensure_Directory (Path : Filename_Optional) return Filename_Type is
      (if Path (Path'Last) in OS_Lib.Directory_Separator | '/'
@@ -481,82 +472,6 @@ package body GPR2.Path_Name is
       Result := Symlink (C_To'Address, C_From'Address);
    end Create_Sym_Link;
 
-   -----------------------------------
-   -- Determine_Temporary_Directory --
-   -----------------------------------
-
-   procedure Determine_Temporary_Directory is
-
-      function Check_Directory (Name : String) return Boolean;
-      --  Returns True if directory exists
-
-      function Check_Environment (Name : String) return Boolean;
-      --  Returns True if directory from environment variable exists
-
-      ---------------------
-      -- Check_Directory --
-      ---------------------
-
-      function Check_Directory (Name : String) return Boolean is
-      begin
-         if OS_Lib.Is_Directory (Name) then
-            Temp_Directory :=
-              Create_Directory
-                (Filename_Type (OS_Lib.Normalize_Pathname (Name)));
-            return True;
-         end if;
-
-         return False;
-      end Check_Directory;
-
-      -----------------------
-      -- Check_Environment --
-      -----------------------
-
-      function Check_Environment (Name : String) return Boolean is
-      begin
-         if Environment_Variables.Exists (Name) then
-            return Check_Directory (Environment_Variables.Value (Name));
-         end if;
-
-         return False;
-      end Check_Environment;
-
-   begin
-      if Check_Environment ("TMPDIR")
-        or else Check_Environment ("TEMP")
-        or else Check_Environment ("TMP")
-      then
-         return;
-      end if;
-
-      case OS_Lib.Directory_Separator is
-         when '\' =>
-            if Check_Directory ("C:\TEMP")
-              or else Check_Directory ("C:\TMP")
-              or else Check_Directory ("\TEMP")
-              or else Check_Directory ("\TMP")
-            then
-               return;
-            end if;
-
-         when '/' =>
-            if Check_Directory ("/tmp")
-              or else Check_Directory ("/var/tmp")
-              or else Check_Directory ("/usr/tmp")
-            then
-               return;
-            end if;
-
-         when others =>
-            pragma Annotate (Xcov, Exempt_On, "unreachable code");
-            raise Internal_Error with
-              "Unsupported directory separator " & OS_Lib.Directory_Separator;
-            pragma Annotate (Xcov, Exempt_Off);
-
-      end case;
-   end Determine_Temporary_Directory;
-
    ------------
    -- Exists --
    ------------
@@ -764,15 +679,6 @@ package body GPR2.Path_Name is
       end Check_For_Standard_Dirs;
    end Simple_Name;
 
-   -------------------------
-   -- Temporary_Directory --
-   -------------------------
-
-   function Temporary_Directory return Object is
-   begin
-      return Temp_Directory;
-   end Temporary_Directory;
-
    ---------------------
    -- Unchecked_Value --
    ---------------------
@@ -795,6 +701,4 @@ package body GPR2.Path_Name is
       return Full_Name (Unchecked_Value (Self));
    end Value;
 
-begin
-   Determine_Temporary_Directory;
 end GPR2.Path_Name;
