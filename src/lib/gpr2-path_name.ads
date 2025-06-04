@@ -232,10 +232,6 @@ package GPR2.Path_Name is
    --  removing current extension if any).
    --  First dot in the Extension is ignored.
 
-   function Modification_Time (Self : Object) return Ada.Calendar.Time
-     with Pre => Self.Exists;
-   --  Returns Self's modification time
-
    function Filesystem_String (Self : Object) return VFS.Filesystem_String;
    --  GPR2.Path_Name.Object to GNATCOLL.VFS.Filesystem_String conversion
 
@@ -299,9 +295,6 @@ private
    function Is_Directory (Self : Object) return Boolean is (Self.Is_Dir);
 
    function Is_Pseudo_File (Self : Object) return Boolean is (Self.In_Memory);
-
-   function Modification_Time (Self : Object) return Ada.Calendar.Time is
-     (Ada.Directories.Modification_Time (To_String (Self.Value)));
 
    function Create (Filename : VFS.Filesystem_String) return Object
    is
