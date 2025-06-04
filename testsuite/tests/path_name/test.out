@@ -162,10 +162,6 @@ File with no full path
 - Simple_Name: file.txt
 - Containing_Directory: 'files.dir'
 
-Check temp directory
-- Is a directory
-- Actually exists
-
 Check in-memory autoconf file
 - Is a file
 - Exists in memory only

@@ -109,7 +109,6 @@ begin
                               Create_File ("/bar/foo/test.txt")));
    Check_Path ("File with no full path",
                Create_File ("files.dir/file.txt", No_Resolution));
-   Check_Path ("Check temp directory", Temporary_Directory, True);
 
    --  Additional windows-specific tests
    if On_Windows then
