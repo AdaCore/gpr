@@ -164,6 +164,9 @@ package body GPR2.Build.Jobserver is
    procedure Initialize_Protocol (Self : in out Object)
    is
       Makeflags            : constant String := Value ("MAKEFLAGS", "");
+      --  in GNU make anterior to 4.2 "--jobserver-auth=" did not exist and
+      --  another switch was used. We are only compatible with
+      --  "--jobserver-auth=".
       JS_Auth              : constant String := "--jobserver-auth=";
       Named_Pipe_Delimiter : constant String := "fifo:";
       Dry_Run_Delimiter    : constant String := "n";
@@ -171,7 +174,12 @@ package body GPR2.Build.Jobserver is
                                 GNAT.Regpat.Compile ("(-?[0-9]+),(-?[0-9]+)");
       Simple_Pipe_Match    : GNAT.Regpat.Match_Array (1 .. 2);
 
-      Idx                  : Natural := 0;
+      First                : Natural := Makeflags'First;
+      Idx                  : Natural;
+      JS_Auth_Param        : Unbounded_String;
+
+      use GNATCOLL.Utils;
+
    begin
       pragma Assert
         (not Self.Task_Launched,
@@ -179,53 +187,54 @@ package body GPR2.Build.Jobserver is
 
       Self.Self := Self'Unrestricted_Access;
 
-      Traces.Trace ("Makeflags : " & '"' & Makeflags & '"');
+      Traces.Trace ("Makeflags : """ & Makeflags & '"');
 
       --  There is no MAKEFLAGS envvar, no jobserver to connect to
       if Makeflags = "" then
          return;
       end if;
 
-      Idx := Index (Makeflags, " ");
-      Idx := Index (Makeflags (Makeflags'First .. Idx - 1), Dry_Run_Delimiter);
+      while First < Makeflags'Last loop
+         Idx := Index (Makeflags, " ", First);
 
-      --  "n" detected in the MAKEFLAGS envvar, we should not do anything
-      Self.Dry_Run := Idx /= 0;
+         if Idx = 0 then
+            Idx := Makeflags'Last + 1;
+         end if;
 
-      if Self.Dry_Run then
-         return;
-      end if;
+         if Makeflags (First .. Idx - 1) = Dry_Run_Delimiter then
+            Traces.Trace
+              ("'n' detected in the MAKEFLAGS envvar, " &
+                 "we should not do anything");
+            Self.Dry_Run := True;
 
-      --  Detect the last "--jobserver-auth=" in MAKEFLAGS envvar
-      Idx := Index (Makeflags, JS_Auth, Going => Ada.Strings.Backward);
+            return;
 
-      --  in GNU make anterior to 4.2 "--jobserver-auth=" did not exist and
-      --  another switch was used. We are only compatible with
-      --  "--jobserver-auth=".
-      if Idx = 0 then
-         Traces.Trace
-           ("MAKEFLAGS doesn't have " & JS_Auth & " in """ & Makeflags & '"');
+         elsif Starts_With (Makeflags (First .. Idx - 1), JS_Auth) then
+            JS_Auth_Param := To_Unbounded_String
+              (Makeflags (First + JS_Auth'Length .. Idx - 1));
+         end if;
+
+         First := Idx + 1;
+      end loop;
+
+      if Length (JS_Auth_Param) = 0 then
+         --  Nothing to do
          return;
       end if;
 
       --  Try all jobserver methods
       declare
-         Idx_End : constant Natural :=
-                     Index (Makeflags (Idx .. Makeflags'Last), " ");
-         Param   : constant String :=
-                     Makeflags
-                       (Idx + JS_Auth'Length ..
-                          (if Idx_End > 0 then Idx_End else Makeflags'Last));
-
-         Match   : constant Boolean :=
-                     GNAT.Regpat.Match (Simple_Pipe_Re, Param);
+         Param : constant String := -JS_Auth_Param;
+         Match : constant Boolean := GNAT.Regpat.Match (Simple_Pipe_Re, Param);
       begin
          --  Check named pipe
-         if GNATCOLL.Utils.Starts_With (Param, Named_Pipe_Delimiter) then
+         if Starts_With (Param, Named_Pipe_Delimiter) then
+            Traces.Trace ("named pipes not supported for now");
             Self.Error := True;
 
-         --  Check simple pipe
+            --  Check simple pipe
          elsif Match then
+            Traces.Trace ("simple pipe detected, use it");
             GNAT.Regpat.Match (Simple_Pipe_Re, Param, Simple_Pipe_Match);
 
             declare
@@ -246,6 +255,9 @@ package body GPR2.Build.Jobserver is
             end;
 
          elsif GPR2.On_Windows then
+            Traces.Trace
+              ("windows semaphores detected, use the protocol");
+
             declare
                Protocol : constant Jobserver_Protocol.Semaphore.Object :=
                             Jobserver_Protocol.Semaphore.Initialize (Param);
