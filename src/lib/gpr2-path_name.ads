@@ -14,15 +14,12 @@
 --  From a path-name object it is always possible to get the full pathname
 --  of the file and its containing directory.
 
-with Ada.Calendar;
-with GNAT.MD5;
-
 with GNATCOLL;
 with GNATCOLL.Utils;
 with GNATCOLL.VFS;
 
-private with Ada.Directories;
-private with Ada.Strings.Unbounded.Hash;
+private with Ada.Strings.Hash;
+private with GNATCOLL.Refcount;
 
 package GPR2.Path_Name is
 
@@ -115,12 +112,14 @@ package GPR2.Path_Name is
    --  Whether Self is defined and has a full pathname.
 
    function Value (Self : Object) return Full_Name
-     with Pre => Self.Is_Defined and then Self.Has_Value;
+     with Pre => Self.Is_Defined and then Self.Has_Value,
+          Inline;
    --  Returns the full pathname for Self if defined, or the empty string if
    --  the full path has not been resolved.
 
    function String_Value (Self : Object) return String
-     with Pre => Self.Is_Defined and then Self.Has_Value;
+     with Pre => Self.Is_Defined and then Self.Has_Value,
+          Inline;
    --  Same as Value, but returning a simple String
 
    function Base_Name (Self : Object) return Name_Type
@@ -168,9 +167,6 @@ package GPR2.Path_Name is
           Post => Dir_Name'Result (Dir_Name'Result'Last) in '/' | '\';
    --  Returns the directory part for Self
 
-   function Temporary_Directory return Object;
-   --  Returns the current temporary directory
-
    function Compose
      (Self      : Object;
       Name      : Filename_Type;
@@ -184,14 +180,6 @@ package GPR2.Path_Name is
    function Exists (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if Self is an existing and readable file or directory
-
-   function Content_MD5 (Self : Object) return GNAT.MD5.Message_Digest
-     with Pre => Self.Is_Defined and then Self.Exists;
-   --  Returns the MD5 signature for the given file
-
-   procedure Create_Sym_Link (Self, To : Object)
-     with Pre => Self.Is_Defined and then To.Is_Defined;
-   --  Creates a symlink for Self as To
 
    function Relative_Path (Self, From : Object) return Filename_Type
      with Pre  => Self.Is_Defined and then From.Is_Defined,
@@ -235,10 +223,6 @@ package GPR2.Path_Name is
    --  removing current extension if any).
    --  First dot in the Extension is ignored.
 
-   function Modification_Time (Self : Object) return Ada.Calendar.Time
-     with Pre => Self.Exists;
-   --  Returns Self's modification time
-
    function Filesystem_String (Self : Object) return VFS.Filesystem_String;
    --  GPR2.Path_Name.Object to GNATCOLL.VFS.Filesystem_String conversion
 
@@ -257,54 +241,75 @@ package GPR2.Path_Name is
 
 private
 
-   type Object is tagged record
+   type Object_Internal
+     (As_Is_Len     : Natural;
+      Value_Len     : Natural;
+      Comparing_Len : Natural;
+      Base_Name_Len : Natural;
+      Dir_Name_Len  : Natural)
+   is record
       Is_Dir    : Boolean := False;
       In_Memory : Boolean := False;
-      As_Is     : Unbounded_String;
-      Value     : Unbounded_String; -- the normalized path-name
-      Comparing : Unbounded_String; -- normalized path-name for comparison
-      Base_Name : Unbounded_String;
-      Dir_Name  : Unbounded_String;
+      As_Is     : Filename_Optional (1 .. As_Is_Len);
+      Value     : Filename_Optional (1 .. Value_Len);
+      --  the normalized path-name
+      Comparing : String (1 .. Comparing_Len);
+      --  normalized path-name for comparison
+      Base_Name : Filename_Optional (1 .. Base_Name_Len);
+      Dir_Name  : Filename_Optional (1 .. Dir_Name_Len);
    end record;
    --  Comparing is equal to Value for case sensitive OS and lowercased Value
    --  for case insensitive OS.
 
-   Undefined : constant Object := (others => <>);
+   package Refcnt is new GNATCOLL.Refcount.Shared_Pointers (Object_Internal);
+   use Refcnt;
+
+   type Object is new Refcnt.Ref with null record;
+
+   Undefined : constant Object := (Refcnt.Null_Ref with null record);
 
    function Is_Defined (Self : Object) return Boolean is
-     (Self /= Undefined);
+     (not Self.Is_Null);
 
    overriding function "=" (Left, Right : Object) return Boolean is
-     (Left.Comparing = Right.Comparing);
+     (if Left.Is_Defined and then Right.Is_Defined
+      then Get (Left).Comparing = Get (Right).Comparing
+      else Left.Is_Defined = Right.Is_Defined);
 
    function "<" (Left, Right : Object) return Boolean is
-     (Left.Comparing < Right.Comparing);
+     (if Left.Is_Defined and then Right.Is_Defined
+      then Get (Left).Comparing < Get (Right).Comparing
+      elsif not Left.Is_Defined and then not Right.Is_Defined
+      then False
+      elsif Left.Is_Defined
+      then False
+      else True);
 
    function Base_Name (Self : Object) return Name_Type is
-     (Name_Type (To_String (Self.Base_Name)));
+     (Name_Type (Get (Self).Base_Name));
 
    function Base_Filename (Self : Object) return GPR2.Simple_Name is
-     (GPR2.Simple_Name (To_String (Self.Base_Name)));
+     (GPR2.Simple_Name (Get (Self).Base_Name));
+
+   function Dir_Name (Self : Object_Internal) return Full_Name is
+      (Full_Name (if Self.Is_Dir then Self.Value else Self.Dir_Name));
 
    function Dir_Name (Self : Object) return Full_Name is
-     (Full_Name
-        (To_String (if Self.Is_Dir then Self.Value else Self.Dir_Name)));
+     (Dir_Name (Get (Self)));
 
    function Has_Dir_Name (Self : Object) return Boolean is
-     (Self.Dir_Name /= Null_Unbounded_String);
+     (Get (Self).Dir_Name'Length > 0);
 
    function Has_Value (Self : Object) return Boolean is
-     (Self.Value /= Null_Unbounded_String);
+     (Get (Self).Value'Length > 0);
 
-   function String_Value (Self : Object) return String is
-     (String (Value (Self)));
+   function Value (Self : Object) return Full_Name is
+     (Full_Name (String_Value (Self)));
 
-   function Is_Directory (Self : Object) return Boolean is (Self.Is_Dir);
+   function Is_Directory (Self : Object) return Boolean is (Get (Self).Is_Dir);
 
-   function Is_Pseudo_File (Self : Object) return Boolean is (Self.In_Memory);
-
-   function Modification_Time (Self : Object) return Ada.Calendar.Time is
-     (Ada.Directories.Modification_Time (To_String (Self.Value)));
+   function Is_Pseudo_File (Self : Object) return Boolean is
+     (Get (Self).In_Memory);
 
    function Create (Filename : VFS.Filesystem_String) return Object
    is
@@ -335,6 +340,6 @@ private
       else VFS.No_File);
 
    function Hash (Self : Object) return Ada.Containers.Hash_Type is
-     (Ada.Strings.Unbounded.Hash (Self.Comparing));
+     (Ada.Strings.Hash (Get (Self).Comparing));
 
 end GPR2.Path_Name;
