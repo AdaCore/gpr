@@ -430,7 +430,8 @@
                 ".s",
                 ".ci",
                 ".gcno",
-                ".su"
+                ".su",
+                ".sid"
               ]
             },
             {
@@ -439,7 +440,7 @@
               "name": "Object_Artifact_Extensions",
               "values": [
                 ".s",
-                "ci",
+                ".ci",
                 ".gcno",
                 ".su"
               ]
@@ -450,7 +451,7 @@
               "name": "Object_Artifact_Extensions",
               "values": [
                 ".s",
-                "ci",
+                ".ci",
                 ".gcno",
                 ".su"
               ]
