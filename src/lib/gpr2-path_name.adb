@@ -6,6 +6,7 @@
 
 with Ada.Characters.Handling;
 with Ada.Directories.Hierarchical_File_Names;
+with Ada.Streams.Stream_IO;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
 
@@ -14,6 +15,7 @@ with GNAT.Regexp;
 
 with GNATCOLL.OS.Constants;
 with GNATCOLL.OS.Stat;
+with System;
 
 package body GPR2.Path_Name is
 
@@ -327,6 +329,32 @@ package body GPR2.Path_Name is
       return To_OS_Case (Root) = To_OS_Case (Target (Root'First .. Root'Last));
    end Contains;
 
+   -----------------
+   -- Content_MD5 --
+   -----------------
+
+   function Content_MD5 (Self : Object) return GNAT.MD5.Message_Digest is
+      use Ada.Streams;
+      use GNAT.MD5;
+
+      C : Context;
+      S : Stream_IO.File_Type;
+      B : Stream_Element_Array (1 .. 100 * 1024);
+      --  Buffer to read chunk of data
+      L : Stream_Element_Offset;
+   begin
+      Stream_IO.Open (S, Stream_IO.In_File, String (Self.Value));
+
+      while not Stream_IO.End_Of_File (S) loop
+         Stream_IO.Read (S, B, L);
+         Update (C, B (1 .. L));
+      end loop;
+
+      Stream_IO.Close (S);
+
+      return Digest (C);
+   end Content_MD5;
+
    ------------
    -- Create --
    ------------
@@ -446,6 +474,30 @@ package body GPR2.Path_Name is
                Dir_Name  => Ensure_Directory (Pseudo_Dir)));
       end return;
    end Create_Pseudo_File;
+
+   ---------------------
+   -- Create_Sym_Link --
+   ---------------------
+
+   procedure Create_Sym_Link (Self, To : Object) is
+
+      function Symlink
+        (Oldpath : System.Address;
+         Newpath : System.Address) return Integer;
+      pragma Import (C, Symlink, "__gnat_symlink");
+
+      C_From  : constant String := String (Self.Value) & ASCII.NUL;
+      pragma Warnings (Off, "*actuals for this call may be in wrong order*");
+      C_To    : constant String :=
+                  String (Relative_Path (To, Self)) & ASCII.NUL;
+      Result  : Integer;
+      Success : Boolean;
+      pragma Unreferenced (Result);
+
+   begin
+      OS_Lib.Delete_File (String (Self.Value), Success);
+      Result := Symlink (C_To'Address, C_From'Address);
+   end Create_Sym_Link;
 
    ------------
    -- Exists --
