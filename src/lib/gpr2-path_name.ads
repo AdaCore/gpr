@@ -14,6 +14,8 @@
 --  From a path-name object it is always possible to get the full pathname
 --  of the file and its containing directory.
 
+with GNAT.MD5;
+
 with GNATCOLL;
 with GNATCOLL.Utils;
 with GNATCOLL.VFS;
@@ -189,6 +191,14 @@ package GPR2.Path_Name is
    function Exists (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if Self is an existing and readable file or directory
+
+   function Content_MD5 (Self : Object) return GNAT.MD5.Message_Digest
+     with Pre => Self.Is_Defined and then Self.Exists;
+   --  Returns the MD5 signature for the given file
+
+   procedure Create_Sym_Link (Self, To : Object)
+     with Pre => Self.Is_Defined and then To.Is_Defined;
+   --  Creates a symlink for Self as To
 
    function Relative_Path (Self, From : Object) return Filename_Type
      with Pre  => Self.Is_Defined and then From.Is_Defined,
