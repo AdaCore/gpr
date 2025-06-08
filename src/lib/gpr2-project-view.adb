@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Directories;
 with Ada.Strings.Fixed;
 
 with GNAT.OS_Lib;
@@ -2856,7 +2855,7 @@ package body GPR2.Project.View is
          --  optional).
          if not (Self.Has_Source_Subdirectory
                  and then S.Text = Self.Source_Subdirectory.String_Value
-                 and then not Directories.Exists (S.Text))
+                 and then not Self.Source_Subdirectory.Exists)
          then
             View_Internal.Foreach
               (Base_Dir          => Self.Dir_Name,

@@ -19,7 +19,6 @@
 with Ada.Command_Line;
 with Ada.Directories;
 with Ada.Exceptions;
-with Ada.Text_IO;
 
 with GNAT.OS_Lib;
 with GNATCOLL.OS.Dir;
@@ -140,7 +139,7 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
 
       if Stat.Is_File (Attrs) or else Stat.Is_Symbolic_Link (Attrs) then
          if Opts.Dry_Run then
-            Text_IO.Put_Line (Name);
+            Opts.Tree.Reporter.Report (Name);
 
          else
             if Opts.Force_Deletions

@@ -4,15 +4,14 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.IO_Exceptions;
-with Ada.Strings.Fixed;
 with Ada.Strings;
-with Ada.Text_IO;
+with Ada.Strings.Fixed;
 
 with GNAT.Directory_Operations;
 with GNAT.OS_Lib;
 
 with GNATCOLL.OS.FS;
+with GNATCOLL.OS.Stat;
 with GNATCOLL.Traces;
 with GNATCOLL.Utils; use GNATCOLL.Utils;
 
@@ -794,7 +793,8 @@ package body GPR2.Build.Actions.Ada_Bind is
       Stdout : Unbounded_String := Null_Unbounded_String;
       Stderr : Unbounded_String := Null_Unbounded_String) return Boolean
    is
-      use Ada.Text_IO;
+      use GNATCOLL.OS;
+      use GNATCOLL.OS.FS;
       use Ada.Strings;
       use Ada.Strings.Fixed;
 
@@ -918,11 +918,8 @@ package body GPR2.Build.Actions.Ada_Bind is
          end if;
       end Process_Option_Or_Object_Line;
 
-      Src_File     : File_Type;
-      Reading      : Boolean         := False;
-      Begin_Marker : constant String := "--  BEGIN Object file/option list";
-      End_Marker   : constant String := "--  END Object file/option list";
-      Switch_Index : Natural;
+      Src_File     : File_Descriptor;
+      Attrs        : Stat.File_Attributes;
 
       Link            : constant Actions.Link.Object'Class := Self.Link;
       Link_Opt_Insert : constant Actions.Link_Options_Insert.Object :=
@@ -936,44 +933,82 @@ package body GPR2.Build.Actions.Ada_Bind is
               " to obtain linker options");
       end if;
 
-      Open
-        (File => Src_File,
-         Mode => In_File,
-         Name => Self.Output_Body.Path.String_Value);
+      Attrs := Stat.Stat (Self.Output_Body.Path.String_Value);
 
-      while not End_Of_File (Src_File) loop
-         declare
-            Line : constant String := Get_Line (Src_File);
-         begin
-            if Index (Line, Begin_Marker) = Line'First then
-               Reading := True;
-            elsif Index (Line, End_Marker) = Line'First then
-               Reading := False;
-               exit;
-            elsif Reading then
-               Switch_Index := Index (Line, "--");
+      if not Stat.Exists (Attrs)
+        or else not Stat.Is_File (Attrs)
+        or else not Stat.Is_Readable (Attrs)
+      then
+         Self.Tree.Reporter.Report
+           ("cannot find binder generated file """ &
+              String (Self.Output_Body.Path.Simple_Name) & '"',
+            To_Stderr => True,
+            Level     => GPR2.Message.Important);
 
-               if Switch_Index = 0 then
-                  pragma Annotate (Xcov, Exempt_On, "unreachable code");
-                  raise Internal_Error
-                    with "Failed parsing line " & Line & " from " &
-                    Self.Output_Body.Path.String_Value;
-                  pragma Annotate (Xcov, Exempt_Off);
+         return False;
+      end if;
+
+      Src_File := Open (Self.Output_Body.Path.String_Value, Read_Mode);
+
+      declare
+         Buffer       : String (1 .. Natural (Stat.Length (Attrs)));
+         Ign          : Natural with Unreferenced;
+         Pos, Last    : Natural;
+         Reading      : Boolean         := False;
+         Begin_Marker : constant String := "--  BEGIN Object file/option list";
+         End_Marker   : constant String := "--  END Object file/option list";
+         Switch_Index : Natural;
+      begin
+         Ign := Read (Src_File, Buffer);
+         Close (Src_File);
+
+         Pos := 1;
+
+         while Pos < Buffer'Last loop
+            Last := GNATCOLL.Utils.Line_End (Buffer, Pos);
+
+            declare
+               Line : String renames Buffer (Pos .. Last);
+            begin
+               if Index (Line, Begin_Marker) = Line'First then
+                  Reading := True;
+               elsif Index (Line, End_Marker) = Line'First then
+                  Reading := False;
+                  exit;
+               elsif Reading then
+                  Switch_Index := Index (Line, "--");
+
+                  if Switch_Index = 0 then
+                     pragma Annotate (Xcov, Exempt_On, "unreachable code");
+                     raise Internal_Error
+                       with "Failed parsing line " & Line & " from " &
+                       Self.Output_Body.Path.String_Value;
+                     pragma Annotate (Xcov, Exempt_Off);
+                  end if;
+
+                  --  Skip the "--" comment prefix
+                  Switch_Index := Switch_Index + 2;
+
+                  declare
+                     Trimmed_Line : constant String :=
+                                      Trim (Line (Switch_Index .. Line'Last),
+                                            Both);
+                  begin
+                     Traces.Trace
+                       ("Processing parsed line '" & Trimmed_Line & "'");
+                     Process_Option_Or_Object_Line (Trimmed_Line);
+                  end;
                end if;
+            end;
 
-               --  Skip the "--" comment prefix
-               Switch_Index := Switch_Index + 2;
-               declare
-                  Trimmed_Line : constant String :=
-                    Trim (Line (Switch_Index .. Line'Last), Both);
-               begin
-                  Traces.Trace
-                    ("Processing parsed line '" & Trimmed_Line & "'");
-                  Process_Option_Or_Object_Line (Trimmed_Line);
-               end;
-            end if;
-         end;
-      end loop;
+            --  Use bigest between pos and last to prevent infinite recursion
+            --  in case of empty strings when the line delimiter has several
+            --  characters (CR/LF on windows).
+            Pos := GNATCOLL.Utils.Next_Line
+              (Buffer,
+               Natural'Max (Pos, Last));
+         end loop;
+      end;
 
       if not Link.Is_Defined then
          Traces.Trace
@@ -1007,17 +1042,7 @@ package body GPR2.Build.Actions.Ada_Bind is
          end if;
       end if;
 
-      Close (Src_File);
-
       return True;
-   exception
-      when Ada.IO_Exceptions.Name_Error =>
-         Self.Tree.Reporter.Report
-           ("cannot find binder generated file """ &
-              String (Self.Output_Body.Path.Simple_Name) & '"',
-            To_Stderr => True,
-            Level     => GPR2.Message.Important);
-         return False;
    end Post_Command;
 
    ---------

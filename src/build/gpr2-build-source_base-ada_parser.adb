@@ -4,8 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Directories;
-
 with Gpr_Parser.Analysis;
 
 with GPR2.Build.Unit_Info;
@@ -91,7 +89,8 @@ package body GPR2.Build.Source_Base.Ada_Parser is
          Parents_Only : Boolean := False)
       is
          N        : constant Name_Type := Name_Type (Name);
-         B_Name   : constant String    := Directories.Base_Name (Name);
+         B_Name   : constant String    :=
+                      GPR2.Path_Name.Base_Name (Name);
          Position : Containers.Name_Type_Set.Cursor;
          Inserted : Boolean;
 

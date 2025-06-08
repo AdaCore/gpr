@@ -2963,7 +2963,7 @@ package body GPR2.KB is
                            Trace
                              (Main_Trace,
                               "<dir>: Matched "
-                              & Ada.Directories.Simple_Name (File));
+                              & Directories.Simple_Name (File));
 
                            if Group = 0 then
                               Parse_All_Dirs

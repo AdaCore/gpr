@@ -133,6 +133,10 @@ package GPR2.Path_Name is
    --  Return Path basename (so simple name without extension).
    --  Assumes Path is a file.
 
+   function Base_Name (Path : String) return String;
+   --  Return Path basename (so simple name without extension).
+   --  Assumes Path is a file.
+
    function Base_Filename (Self : Object) return GPR2.Simple_Name
      with Pre => Self.Is_Defined
                    and then not Self.Is_Directory;
@@ -154,6 +158,11 @@ package GPR2.Path_Name is
    --  Returns the base name for Self (with extension)
 
    function Simple_Name (Path : Filename_Optional) return GPR2.Simple_Name;
+   --  Returns the simple name portion of the file name specified by Name.
+   --  This is Ada.Directories.Simple_Name implementation with
+   --  valid path name check removed to allow '*' chars.
+
+   function Simple_Name (Path : String) return String;
    --  Returns the simple name portion of the file name specified by Name.
    --  This is Ada.Directories.Simple_Name implementation with
    --  valid path name check removed to allow '*' chars.
@@ -285,6 +294,9 @@ private
       then False
       else True);
 
+   function Base_Name (Path : String) return String is
+     (String (Base_Name (Filename_Type (Path))));
+
    function Base_Name (Self : Object) return Name_Type is
      (Name_Type (Get (Self).Base_Name));
 
@@ -299,6 +311,9 @@ private
 
    function Has_Dir_Name (Self : Object) return Boolean is
      (Get (Self).Dir_Name'Length > 0);
+
+   function Simple_Name (Path : String) return String is
+     (String (Simple_Name (Filename_Type (Path))));
 
    function Has_Value (Self : Object) return Boolean is
      (Get (Self).Value'Length > 0);
