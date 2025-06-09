@@ -39,7 +39,7 @@ $ gprbuild -Plib -j1
 [Ada Post-Bind]   b__lib.adb
 [Add-Link-Options] o__lib.o
 [Partial Link]    p__lib.o
-lib.gpr: error: could not copy ali file pkg2.ali to the library directory
+lib.gpr: error: could not create the ali file "pkg2.ali"
 Command '[Archive] liblib.a (lib.gpr)' failed.
 $ chmod 0x777 lib/lib
 $ gprbuild -Plib -q
