@@ -1,2 +1,4 @@
 description: test gpr2clean -f switch implementation
 driver: python_script
+control:
+- [XFAIL, "'windows' in env.host.platform", "os.chmod in python doesn't handle ACLs but just the old DOS read-only flag"]
