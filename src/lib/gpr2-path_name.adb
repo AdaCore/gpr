@@ -6,17 +6,22 @@
 
 with Ada.Characters.Handling;
 with Ada.Directories.Hierarchical_File_Names;
-with Ada.IO_Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
 
 with GNAT.OS_Lib;
 with GNAT.Regexp;
 
+with GNATCOLL.OS.Constants;
+with GNATCOLL.OS.Stat;
+
 package body GPR2.Path_Name is
 
    use GNAT;
    use GNAT.Regexp;
+   use GNATCOLL.OS;
+
+   function Get_Extension (Path : Filename_Optional) return Filename_Optional;
 
    function To_OS_Case (Name : Filename_Optional) return String is
      (if File_Names_Case_Sensitive
@@ -34,17 +39,17 @@ package body GPR2.Path_Name is
                  Compile ("/+|[A-Z]:\\+", Case_Sensitive => False);
 
    Dir_Seps : constant Ada.Strings.Maps.Character_Set :=
-                Strings.Maps.To_Set ("/\");
+                Strings.Maps.To_Set (Constants.Dir_Seps);
    --  UNIX and DOS style directory separators
 
    function Ensure_Directory (Path : Filename_Optional) return Filename_Type is
-     (if Path (Path'Last) in OS_Lib.Directory_Separator | '/'
+     (if Path (Path'Last) in '\' | '/'
       then Path
-      else Path & OS_Lib.Directory_Separator);
+      else Path & Constants.Dir_Sep);
 
    function Remove_Last_DS (Path : Filename_Optional) return Filename_Optional
    is (if Path'Length > 0
-         and then Path (Path'Last) in OS_Lib.Directory_Separator | '/' | '\'
+         and then Path (Path'Last) in '\' | '/'
        then Path (Path'First .. Path'Last - 1)
        else Path);
 
@@ -132,24 +137,21 @@ package body GPR2.Path_Name is
    function Change_Extension
      (Self : Object; Extension : Filename_Optional) return Object
    is
-      Result  : Object;
-      Temp    : constant String :=
-                  Directories.Extension (Self.String_Value);
-      Old_Ext : constant Filename_Optional :=
-                  (if Temp'Length = 0 then ""
-                   else '.' & Filename_Optional (Temp));
-      New_Ext : constant Filename_Optional :=
-                  (if Extension'Length = 0
-                   or else (Extension'Length = 1 and then Extension = ".")
-                   then ""
-                   elsif Extension (Extension'First) /= '.'
-                   then '.' & Extension
-                   else Extension);
-
       function Replace_Extension
         (Path : Filename_Optional;
          Suff : Filename_Optional) return Filename_Optional;
       --  Replaces the file extension in Path to the New_Ext
+
+      Result   : Object;
+      Old_Ext  : constant Filename_Optional :=
+                   Get_Extension (Self.Value);
+      New_Ext  : constant Filename_Optional :=
+                   (if Extension'Length = 0
+                    or else (Extension'Length = 1 and then Extension = ".")
+                    then ""
+                    elsif Extension (Extension'First) /= '.'
+                    then '.' & Extension
+                    else Extension);
 
       -----------------------
       -- Replace_Extension --
@@ -426,10 +428,10 @@ package body GPR2.Path_Name is
 
    function Create_Pseudo_File (Name : Filename_Type) return Object is
       Pseudo_Dir  : constant Filename_Type :=
-                      OS_Lib.Directory_Separator & "<ram>";
+                      Constants.Dir_Sep & "<ram>";
       Pseudo_Full : constant Filename_Type :=
                       Pseudo_Dir
-                      & OS_Lib.Directory_Separator
+                      & Constants.Dir_Sep
                       & Simple_Name (Name);
    begin
       return Result : Object do
@@ -450,13 +452,16 @@ package body GPR2.Path_Name is
    ------------
 
    function Exists (Self : Object) return Boolean is
-      Int : Object_Internal renames Get (Self);
+      Val  : String renames Self.Unchecked_Value;
+      Stat : GNATCOLL.OS.Stat.File_Attributes;
    begin
-      return Int.Value'Length > 0
-        and then Directories.Exists (String (Int.Value));
-   exception
-      when Ada.IO_Exceptions.Name_Error =>
+      if Val'Length > 0 then
+         Stat := GNATCOLL.OS.Stat.Stat (Val);
+
+         return GNATCOLL.OS.Stat.Exists (Stat);
+      else
          return False;
+      end if;
    end Exists;
 
    ---------------
@@ -486,6 +491,26 @@ package body GPR2.Path_Name is
          return "";
       end if;
    end Filesystem_String;
+
+   -------------------
+   -- Get_Extension --
+   -------------------
+
+   function Get_Extension (Path : Filename_Optional) return Filename_Optional
+   is
+      Dir_Seps : constant Strings.Maps.Character_Set :=
+                   Strings.Maps.To_Set (Constants.Dir_Seps);
+   begin
+      for J in reverse Path'Range loop
+         if Strings.Maps.Is_In (Path (J), Dir_Seps) then
+            return "";
+         elsif Path (J) = '.' then
+            return Path (J .. Path'Last);
+         end if;
+      end loop;
+
+      return "";
+   end Get_Extension;
 
    -----------------
    -- Is_Root_Dir --
@@ -585,9 +610,9 @@ package body GPR2.Path_Name is
       N := Strings.Fixed.Count (T (Pi + 1 .. T'Last), Dir_Seps);
 
       return Filename_Optional
-        (String'(N * (".." & GNAT.OS_Lib.Directory_Separator)
+        (String'(N * (".." & Constants.Dir_Sep)
          & (if Pi = P'Last and then N = 0
-            then (if S_Int.Is_Dir then "./" else "")
+            then (if S_Int.Is_Dir then "." & Constants.Dir_Sep else "")
             else P (Pi + 1 .. P'Last))))
          & (if S_Int.Is_Dir then "" else Filename_Type (Self.Simple_Name));
    end Relative_Path;
@@ -632,7 +657,7 @@ package body GPR2.Path_Name is
          BN               : constant Filename_Type :=
                               Path (Cut_Start .. Cut_End);
          Has_Drive_Letter : constant Boolean :=
-                              OS_Lib.Path_Separator /= ':';
+                              Constants.Path_Sep /= ':';
          --  If Path separator is not ':' then we are on a DOS based OS
          --  where this character is used as a drive letter separator.
 

@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Directories;
 with Ada.Strings.Fixed;
 with GNAT.Formatted_String;
 
@@ -64,7 +63,7 @@ package body GPR2.Source_Reference is
             Start := Start + 5;
          end if;
 
-         return Directories.Simple_Name (S (Start .. S'Last));
+         return Path_Name.Simple_Name (S (Start .. S'Last));
       end Simple_Name;
 
       Filename : constant String :=

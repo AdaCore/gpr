@@ -6,8 +6,8 @@
 
 with Ada.Exceptions;
 with GNATCOLL.Buffer;
+with GNATCOLL.OS.FS;
 with GNATCOLL.Traces;
-with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
 package body GPR2.Build.ALI_Parser is
@@ -727,10 +727,10 @@ package body GPR2.Build.ALI_Parser is
    -------------
 
    function Version (ALI_File : GPR2.Path_Name.Object) return String is
-      use Ada.Text_IO;
+      use GNATCOLL.OS.FS;
 
-      File  : File_Type;
-      Line  : String (1 .. 1_000);
+      File  : File_Descriptor;
+      Line  : String (1 .. 100);
       Last  : Natural;
       Start : Natural;
    begin
@@ -738,12 +738,12 @@ package body GPR2.Build.ALI_Parser is
          return "";
       end if;
 
-      Open
-         (File,
-         In_File,
-         ALI_File.String_Value);
-      Get_Line (File, Line, Last);
+      File := Open (ALI_File.String_Value);
+      Last := Read (File, Line);
       Close (File);
+
+      Last := GNATCOLL.Utils.Line_End (Line, 1);
+
       Start := Ada.Strings.Fixed.Index (Line (1 .. Last), " v");
 
       if Start /= 0 then

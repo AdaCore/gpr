@@ -4,10 +4,12 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GNATCOLL.OS.Process;
-with GPR2.Build.Actions; use GPR2.Build.Actions;
-with Ada.Text_IO;        use Ada.Text_IO;
 with Ada.Strings.Fixed;
+
+with GNATCOLL.OS.FS;
+with GNATCOLL.OS.Process;
+
+with GPR2.Build.Actions; use GPR2.Build.Actions;
 
 package body GPR2.Build.Process_Manager.JSON is
 
@@ -110,14 +112,14 @@ package body GPR2.Build.Process_Manager.JSON is
      ----------------------------
 
    overriding procedure Execution_Post_Process (Self : in out Object) is
-      File : File_Type;
+      File : GNATCOLL.OS.FS.File_Descriptor;
    begin
       if not Self.JSON_File.Is_Defined then
          return;
       end if;
 
-      Create (File, Out_File, Self.JSON_File.String_Value);
-      Put_Line (File, Write (Create (Self.JSON)) & ASCII.CR & ASCII.LF);
+      File := Open (Self.JSON_File.String_Value, Write_Mode);
+      Write (File, Write (Create (Self.JSON)) & ASCII.CR & ASCII.LF);
       Close (File);
    end Execution_Post_Process;
 

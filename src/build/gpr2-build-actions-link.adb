@@ -6,13 +6,12 @@
 
 with Ada.Characters.Handling;
 with Ada.Strings.Fixed;
-with Ada.IO_Exceptions;
-with Ada.Text_IO;
 
 with GNAT.Regpat;
 with GNATCOLL.OS.FS;
 with GNATCOLL.OS.FSUtil;
 with GNATCOLL.OS.Process;
+with GNATCOLL.OS.Stat;
 with GNATCOLL.Traces;
 with GNATCOLL.Utils;
 
@@ -972,6 +971,7 @@ package body GPR2.Build.Actions.Link is
                   GNAT.Regpat.Compile
                     (Self.View.Attribute
                        (PRA.Object_Lister_Matcher).Value.Text);
+      Attrs   : GNATCOLL.OS.Stat.File_Attributes;
 
       ---------------------
       -- Extract_Symbols --
@@ -1159,25 +1159,68 @@ package body GPR2.Build.Actions.Link is
 
       else
          --  Read the symbols from the specified file
-         declare
-            FD : Ada.Text_IO.File_Type;
-         begin
-            Ada.Text_IO.Open (FD, Ada.Text_IO.In_File, From.String_Value);
 
-            while not Ada.Text_IO.End_Of_File (FD) loop
+         Attrs := GNATCOLL.OS.Stat.Stat (From.String_Value);
+
+         if not GNATCOLL.OS.Stat.Is_File (Attrs) then
+            Self.Tree.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  '"' & From.String_Value & """ is not a file",
+                  GPR2.Source_Reference.Create
+                    (Self.Ctxt.Path_Name.Value, 0, 0)));
+            return "";
+
+         elsif not GNATCOLL.OS.Stat.Is_Readable (Attrs) then
+            Self.Tree.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  '"' & From.String_Value & """ is not a readable",
+                  GPR2.Source_Reference.Create
+                    (Self.Ctxt.Path_Name.Value, 0, 0)));
+            return "";
+
+         elsif GNATCOLL.OS.Stat.Length (Attrs) >
+           Long_Long_Integer (Natural'Last)
+         then
+            Self.Tree.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  '"' & From.String_Value & """ is too big",
+                  GPR2.Source_Reference.Create
+                    (Self.Ctxt.Path_Name.Value, 0, 0)));
+            return "";
+         end if;
+
+         declare
+            Buffer : String (1 .. Natural (GNATCOLL.OS.Stat.Length (Attrs)));
+            FD     : constant GNATCOLL.OS.FS.File_Descriptor :=
+                       GNATCOLL.OS.FS.Open (From.String_Value);
+            Ign    : Natural with Unreferenced;
+            First  : Natural := 1;
+            Last   : Natural;
+
+         begin
+            Ign := GNATCOLL.OS.FS.Read (FD, Buffer);
+            GNATCOLL.OS.FS.Close (FD);
+
+            while First < Buffer'Last loop
+               Last := GNATCOLL.Utils.Line_End (Buffer, First + 1);
+
                declare
                   Line : constant String :=
                            Ada.Strings.Fixed.Trim
-                             (Ada.Text_IO.Get_Line (FD),
+                             (Buffer (First .. Last),
                               Ada.Strings.Both);
                begin
                   if Line'Length > 0 then
                      Syms.Include (Line);
                   end if;
                end;
-            end loop;
 
-            Ada.Text_IO.Close (FD);
+               First := GNATCOLL.Utils.Next_Line
+                 (Buffer, Natural'Max (First, Last));
+            end loop;
          end;
       end if;
 
@@ -1749,21 +1792,19 @@ package body GPR2.Build.Actions.Link is
 
          for U of Units loop
             declare
-               use Ada.Text_IO;
-               C_Id : constant Actions.Compile.Ada.Ada_Compile_Id :=
-                        Actions.Compile.Ada.Create (U);
+               C_Id  : constant Actions.Compile.Ada.Ada_Compile_Id :=
+                         Actions.Compile.Ada.Create (U);
                pragma Assert
                  (Self.Tree.Has_Action (C_Id),
                   "interface unit '" & String (U.Name) &
                     "' doesn't have an associated compile action");
-               From : constant Path_Name.Object :=
-                        Actions.Compile.Object
-                          (Self.Tree.Action (C_Id)).Dependency_File.Path;
-               To   : constant Path_Name.Object :=
-                        Self.Ctxt.Library_Ali_Directory.Compose
-                          (From.Simple_Name);
-               Input  : File_Type;
-               Output : File_Type;
+               From  : constant Path_Name.Object :=
+                         Actions.Compile.Object
+                           (Self.Tree.Action (C_Id)).Dependency_File.Path;
+               To    : constant Path_Name.Object :=
+                         Self.Ctxt.Library_Ali_Directory.Compose
+                           (From.Simple_Name);
+               Attrs : GNATCOLL.OS.Stat.File_Attributes;
 
             begin
                GPR2.Build.Actions.Compile.Ada.Object
@@ -1799,52 +1840,93 @@ package body GPR2.Build.Actions.Link is
                   --  Amend the ALI to add the SL (StandAlone) flag to
                   --  it to prevent multiple elaboration of the unit.
 
-                  Open (Input, In_File, From.String_Value);
-                  Create (Output, Out_File, To.String_Value);
+                  Attrs := GNATCOLL.OS.Stat.Stat (From.String_Value);
 
-                  Traces.Trace
-                    ("Installing """ & From.String_Value & """ to """ &
-                       To.Containing_Directory.String_Value &
-                       """ as library interface for " &
-                       String (Self.Ctxt.Name));
+                  declare
+                     use GNATCOLL.OS;
+                     use type GNATCOLL.OS.FS.File_Descriptor;
 
-                  while not End_Of_File (Input) loop
-                     declare
-                        Line : constant String := Get_Line (Input);
-                     begin
-                        if Line'Length > 2
-                          and then Line
-                            (Line'First .. Line'First + 1) = "P "
+                     Buffer : String (1 .. Natural (Stat.Length (Attrs)));
+                     Ign    : Natural with Unreferenced;
+                     First  : Natural := 1;
+                     Last   : Natural;
+                     Found  : Boolean := False;
+                     Input  : GNATCOLL.OS.FS.File_Descriptor;
+                     Output : GNATCOLL.OS.FS.File_Descriptor;
+
+                  begin
+                     Input := FS.Open (From.String_Value, FS.Read_Mode);
+
+                     if Input = FS.Invalid_FD then
+                        Self.Tree.Reporter.Report
+                          (GPR2.Message.Create
+                             (GPR2.Message.Error,
+                              "could not read the ali file """ &
+                                String (From.Simple_Name) & '"',
+                              GPR2.Source_Reference.Object
+                                (GPR2.Source_Reference.Create
+                                     (Self.Ctxt.Path_Name.Value, 0, 0))));
+
+                        return False;
+                     end if;
+
+                     Ign := FS.Read (Input, Buffer);
+                     FS.Close (Input);
+
+                     Output := FS.Open (To.String_Value, FS.Write_Mode);
+
+                     if Output = FS.Invalid_FD then
+                        Self.Tree.Reporter.Report
+                          (GPR2.Message.Create
+                             (GPR2.Message.Error,
+                              "could not create the ali file """ &
+                                String (To.Simple_Name) & '"',
+                              GPR2.Source_Reference.Object
+                                (GPR2.Source_Reference.Create
+                                     (Self.Ctxt.Path_Name.Value, 0, 0))));
+
+                        return False;
+                     end if;
+
+                     Traces.Trace
+                       ("Installing """ & From.String_Value & """ to """ &
+                          To.Containing_Directory.String_Value &
+                          """ as library interface for " &
+                          String (Self.Ctxt.Name));
+
+                     while First < Buffer'Last loop
+                        Last := GNATCOLL.Utils.Next_Line (Buffer, First);
+
+                        if Last > First + 1 and then
+                          Buffer (First .. First + 1) = "P "
                         then
-                           Put_Line
-                             (Output,
-                              "P SL" &
-                                Line (Line'First + 1 .. Line'Last));
-                        else
-                           Put_Line (Output, Line);
+                           FS.Write (Output, Buffer (1 .. First + 1));
+                           FS.Write (Output, "SL");
+                           FS.Write
+                             (Output, Buffer (First + 1 .. Buffer'Last));
+                           Found := True;
+
+                           exit;
                         end if;
-                     end;
-                  end loop;
 
-                  Close (Input);
-                  Close (Output);
+                        First := Last;
+                     end loop;
+
+                     if not Found then
+                        Self.Tree.Reporter.Report
+                          (GPR2.Message.Create
+                             (GPR2.Message.Error,
+                              "incorrectly formatted ali file """ &
+                                From.String_Value & '"',
+                              GPR2.Source_Reference.Create
+                                (Self.Ctxt.Path_Name.Value, 0, 0)));
+
+                        FS.Write (Output, Buffer);
+                     end if;
+
+                     FS.Close (Output);
+                  end;
                end if;
-
-            exception
-               when Ada.IO_Exceptions.Use_Error |
-                    Ada.IO_Exceptions.Name_Error =>
-
-                  Self.Tree.Reporter.Report
-                    (GPR2.Message.Create
-                       (GPR2.Message.Error,
-                        "could not copy ali file " &
-                          String (From.Simple_Name) &
-                          " to the library directory",
-                        GPR2.Source_Reference.Object
-                          (GPR2.Source_Reference.Create
-                               (Self.Ctxt.Path_Name.Value, 0, 0))));
-
-                  return False;
             end;
          end loop;
 

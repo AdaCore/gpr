@@ -4,11 +4,11 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GNATCOLL.JSON;
 with GNATCOLL.Buffer;
+with GNATCOLL.JSON;
+with GNATCOLL.OS.FS;
 
-with Ada.Directories; use Ada.Directories;
-with Ada.Text_IO; use Ada.Text_IO;
+with GPR2.Build.Actions;
 
 package body GPR2.Build.Signature is
 
@@ -292,12 +292,13 @@ package body GPR2.Build.Signature is
 
    procedure Store (Self : in out Object; Db_File : Path_Name.Object)
    is
-      File    : File_Type;
+      FD      : GNATCOLL.OS.FS.File_Descriptor;
       Value   : constant JSON.JSON_Value := JSON.Create_Object;
       Inputs  : JSON.JSON_Array;
       Outputs : JSON.JSON_Array;
 
       use type Ada.Containers.Count_Type;
+      use GNATCOLL.OS.FS;
 
       function To_Artifact_Element
         (Position : Checksum_Maps.Cursor) return JSON.JSON_Value;
@@ -350,15 +351,15 @@ package body GPR2.Build.Signature is
                       Field_Name => TEXT_STDERR,
                       Field      => Self.Stderr);
 
-      if Exists (String (Db_File.Value)) then
-         Open (File, Out_File, String (Db_File.Value));
-         Put_Line (File, JSON.Write (Value) & ASCII.CR & ASCII.LF);
-         Close (File);
-      elsif Exists (String (Db_File.Containing_Directory.Value)) then
-         Create (File, Out_File, String (Db_File.Value));
-         Put_Line (File, JSON.Write (Value) & ASCII.CR & ASCII.LF);
-         Close (File);
+      FD := Open (Db_File.String_Value, Write_Mode);
+
+      if FD = Invalid_FD then
+         raise GPR2.Build.Actions.Action_Error with
+           "could not create file """ & Db_File.String_Value & '"';
       end if;
+
+      Write (FD, JSON.Write (Value) & ASCII.CR & ASCII.LF);
+      Close (FD);
    end Store;
 
    -----------
