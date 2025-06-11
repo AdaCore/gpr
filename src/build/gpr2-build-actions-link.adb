@@ -706,9 +706,6 @@ package body GPR2.Build.Actions.Link is
 
       if Link_Exec then
          --  Add switches for linking an executable
-         Status :=
-           Add_Attr (PRA.Linker.Required_Switches, PAI.Undefined, True, True);
-
          Status := Add_Attr (PRA.Linker.Switches, Src_Idx, True, True);
 
          if not Status then
@@ -719,9 +716,6 @@ package body GPR2.Build.Actions.Link is
                True,
                True);
          end if;
-
-         Status :=
-           Add_Attr (PRA.Linker.Trailing_Switches, Src_Idx, True, True);
       end if;
 
       if not Self.Is_Static_Library then
@@ -805,6 +799,50 @@ package body GPR2.Build.Actions.Link is
       if Self.Is_Library and then not Self.Is_Static then
          Self.Handle_Export_File (Cmd_Line, Signature_Only, False);
       end if;
+
+      if Link_Exec then
+         Status :=
+           Add_Attr (PRA.Linker.Required_Switches, PAI.Undefined, True, True);
+
+         Status :=
+           Add_Attr (PRA.Linker.Trailing_Switches, Src_Idx, True, True);
+      end if;
+
+      --  Filter out some duplicates that may happen during command line
+      --  construction:
+
+      --  on 32-bit windows, contradictory --shared-libgcc and --static-libgcc
+      --  lead to invalid link for cross-handling of c++/Ada exceptions. Only
+      --  the last one should remain.
+      --  ??? That's the linker's job to handle those contradictory switches,
+      --  we probably can do something to fix it rather than this very specific
+      --  handling. All other linkers seem to handle that properly.
+      --  ??? If we want to have a generic answer to this kind of situation,
+      --  how to express that in KB terms?
+
+      declare
+         Seen          : Boolean := False;
+         Static_Arg    : Boolean := False;
+         Shared_Arg    : Boolean := False;
+      begin
+         for J in reverse
+           Cmd_Line.Argument_List.First_Index ..
+             Cmd_Line.Argument_List.Last_Index
+         loop
+            Static_Arg :=
+              Cmd_Line.Argument_List.Element (J) = "-static-libgcc";
+            Shared_Arg :=
+              Cmd_Line.Argument_List.Element (J) = "-shared-libgcc";
+
+            if Static_Arg or else Shared_Arg then
+               if not Seen then
+                  Seen := True;
+               else
+                  Cmd_Line.Remove (J);
+               end if;
+            end if;
+         end loop;
+      end;
 
       --  Finally remove any duplicated --specs switch as this may cause
       --  trouble by introducing duplicated symbols in the result.

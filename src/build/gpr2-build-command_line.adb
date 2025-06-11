@@ -85,12 +85,23 @@ package body GPR2.Build.Command_Line is
 
             if not Inserted then
                --  Remove the duplicated value
-               Self.Cmd_Line.Delete (J);
-               Self.In_Signature.Delete (J);
+               Self.Remove (J);
             end if;
          end if;
       end loop;
    end Filter_Duplicate_Switches;
+
+   ------------
+   -- Remove --
+   ------------
+
+   procedure Remove
+     (Self  : in out Object;
+      Index : Natural) is
+   begin
+      Self.Cmd_Line.Delete (Index);
+      Self.In_Signature.Delete (Index);
+   end Remove;
 
    ----------------
    -- Set_Driver --
