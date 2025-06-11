@@ -58,6 +58,11 @@ package GPR2.Build.Command_Line is
    function Argument_List
      (Self : Object) return GNATCOLL.OS.Process.Argument_List;
 
+   procedure Remove
+     (Self  : in out Object;
+      Index : Natural);
+   --  Remove an argument from the Argument list at the specified index
+
    function Signature (Self : Object) return String;
 
    function Environment_Variables
