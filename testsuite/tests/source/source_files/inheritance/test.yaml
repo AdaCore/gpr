@@ -1,5 +1,0 @@
-description:
-    Test the Source_Files attribute with an extending projects
-driver: build_and_run
-project_file: test
-main: main
