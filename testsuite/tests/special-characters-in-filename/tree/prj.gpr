@@ -1,0 +1,8 @@
+project Prj is
+   for Source_Dirs use (".");
+   for Exec_Dir use ".";
+
+   for Languages use ("C");
+
+   for Main use ("main.c");
+end Prj;
