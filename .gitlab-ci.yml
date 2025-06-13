@@ -133,6 +133,26 @@ test_gprbuild_internal:
     reports:
       junit: testgpr1testsuite_result.xml
 
+#########################
+## ARMHF GPR1 TESTSUITE #
+#########################
+
+# Test the gpr1 testsuite with gpr2build on the armhf-linux platform.
+test_armhf_gprbuild_internal:
+  extends: .gpr2_test_template
+  variables:
+    JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
+  when: manual
+  script:
+  - install_cache
+  - run_testsuite gprbuild "-Qgpr2build --target=armhf-linux,unknown,qemu,unknown" test_armhf_gpr1_testsuite
+  artifacts:
+    when: always
+    paths:
+    - testarmhfgpr1testsuite_result.xml
+    reports:
+      junit: testarmhfgpr1testsuite_result.xml
+
 ##################
 ## MEMORY LEAKS ##
 ##################
