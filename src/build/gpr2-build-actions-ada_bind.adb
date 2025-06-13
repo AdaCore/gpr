@@ -132,7 +132,9 @@ package body GPR2.Build.Actions.Ada_Bind is
                   --  There is always a '-' between <prefix> and
                   --  "gnatbind". Add one if not already in <prefix>.
                   if Val.Text'Length = Gnatbind_Prefix_Equal'Length then
-                     Binder_From_Attrs := +Default_Binder_Name;
+                     Binder_From_Attrs :=
+                       +(Self.View.Compiler_Prefix &
+                         Default_Binder_Name);
                   else
                      Binder_From_Attrs :=
                        +(Val.Text (Val.Text'First +
@@ -307,7 +309,7 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       function Resolve_Binder return String is
          Default_Binder_Name : constant String :=
-           Self.View.Compiler_Prefix (Ada_Language)
+           Self.View.Compiler_Prefix
            & "gnatbind"
            & (if GPR2.On_Windows then ".exe" else "");
          Binder_Path         : Path_Name.Object;

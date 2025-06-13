@@ -261,12 +261,10 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Get the list of attributes
 
-   function Compiler_Prefix (Self : Object; Language : Language_Id)
-     return String
+   function Compiler_Prefix (Self : Object) return String
      with Pre => Self.Is_Defined;
-   --  Returns the compiler prefix for the given language, including the
-   --  separator dash, or an empty string if no prefix is defined for
-   --  the specified language.
+   --  Returns the compiler prefix including the separator dash, or an empty
+   --  string if no prefix is defined for any available compiler.
 
    --  Types
 

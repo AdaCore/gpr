@@ -9,6 +9,7 @@ with GPR2.Build.Actions.Archive_Extract;
 with GNAT.String_Split;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Actions.Link_Options_Extract;
+with GPR2.Project.Registry.Attribute;
 
 package body GPR2.Build.Actions.Archive_Table_List is
 
@@ -24,8 +25,10 @@ package body GPR2.Build.Actions.Archive_Table_List is
       Signature_Only : Boolean)
    is
       pragma Unreferenced (Slot);
+      package PRA renames GPR2.Project.Registry.Attribute;
    begin
-      Cmd_Line.Set_Driver ("ar");
+      Cmd_Line.Set_Driver
+        (Self.Ctxt.Attribute (PRA.Archive_Builder).Values.First_Element.Text);
       Cmd_Line.Add_Argument ("-t");
       Cmd_Line.Add_Argument (Self.Archive.Path.String_Value);
    end Compute_Command;
