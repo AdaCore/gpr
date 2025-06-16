@@ -13,13 +13,13 @@ def build():
 
 
 def install_gpr2():
-    if env.host.os.name == "linux":
+    if env.host.platform == "x86_64-linux":
         anod_install("gpr2-doc")
     anod_install("libgpr2", qualifier={"bare": True})
     anod_install("gpr2", qualifier={"gpr2build": True})
 
 
-def build_bootstrap():
+def build_gnat_bootstrap():
     install_gpr2()
     anod_install("gpr2")
     anod_install("libgpr2")

@@ -58,8 +58,8 @@ include:
   # bootstrap build
   - component: $CI_SERVER_FQDN/eng/gitlab-templates/build@~latest
     inputs:
-      job-name: build_bootstrap
-      anod-args: run build_bootstrap
+      job-name: build_gnat_bootstrap
+      anod-args: run build_gnat_bootstrap
       save-component: true
       cpus: 16
       disk: 80
@@ -77,7 +77,7 @@ include:
       save-component: false
       cpus: 16
       disk: 80
-      needs: ["build_bootstrap:linux"]
+      needs: ["build_gnat_bootstrap:linux"]
       rules:
         - allow_failure: true
 
@@ -104,11 +104,18 @@ include:
   # gpr2 testsuite with coverage
   - component: $CI_SERVER_FQDN/eng/gitlab-templates/test@~latest
     inputs:
-      job-name: test_gpr2_cov
+      # do not make it visible to allow actual job to have multiple
+      # extends (from this template but also from the coverage postprocessing
+      # template)
+      job-name: .test_gpr2_cov
       anod-args: run test_gpr2_cov
       disk: 80
       save-anod-logs: true
       needs: ["build:linux"]
+      windows: true
+      windows-cpus: 8
+      windows-mem: 16
+      windows-needs: ["build:windows"]
       rules:
         - allow_failure: true
 
@@ -158,10 +165,17 @@ include:
 # let's make them optional and activate them manually on windows-impacting
 # MRs.
 
-build_bootstrap:windows:
+build_gnat_bootstrap:windows:
   when: manual
 
 test_gpr2build:windows:
+  when: manual
+
+# windows coverage don't differ much from the linux result, so make the test
+# optional. Can be useful though in some circumstances, so we still make
+# it available.
+
+.test_gpr2_cov:windows:
   when: manual
 
 # full bootstrap is clearly a very long build, and will certainly need to be
@@ -185,13 +199,16 @@ test_gpr2build:armhf_linux:linux:
 
 # Extend the coverage script to make actual use of the cov results
 
-test_gpr2_cov:linux:
+.cov_postprocess:
   variables:
     RUNNER_AFTER_SCRIPT_TIMEOUT: 10m
   after_script: |
     # Source the env prepared by generic_anod_ci
     cat /tmp/ci_env.sh
     . /tmp/ci_env.sh
+
+    # get the current host
+    HOST=$(anod info gpr2 --show platform)
 
     # get the test workspace
     BUILD_SPACE=$(anod info test gpr2 -Qcoverage --show working_dir)
@@ -200,33 +217,45 @@ test_gpr2_cov:linux:
     mkdir -v $CI_PROJECT_DIR/coverage
 
     # save coverage results
-    mv $RESULTS_DIR/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
+    mv $RESULTS_DIR/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/cobertura-${HOST}.xml
+
+    # display coverage stats for global reporting
+    echo_coverage_stats --coverage-file $RESULTS_DIR/coverage-xml/index.xml
 
     # export to gitlab pages
+    if [[ ${HOST} = "x86_64-linux" ]]; then
+      host_subdir=""
+    else
+      host_subdir=/${HOST}
+    fi
     if [[ $CI_PIPELINE_SOURCE = "merge_request_event" ]]; then
       target_subdir=MRs/$CI_MERGE_REQUEST_IID
     else
       target_subdir=$CI_COMMIT_BRANCH
     fi
-    publish-pages $RESULTS_DIR/coverage-dhtml/ --target-subdir $target_subdir --expires 30
-
-    # display coverage stats for global reporting
-    echo_coverage_stats --coverage-file $RESULTS_DIR/coverage-xml/index.xml
-
-    # report initial test status code
-    exit $FAILED
+    publish-pages $RESULTS_DIR/coverage-dhtml/ --target-subdir ${target_subdir}${host_subdir} --expires 30
 
   coverage: '/Stmt Coverage:\s+(?:\d+\.\d+)%/'
   artifacts:
     when: always
     paths:
-      - coverage/cobertura.xml
+      - coverage/cobertura-*.xml
       - xunit-*.xml
     reports:
       junit: xunit-*.xml
       coverage_report:
         coverage_format: cobertura
-        path: coverage/cobertura.xml
+        path: coverage/cobertura-*.xml
+
+test_gpr2_cov:linux:
+  extends:
+    - .test_gpr2_cov:linux
+    - .cov_postprocess
+
+test_gpr2_cov:windows:
+  extends:
+    - .test_gpr2_cov:windows
+    - .cov_postprocess
 
 # Post-processing to get a test count
 
