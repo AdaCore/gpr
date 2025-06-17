@@ -44,6 +44,8 @@ include:
       windows-mem: 16
       needs: []
       windows-needs: []
+      rules:
+        - allow_failure: false
 
   # debug build
   - component: $CI_SERVER_FQDN/eng/gitlab-templates/build@~latest
@@ -54,6 +56,8 @@ include:
       cpus: 16
       disk: 80
       needs: ["build:linux"]
+      rules:
+        - allow_failure: false
 
   # bootstrap build
   - component: $CI_SERVER_FQDN/eng/gitlab-templates/build@~latest
@@ -68,6 +72,8 @@ include:
       windows-cpus: 8
       windows-mem: 16
       windows-needs: ["build:windows"]
+      rules:
+        - allow_failure: false
 
   # libgpr2 users build
   - component: $CI_SERVER_FQDN/eng/gitlab-templates/build@~latest
@@ -157,7 +163,6 @@ include:
       rules:
         - allow_failure: true
 
-
 # Make some jobs optional
 
 # on windows, considering the machines we have for the CI (the fast-startup
@@ -167,6 +172,8 @@ include:
 
 build_gnat_bootstrap:windows:
   when: manual
+  rules:
+    - allow_failure: true
 
 test_gpr2build:windows:
   when: manual
