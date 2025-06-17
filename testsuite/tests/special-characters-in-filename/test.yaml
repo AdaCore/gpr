@@ -1,0 +1,6 @@
+description: Test filenames with backslashes in their names
+driver: build_and_run
+project_file: test
+main: test
+control:
+- [ SKIP, "'windows' in env.host.platform", "Backslashes can not be in filenames on not windows" ]

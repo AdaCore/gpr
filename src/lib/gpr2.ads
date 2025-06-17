@@ -145,8 +145,13 @@ package GPR2 is
    overriding function "=" (Left, Right : External_Name_Type) return Boolean;
    overriding function "<" (Left, Right : External_Name_Type) return Boolean;
 
+   File_Names_Case_Sensitive : constant Boolean;
+   On_Windows                : constant Boolean;
+
    function Is_Simple_Name (Path : Filename_Optional) return Boolean
-     is (for all C of Path => C not in '/' | '\');
+   is (if GPR2.On_Windows
+       then (for all C of Path => C not in '/' | '\')
+       else (for all C of Path => C not in '/'));
 
    subtype Simple_Name is Filename_Optional
      with Dynamic_Predicate =>
@@ -174,9 +179,6 @@ package GPR2 is
    --  Gets global debug flag's value
 
    type Word is mod 2 ** 32;
-
-   File_Names_Case_Sensitive : constant Boolean;
-   On_Windows                : constant Boolean;
 
    function Hash (Fname : Filename_Optional) return Ada.Containers.Hash_Type;
 
