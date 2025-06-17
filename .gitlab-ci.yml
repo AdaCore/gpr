@@ -270,14 +270,14 @@ postprocess:
   stage: post
   services:
      - image:pe-base
-     - cpu:8
+     - cpu:1
   interruptible: true
   script:
     # generate badge
     - cd $CI_PROJECT_DIR
     - rm -f test-count.svg
     - if ls xunit-*.xml &> /dev/null; then
-        create_xunit_badge --xunit_reports test*_result.xml ;
+        create_xunit_badge --xunit_reports xunit-*.xml ;
       else
         anybadge -l "Tests Passing" -v "Error" -f test-count.svg -c red ;
       fi
