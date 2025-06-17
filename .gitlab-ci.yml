@@ -1,360 +1,279 @@
-include:
-  - project: eng/gpr/gpr-issues
-    file: /.gitlab/.gitlab-ci-shared.yml
-
 stages:
+  - check
   - build
   - test
   - post
 
-.gpr2_test_template:
-  extends: .test_template
-  cache:
-    - key: $CI_COMMIT_REF_SLUG
-      fallback_keys:
-        - main
-      policy: pull
-      paths:
-        - cache
+# Don't run CIs on branches without merge requests, except on important branches
+# The latter is important to get automatic comparison on failing tests
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_REF_NAME == "master" || $CI_COMMIT_REF_NAME == "main")
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: always
+    - when: never
 
-###########
-## BUILD ##
-###########
+include:
+  ###############
+  # BUILD STAGE #
+  ###############
 
-build:
-  extends: .job_template
-  stage: build
-  variables:
-    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
-  cache:
-    - key: $CI_COMMIT_REF_SLUG
-      fallback_keys:
-        - main
-      paths:
-        - cache
-  script:
-    # Tune to use our build & test plan
-    - anod tune --plan $CI_PROJECT_DIR/.ci.plan
+  # Issue check
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/check-issue@~latest
 
-    # if a cached sandbox exists, use it, except for the daily schedule
-    # where we want to start anew
-    - if [[ $CI_PIPELINE_SOURCE != "schedule" ]]; then
-        install_cache full ;
-      else
-        rm -rf $CI_PROJECT_DIR/cache ;
-      fi
+  # pre-commit: TODO come up with a proper config
+  # - component: $CI_SERVER_FQDN/eng/gitlab-templates/pre-commit@~latest
+  #   inputs:
+  #     on-diff: true
 
-    # (re)build gpr2
-    - anod run build
+  # regular build
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/build@~latest
+    inputs:
+      job-name: build
+      anod-args: run build
+      save-component: true
+      cpus: 16
+      disk: 80
+      windows: true
+      windows-cpus: 8
+      windows-mem: 16
+      needs: []
+      windows-needs: []
 
-    # Save gpr builds in cache to speed up a re-build
-    - mkdir -p $CI_PROJECT_DIR/cache
-    - rsync -a $SANDBOX/$HOST/*gpr2* $SANDBOX/$HOST/gnatcoll-core $CI_PROJECT_DIR/cache/
+  # debug build
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/build@~latest
+    inputs:
+      job-name: build_debug
+      anod-args: run build_debug
+      save-component: false
+      cpus: 16
+      disk: 80
+      needs: ["build:linux"]
 
-######################
-## DEBUG MODE BUILD ##
-######################
+  # bootstrap build
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/build@~latest
+    inputs:
+      job-name: build_gnat_bootstrap
+      anod-args: run build_gnat_bootstrap
+      save-component: true
+      cpus: 16
+      disk: 80
+      needs: ["build:linux"]
+      windows: true
+      windows-cpus: 8
+      windows-mem: 16
+      windows-needs: ["build:windows"]
 
-debug_build:
-  extends: .job_template
-  stage: build
-  variables:
-    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
-  script:
-    # Tune to use our build & test plan
-    - anod tune --plan $CI_PROJECT_DIR/.ci.plan
+  # libgpr2 users build
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/build@~latest
+    inputs:
+      job-name: build_gpr2_users
+      anod-args: run build_libgpr2_users
+      save-component: false
+      cpus: 16
+      disk: 80
+      needs: ["build_gnat_bootstrap:linux"]
+      rules:
+        - allow_failure: true
 
-    # build libgpr2 in debug mode without rebuilding dependencies
-    - anod run debug_build
+  ##############
+  # TEST STAGE #
+  ##############
+
+  # gpr2 testsuite
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/test@~latest
+    inputs:
+      job-name: test_gpr2
+      anod-args: run test_gpr2
+      disk: 80
+      save-anod-logs: true
+      needs: ["build:linux"]
+      windows: true
+      windows-cpus: 8
+      windows-mem: 16
+      windows-needs: ["build:windows"]
+      artifacts: ["xunit-*.xml"]
+      rules:
+        - allow_failure: true
+
+  # gpr2 testsuite with coverage
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/test@~latest
+    inputs:
+      # do not make it visible to allow actual job to have multiple
+      # extends (from this template but also from the coverage postprocessing
+      # template)
+      job-name: .test_gpr2_cov
+      anod-args: run test_gpr2_cov
+      disk: 80
+      save-anod-logs: true
+      needs: ["build:linux"]
+      windows: true
+      windows-cpus: 8
+      windows-mem: 16
+      windows-needs: ["build:windows"]
+      rules:
+        - allow_failure: true
+
+  # gpr2 testsuite with valgrind
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/test@~latest
+    inputs:
+      job-name: test_gpr2_valgrind
+      anod-args: run test_gpr2_valgrind
+      disk: 80
+      save-anod-logs: true
+      needs: ["build:linux"]
+      artifacts: ["xunit-*.xml"]
+      rules:
+        - allow_failure: true
+
+  # gprbuild testsuite with gpr2build
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/test@~latest
+    inputs:
+      job-name: test_gpr2build
+      anod-args: run test_gpr2build
+      disk: 80
+      save-anod-logs: true
+      needs: ["build:linux"]
+      windows: true
+      windows-needs: ["build:windows"]
+      artifacts: ["xunit-*.xml"]
+      rules:
+        - allow_failure: true
+
+   # gprbuild testsuite with gpr2build for armhf-linux
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/test@~latest
+    inputs:
+      job-name: test_gpr2build:armhf_linux
+      anod-args: run test_gpr2build_armhf_linux
+      disk: 80
+      save-anod-logs: true
+      needs: ["build:linux"]
+      artifacts: ["xunit-*.xml"]
+      rules:
+        - allow_failure: true
 
 
-####################
-## GPR2 TESTSUITE ##
-####################
+# Make some jobs optional
 
-test_gpr2:
-  extends: .gpr2_test_template
-  script:
-    - install_cache
-    - run_testsuite gpr2 "" test_gpr2
-  artifacts:
-    when:
-      always
-    paths:
-      - testgpr2_result.xml
-    reports:
-      junit: testgpr2_result.xml
+# on windows, considering the machines we have for the CI (the fast-startup
+# ones have only 2 CPUs), the testsuites may take a long time to run, so
+# let's make them optional and activate them manually on windows-impacting
+# MRs.
 
-############################
-## GPR2 WINDOWS TESTSUITE ##
-############################
-
-build_and_test_gpr2_windows:
-  services:
-    - image:e3-windows-2022
-    - platform:x86_64-windows-2022
-    - cpu:8
-    - mem:8 # 8 is required for tests with high memory usage
-    - disk:100
-  stage: test
-  allow_failure: true
-  interruptible: true
-  needs: []
-  variables:
-    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
-  script:
-    - exec anod build gpr2 -Qgpr2build
-    - run_testsuite gpr2 "" test_gpr2_windows
-  artifacts:
-    when:
-      always
-    paths:
-      - testgpr2windows_result.xml
-    reports:
-      junit: testgpr2windows_result.xml
-
-###################
-## GPR1 TESTSUITE #
-###################
-
-# Test the gpr1 testsuite with gpr2build.
-test_gprbuild_internal:
-  extends: .gpr2_test_template
-  variables:
-    JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
-  script:
-    - install_cache
-    - run_testsuite gprbuild -Qgpr2build test_gpr1_testsuite
-  artifacts:
-    when:
-      always
-    paths:
-      - testgpr1testsuite_result.xml
-    reports:
-      junit: testgpr1testsuite_result.xml
-
-#########################
-## ARMHF GPR1 TESTSUITE #
-#########################
-
-# Test the gpr1 testsuite with gpr2build on the armhf-linux platform.
-test_armhf_gprbuild_internal:
-  extends: .gpr2_test_template
-  variables:
-    JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
+build_gnat_bootstrap:windows:
   when: manual
-  script:
-  - install_cache
-  - run_testsuite gprbuild "-Qgpr2build --target=armhf-linux,unknown,qemu,unknown" test_armhf_gpr1_testsuite
-  artifacts:
-    when: always
-    paths:
-    - testarmhfgpr1testsuite_result.xml
-    reports:
-      junit: testarmhfgpr1testsuite_result.xml
 
-##################
-## MEMORY LEAKS ##
-##################
+test_gpr2build:windows:
+  when: manual
 
-test_gpr2_valgrind:
-  extends: .test_template
-  needs: []
+# windows coverage don't differ much from the linux result, so make the test
+# optional. Can be useful though in some circumstances, so we still make
+# it available.
+
+.test_gpr2_cov:windows:
+  when: manual
+
+# full bootstrap is clearly a very long build, and will certainly need to be
+# removed once everyone will have moved to gpr2...
+
+build_gpr2_users:linux:
+  when: manual
+
+# The nightly run already catches the failures for this long running CI, so
+# it should be optional. Use it when coming up with some specific objects life
+# cycle management.
+
+test_gpr2_valgrind:linux:
+  when: manual
+
+# Cross-testing is not ready yet for gpr2. Working on it, in the mean time the
+# result shows errors.
+
+test_gpr2build:armhf_linux:linux:
+  when: manual
+
+# Extend the coverage script to make actual use of the cov results
+
+.cov_postprocess:
   variables:
-    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
-  script: |
-    # Tune to use our build & test plan
-    exec anod build gpr2 -Qvalgrind
-    run_testsuite gpr2 -Qvalgrind test_gpr2_vg
-  artifacts:
-    when:
-      always
-    paths:
-      - testgpr2vg_result.xml
-    reports:
-      junit: testgpr2vg_result.xml
+    RUNNER_AFTER_SCRIPT_TIMEOUT: 10m
+  after_script: |
+    # Source the env prepared by generic_anod_ci
+    cat /tmp/ci_env.sh
+    . /tmp/ci_env.sh
 
-##############
-## COVERAGE ##
-##############
+    # get the current host
+    HOST=$(anod info gpr2 --show platform)
 
-test_gpr2_cov:
-  extends: .test_template
-  needs: []
-  variables:
-    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
-  script: |
-    exec anod build gpr2 -Qcoverage
+    # get the test workspace
+    BUILD_SPACE=$(anod info test gpr2 -Qcoverage --show working_dir)
+    RESULTS_DIR=${BUILD_SPACE}/results/new
 
-    # do a normal testsuite run but save the exit code instead of just exiting
-    # so that coverage artifacts can be saved and used.
-    result=0
-    run_testsuite gpr2 -Qcoverage test_gpr2_cov || result=$?
-
-    mkdir $CI_PROJECT_DIR/coverage
+    mkdir -v $CI_PROJECT_DIR/coverage
 
     # save coverage results
-    exec mv $RESULTS_DIR/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/
-    exec mv $RESULTS_DIR/coverage-dhtml $CI_PROJECT_DIR/coverage/dhtml
+    mv $RESULTS_DIR/coverage-cobertura/cobertura.xml $CI_PROJECT_DIR/coverage/cobertura-${HOST}.xml
+
+    # display coverage stats for global reporting
+    echo_coverage_stats --coverage-file $RESULTS_DIR/coverage-xml/index.xml
 
     # export to gitlab pages
+    if [[ ${HOST} = "x86_64-linux" ]]; then
+      host_subdir=""
+    else
+      host_subdir=/${HOST}
+    fi
     if [[ $CI_PIPELINE_SOURCE = "merge_request_event" ]]; then
       target_subdir=MRs/$CI_MERGE_REQUEST_IID
     else
       target_subdir=$CI_COMMIT_BRANCH
     fi
-    exec publish-pages $CI_PROJECT_DIR/coverage/dhtml/ --target-subdir $target_subdir --expires 30
-
-    # display coverage stats for global reporting
-    echo_coverage_stats --coverage-file $RESULTS_DIR/coverage-xml/index.xml
-
-    # report initial test status code
-    exit $result
+    publish-pages $RESULTS_DIR/coverage-dhtml/ --target-subdir ${target_subdir}${host_subdir} --expires 30
 
   coverage: '/Stmt Coverage:\s+(?:\d+\.\d+)%/'
   artifacts:
-    when:
-      always
+    when: always
     paths:
-      - coverage/cobertura.xml
-      - coverage/dhtml
-      - testgpr2cov_result.xml
+      - coverage/cobertura-*.xml
+      - xunit-*.xml
     reports:
-      junit: testgpr2cov_result.xml
+      junit: xunit-*.xml
       coverage_report:
         coverage_format: cobertura
-        path: coverage/cobertura.xml
+        path: coverage/cobertura-*.xml
 
-###############################
-# CHECK WE CAN BOOTSTRAP GNAT #
-###############################
+test_gpr2_cov:linux:
+  extends:
+    - .test_gpr2_cov:linux
+    - .cov_postprocess
 
-.gnat_bootstrap:
-  extends: .gpr2_test_template
-  variables:
-    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb eng/gpr/gprname
-  cache:
-    - key: $CI_COMMIT_REF_SLUG
-      policy: pull
-      paths:
-        - cache
-    - key: bootstrap-$CI_COMMIT_REF_SLUG
-      fallback_keys:
-        - bootstrap-main
-      paths:
-        - bootstrap_cache
+test_gpr2_cov:windows:
+  extends:
+    - .test_gpr2_cov:windows
+    - .cov_postprocess
 
-test_bootstrap:
-  services:
-     - image:e3
-     - cpu:16
-  extends: .gnat_bootstrap
-  allow_failure: false
-  script:
-    - install_cache full
-    - if [[ $CI_PIPELINE_SOURCE != "schedule" && -d $CI_PROJECT_DIR/bootstrap_cache ]]; then
-        exec rsync -a $CI_PROJECT_DIR/bootstrap_cache/* $SANDBOX/$HOST/ ;
-      fi
-    - rm -rf $CI_PROJECT_DIR/bootstrap_cache ;
-    # JOB_SUBPROJECTS and repos identified by a "depends-on" in the MR are
-    # locally cloned and used by anod. However git don't preserve timestamps
-    # which lead to very long rebuild times (gprbuild then considers all sources
-    # as being modified), so caching the builds is highly ineffective.
-    # So in order to have a reasonable rebuild, we install a wrapper to gprbuild
-    # ensuring that -m is enforced for all packages.
-    - install_build_wrapper() {
-        bindir=$(anod info install $* --show working_dir)/install/bin ;
-        exec mv $bindir/gprbuild $bindir/gprbuild-saved ;
-        echo '#!'$SHELL > $bindir/gprbuild ;
-        echo 'gprbuild-saved -m $@' >> $bindir/gprbuild ;
-        exec cat $bindir/gprbuild ;
-        exec chmod a+x $bindir/gprbuild ;
-      }
-    - anod tune --plan $CI_PROJECT_DIR/.ci.plan
-    - result=0
-    # Install gprbuild wrappers for the gprbuild bootstrap part
-    - anod install gprbuild -Qstable
-    - install_build_wrapper gprbuild -Qstable
-    # and run the gnat bootstrap
-    - anod build gnat || result=$?
-    - mkdir -p $CI_PROJECT_DIR/bootstrap_cache
-    # save build for packages that take a long time to build: only a re-build
-    # will be performed on following runs, which assumably will be faster
-    # (than the time it takes to save/restore them).
-    # ??? the build space name is forged in stone here, while we know it can
-    # change anytime: maybe a hard to maintain choice
-    - for pkg in libadalang-internal laltools ; do
-        rsync -a $SANDBOX/$HOST/$pkg $CI_PROJECT_DIR/bootstrap_cache/ ;
-      done
-    - exit $result
+# Post-processing to get a test count
 
-##########################################
-# CHECK WE CAN BOOTSTRAP GNAT ON WINDOWS #
-##########################################
-
-test_windows_bootstrap:
-  services:
-    - image:e3-windows-2022
-    - platform:x86_64-windows-2022
-    - cpu:8
-    - mem:16
-    - disk:100
-  extends: .gnat_bootstrap
-  allow_failure: true
-  script:
-    - install_cache full
-    - anod tune --plan $CI_PROJECT_DIR/.ci.plan
-    - result=0
-    - anod install gprbuild -Qstable
-    # and run the gnat bootstrap
-    - anod build gnat || result=$?
-    - exit $result
-  when: manual
-
-###################################################
-## CHECK USERS OF THE LIBGPR2 LIBRARY (optional) ##
-###################################################
-
-test_libgpr2_users:
-  services:
-     - image:e3
-     - cpu:16
-  extends: .gpr2_test_template
-  when: manual
-  variables:
-    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb eng/gpr/gprname
-  cache:
-    - key: $CI_COMMIT_REF_SLUG
-      policy: pull
-      paths:
-        - cache
-  script:
-    - install_cache full
-    - anod tune --plan $CI_PROJECT_DIR/.ci.plan
-    - anod run libgpr2_users
-
-####################
-## POSTPROCESSING ##
-####################
-
-post:
-  extends: .job_template
+postprocess:
   stage: post
-  when: always
   services:
-    - cpu:1
-    - image:pe-base
+     - image:pe-base
+     - cpu:8
+  interruptible: true
   script:
     # generate badge
     - cd $CI_PROJECT_DIR
     - rm -f test-count.svg
-    - if ls test*_result.xml &> /dev/null; then
+    - if ls xunit-*.xml &> /dev/null; then
         create_xunit_badge --xunit_reports test*_result.xml ;
       else
         anybadge -l "Tests Passing" -v "Error" -f test-count.svg -c red ;
       fi
   artifacts:
-    when:
-      always
-    paths:
-      - test-count.svg
+    when: always
+    paths: [ test-count.svg ]
