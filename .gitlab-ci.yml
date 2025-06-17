@@ -272,15 +272,23 @@ postprocess:
      - image:pe-base
      - cpu:1
   interruptible: true
-  script:
+  script: |
     # generate badge
-    - cd $CI_PROJECT_DIR
-    - rm -f test-count.svg
-    - if ls xunit-*.xml &> /dev/null; then
-        create_xunit_badge --xunit_reports xunit-*.xml ;
-      else
-        anybadge -l "Tests Passing" -v "Error" -f test-count.svg -c red ;
-      fi
-  artifacts:
-    when: always
-    paths: [ test-count.svg ]
+    cd $CI_PROJECT_DIR
+    rm -f test-count.svg
+    if ls xunit-*.xml &> /dev/null; then
+      create_xunit_badge --xunit_reports xunit-*.xml ;
+    else
+      anybadge -l "Tests Passing" -v "Error" -f test-count.svg -c red ;
+    fi
+    publish-pages test-count.svg --target-subdir $CI_COMMIT_REF_NAME/badge --expires 30
+  rules:
+    - if: $CI_COMMIT_REF_NAME != "main"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: always
+    - when: never
