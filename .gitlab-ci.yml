@@ -2,7 +2,6 @@ stages:
   - check
   - build
   - test
-  - post
 
 # Don't run CIs on branches without merge requests, except on important branches
 # The latter is important to get automatic comparison on failing tests
@@ -133,7 +132,6 @@ include:
       disk: 80
       save-anod-logs: true
       needs: ["build:linux"]
-      artifacts: ["xunit-*.xml"]
       rules:
         - allow_failure: true
 
@@ -147,7 +145,6 @@ include:
       needs: ["build:linux"]
       windows: true
       windows-needs: ["build:windows"]
-      artifacts: ["xunit-*.xml"]
       rules:
         - allow_failure: true
 
@@ -159,7 +156,6 @@ include:
       disk: 80
       save-anod-logs: true
       needs: ["build:linux"]
-      artifacts: ["xunit-*.xml"]
       rules:
         - allow_failure: true
 
@@ -247,7 +243,6 @@ test_gpr2build:armhf_linux:linux:
     when: always
     paths:
       - coverage/cobertura-*.xml
-      - xunit-*.xml
     reports:
       junit: xunit-*.xml
       coverage_report:
@@ -263,32 +258,3 @@ test_gpr2_cov:windows:
   extends:
     - .test_gpr2_cov:windows
     - .cov_postprocess
-
-# Post-processing to get a test count
-
-postprocess:
-  stage: post
-  services:
-     - image:pe-base
-     - cpu:1
-  interruptible: true
-  script: |
-    # generate badge
-    cd $CI_PROJECT_DIR
-    rm -f test-count.svg
-    if ls xunit-*.xml &> /dev/null; then
-      create_xunit_badge --xunit_reports xunit-*.xml ;
-    else
-      anybadge -l "Tests Passing" -v "Error" -f test-count.svg -c red ;
-    fi
-    publish-pages test-count.svg --target-subdir $CI_COMMIT_REF_NAME/badge --expires 30
-  rules:
-    - if: $CI_COMMIT_REF_NAME != "main"
-      when: never
-    - if: $CI_PIPELINE_SOURCE == "push"
-      when: always
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-      when: always
-    - if: $CI_PIPELINE_SOURCE == "web"
-      when: always
-    - when: never
