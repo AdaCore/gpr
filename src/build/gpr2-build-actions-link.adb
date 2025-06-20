@@ -196,6 +196,9 @@ package body GPR2.Build.Actions.Link is
          In_Signature : Boolean;
          Param        : String := "") return Boolean;
 
+      procedure Append_Rpath
+        (Path : Path_Name.Object);
+
       procedure Check_Ada_Runtime_Needed
         (Libgnat : out Boolean;
          Libgnarl : out Boolean);
@@ -211,7 +214,10 @@ package body GPR2.Build.Actions.Link is
       --  always return False. To be updated once the support has been
       --  implemented.
 
-      Objects : Tree_Db.Artifact_Sets.Set;
+      Objects      : Tree_Db.Artifact_Sets.Set;
+      Rpath        : Unbounded_String;
+      Rpath_Origin : constant GPR2.Project.Attribute.Object :=
+                       Self.Ctxt.Attribute (PRA.Run_Path_Origin);
 
       --------------
       -- Add_Attr --
@@ -301,6 +307,47 @@ package body GPR2.Build.Actions.Link is
          return True;
       end Add_Attr;
 
+      ------------------
+      -- Append_Rpath --
+      ------------------
+
+      procedure Append_Rpath (Path : Path_Name.Object) is
+      begin
+         if Length (Rpath) /= 0 then
+            --  ??? hard coded value: ok for now since this is not
+            --  used on windows, but we may need an attribute for that
+            --  at some point.
+            Append (Rpath, ':');
+         end if;
+
+         if Rpath_Origin.Is_Defined
+           and then not Self.Is_Library
+         then
+            --  ??? $ORIGIN refers to the executable, we would
+            --  need an equivalent attribute for shared libs
+            --  dependencies.
+
+            --  ??? This processing is unix-oriented with unix
+            --  path and directory delimiters. This is somewhat
+            --  expected since this mechanism is not available on
+            --  windows, but then we still need to properly cross
+            --  compilation on windows hosts, so may need to
+            --  "posixify" the paths here.
+
+            declare
+               From : constant Path_Name.Object :=
+                        Self.Ctxt.Executable_Directory;
+            begin
+               Append
+                 (Rpath,
+                  Rpath_Origin.Value.Text & "/" &
+                    String (Path.Relative_Path (From)));
+            end;
+         else
+            Append (Rpath, String (Path.Dir_Name));
+         end if;
+      end Append_Rpath;
+
       ------------------------------
       -- Check_Ada_Runtime_Needed --
       ------------------------------
@@ -360,10 +407,9 @@ package body GPR2.Build.Actions.Link is
                            At_Pos         => Self.Main_Src.Index)
                         else PAI.Undefined);
       Link_Exec    : constant Boolean := Src_Idx.Is_Defined;
-      Rpath        : Unbounded_String;
-      Rpath_Origin : constant GPR2.Project.Attribute.Object :=
-                       Self.Ctxt.Attribute (PRA.Run_Path_Origin);
       Ign          : Boolean with Unreferenced;
+      Lib_Dir_Opt  : constant Value_Type :=
+                       Self.Tree.Linker_Lib_Dir_Option;
       Dash_l_Opts  : GPR2.Containers.Value_List;
       --  -l needs to be last in the command line, so we add them here and
       --  then append to the command line in the end
@@ -483,8 +529,7 @@ package body GPR2.Build.Actions.Link is
          --  library dependencies.
 
          if Self.Ctxt.Tree.Has_Runtime_Project then
-            Rpath :=
-              +Self.Ctxt.Tree.Runtime_Project.Object_Directory.String_Value;
+            Append_Rpath (Self.Ctxt.Tree.Runtime_Project.Object_Directory);
          end if;
 
          if Self.Lib_Dep_Circle then
@@ -498,8 +543,6 @@ package body GPR2.Build.Actions.Link is
                                 Object'Class (Self.Tree.Action (Lib));
                Lib_Artifact : constant GPR2.Path_Name.Object :=
                                 Link.Output.Path;
-               Lib_Dir_Opt  : constant Value_Type :=
-                                Self.Tree.Linker_Lib_Dir_Option;
 
                use GNATCOLL.Utils;
             begin
@@ -520,47 +563,15 @@ package body GPR2.Build.Actions.Link is
                   --  Add flags to include the shared library
 
                   Cmd_Line.Add_Argument
-                    (Lib_Dir_Opt & Link.View.Library_Directory.String_Value);
+                    (Lib_Dir_Opt &
+                       String (Link.View.Library_Directory.Relative_Path
+                         (Self.Working_Directory)));
 
                   --  Add the library directory to the rpath of the
                   --  executable, so that LD_LIBRARY_PATH does not need to
                   --  be set before execution.
 
-                  if Length (Rpath) /= 0 then
-                     --  ??? hard coded value: ok for now since this is not
-                     --  used on windows, but we may need an attribute for that
-                     --  at some point.
-                     Append (Rpath, ':');
-                  end if;
-
-                  if Rpath_Origin.Is_Defined
-                    and then not Self.Is_Library
-                  then
-                     --  ??? $ORIGIN refers to the executable, we would
-                     --  need an equivalent attribute for shared libs
-                     --  dependencies.
-
-                     --  ??? This processing is unix-oriented with unix
-                     --  path and directory delimiters. This is somewhat
-                     --  expected since this mechanism is not available on
-                     --  windows, but then we still need to properly cross
-                     --  compilation on windows hosts, so may need to
-                     --  "posixify" the paths here.
-
-                     declare
-                        From : constant Path_Name.Object :=
-                                 Self.Ctxt.Executable_Directory;
-                     begin
-                        Append
-                          (Rpath,
-                           Rpath_Origin.Value.Text & "/" &
-                           String
-                             (Link.View.Library_Directory.Relative_Path
-                                  (From)));
-                     end;
-                  else
-                     Append (Rpath, String (Lib_Artifact.Dir_Name));
-                  end if;
+                  Append_Rpath (Link.View.Library_Directory);
 
                   declare
                      Prefix : constant Value_Type :=
@@ -588,6 +599,7 @@ package body GPR2.Build.Actions.Link is
                declare
                   Attr : constant GPR2.Project.Attribute.Object :=
                            Link.View.Attribute (PRA.Library_Options);
+                  Path : Path_Name.Object;
                begin
                   if Attr.Is_Defined then
                      for Val of Attr.Values loop
@@ -599,11 +611,28 @@ package body GPR2.Build.Actions.Link is
                         begin
                            if not Path.Exists then
                               if not Link.Is_Static then
+                                 if not Self.No_Rpath
+                                   and then Starts_With (Val.Text, Lib_Dir_Opt)
+                                 then
+                                    --  Amend the RPATH with the directory
+                                    --  value
+                                    Append_Rpath
+                                      (Path_Name.Create_Directory
+                                         (Filename_Optional
+                                              (Val.Text
+                                                   (Val.Text'First +
+                                                          Lib_Dir_Opt'Length ..
+                                                            Val.Text'Last)),
+                                          Link.Working_Directory.Value));
+                                 end if;
+
                                  if Starts_With (Val.Text, "-l") then
                                     Dash_l_Opts.Append (Val.Text);
+
                                  else
                                     Cmd_Line.Add_Argument (Val.Text);
                                  end if;
+
                               else
                                  if not Signature_Only then
                                     Self.Tree.Reporter.Report
