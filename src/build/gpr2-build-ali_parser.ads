@@ -40,8 +40,10 @@ package GPR2.Build.ALI_Parser is
    --  'Dep_Names' vector. Returns True upon success.
 
    function Imports
-     (ALI_File : GPR2.Path_Name.Object;
-      Imports  : in out GPR2.Containers.Name_Set) return Boolean;
+     (ALI_File     : GPR2.Path_Name.Object;
+      Spec_Imports : out GPR2.Containers.Name_Set;
+      Body_Imports : out GPR2.Containers.Name_Set;
+      Needs_Body   : out Boolean) return Boolean;
    --  Parse the explicit import lines that begin with the 'W' character.
    --  Returns True upon success.
 
