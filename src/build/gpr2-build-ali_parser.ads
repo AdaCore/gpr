@@ -29,7 +29,8 @@ package GPR2.Build.ALI_Parser is
 
    type Spec_Body is (U_Spec, U_Body);
 
-   type Unit_Flags_Set is array (Unit_Flags_Kind) of Boolean;
+   type Unit_Flags_Set is array (Unit_Flags_Kind) of Boolean
+      with Default_Component_Value => False;
    type Units_Flags_Set is array (Spec_Body) of Unit_Flags_Set;
 
    function Dependencies
