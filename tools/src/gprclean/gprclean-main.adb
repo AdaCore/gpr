@@ -544,6 +544,6 @@ exception
       Handle_Program_Termination
         (Force_Exit => False,
          Exit_Cause => E_Generic,
-         Message    => Exception_Message (E));
+         Message    => Exception_Information (E));
       return To_Exit_Status (E_Fatal);
 end GPRclean.Main;
