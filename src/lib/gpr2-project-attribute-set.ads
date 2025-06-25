@@ -61,6 +61,9 @@ package GPR2.Project.Attribute.Set is
      with Post => Self.Contains (Attribute);
    --  Inserts or replaces an Attribute into the set
 
+   procedure Delete
+     (Self : in out Object; Attribute : Project.Attribute.Object);
+
    --  Iterator
 
    type Cursor is private;
