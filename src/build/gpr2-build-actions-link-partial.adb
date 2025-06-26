@@ -115,9 +115,10 @@ package body GPR2.Build.Actions.Link.Partial is
          for Lib of Self.Library_Dependencies loop
             declare
                Link         : constant Actions.Link.Object'Class :=
-                 Actions.Link.Object'Class (Self.Tree.Action (Lib));
+                                Actions.Link.Object'Class
+                                  (Self.Tree.Action (Lib));
                Lib_Artifact : constant GPR2.Path_Name.Object :=
-                 Link.Output.Path;
+                                Link.Output.Path;
             begin
                Cmd_Line.Add_Argument (Lib_Artifact.String_Value);
             end;
