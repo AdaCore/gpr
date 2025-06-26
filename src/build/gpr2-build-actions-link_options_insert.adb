@@ -77,7 +77,7 @@ package body GPR2.Build.Actions.Link_Options_Insert is
       end if;
 
       Cmd_Line.Set_Driver
-        (Self.View.Compiler_Prefix (Ada_Language) & "objcopy");
+        (Self.View.Compiler_Prefix & "objcopy");
       Cmd_Line.Add_Argument ("-j");
       Cmd_Line.Add_Argument (GPR_Section);
       Cmd_Line.Add_Argument ("--add-section");

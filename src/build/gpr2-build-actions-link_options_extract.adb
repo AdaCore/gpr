@@ -29,7 +29,8 @@ package body GPR2.Build.Actions.Link_Options_Extract is
    is
       pragma Unreferenced (Slot);
    begin
-      Cmd_Line.Set_Driver ("objdump");
+      Cmd_Line.Set_Driver
+        (Self.View.Compiler_Prefix & "objdump");
       Cmd_Line.Add_Argument ("-s");
       Cmd_Line.Add_Argument ("--section=.GPR.linker_options");
       Cmd_Line.Add_Argument (String (Self.Object_File.Path.Simple_Name));
