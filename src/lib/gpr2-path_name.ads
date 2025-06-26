@@ -295,7 +295,8 @@ private
       else True);
 
    function Base_Name (Path : String) return String is
-     (String (Base_Name (Filename_Type (Path))));
+     (if Path'Length = 0 then ""
+      else String (Base_Name (Filename_Type (Path))));
 
    function Base_Name (Self : Object) return Name_Type is
      (Name_Type (Get (Self).Base_Name));
