@@ -320,13 +320,7 @@ package body GPR2.Build.Actions.Link is
             Append (Rpath, ':');
          end if;
 
-         if Rpath_Origin.Is_Defined
-           and then not Self.Is_Library
-         then
-            --  ??? $ORIGIN refers to the executable, we would
-            --  need an equivalent attribute for shared libs
-            --  dependencies.
-
+         if Rpath_Origin.Is_Defined then
             --  ??? This processing is unix-oriented with unix
             --  path and directory delimiters. This is somewhat
             --  expected since this mechanism is not available on
@@ -336,12 +330,17 @@ package body GPR2.Build.Actions.Link is
 
             declare
                From : constant Path_Name.Object :=
-                        Self.Ctxt.Executable_Directory;
+                        Self.Working_Directory;
+               Rel  : constant String :=
+                        String (Path.Relative_Path (From));
+               Last : constant Natural :=
+                        (if Rel (Rel'Last) = '/'
+                         then Rel'Last - 1
+                         else Rel'Last);
             begin
                Append
                  (Rpath,
-                  Rpath_Origin.Value.Text & "/" &
-                    String (Path.Relative_Path (From)));
+                  Rpath_Origin.Value.Text & "/" & Rel (Rel'First .. Last));
             end;
          else
             Append (Rpath, String (Path.Dir_Name));
