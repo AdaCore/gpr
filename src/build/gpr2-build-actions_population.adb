@@ -1018,11 +1018,15 @@ package body GPR2.Build.Actions_Population is
             return False;
          end if;
 
-         --  Used by the linker so it can find its bind action easily. This is
-         --  used to export the bind symbols for standalone libraries.
+         --  Used by the linker so it can find its bind action easily.
 
          Actions.Link.Object'Class
            (Tree_Db.Action_Id_To_Reference (Self.Initial_Link_Action.UID)
+              .Element.all)
+           .Set_Bind_Action (Self.Bind);
+
+         Actions.Link.Object'Class
+           (Tree_Db.Action_Id_To_Reference (Self.Final_Link_Action.UID)
               .Element.all)
            .Set_Bind_Action (Self.Bind);
 
@@ -1443,6 +1447,15 @@ package body GPR2.Build.Actions_Population is
                      end loop;
                   end if;
                end;
+            end if;
+
+            if Bind (Idx).Is_Defined then
+               --  Used by the linker so it can find its bind action easily.
+
+               Actions.Link.Object'Class
+                 (Tree_Db.Action_Id_To_Reference (Link (Idx).UID)
+                  .Element.all)
+                 .Set_Bind_Action (Bind (Idx));
             end if;
 
             --  Add library dependencies: we need a proper ordering in
