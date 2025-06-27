@@ -20,7 +20,10 @@ package GPR2.Build.Source is
       Owning_View    : GPR2.Project.View.Object;
       Defining_View  : GPR2.Project.View.Object;
       Inherited_From : GPR2.Project.View.Object;
-      Is_Visible     : Boolean) return Object;
+      Is_Visible     : Boolean) return Object
+     with Pre => Owning_View.Is_Defined
+                 and then Defining_View.Is_Defined
+                 and then Base_Source.Is_Defined;
 
    function Is_Compilable (Self : Object) return Boolean;
    --  Whether the source's language has a defined compiler driver
