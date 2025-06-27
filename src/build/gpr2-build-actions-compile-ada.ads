@@ -70,14 +70,12 @@ package GPR2.Build.Actions.Compile.Ada is
      (Self : Object) return GPR2.Containers.Filename_Set;
    --  Fetch dependencies from a .ali dependency file with an ALI parser
 
-   function Withed_Units
-     (Self : Object) return GPR2.Containers.Name_Set
-     with Pre => Self.In_Build_Tree;
-   --  Return the list of withed units. If the ALI file is present then the
-   --  list is retrieved from it, else it is retrieved via the
-   --  Compilation_Unit's Ada parser.
-
    overriding function Extended (Self : Object) return Object;
+
+   function Withed_Units (Self : Object) return Containers.Name_Set;
+   function Withed_Units_From_Spec (Self : Object) return Containers.Name_Set;
+   function Withed_Units_From_Body (Self : Object) return Containers.Name_Set;
+   function Spec_Needs_Body (Self : Object) return Boolean;
 
 private
 
@@ -127,6 +125,10 @@ private
       Global_Config_Pragmas : Path_Name.Object;
       --  The global configuration pragma file specified by the root project
       --  Global_Configuration_Pragmas attribute
+
+      Withed_From_Spec      : Containers.Name_Set;
+      Withed_From_Body      : Containers.Name_Set;
+      Needs_Body            : Boolean := False;
    end record;
 
    overriding function Src_Index (Self : Object) return Unit_Index is
@@ -135,6 +137,9 @@ private
    overriding procedure Compute_Signature
      (Self      : in out Object;
       Load_Mode : Boolean);
+
+   overriding function On_Ready_State
+     (Self : in out Object) return Boolean;
 
    Undefined : constant Object := (others => <>);
 
@@ -152,6 +157,17 @@ private
      (Self.Dep_File);
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class is
-      (Create (Src => Self.CU));
+     (Create (Src => Self.CU));
 
+   function Withed_Units (Self : Object) return Containers.Name_Set is
+     (Self.Withed_From_Spec.Union (Self.Withed_From_Body));
+
+   function Withed_Units_From_Spec (Self : Object) return Containers.Name_Set
+   is (Self.Withed_From_Spec);
+
+   function Withed_Units_From_Body (Self : Object) return Containers.Name_Set
+   is (Self.Withed_From_Body);
+
+   function Spec_Needs_Body (Self : Object) return Boolean is
+     (Self.Needs_Body);
 end GPR2.Build.Actions.Compile.Ada;

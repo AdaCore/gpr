@@ -19,6 +19,7 @@ with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Actions.Link_Options_Insert;
 with GPR2.Build.Actions.Post_Bind;
+with GPR2.Build.ALI_Parser;
 with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Compilation_Unit;
 pragma Warnings (Off);
@@ -35,6 +36,7 @@ pragma Warnings (Off, "*is not referenced");
 with GPR2.Project.View.Vector;
 pragma Warnings (On);
 with GPR2.Project.Tree;
+with GPR2.Source_Reference;
 
 package body GPR2.Build.Actions.Ada_Bind is
 
@@ -56,6 +58,22 @@ package body GPR2.Build.Actions.Ada_Bind is
    --  Returns the Link_Options_Insert action that is a transitive
    --  successor of the current action, if one exists. Returns Undefined
    --  if no such action is found.
+
+   function On_Ada_Dependencies
+     (Self     : in out Object;
+      Imports  : Containers.Name_Set;
+      From_ALI : Boolean) return Boolean;
+
+   -------------------
+   -- Add_Root_Unit --
+   -------------------
+
+   procedure Add_Root_Unit
+     (Self : in out Object;
+      Root : GPR2.Build.Compilation_Unit.Object) is
+   begin
+      Self.Roots.Include (Root.Name, Root);
+   end Add_Root_Unit;
 
    ---------------------
    -- Compute_Command --
@@ -84,6 +102,10 @@ package body GPR2.Build.Actions.Ada_Bind is
       Lang_Ada_Idx      : constant PAI.Object :=
                             PAI.Create (GPR2.Ada_Language);
       Binder_From_Attrs : Unbounded_String;
+      Exe_Ext           : constant String :=
+                            (if GPR2.On_Windows then ".exe" else "");
+      Roots             : GPR2.Containers.Name_Set;
+      --  The list of Ada entry points to consider
 
       --------------
       -- Add_Attr --
@@ -97,8 +119,6 @@ package body GPR2.Build.Actions.Ada_Bind is
       is
          Attr                  : constant Project.Attribute.Object :=
                                    Self.View.Attribute (Id, Index);
-         Exe_Ext               : constant String :=
-                                   (if GPR2.On_Windows then ".exe" else "");
          Gnatbind_Prefix_Equal : constant String := "gnatbind_prefix=";
          Gnatbind_Path_Equal   : constant String := "--gnatbind_path=";
          Ada_Binder_Equal      : constant String := "ada_binder=";
@@ -133,8 +153,7 @@ package body GPR2.Build.Actions.Ada_Bind is
                   --  "gnatbind". Add one if not already in <prefix>.
                   if Val.Text'Length = Gnatbind_Prefix_Equal'Length then
                      Binder_From_Attrs :=
-                       +(Self.View.Compiler_Prefix &
-                         Default_Binder_Name);
+                       +(Self.Ctxt.Compiler_Prefix & Default_Binder_Name);
                   else
                      Binder_From_Attrs :=
                        +(Val.Text (Val.Text'First +
@@ -309,9 +328,8 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       function Resolve_Binder return String is
          Default_Binder_Name : constant String :=
-           Self.View.Compiler_Prefix
-           & "gnatbind"
-           & (if GPR2.On_Windows then ".exe" else "");
+                                 Self.View.Compiler_Prefix &
+                                 "gnatbind" & Exe_Ext;
          Binder_Path         : Path_Name.Object;
       begin
          --  if "gnatbind_prefix=", "--gnatbind_path=" or "ada_binder=" weren't
@@ -430,10 +448,18 @@ package body GPR2.Build.Actions.Ada_Bind is
          Cmd_Line.Add_Argument ("-a");
       end if;
 
-      for Ali of Self.Tree.Inputs (Self.UID, Explicit_Only => True) loop
-         Cmd_Line.Add_Argument
-           (GPR2.Build.Artifacts.Files.Object (Ali).Path,
-            GPR2.Build.Command_Line.Simple);
+      for Unit of Self.Roots loop
+         declare
+            UID : constant Actions.Compile.Ada.Ada_Compile_Id :=
+                    Actions.Compile.Ada.Create (Unit);
+            Comp : constant Actions.Compile.Ada.Object :=
+                     Actions.Compile.Ada.Object (Self.Tree.Action (UID));
+         begin
+            if Comp.Is_Defined then
+               Cmd_Line.Add_Argument
+                 (Comp.Local_Ali_File.Path, Build.Command_Line.Simple);
+            end if;
+         end;
       end loop;
 
       for View of Self.Ctxt.Closure (True, True, True) loop
@@ -529,6 +555,25 @@ package body GPR2.Build.Actions.Ada_Bind is
       end loop;
    end Compute_Signature;
 
+   ------------------------
+   -- Extended_Interface --
+   ------------------------
+
+   function Extended_Interface (Self : Object) return Compilation_Unit.Maps.Map
+   is
+   begin
+      return Result : Compilation_Unit.Maps.Map do
+         for C in Self.Extra_Intf.Iterate loop
+            declare
+               CU : constant Compilation_Unit.Object :=
+                      Extended_Interface_Map.Key (C);
+            begin
+               Result.Include (CU.Name, CU);
+            end;
+         end loop;
+      end return;
+   end Extended_Interface;
+
    ----------------
    -- Initialize --
    ----------------
@@ -537,13 +582,62 @@ package body GPR2.Build.Actions.Ada_Bind is
      (Self           : in out Object;
       Basename       : Simple_Name;
       Context        : GPR2.Project.View.Object;
-      Has_Main       : Boolean;
+      Main_Unit      : GPR2.Build.Compilation_Unit.Object;
       SAL_In_Closure : Boolean;
-      Skip           : Boolean := False) is
+      Skip           : Boolean := False)
+   is
+      procedure Add_Root_Attr (Attr : GPR2.Project.Attribute.Object);
+
+      New_Roots : Compilation_Unit.Maps.Map;
+      Root_Attr : Project.Attribute.Object;
+
+      -------------------
+      -- Add_Root_Attr --
+      -------------------
+
+      procedure Add_Root_Attr (Attr : GPR2.Project.Attribute.Object) is
+         CU : Compilation_Unit.Object;
+         Found : Boolean := False;
+
+      begin
+         for V of Attr.Values loop
+            if Ada.Strings.Fixed.Index (V.Text, "*") > 0 then
+               if Self.Ctxt.Is_Namespace_Root then
+                  for CU of Self.Ctxt.Units loop
+                     if GNATCOLL.Utils.Match
+                       (Ada.Characters.Handling.To_Lower (String (CU.Name)),
+                        V.Text)
+                     then
+                        New_Roots.Include (CU.Name, CU);
+                        Found := True;
+                     end if;
+                  end loop;
+               end if;
+
+            elsif not New_Roots.Contains (Name_Type  (V.Text)) then
+               CU := Self.Ctxt.Namespace_Roots.First_Element.Unit
+                 (Name_Type (V.Text));
+
+               if CU.Is_Defined then
+                  New_Roots.Include (CU.Name, CU);
+                  Found := True;
+               end if;
+            end if;
+
+            if not Found then
+               Self.Ctxt.Tree.Reporter.Report
+                 (GPR2.Message.Create
+                    (GPR2.Message.Warning,
+                     "cannot find the Root unit """ & V.Text & '"',
+                     V));
+            end if;
+         end loop;
+      end Add_Root_Attr;
+
    begin
       Self.Ctxt        := Context;
       Self.Basename    := +Basename;
-      Self.Has_Main    := Has_Main;
+      Self.Has_Main    := Main_Unit.Is_Defined;
       Self.SAL_Closure := SAL_In_Closure;
       Self.Output_Spec :=
         Artifacts.Files.Create
@@ -553,9 +647,82 @@ package body GPR2.Build.Actions.Ada_Bind is
           (Context.Object_Directory.Compose ("b__" & Basename & ".adb"));
       Self.Skip := Skip;
 
-      if Skip then
+      if Skip or else Self.Ctxt.Is_Externally_Built then
          Self.Deactivate;
       end if;
+
+      if Main_Unit.Is_Defined then
+         Self.Roots.Include (Main_Unit.Name, Main_Unit);
+
+      elsif Self.Ctxt.Is_Library
+        and then Self.Ctxt.Has_Any_Interfaces
+      then
+         for U of Self.Ctxt.Interface_Closure loop
+            Self.Roots.Include (U.Name, U);
+         end loop;
+
+      else
+         --  Consider all units of the context as root
+         for U of Self.Ctxt.Own_Units loop
+            Self.Roots.Include (U.Name, U);
+         end loop;
+      end if;
+
+      --  Check additional entry points defined by the Roots attribute
+
+      for U of Self.Roots loop
+         Root_Attr := Self.Ctxt.Attribute
+           (PRA.Roots,
+            PAI.Create_Source
+              (U.Main_Part.Source.Simple_Name,
+               U.Main_Part.Index));
+
+         if Root_Attr.Is_Defined then
+            Add_Root_Attr (Root_Attr);
+         end if;
+      end loop;
+
+      --  Also lookup for non-Ada source index
+
+      if Self.Ctxt.Is_Library then
+         --  Lookup the interface for libraries
+
+         for Src of Self.Ctxt.Sources (Interface_Only => True) loop
+            if Src.Language /= Ada_Language then
+               Root_Attr := Self.Ctxt.Attribute
+                 (PRA.Roots,
+                  PAI.Create_Source (Src.Path_Name.Simple_Name));
+
+               if Root_Attr.Is_Defined then
+                     Add_Root_Attr (Root_Attr);
+               end if;
+            end if;
+         end loop;
+
+      else
+         --  Lookup the mains otherwise
+
+         for Main of Self.Ctxt.Mains loop
+            declare
+               Src : constant Build.Source.Object :=
+                       Main.View.Visible_Source (Main.Source);
+            begin
+               if Src.Language /= Ada_Language then
+                  Root_Attr := Self.Ctxt.Attribute
+                    (PRA.Roots,
+                     PAI.Create_Source (Src.Path_Name.Simple_Name));
+
+                  if Root_Attr.Is_Defined then
+                     Add_Root_Attr (Root_Attr);
+                  end if;
+               end if;
+            end;
+         end loop;
+      end if;
+
+      for CU of New_Roots loop
+         Self.Roots.Include (CU.Name, CU);
+      end loop;
    end Initialize;
 
    ----------
@@ -603,16 +770,22 @@ package body GPR2.Build.Actions.Ada_Bind is
       return GPR2.Build.Actions.Link_Options_Insert.Undefined;
    end Link_Opt_Insert;
 
-   -------------------
-   -- On_Ali_Parsed --
-   -------------------
+   -------------------------
+   -- On_Ada_Dependencies --
+   -------------------------
 
-   function On_Ali_Parsed
-     (Self    : in out Object;
-      Imports : GPR2.Containers.Name_Set) return Boolean
+   function On_Ada_Dependencies
+     (Self     : in out Object;
+      Imports  : Containers.Name_Set;
+      From_ALI : Boolean) return Boolean
    is
-      Link       : constant GPR2.Build.Actions.Link.Object'Class := Self.Link;
-      To_Analyze : GPR2.Containers.Name_Set;
+      Link                : constant GPR2.Build.Actions.Link.Object'Class :=
+                              Self.Link;
+      To_Analyze_From_Ali : GPR2.Containers.Name_Set;
+      To_Analyze_From_Ada : GPR2.Containers.Name_Set;
+      --  We need to differentiate dependencies found from Ali and the ones
+      --  from the Ada parser to allow for a proper update upon ALI creation.
+      --  Else we will prune the analysis of ALI deps,
 
       function Add_Dependency (Unit : Name_Type) return Boolean;
 
@@ -625,7 +798,12 @@ package body GPR2.Build.Actions.Ada_Bind is
          CU         : Compilation_Unit.Object;
          Comp       : Actions.Compile.Ada.Object;
          Same_Scope : Boolean;
+         Part       : Unit_Kind := S_Spec;
+         S_Deps     : Containers.Name_Set;
+         B_Deps     : Containers.Name_Set;
+         Ign        : Boolean;
 
+         use GPR2.Project;
          use type GPR2.Project.View.Object;
 
       begin
@@ -641,12 +819,19 @@ package body GPR2.Build.Actions.Ada_Bind is
             return True;
          end if;
 
+         if CU.Owning_View.Is_Library
+           and then CU.Owning_View.Is_Externally_Built
+         then
+            return True;
+         end if;
+
          --  Check if the unit is in the same bind & link scope as the current
          --  action.
 
          Same_Scope := CU.Owning_View = Self.Ctxt
-           or else (Self.Ctxt.Kind = K_Aggregate_Library
-                    and then Self.View.Aggregated.Contains (CU.Owning_View));
+           or else
+             (Self.Ctxt.Closure (False, True, True).Contains (CU.Owning_View)
+              and then not CU.Owning_View.Is_Library);
 
          declare
             Comp_Id : constant Actions.Compile.Ada.Ada_Compile_Id :=
@@ -665,14 +850,25 @@ package body GPR2.Build.Actions.Ada_Bind is
             end if;
          end;
 
-         if Same_Scope or else not Comp.View.Is_Library then
-            --  If same scope or a regular project, just add the dependencies
+         if Same_Scope then
+            --  If same scope just add the dependencies
             --  on the output of the compile action.
 
             Self.Tree.Add_Input
               (Self.UID, Comp.Local_Ali_File, False);
+
+            if Link.Is_Defined then
+               Self.Tree.Add_Input
+                 (Link.UID, Comp.Object_File, False);
+            end if;
+
+         elsif Self.Ctxt.Is_Library
+           and then Self.Ctxt.Library_Standalone = Encapsulated
+         then
+            --  Part of a library, just add the ALI to the binder
             Self.Tree.Add_Input
-              (Link.UID, Comp.Object_File, False);
+              (Self.UID, Comp.Local_Ali_File, False);
+
          else
             --  Use the .ali that's in the library dir instead of the object
             --  directory.
@@ -681,33 +877,203 @@ package body GPR2.Build.Actions.Ada_Bind is
               (Self.UID, Comp.Intf_Ali_File, False);
          end if;
 
-         for Dep of Comp.Withed_Units loop
-            if not Self.Known_Inputs.Contains (Dep) then
-               To_Analyze.Include (Dep);
+         if Comp.Valid_Signature or else Comp.View.Is_Externally_Built then
+            --  If the new dependency has a valid signature, that's necessarily
+            --  because it has been just compiled (or skipped because the
+            --  signature has been checked). We can thus rely on its ALI file
+            --  to give us accurate dependencies, so add it in the Todo list.
+
+            if not GPR2.Build.ALI_Parser.Imports
+              (Comp.Dependency_File.Path, S_Deps, B_Deps, Ign)
+            then
+               Self.Tree.Reporter.Report
+                 (Message.Create
+                    (Message.Error,
+                     "Incorrectly formatted ali file """ &
+                       Comp.Dependency_File.Path.String_Value & '"',
+                     Source_Reference.Create
+                       (Comp.Dependency_File.Path.Value, 0, 0)));
+               return False;
             end if;
-         end loop;
+
+            To_Analyze_From_Ali.Union (S_Deps);
+            To_Analyze_From_Ali.Union (B_Deps);
+            To_Analyze_From_Ali.Difference (Self.Analyzed);
+
+         elsif not From_ALI then
+            --  If From_ALI is unset, this means we're in the initial actions
+            --  population stage, so the signature is expected to fail here.
+            --  Since we want this stage to be as close as possible to the
+            --  final dependency graph, let's continue analyzing the dependency
+            --  using the Ada parser.
+
+            S_Deps := CU.Known_Dependencies;
+            To_Analyze_From_Ada.Union (S_Deps);
+            To_Analyze_From_Ada.Difference (Self.Pre_Analyzed);
+         end if;
 
          return True;
       end Add_Dependency;
 
    begin
-      To_Analyze := Imports;
+      if From_ALI then
+         To_Analyze_From_Ali := Imports;
+      else
+         To_Analyze_From_Ada := Imports;
+      end if;
 
-      while not To_Analyze.Is_Empty loop
+      while not To_Analyze_From_Ali.Is_Empty
+        or else not To_Analyze_From_Ada.Is_Empty
+      loop
          declare
-            Unit : constant Name_Type := To_Analyze.First_Element;
+            Unit         : constant Name_Type :=
+                             (if not To_Analyze_From_Ali.Is_Empty
+                              then To_Analyze_From_Ali.First_Element
+                              else To_Analyze_From_Ada.First_Element);
+            Dep_From_Ali : constant Boolean :=
+                             not To_Analyze_From_Ali.Is_Empty;
+            Pos          : Containers.Name_Type_Set.Cursor;
+            Inserted     : Boolean;
          begin
-            To_Analyze.Delete_First;
+            if Dep_From_Ali then
+               To_Analyze_From_Ali.Delete_First;
+               Self.Analyzed.Insert (Unit, Pos, Inserted);
+            else
+               To_Analyze_From_Ada.Delete_First;
+               Self.Pre_Analyzed.Insert (Unit, Pos, Inserted);
+            end if;
 
-            if not Self.Known_Inputs.Contains (Unit) then
-               Self.Known_Inputs.Include (Unit);
-
-               if not Add_Dependency (Unit) then
-                  return False;
-               end if;
+            if Inserted
+              and then not Add_Dependency (Unit)
+            then
+               return False;
             end if;
          end;
       end loop;
+
+      return True;
+   end On_Ada_Dependencies;
+
+   -------------------
+   -- On_Ali_Parsed --
+   -------------------
+
+   function On_Ali_Parsed
+     (Self : in out Object;
+      Comp : GPR2.Build.Actions.Compile.Ada.Object) return Boolean
+   is
+      Scope      : Containers.Name_Set;
+      To_Analyze : Extended_Interface_Map.Map;
+   begin
+      --  First pass: adjust the Db dependencies to take into account potential
+      --  new dependencies between From_CU and the list of imports
+
+      if not (Comp.Withed_Units_From_Spec.Is_Empty
+              and then Comp.Withed_Units_From_Body.Is_Empty)
+        and then not Self.On_Ada_Dependencies (Comp.Withed_Units, True)
+      then
+         return False;
+      end if;
+
+      --  Second stage: look if the library interface needs to be adjusted with
+      --  a required new dependency
+
+      if Self.Ctxt.Is_Library
+        and then Self.Ctxt.Has_Any_Interfaces
+        and then
+          (Self.Roots.Contains (Comp.Input_Unit.Name)
+           or else Self.Extra_Intf.Contains (Comp.Input_Unit))
+      then
+         if Comp.Spec_Needs_Body then
+            Scope := Comp.Withed_Units;
+         else
+            Scope := Comp.Withed_Units_From_Spec;
+         end if;
+
+         for U of Scope loop
+            if not Self.Itf_Analyzed.Contains (U) then
+               To_Analyze.Include
+                 (Self.Ctxt.Namespace_Roots.First_Element.Unit (U),
+                  Comp.Input_Unit.Name);
+            end if;
+         end loop;
+
+         while not To_Analyze.Is_Empty loop
+            declare
+               C        : Extended_Interface_Map.Cursor := To_Analyze.First;
+               CU       : constant Compilation_Unit.Object :=
+                            Extended_Interface_Map.Key (C);
+               From     : constant Name_Type :=
+                            Extended_Interface_Map.Element (C);
+               UID      : constant Compile.Ada.Ada_Compile_Id :=
+                            Compile.Ada.Create (CU);
+               New_Comp : Compile.Ada.Object;
+               Inserted : Boolean;
+               Add_Intf : Boolean := True;
+
+               use GPR2.Project;
+               use type GPR2.Project.View.Object;
+
+            begin
+               To_Analyze.Delete (C);
+               Self.Itf_Analyzed.Include (CU.Name);
+
+               Add_Intf := CU.Is_Defined;
+
+               if Add_Intf
+                 --  Ignore external units
+                 and then CU.Owning_View /= Self.View
+                 --  except for encapsulated libraries
+                 and then Self.Ctxt.Library_Standalone /= Encapsulated
+                 --  except for aggregated projects
+                 and then
+                   (Self.Ctxt.Kind /= K_Aggregate_Library
+                    or else
+                      not Self.Ctxt.Aggregated.Contains (CU.Owning_View))
+               then
+                  Add_Intf := False;
+               end if;
+
+               if Add_Intf and then Self.Roots.Contains (CU.Name) then
+                  Add_Intf := False;
+               end if;
+
+               if Add_Intf then
+                  Self.Extra_Intf.Insert (CU, From, C, Inserted);
+
+                  if Inserted
+                    and then Self.Tree.Has_Action (UID)
+                  then
+                     New_Comp := Compile.Ada.Object (Self.Tree.Action (UID));
+                  end if;
+
+                  if New_Comp.Is_Defined
+                    and then New_Comp.Valid_Signature
+                  then
+                     if New_Comp.Spec_Needs_Body then
+                        Scope := New_Comp.Withed_Units;
+                     else
+                        Scope := New_Comp.Withed_Units_From_Spec;
+                     end if;
+                  end if;
+
+                  for U of Scope loop
+                     if not Self.Itf_Analyzed.Contains (U) then
+                        declare
+                           CU2 : constant Compilation_Unit.Object :=
+                                  Self.Ctxt.Namespace_Roots.First_Element.Unit
+                                    (U);
+                        begin
+                           if CU2.Is_Defined then
+                              To_Analyze.Include (CU2, CU.Name);
+                           end if;
+                        end;
+                     end if;
+                  end loop;
+               end if;
+            end;
+         end loop;
+      end if;
 
       return True;
    end On_Ali_Parsed;
@@ -748,25 +1114,47 @@ package body GPR2.Build.Actions.Ada_Bind is
    -------------------------
 
    overriding function On_Tree_Propagation
-     (Self : in out Object) return Boolean
-   is
-      To_Analyze : GPR2.Containers.Name_Set;
-
+     (Self : in out Object) return Boolean is
    begin
+      --  Now add our explicit inputs
+
+      for CU of Self.Roots loop
+         declare
+            Ada_Comp : Actions.Compile.Ada.Object;
+            Link     : constant Actions.Link.Object'Class := Self.Link;
+         begin
+            Ada_Comp.Initialize (CU);
+
+            if not Self.Tree.Add_Action (Ada_Comp) then
+               return False;
+            end if;
+
+            Self.Tree.Add_Input (Self.UID, Ada_Comp.Local_Ali_File, True);
+
+            if Link.Is_Defined and then Ada_Comp.Object_File.Is_Defined then
+               Self.Tree.Add_Input (Link.UID, Ada_Comp.Object_File, True);
+            end if;
+         end;
+      end loop;
+
       for Ali of Self.Tree.Inputs (Self.UID, True) loop
          if Self.Tree.Has_Predecessor (Ali) then
             declare
                A_Comp : constant Actions.Compile.Ada.Object :=
                           Actions.Compile.Ada.Object
                             (Self.Tree.Predecessor (Ali));
+               Deps   : Containers.Name_Set;
             begin
-               Self.Known_Inputs.Include (A_Comp.Input_Unit.Name);
-               To_Analyze.Union (A_Comp.Withed_Units);
+               Deps := A_Comp.Input_Unit.Known_Dependencies;
+
+               if not Self.On_Ada_Dependencies (Deps, False) then
+                  return False;
+               end if;
             end;
          end if;
       end loop;
 
-      return Self.On_Ali_Parsed (To_Analyze);
+      return True;
    end On_Tree_Propagation;
 
    ---------------
@@ -928,6 +1316,24 @@ package body GPR2.Build.Actions.Ada_Bind is
         Self.Link_Opt_Insert;
 
    begin
+      for C in Self.Extra_Intf.Iterate loop
+         declare
+            CU : constant Compilation_Unit.Object :=
+                   Extended_Interface_Map.Key (C);
+            From : constant Name_Type :=
+                     Extended_Interface_Map.Element (C);
+         begin
+            Self.Tree.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Warning,
+                  "unit """  & String (CU.Name)
+                  & """ is not in the interface set, but it is needed by """
+                  & String (From) & """",
+                  GPR2.Source_Reference.Create
+                    (Self.Ctxt.Path_Name.Value, 0, 0)));
+         end;
+      end loop;
+
       if Traces.Is_Active then
          Traces.Trace
            ("Parsing file '" & Self.Output_Body.Path.String_Value &

@@ -5,7 +5,6 @@
 --
 
 with Ada.Containers.Vectors;
-with Ada.Strings.Fixed;
 
 with GNATCOLL.Directed_Graph;
 with GNATCOLL.Traces;
@@ -774,19 +773,46 @@ package body GPR2.Build.Actions_Population is
       end loop;
 
       if Static_Actions then
+         --  This action tree is amended when executed by the Action's post
+         --  command. In the case the tree is not executed, but need a complete
+         --  tree, we thus need to manually iterate on the actions to allow
+         --  them to perform this post-processing.
+
          declare
-            List : Build.Tree_Db.Actions_List'Class :=
-                     Tree_Db.All_Actions;
+            New_Actions  : GPR2.Build.Actions.Action_Id_Sets.Set;
+            Done_Actions : GPR2.Build.Actions.Action_Id_Sets.Set;
+            List         : constant Build.Tree_Db.Actions_List'Class :=
+                             Tree_Db.All_Actions;
          begin
-            for C in List.Action_Iterate loop
-               declare
-                  Action : constant Build.Tree_Db.Action_Reference_Type :=
-                             List.Action_Reference (C);
-               begin
-                  if not Action.On_Ready_State then
-                     return False;
-                  end if;
-               end;
+            loop
+               New_Actions.Clear;
+
+               for C in List.Action_Iterate loop
+                  declare
+                     Action : constant Build.Actions.Object'Class :=
+                                Build.Tree_Db.Element (C);
+                  begin
+                     if not Done_Actions.Contains (Action.UID) then
+                        Done_Actions.Include (Action.UID);
+                        New_Actions.Include (Action.UID);
+                     end if;
+                  end;
+               end loop;
+
+               exit when New_Actions.Is_Empty;
+
+               for UID of New_Actions loop
+                  declare
+                     Action : Build.Actions.Object'Class :=
+                                Tree_Db.Action (UID);
+                  begin
+                     if not Action.On_Ready_State then
+                        return False;
+                     end if;
+
+                     Tree_Db.Action_Id_To_Reference (UID) := Action;
+                  end;
+               end loop;
             end loop;
          end;
       end if;
@@ -1010,7 +1036,7 @@ package body GPR2.Build.Actions_Population is
          Self.Bind.Initialize
            (Basename       => View.Library_Name,
             Context        => View,
-            Has_Main       => False,
+            Main_Unit      => Compilation_Unit.Undefined,
             SAL_In_Closure => Has_SAL,
             Skip           => Options.No_SAL_Binding);
 
@@ -1056,24 +1082,6 @@ package body GPR2.Build.Actions_Population is
            (Self.Initial_Link_Action.UID,
             Self.Bind.Post_Bind.Object_File,
             True);
-
-         --  Now gather the list of units that compose the interface
-
-         for CU of View.Interface_Closure loop
-            declare
-               Comp : GPR2.Build.Actions.Compile.Ada.Object;
-            begin
-               Comp.Initialize (CU);
-
-               if not Tree_Db.Add_Action (Comp) then
-                  return False;
-               end if;
-
-               Tree_Db.Add_Input
-                 (Self.Initial_Link_Action.UID, Comp.Object_File, False);
-               Tree_Db.Add_Input (Self.Bind.UID, Comp.Local_Ali_File, True);
-            end;
-         end loop;
 
       else
          --  Non standalone libraries: add all Ada units
@@ -1142,15 +1150,19 @@ package body GPR2.Build.Actions_Population is
       for Id of Self.Static_Libs_Deps.Union (Self.Shared_Libs_Deps) loop
          declare
             Sublib : constant LH.Object := Cache.Element (Id);
+            Encaps : constant Boolean :=
+                       Self.View.Library_Standalone = Encapsulated;
          begin
             --  Update the DAG to ensure that libraries required to link a
             --  shared lib are present during the final link
 
-            if not Self.Final_Link_Action.Is_Static_Library then
+            if (not Self.Final_Link_Action.Is_Static_Library)
+              or else Encaps
+            then
                Tree_Db.Add_Input
                  (Self.Initial_Link_Action.UID,
                   Sublib.Final_Link_Action.Output,
-                  False);
+                  Encaps);
             end if;
 
             --  Make sure the libraries dependencies are bounded before the
@@ -1239,8 +1251,6 @@ package body GPR2.Build.Actions_Population is
          Idx           : Natural := 1;
          Skip          : Boolean := False;
          Direct_Import : Boolean := False;
-         Has_Ada       : Boolean := False;
-         Has_Other     : Boolean := False;
          Has_SAL       : Boolean := False;
       begin
          --  First check the dependencies and retrieve the libraries
@@ -1262,19 +1272,6 @@ package body GPR2.Build.Actions_Population is
          for Id of Shared_Libs loop
             Sorted_Libs.Append (Libs_Cache.Element (Id));
          end loop;
-
-         Closure_Loop :
-         for V of Closure loop
-            for L of V.Language_Ids loop
-               if L = Ada_Language then
-                  Has_Ada := True;
-               elsif V.Is_Compilable (L) then
-                  Has_Other := True;
-               end if;
-
-               exit Closure_Loop when Has_Ada and then Has_Other;
-            end loop;
-         end loop Closure_Loop;
 
          --  Process the mains one by one
 
@@ -1308,22 +1305,27 @@ package body GPR2.Build.Actions_Population is
             end if;
 
             if Source.Language = Ada_Language then
-               A_Comp.Initialize
-                 (Main.View.Own_Unit (Source.Units.Element (Main.Index).Name));
+               declare
+                  Unit : constant Compilation_Unit.Object :=
+                           Main.View.Own_Unit
+                             (Source.Units.Element (Main.Index).Name);
+               begin
+                  A_Comp.Initialize (Unit);
 
-               if not Tree_Db.Add_Action (A_Comp) then
-                  return False;
-               end if;
+                  if not Tree_Db.Add_Action (A_Comp) then
+                     return False;
+                  end if;
 
-               Bind (Idx).Initialize
-                 (A_Comp.Local_Ali_File.Path.Base_Filename,
-                  Main.View,
-                  Has_Main       => True,
-                  SAL_In_Closure => Has_SAL);
+                  Bind (Idx).Initialize
+                    (A_Comp.Local_Ali_File.Path.Base_Filename,
+                     Main.View,
+                     Main_Unit      => Unit,
+                     SAL_In_Closure => Has_SAL);
 
-               if not Tree_Db.Add_Action (Bind (Idx)) then
-                  return False;
-               end if;
+                  if not Tree_Db.Add_Action (Bind (Idx)) then
+                     return False;
+                  end if;
+               end;
 
                Tree_Db.Add_Input (Bind (Idx).UID, A_Comp.Local_Ali_File, True);
                Tree_Db.Add_Input (Link (Idx).UID, A_Comp.Object_File, True);
@@ -1339,7 +1341,10 @@ package body GPR2.Build.Actions_Population is
 
                Tree_Db.Add_Input (Link (Idx).UID, Comp.Object_File, True);
 
-               if Has_Ada then
+               if (for some Lib of Closure =>
+                     Lib.Language_Ids.Contains (Ada_Language))
+                 or else not Main.View.Attributes (PRA.Roots).Is_Empty
+               then
                   --  ??? We don't need a bind phase per non-Ada main, we just
                   --  need one for the view. We do that only to remain
                   --  compatible with what gpr1build does?
@@ -1347,106 +1352,24 @@ package body GPR2.Build.Actions_Population is
                   Bind (Idx).Initialize
                     (Source.Path_Name.Base_Filename,
                      View,
-                     Has_Main       => False,
+                     Main_Unit      => Compilation_Unit.Undefined,
                      SAL_In_Closure => Has_SAL);
+
+                  for V of Closure loop
+                     for CU of V.Own_Units loop
+                        Bind (Idx).Add_Root_Unit (CU);
+                     end loop;
+                  end loop;
 
                   if not Tree_Db.Add_Action (Bind (Idx)) then
                      return False;
                   end if;
-
-                  for V of Closure loop
-                     for CU of V.Own_Units loop
-                        A_Comp.Initialize (CU);
-
-                        if not Tree_Db.Add_Action (A_Comp) then
-                           return False;
-                        end if;
-
-                        Tree_Db.Add_Input
-                          (Bind (Idx).UID, A_Comp.Local_Ali_File, True);
-                        Tree_Db.Add_Input
-                          (Link (Idx).UID, A_Comp.Object_File, True);
-                     end loop;
-                  end loop;
 
                   Tree_Db.Add_Input
                     (Link (Idx).UID,
                      Bind (Idx).Post_Bind.Object_File,
                      True);
                end if;
-
-               --  Hendle roots if any
-
-               declare
-                  procedure Add_CU (CU : Build.Compilation_Unit.Object);
-
-                  ------------
-                  -- Add_CU --
-                  ------------
-
-                  procedure Add_CU (CU : Build.Compilation_Unit.Object) is
-                     Ada_Comp : GPR2.Build.Actions.Compile.Ada.Object;
-                  begin
-                     if CU.Is_Defined then
-                        Ada_Comp.Initialize (CU);
-                        Tree_Db.Add_Input
-                          (Bind (Idx).UID,
-                           Ada_Comp.Local_Ali_File,
-                           True);
-
-                        if Ada_Comp.Object_File.Is_Defined then
-                           Tree_Db.Add_Input
-                             (Link (Idx).UID,
-                              Ada_Comp.Object_File,
-                              True);
-                        end if;
-                     end if;
-                  end Add_CU;
-
-                  Attr : constant GPR2.Project.Attribute.Object :=
-                           View.Attribute
-                             (PRA.Roots,
-                              PAI.Create_Source (Main.Source.Simple_Name));
-                  CU   : GPR2.Build.Compilation_Unit.Object;
-
-               begin
-                  if Attr.Is_Defined
-                    and then not Attr.Values.Is_Empty
-                  then
-                     if not Bind (Idx).Is_Defined then
-                        Bind (Idx).Initialize
-                          (Source.Path_Name.Base_Filename,
-                           View,
-                           Has_Main       => False,
-                           SAL_In_Closure => Has_SAL);
-
-                        if not Tree_Db.Add_Action (Bind (Idx)) then
-                           return False;
-                        end if;
-
-                        Tree_Db.Add_Input
-                          (Link (Idx).UID,
-                           Bind (Idx).Post_Bind.Object_File,
-                           True);
-                     end if;
-
-                     for Val of Attr.Values loop
-                        if Ada.Strings.Fixed.Index (Val.Text, "*") > 0 then
-                           for CU of View.Units loop
-                              if GNATCOLL.Utils.Match
-                                (String (CU.Name), Val.Text)
-                              then
-                                 Add_CU (CU);
-                              end if;
-                           end loop;
-
-                        else
-                           CU := View.Unit (Name_Type (Val.Text));
-                           Add_CU (CU);
-                        end if;
-                     end loop;
-                  end if;
-               end;
             end if;
 
             if Bind (Idx).Is_Defined then

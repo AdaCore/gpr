@@ -166,9 +166,6 @@ private
                          Containers.Empty_Value_List;
       --  Command line options added manually with the Add_Option procedure
 
-      Extra_Intf     : GPR2.Build.Compilation_Unit.Maps.Map;
-      --  Extra units needed to have a complete interface
-
       Bind            : Actions.Ada_Bind.Object;
       --  The bind action generating the initialisation of the linked library
 

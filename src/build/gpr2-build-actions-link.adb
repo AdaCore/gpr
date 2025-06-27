@@ -36,10 +36,6 @@ package body GPR2.Build.Actions.Link is
               GNATCOLL.Traces.Create
                 ("GPR.BUILD.ACTIONS.LINK", GNATCOLL.Traces.Off);
 
-   procedure Check_Interface
-     (Self        : in out Object;
-      No_Warnings : Boolean);
-
    function Generate_Export_File
      (Self : in out Object;
       From : Path_Name.Object) return Filename_Optional;
@@ -87,95 +83,6 @@ package body GPR2.Build.Actions.Link is
    begin
       Self.Static_Options.Append (Option);
    end Add_Option;
-
-   ---------------------
-   -- Check_Interface --
-   ---------------------
-
-   procedure Check_Interface
-     (Self        : in out Object;
-      No_Warnings : Boolean)
-   is
-      CU       : GPR2.Build.Compilation_Unit.Object;
-      CU_Dep   : GPR2.Build.Compilation_Unit.Object;
-      Analyzed : GPR2.Containers.Name_Set;
-      Todo     : GPR2.Build.Compilation_Unit.Maps.Map;
-      Pos      : GPR2.Build.Compilation_Unit.Maps.Cursor;
-      Inserted : Boolean;
-
-   begin
-      if Self.Ctxt.Is_Library
-        and then Self.Ctxt.Has_Any_Interfaces
-        and then Self.Ctxt.Is_Library_Standalone
-        and then Self.Extra_Intf.Is_Empty
-      then
-         --  Check that the interface is complete: no dependency from specs
-         --  should depend on a spec that is not part of the interface.
-
-         Todo := Self.Ctxt.Interface_Closure;
-
-         while not Todo.Is_Empty loop
-            CU := Todo.First_Element;
-            Todo.Delete_First;
-            Analyzed.Insert (CU.Name);
-
-            --  ??? TODO Need to know if CU requires the body (generics or
-            --  inlined subprograms), and use Spec_Only parameter accordingly.
-
-            for Dep of CU.Known_Dependencies (Spec_Only => True) loop
-               if not Self.Ctxt.Interface_Closure.Contains (Dep)
-                 and then not Analyzed.Contains (Dep)
-               then
-                  if Self.Ctxt.Kind = K_Aggregate_Library then
-                     for V of Self.Ctxt.Aggregated loop
-                        CU_Dep := V.Own_Unit (Dep);
-                        exit when CU_Dep.Is_Defined;
-                     end loop;
-                  else
-                     CU_Dep := Self.Ctxt.Own_Unit (Dep);
-                  end if;
-
-                  --  Only warn for internal units, the interface may depend
-                  --  on other units
-
-                  if CU_Dep.Is_Defined
-                    and then not Analyzed.Contains (CU_Dep.Name)
-                  then
-                     if not No_Warnings then
-                        Self.Tree.Reporter.Report
-                          (GPR2.Message.Create
-                             (GPR2.Message.Warning,
-                              "unit """
-                              & String (Dep)
-                              & """ is not in the interface set, but it is "
-                              & "needed by """
-                              & String (CU.Name)
-                              & """",
-                              GPR2.Source_Reference.Create
-                                (Self.Ctxt.Path_Name.Value, 0, 0)));
-                     end if;
-
-                     Self.Extra_Intf.Insert
-                       (CU_Dep.Name, CU_Dep, Pos, Inserted);
-
-                     if Inserted then
-                        declare
-                           Ada_Comp : Actions.Compile.Ada.Object;
-                        begin
-                           Ada_Comp.Initialize (CU_Dep);
-
-                           Self.Tree.Add_Input
-                             (Self.UID, Ada_Comp.Local_Ali_File, True);
-                        end;
-
-                        Todo.Include (CU_Dep.Name, CU_Dep);
-                     end if;
-                  end if;
-               end if;
-            end loop;
-         end loop;
-      end if;
-   end Check_Interface;
 
    ---------------------
    -- Compute_Command --
@@ -1430,14 +1337,6 @@ package body GPR2.Build.Actions.Link is
       end if;
 
       if Export_File_Switch.Is_Defined then
-         if not Self.Lib_Symbol_File.Is_Defined then
-            --  We will need to generate the exported symbols
-            --  from the library interface: we thus need it to
-            --  be up-to-date.
-
-            Self.Check_Interface (No_Warnings => No_Warning);
-         end if;
-
          declare
             Tmp_File : constant Filename_Optional :=
                          Self.Generate_Export_File
@@ -1552,9 +1451,13 @@ package body GPR2.Build.Actions.Link is
       if Self.Ctxt.Is_Library_Standalone then
          Units := Self.Ctxt.Interface_Closure;
 
-         for CU of Self.Extra_Intf loop
-            Units.Include (CU.Name, CU);
-         end loop;
+         if Self.Bind.Is_Defined then
+            for CU of Ada_Bind.Object
+              (Self.Tree.Action (Self.Bind.UID)).Extended_Interface
+            loop
+               Units.Include (CU.Name, CU);
+            end loop;
+         end if;
 
       else
          Units := Self.Ctxt.Own_Units;
@@ -1595,8 +1498,6 @@ package body GPR2.Build.Actions.Link is
       then
          return True;
       end if;
-
-      Check_Interface (Self, No_Warnings => True);
 
       Units := Self.Interface_Units;
 
@@ -1819,10 +1720,6 @@ package body GPR2.Build.Actions.Link is
       Todo     : GPR2.Build.Compilation_Unit.Maps.Map;
 
    begin
-      --  Check the library interface if needed
-
-      Check_Interface (Self, No_Warnings => False);
-
       if Self.Is_Static_Library and then Self.Output.Path.Exists then
          --  Remove the old .a since otherwise ar will just accumulate the
          --  objects there
@@ -2053,8 +1950,23 @@ package body GPR2.Build.Actions.Link is
                         end if;
                      end On_Unit_Part;
 
+                     Comp    : constant Actions.Compile.Ada.Object :=
+                                 Actions.Compile.Ada.Object
+                                   (Self.Tree.Action
+                                      (Actions.Compile.Ada.Create (CU)));
                   begin
-                     CU.For_All_Part (On_Unit_Part'Access);
+                     if Comp.Spec_Needs_Body
+                       or else not CU.Has_Part (S_Spec)
+                     then
+                        CU.For_All_Part (On_Unit_Part'Access);
+                     else
+                        On_Unit_Part
+                          (S_Spec,
+                           CU.Spec.View,
+                           CU.Spec.Source,
+                           CU.Spec.Index,
+                           "");
+                     end if;
 
                      if Has_Error then
                         return False;
