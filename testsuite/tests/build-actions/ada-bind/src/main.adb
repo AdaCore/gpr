@@ -85,11 +85,11 @@ begin
       for Input of Tree.Artifacts_Database.Inputs (Action.UID) loop
          Count := Count + 1;
          Test_Helper.Assert
-           (Artifacts.Files.Object (Input).Path.Simple_Name = "main.ali",
-            "Artifact file is main.ali");
+           (Artifacts.Files.Object (Input).Path.Simple_Name in "main.ali" | "pkg.ali" | "dep_two.ali",
+            "Artifact file is " & String (Artifacts.Files.Object (Input).Path.Simple_Name));
       end loop;
 
-      Test_Helper.Assert (Count = 1, "Correct number of inputs");
+      Test_Helper.Assert (Count = 3, "Correct number of inputs");
 
       declare
          PB  : GPR2.Build.Actions.Post_Bind.Object := Action.Post_Bind;

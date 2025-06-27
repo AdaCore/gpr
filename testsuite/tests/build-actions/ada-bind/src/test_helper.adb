@@ -1,6 +1,7 @@
 with Ada.Text_IO;
 
 with GPR2.Build.Artifacts.Files;
+with GPR2.Build.Compilation_Unit;
 with GPR2.Options;
 
 with GNAT.OS_Lib;
@@ -8,6 +9,8 @@ with GNAT.OS_Lib;
 with Test_Helper;
 
 package body Test_Helper is
+
+   use GPR2.Build;
 
    ------------
    -- Assert --
@@ -75,6 +78,10 @@ package body Test_Helper is
       for Root of Tree.Namespace_Root_Projects loop
          for Main of Root.Mains loop
             declare
+               Unit_Name : constant Name_Type :=
+                             Main.View.Visible_Source (Main.Source).Unit (Main.Index).Name;
+               Unit      : constant Compilation_Unit.Object :=
+                             Root.Unit (Unit_Name);
                Ali : constant Build.Artifacts.Files.Object :=
                        Build.Artifacts.Files.Create
                          (Root.Object_Directory.Compose
@@ -83,7 +90,7 @@ package body Test_Helper is
                Action.Initialize
                  (Basename       => Ali.Path.Base_Filename,
                   Context        => Root,
-                  Has_Main       => True,
+                  Main_Unit      => Unit,
                   SAL_In_Closure => False);
                Assert
                  (not Tree.Artifacts_Database.Has_Action (Action.UID),
@@ -95,6 +102,10 @@ package body Test_Helper is
             end;
          end loop;
       end loop;
+
+      Assert
+        (Tree.Artifacts_Database.Propagate_Actions,
+         "actions are propagated in the tree", Topic => Setup);
 
       return Action;
    end Create_Binder_Action;

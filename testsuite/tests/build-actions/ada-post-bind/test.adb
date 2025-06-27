@@ -44,7 +44,7 @@ function Test return Integer is
       Bind_Action.Initialize
         (Basename       => Ali_Path.Base_Filename,
          Context        => Context,
-         Has_Main       => True,
+         Main_Unit      => Tree.Root_Project.Unit ("Main"),
          SAL_In_Closure => False);
       Assert
         (Tree.Artifacts_Database.Add_Action (Bind_Action),

@@ -250,7 +250,6 @@ Case 19 - Modified pkg.adb without dep_two dependency
 [Ada Post-Bind]   b__main.adb
 [Link]            main
 == Content of jobs.json:
-uid: '[Ada Compile] dep_two.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''

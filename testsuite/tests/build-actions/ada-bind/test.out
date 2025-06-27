@@ -6,12 +6,15 @@
 [ Setup ] dep_two.ali Created
 [ Setup ] New binder action
 [ Setup ] Action inserted in Tree_DB
+[ Setup ] actions are propagated in the tree
 [ OK ] Successful action
 [ OK ] Spec has .ads extension
 [ OK ] Body has .adb extension
 [ OK ] Coherent base name
 [ OK ] Expected base name
 [ OK ] Artifact file is main.ali
+[ OK ] Artifact file is pkg.ali
+[ OK ] Artifact file is dep_two.ali
 [ OK ] Correct number of inputs
 [ OK ] Post-Bind action correctly created
 [ Test case 2 ] - [ Parse gnatbind_prefix ]
@@ -19,6 +22,7 @@
 [ Setup ] Sources updated
 [ Setup ] New binder action
 [ Setup ] Action inserted in Tree_DB
+[ Setup ] actions are propagated in the tree
 [ OK ] Test binder tool with gnatbind_prefix=bla
 [ OK ] Successfully launched process
 [ Test case 3 ] - [ Parse gnatbind_prefix with dash ]
@@ -26,6 +30,7 @@
 [ Setup ] Sources updated
 [ Setup ] New binder action
 [ Setup ] Action inserted in Tree_DB
+[ Setup ] actions are propagated in the tree
 [ OK ] Test binder tool with gnatbind_prefix=bla-
 [ OK ] Successfully launched process
 [ Test case 4 ] - [ Parse ada_binder ]
@@ -33,6 +38,7 @@
 [ Setup ] Sources updated
 [ Setup ] New binder action
 [ Setup ] Action inserted in Tree_DB
+[ Setup ] actions are propagated in the tree
 [ OK ] Test binder tool with ada_binder=bla-gnatbind
 [ OK ] Successfully launched process
 [ Test case 5 ] - [ Parse gnatbind_path ]
@@ -40,6 +46,7 @@
 [ Setup ] Sources updated
 [ Setup ] New binder action
 [ Setup ] Action inserted in Tree_DB
+[ Setup ] actions are propagated in the tree
 [ OK ] Correctly found binder tool define in gnatbind_path=<path>/bla-gnatbind
 [ OK ] Successfully launched process
 [ Test case 6 ] - [ Parse empty required switches ]
@@ -47,6 +54,7 @@
 [ Setup ] Sources updated
 [ Setup ] New binder action
 [ Setup ] Action inserted in Tree_DB
+[ Setup ] actions are propagated in the tree
 [ OK ] Correctly defaulted to binder tool in Compiler.Driver install directory
 [ OK ] Successfully launched process
 [ Test case 7 ] - [ Fake gnatbind path ]
@@ -54,6 +62,7 @@
 [ Setup ] Sources updated
 [ Setup ] New binder action
 [ Setup ] Action inserted in Tree_DB
+[ Setup ] actions are propagated in the tree
 [ OK ] Unknown tool
 [ OK ] Process error expected due to a fake gnatbind being used
 [ Test case 8 ] - [ Fake gnatbind prefix ]
@@ -61,6 +70,7 @@
 [ Setup ] Sources updated
 [ Setup ] New binder action
 [ Setup ] Action inserted in Tree_DB
+[ Setup ] actions are propagated in the tree
 [ OK ] Unknown tool
 [ OK ] Process error expected due to a fake gnatbind being used
 [ Test case 9 ] - [ Fake ada binder ]
@@ -68,6 +78,7 @@
 [ Setup ] Sources updated
 [ Setup ] New binder action
 [ Setup ] Action inserted in Tree_DB
+[ Setup ] actions are propagated in the tree
 [ OK ] Unknown tool
 [ OK ] Process error expected due to a fake gnatbind being used
 
