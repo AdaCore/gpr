@@ -159,6 +159,17 @@ include:
       rules:
         - allow_failure: true
 
+   # gprbuild testsuite with gpr2build for arm-elf-zynq7k
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/test@~latest
+    inputs:
+      job-name: test_gpr2build:arm_elf_zynq7k
+      anod-args: run test_gpr2build_arm_elf_zynq7k
+      disk: 80
+      save-anod-logs: true
+      needs: ["build:linux"]
+      rules:
+        - allow_failure: true
+
 # Make some jobs optional
 
 # on windows, considering the machines we have for the CI (the fast-startup
@@ -198,6 +209,9 @@ test_gpr2_valgrind:linux:
 # result shows errors.
 
 test_gpr2build:armhf_linux:linux:
+  when: manual
+
+test_gpr2build:arm_elf_zynq7k:linux:
   when: manual
 
 # Extend the coverage script to make actual use of the cov results
