@@ -13,18 +13,31 @@ procedure Main is
    procedure Print_Imports (ALI_File : GPR2.Path_Name.Object);
 
    procedure Print_Imports (ALI_File : GPR2.Path_Name.Object) is
-      Imports  : GPR2.Containers.Name_Set;
+      B_Imports  : GPR2.Containers.Name_Set;
+      S_Imports  : GPR2.Containers.Name_Set;
+      Needs_Body : Boolean;
+      use Ada.Text_IO;
    begin
 
       Ada.Text_IO.Put_Line
         ("=== Parsing file " & String (ALI_File.Simple_Name));
 
-      if not GPR2.Build.ALI_Parser.Imports (ALI_File, Imports) then
+      if not GPR2.Build.ALI_Parser.Imports
+        (ALI_File, S_Imports, B_Imports, Needs_Body)
+      then
          Ada.Text_IO.Put_Line ("Failed to import the ALI file");
       end if;
 
-      for Imp of Imports loop
-         Ada.Text_IO.Put_Line (String (Imp));
+      Put_Line ("Needs body: " & Needs_Body'Image);
+
+      Put_Line ("Withed by the spec:");
+      for Imp of S_Imports loop
+         Ada.Text_IO.Put_Line (" - " & String (Imp));
+      end loop;
+
+      Put_Line ("Withed by the body:");
+      for Imp of B_Imports loop
+         Ada.Text_IO.Put_Line (" - " & String (Imp));
       end loop;
    end Print_Imports;
 

@@ -240,9 +240,6 @@ test_gpr2build:armhf_linux:linux:
 
   coverage: '/Stmt Coverage:\s+(?:\d+\.\d+)%/'
   artifacts:
-    when: always
-    paths:
-      - coverage/cobertura-*.xml
     reports:
       junit: xunit-*.xml
       coverage_report:

@@ -1,11 +1,16 @@
 using project file /test.gpr
 === Parsing file gnatcoll-memory.ali
-ada
-ada.exceptions
-gnat
-gnat.debug_pools
-gnatcoll
-system
-system.crtl
-system.memory
-system.storage_elements
+Needs body: TRUE
+Withed by the spec:
+ - gnat
+ - gnat.debug_pools
+ - gnatcoll
+ - system
+Withed by the body:
+ - ada
+ - ada.exceptions
+ - gnatcoll
+ - system
+ - system.crtl
+ - system.memory
+ - system.storage_elements

@@ -20,6 +20,14 @@ package body GPR2.Build.ALI_Parser is
    Traces : constant GT.Trace_Handle :=
               GT.Create ("GPR.BUILD.ALI_PARSER", GNATCOLL.Traces.Off);
 
+   type Unit_Flags_Part is record
+      SB    : Spec_Body;
+      Flags : Unit_Flags_Set;
+   end record;
+
+   function Parse_Flags (Reader : in out GB.Reader;
+                         EOL    : in out Boolean) return Unit_Flags_Part;
+
    package IO is
 
       function Get_Token
@@ -375,14 +383,17 @@ package body GPR2.Build.ALI_Parser is
    -------------
 
    function Imports
-     (ALI_File : GPR2.Path_Name.Object;
-      Imports  : in out GPR2.Containers.Name_Set) return Boolean
+     (ALI_File     : GPR2.Path_Name.Object;
+      Spec_Imports : out GPR2.Containers.Name_Set;
+      Body_Imports : out GPR2.Containers.Name_Set;
+      Needs_Body   : out Boolean) return Boolean
    is
 
       procedure Parse_With (Reader : in out GB.Reader);
       --  Parse the source file name of the current dependency line
 
-      EOL : Boolean := False;
+      EOL          : Boolean := False;
+      Cur_SB       : Spec_Body := U_Spec;
 
       ---------------
       -- Parse_Dep --
@@ -410,9 +421,15 @@ package body GPR2.Build.ALI_Parser is
               and then Unit_Name (Unit_Name'Last) in 's' | 'b'
               and then Unit_Name (Unit_Name'Last - 1) = '%'
             then
-               Imports.Include
-                 (Name_Type
-                    (Unit_Name (Unit_Name'First .. Unit_Name'Last - 2)));
+               if Cur_SB = U_Spec then
+                  Spec_Imports.Include
+                    (Name_Type
+                       (Unit_Name (Unit_Name'First .. Unit_Name'Last - 2)));
+               else
+                  Body_Imports.Include
+                    (Name_Type
+                       (Unit_Name (Unit_Name'First .. Unit_Name'Last - 2)));
+               end if;
             else
                raise Scan_ALI_Error with
                  "withed unit name does not end with '%s'";
@@ -422,8 +439,11 @@ package body GPR2.Build.ALI_Parser is
 
       Reader : GB.Reader :=  GB.Open (String (ALI_File.Value));
       Word   : Character := ASCII.NUL;
+      Flags  : Unit_Flags_Part;
 
    begin
+      Needs_Body := False;
+
       --  Only the dependencies lines "D" are of interest, as they contain
       --  dependencies source names.
 
@@ -443,6 +463,14 @@ package body GPR2.Build.ALI_Parser is
             when 'D' =>
                exit;
                --  ??? Add other cases that are after the withed units
+
+            when 'U' =>
+               Flags := Parse_Flags (Reader, EOL);
+               Cur_SB := Flags.SB;
+
+               if Cur_SB = U_Spec then
+                  Needs_Body := Flags.Flags (Body_Needed_For_SAL);
+               end if;
 
             when 'W' | 'Y' =>
                Parse_With (Reader);
@@ -464,6 +492,162 @@ package body GPR2.Build.ALI_Parser is
 
          return False;
    end Imports;
+
+   -----------------
+   -- Parse_Flase --
+   -----------------
+
+   function Parse_Flags
+     (Reader : in out GB.Reader;
+      EOL    : in out Boolean) return Unit_Flags_Part
+   is
+      R : Unit_Flags_Part;
+   begin
+      if not GB.Check (Reader, " ") then
+         raise Scan_ALI_Error
+           with "space expected after the 'U'"
+           & " withed unit character";
+      end if;
+
+      declare
+         Unit_Name : constant String := IO.Get_Token (Reader, EOL);
+      begin
+         if Unit_Name = "" then
+            raise Scan_ALI_Error with "missed unit name";
+         end if;
+
+         if Unit_Name'Length < 3
+           or else Unit_Name (Unit_Name'Last) not in 's' | 'b'
+           or else Unit_Name (Unit_Name'Last - 1) /= '%'
+         then
+            raise Scan_ALI_Error with
+              "withed unit name does not end with '%s'";
+         end if;
+
+         if Unit_Name (Unit_Name'Last) = 's' then
+            R.SB := U_Spec;
+         else
+            R.SB := U_Body;
+         end if;
+      end;
+
+      --  Read the flags at end of line
+      declare
+         S  : constant String := IO.Get_Token (Reader, EOL)
+           with Unreferenced;
+         --  Source
+         F  : constant String := IO.Get_Token (Reader, EOL);
+         --  Checksum & flags
+         I  : Positive := F'First;
+      begin
+         --  Skip checksum
+
+         while F (I) not in ' ' | ASCII.HT | ASCII.LF loop
+            I := I + 1;
+         end loop;
+
+         I := I + 1;
+
+         --  Read flags
+
+         while I < F'Last loop
+            case F (I) is
+               when 'B' =>
+                  case F (I + 1) is
+                     when 'N' =>
+                        R.Flags (Body_Needed_For_SAL) := True;
+                     when 'D' =>
+                        R.Flags (Elaborate_Body_Desirable) := True;
+                     when others =>
+                        null;
+                  end case;
+
+               when 'D' =>
+                  case F (I + 1) is
+                     when 'E' =>
+                        R.Flags (Dynamic_Elab) := True;
+                     when others =>
+                        null;
+                  end case;
+
+               when 'E' =>
+                  case F (I + 1) is
+                     when 'B' =>
+                        R.Flags (Elaborate_Body) := True;
+                     when 'E' =>
+                        R.Flags (Set_Elab_Entity) := True;
+                     when others =>
+                        null;
+                  end case;
+
+               when 'G' =>
+                  case F (I + 1) is
+                     when 'E' =>
+                        R.Flags (Is_Generic) := True;
+                     when others =>
+                        null;
+                  end case;
+
+               when 'I' =>
+                  case F (I + 1) is
+                     when 'S' =>
+                        R.Flags (Init_Scalars) := True;
+                     when others =>
+                        null;
+                  end case;
+
+               when 'N' =>
+                  case F (I + 1) is
+                     when 'E' =>
+                        R.Flags (No_Elab) := True;
+                     when others =>
+                        null;
+                  end case;
+
+               when 'P' =>
+                  case F (I + 1) is
+                     when 'F' =>
+                        R.Flags (Has_Finalizer) := True;
+                     when 'R' =>
+                        R.Flags (Preelab) := True;
+                     when 'U' =>
+                        R.Flags (Pure) := True;
+                     when others =>
+                        null;
+                  end case;
+
+               when 'R' =>
+                  case F (I + 1) is
+                     when 'A' =>
+                        R.Flags (Has_RACW) := True;
+                     when 'C' =>
+                        R.Flags (RCI) := True;
+                     when 'T' =>
+                        R.Flags (Remote_Types) := True;
+                     when others =>
+                        null;
+                  end case;
+
+               when 'S' =>
+                  case F (I + 1) is
+                     when 'E' =>
+                        R.Flags (Serious_Errors) := True;
+                     when 'P' =>
+                        R.Flags (Shared_Passive) := True;
+                     when others =>
+                        null;
+                  end case;
+
+               when others =>
+                  null;
+            end case;
+
+            I := I + 2;
+         end loop;
+      end;
+
+      return R;
+   end Parse_Flags;
 
    --------------
    -- Switches --
@@ -519,163 +703,9 @@ package body GPR2.Build.ALI_Parser is
    function Unit_Flags
      (ALI_File : GPR2.Path_Name.Object) return Units_Flags_Set
    is
-
-      procedure Parse_Flags (Reader : in out GB.Reader);
-      --  Parse the source file name of the current dependency line
-
-      R   : Units_Flags_Set := (others => (others => False));
-      EOL : Boolean := False;
-
-      -----------------
-      -- Parse_Flase --
-      -----------------
-
-      procedure Parse_Flags (Reader : in out GB.Reader) is
-         pragma Warnings (Off);
-      begin
-         if not GB.Check (Reader, " ") then
-            raise Scan_ALI_Error
-              with "space expected after the 'U'"
-                 & " withed unit character";
-         end if;
-
-         declare
-            Unit_Name : constant String := IO.Get_Token (Reader, EOL);
-         begin
-            if Unit_Name = "" then
-               raise Scan_ALI_Error with "missed unit name";
-            end if;
-
-            if Unit_Name'Length >= 3
-              and then Unit_Name (Unit_Name'Last) in 's' | 'b'
-              and then Unit_Name (Unit_Name'Last - 1) = '%'
-            then
-               --  Read the flags at end of line
-               declare
-                  SB : constant Spec_Body :=
-                         (if Unit_Name (Unit_Name'Last) = 's'
-                          then U_Spec
-                          else U_Body);
-                  S  : constant String := IO.Get_Token (Reader, EOL)
-                    with Unreferenced;
-                  --  Source
-                  F  : constant String := IO.Get_Token (Reader, EOL)
-                    with Unreferenced;
-                  --  Checksum & flags
-                  I  : Positive := F'First;
-               begin
-                  --  Skip checksum
-
-                  while F (I) not in ' ' | ASCII.HT | ASCII.LF loop
-                     I := I + 1;
-                  end loop;
-
-                  I := I + 1;
-
-                  --  Read flags
-
-                  while I < F'Last loop
-                     case F (I) is
-                        when 'B' =>
-                           case F (I + 1) is
-                              when 'N' =>
-                                 R (SB) (Body_Needed_For_SAL) := True;
-                              when 'D' =>
-                                 R (SB) (Elaborate_Body_Desirable) := True;
-                              when others =>
-                                 null;
-                           end case;
-
-                        when 'D' =>
-                           case F (I + 1) is
-                              when 'E' =>
-                                 R (SB) (Dynamic_Elab) := True;
-                              when others =>
-                                 null;
-                           end case;
-
-                        when 'E' =>
-                           case F (I + 1) is
-                              when 'B' =>
-                                 R (SB) (Elaborate_Body) := True;
-                              when 'E' =>
-                                 R (SB) (Set_Elab_Entity) := True;
-                              when others =>
-                                 null;
-                           end case;
-
-                        when 'G' =>
-                           case F (I + 1) is
-                              when 'E' =>
-                                 R (SB) (Is_Generic) := True;
-                              when others =>
-                                 null;
-                           end case;
-
-                        when 'I' =>
-                           case F (I + 1) is
-                              when 'S' =>
-                                 R (SB) (Init_Scalars) := True;
-                              when others =>
-                                 null;
-                           end case;
-
-                        when 'N' =>
-                           case F (I + 1) is
-                              when 'E' =>
-                                 R (SB) (No_Elab) := True;
-                              when others =>
-                                 null;
-                           end case;
-
-                        when 'P' =>
-                           case F (I + 1) is
-                              when 'F' =>
-                                 R (SB) (Has_Finalizer) := True;
-                              when 'R' =>
-                                 R (SB) (Preelab) := True;
-                              when 'U' =>
-                                 R (SB) (Pure) := True;
-                              when others =>
-                                 null;
-                           end case;
-
-                        when 'R' =>
-                           case F (I + 1) is
-                              when 'A' =>
-                                 R (SB) (Has_RACW) := True;
-                              when 'C' =>
-                                 R (SB) (RCI) := True;
-                              when 'T' =>
-                                 R (SB) (Remote_Types) := True;
-                              when others =>
-                                 null;
-                           end case;
-
-                        when 'S' =>
-                           case F (I + 1) is
-                              when 'E' =>
-                                 R (SB) (Serious_Errors) := True;
-                              when 'P' =>
-                                 R (SB) (Shared_Passive) := True;
-                              when others =>
-                                 null;
-                           end case;
-
-                        when others =>
-                           null;
-                     end case;
-
-                     I := I + 2;
-                  end loop;
-               end;
-
-            else
-               raise Scan_ALI_Error with
-                 "withed unit name does not end with '%s'";
-            end if;
-         end;
-      end Parse_Flags;
+      R    : Units_Flags_Set := (others => (others => False));
+      Part : Unit_Flags_Part;
+      EOL  : Boolean := False;
 
       Reader : GB.Reader := GB.Open (String (ALI_File.Value));
       Word   : Character := ASCII.NUL;
@@ -702,7 +732,8 @@ package body GPR2.Build.ALI_Parser is
                --  Units are before dependencies
 
             when 'U' =>
-               Parse_Flags (Reader);
+               Part := Parse_Flags (Reader, EOL);
+               R (Part.SB) := Part.Flags;
 
             when others =>
                null;
@@ -729,17 +760,18 @@ package body GPR2.Build.ALI_Parser is
    function Version (ALI_File : GPR2.Path_Name.Object) return String is
       use GNATCOLL.OS.FS;
 
-      File  : File_Descriptor;
-      Line  : String (1 .. 100);
-      Last  : Natural;
-      Start : Natural;
+      File   : File_Descriptor;
+      Line   : String (1 .. 100);
+      Length : Natural with Unreferenced;
+      Last   : Natural;
+      Start  : Natural;
    begin
       if not ALI_File.Exists then
          return "";
       end if;
 
       File := Open (ALI_File.String_Value);
-      Last := Read (File, Line);
+      Length := Read (File, Line);
       Close (File);
 
       Last := GNATCOLL.Utils.Line_End (Line, 1);

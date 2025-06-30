@@ -1,6 +1,7 @@
 #include "foo.h"
 #include "bar.h"
 
-void main() {
+int main() {
   foo();
+  return 0;
 }

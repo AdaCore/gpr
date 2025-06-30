@@ -36,10 +36,6 @@ package body GPR2.Build.Actions.Link is
               GNATCOLL.Traces.Create
                 ("GPR.BUILD.ACTIONS.LINK", GNATCOLL.Traces.Off);
 
-   procedure Check_Interface
-     (Self        : in out Object;
-      No_Warnings : Boolean);
-
    function Generate_Export_File
      (Self : in out Object;
       From : Path_Name.Object) return Filename_Optional;
@@ -89,95 +85,6 @@ package body GPR2.Build.Actions.Link is
    end Add_Option;
 
    ---------------------
-   -- Check_Interface --
-   ---------------------
-
-   procedure Check_Interface
-     (Self        : in out Object;
-      No_Warnings : Boolean)
-   is
-      CU       : GPR2.Build.Compilation_Unit.Object;
-      CU_Dep   : GPR2.Build.Compilation_Unit.Object;
-      Analyzed : GPR2.Containers.Name_Set;
-      Todo     : GPR2.Build.Compilation_Unit.Maps.Map;
-      Pos      : GPR2.Build.Compilation_Unit.Maps.Cursor;
-      Inserted : Boolean;
-
-   begin
-      if Self.Ctxt.Is_Library
-        and then Self.Ctxt.Has_Any_Interfaces
-        and then Self.Ctxt.Is_Library_Standalone
-        and then Self.Extra_Intf.Is_Empty
-      then
-         --  Check that the interface is complete: no dependency from specs
-         --  should depend on a spec that is not part of the interface.
-
-         Todo := Self.Ctxt.Interface_Closure;
-
-         while not Todo.Is_Empty loop
-            CU := Todo.First_Element;
-            Todo.Delete_First;
-            Analyzed.Insert (CU.Name);
-
-            --  ??? TODO Need to know if CU requires the body (generics or
-            --  inlined subprograms), and use Spec_Only parameter accordingly.
-
-            for Dep of CU.Known_Dependencies (Spec_Only => True) loop
-               if not Self.Ctxt.Interface_Closure.Contains (Dep)
-                 and then not Analyzed.Contains (Dep)
-               then
-                  if Self.Ctxt.Kind = K_Aggregate_Library then
-                     for V of Self.Ctxt.Aggregated loop
-                        CU_Dep := V.Own_Unit (Dep);
-                        exit when CU_Dep.Is_Defined;
-                     end loop;
-                  else
-                     CU_Dep := Self.Ctxt.Own_Unit (Dep);
-                  end if;
-
-                  --  Only warn for internal units, the interface may depend
-                  --  on other units
-
-                  if CU_Dep.Is_Defined
-                    and then not Analyzed.Contains (CU_Dep.Name)
-                  then
-                     if not No_Warnings then
-                        Self.Tree.Reporter.Report
-                          (GPR2.Message.Create
-                             (GPR2.Message.Warning,
-                              "unit """
-                              & String (Dep)
-                              & """ is not in the interface set, but it is "
-                              & "needed by """
-                              & String (CU.Name)
-                              & """",
-                              GPR2.Source_Reference.Create
-                                (Self.Ctxt.Path_Name.Value, 0, 0)));
-                     end if;
-
-                     Self.Extra_Intf.Insert
-                       (CU_Dep.Name, CU_Dep, Pos, Inserted);
-
-                     if Inserted then
-                        declare
-                           Ada_Comp : Actions.Compile.Ada.Object;
-                        begin
-                           Ada_Comp.Initialize (CU_Dep);
-
-                           Self.Tree.Add_Input
-                             (Self.UID, Ada_Comp.Local_Ali_File, True);
-                        end;
-
-                        Todo.Include (CU_Dep.Name, CU_Dep);
-                     end if;
-                  end if;
-               end if;
-            end loop;
-         end loop;
-      end if;
-   end Check_Interface;
-
-   ---------------------
    -- Compute_Command --
    ---------------------
 
@@ -196,6 +103,9 @@ package body GPR2.Build.Actions.Link is
          In_Signature : Boolean;
          Param        : String := "") return Boolean;
 
+      procedure Append_Rpath
+        (Path : Path_Name.Object);
+
       procedure Check_Ada_Runtime_Needed
         (Libgnat : out Boolean;
          Libgnarl : out Boolean);
@@ -211,7 +121,10 @@ package body GPR2.Build.Actions.Link is
       --  always return False. To be updated once the support has been
       --  implemented.
 
-      Objects : Tree_Db.Artifact_Sets.Set;
+      Objects      : Tree_Db.Artifact_Sets.Set;
+      Rpath        : Unbounded_String;
+      Rpath_Origin : constant GPR2.Project.Attribute.Object :=
+                       Self.Ctxt.Attribute (PRA.Run_Path_Origin);
 
       --------------
       -- Add_Attr --
@@ -301,6 +214,46 @@ package body GPR2.Build.Actions.Link is
          return True;
       end Add_Attr;
 
+      ------------------
+      -- Append_Rpath --
+      ------------------
+
+      procedure Append_Rpath (Path : Path_Name.Object) is
+      begin
+         if Length (Rpath) /= 0 then
+            --  ??? hard coded value: ok for now since this is not
+            --  used on windows, but we may need an attribute for that
+            --  at some point.
+            Append (Rpath, ':');
+         end if;
+
+         if Rpath_Origin.Is_Defined then
+            --  ??? This processing is unix-oriented with unix
+            --  path and directory delimiters. This is somewhat
+            --  expected since this mechanism is not available on
+            --  windows, but then we still need to properly cross
+            --  compilation on windows hosts, so may need to
+            --  "posixify" the paths here.
+
+            declare
+               From : constant Path_Name.Object :=
+                        Self.Working_Directory;
+               Rel  : constant String :=
+                        String (Path.Relative_Path (From));
+               Last : constant Natural :=
+                        (if Rel (Rel'Last) = '/'
+                         then Rel'Last - 1
+                         else Rel'Last);
+            begin
+               Append
+                 (Rpath,
+                  Rpath_Origin.Value.Text & "/" & Rel (Rel'First .. Last));
+            end;
+         else
+            Append (Rpath, String (Path.Dir_Name));
+         end if;
+      end Append_Rpath;
+
       ------------------------------
       -- Check_Ada_Runtime_Needed --
       ------------------------------
@@ -360,10 +313,9 @@ package body GPR2.Build.Actions.Link is
                            At_Pos         => Self.Main_Src.Index)
                         else PAI.Undefined);
       Link_Exec    : constant Boolean := Src_Idx.Is_Defined;
-      Rpath        : Unbounded_String;
-      Rpath_Origin : constant GPR2.Project.Attribute.Object :=
-                       Self.Ctxt.Attribute (PRA.Run_Path_Origin);
       Ign          : Boolean with Unreferenced;
+      Lib_Dir_Opt  : constant Value_Type :=
+                       Self.Tree.Linker_Lib_Dir_Option;
       Dash_l_Opts  : GPR2.Containers.Value_List;
       --  -l needs to be last in the command line, so we add them here and
       --  then append to the command line in the end
@@ -483,8 +435,7 @@ package body GPR2.Build.Actions.Link is
          --  library dependencies.
 
          if Self.Ctxt.Tree.Has_Runtime_Project then
-            Rpath :=
-              +Self.Ctxt.Tree.Runtime_Project.Object_Directory.String_Value;
+            Append_Rpath (Self.Ctxt.Tree.Runtime_Project.Object_Directory);
          end if;
 
          if Self.Lib_Dep_Circle then
@@ -498,8 +449,6 @@ package body GPR2.Build.Actions.Link is
                                 Object'Class (Self.Tree.Action (Lib));
                Lib_Artifact : constant GPR2.Path_Name.Object :=
                                 Link.Output.Path;
-               Lib_Dir_Opt  : constant Value_Type :=
-                                Self.Tree.Linker_Lib_Dir_Option;
 
                use GNATCOLL.Utils;
             begin
@@ -520,47 +469,15 @@ package body GPR2.Build.Actions.Link is
                   --  Add flags to include the shared library
 
                   Cmd_Line.Add_Argument
-                    (Lib_Dir_Opt & Link.View.Library_Directory.String_Value);
+                    (Lib_Dir_Opt &
+                       String (Link.View.Library_Directory.Relative_Path
+                         (Self.Working_Directory)));
 
                   --  Add the library directory to the rpath of the
                   --  executable, so that LD_LIBRARY_PATH does not need to
                   --  be set before execution.
 
-                  if Length (Rpath) /= 0 then
-                     --  ??? hard coded value: ok for now since this is not
-                     --  used on windows, but we may need an attribute for that
-                     --  at some point.
-                     Append (Rpath, ':');
-                  end if;
-
-                  if Rpath_Origin.Is_Defined
-                    and then not Self.Is_Library
-                  then
-                     --  ??? $ORIGIN refers to the executable, we would
-                     --  need an equivalent attribute for shared libs
-                     --  dependencies.
-
-                     --  ??? This processing is unix-oriented with unix
-                     --  path and directory delimiters. This is somewhat
-                     --  expected since this mechanism is not available on
-                     --  windows, but then we still need to properly cross
-                     --  compilation on windows hosts, so may need to
-                     --  "posixify" the paths here.
-
-                     declare
-                        From : constant Path_Name.Object :=
-                                 Self.Ctxt.Executable_Directory;
-                     begin
-                        Append
-                          (Rpath,
-                           Rpath_Origin.Value.Text & "/" &
-                           String
-                             (Link.View.Library_Directory.Relative_Path
-                                  (From)));
-                     end;
-                  else
-                     Append (Rpath, String (Lib_Artifact.Dir_Name));
-                  end if;
+                  Append_Rpath (Link.View.Library_Directory);
 
                   declare
                      Prefix : constant Value_Type :=
@@ -588,6 +505,7 @@ package body GPR2.Build.Actions.Link is
                declare
                   Attr : constant GPR2.Project.Attribute.Object :=
                            Link.View.Attribute (PRA.Library_Options);
+                  Path : Path_Name.Object;
                begin
                   if Attr.Is_Defined then
                      for Val of Attr.Values loop
@@ -599,11 +517,28 @@ package body GPR2.Build.Actions.Link is
                         begin
                            if not Path.Exists then
                               if not Link.Is_Static then
+                                 if not Self.No_Rpath
+                                   and then Starts_With (Val.Text, Lib_Dir_Opt)
+                                 then
+                                    --  Amend the RPATH with the directory
+                                    --  value
+                                    Append_Rpath
+                                      (Path_Name.Create_Directory
+                                         (Filename_Optional
+                                              (Val.Text
+                                                   (Val.Text'First +
+                                                          Lib_Dir_Opt'Length ..
+                                                            Val.Text'Last)),
+                                          Link.Working_Directory.Value));
+                                 end if;
+
                                  if Starts_With (Val.Text, "-l") then
                                     Dash_l_Opts.Append (Val.Text);
+
                                  else
                                     Cmd_Line.Add_Argument (Val.Text);
                                  end if;
+
                               else
                                  if not Signature_Only then
                                     Self.Tree.Reporter.Report
@@ -1402,14 +1337,6 @@ package body GPR2.Build.Actions.Link is
       end if;
 
       if Export_File_Switch.Is_Defined then
-         if not Self.Lib_Symbol_File.Is_Defined then
-            --  We will need to generate the exported symbols
-            --  from the library interface: we thus need it to
-            --  be up-to-date.
-
-            Self.Check_Interface (No_Warnings => No_Warning);
-         end if;
-
          declare
             Tmp_File : constant Filename_Optional :=
                          Self.Generate_Export_File
@@ -1524,9 +1451,13 @@ package body GPR2.Build.Actions.Link is
       if Self.Ctxt.Is_Library_Standalone then
          Units := Self.Ctxt.Interface_Closure;
 
-         for CU of Self.Extra_Intf loop
-            Units.Include (CU.Name, CU);
-         end loop;
+         if Self.Bind.Is_Defined then
+            for CU of Ada_Bind.Object
+              (Self.Tree.Action (Self.Bind.UID)).Extended_Interface
+            loop
+               Units.Include (CU.Name, CU);
+            end loop;
+         end if;
 
       else
          Units := Self.Ctxt.Own_Units;
@@ -1567,8 +1498,6 @@ package body GPR2.Build.Actions.Link is
       then
          return True;
       end if;
-
-      Check_Interface (Self, No_Warnings => True);
 
       Units := Self.Interface_Units;
 
@@ -1791,10 +1720,6 @@ package body GPR2.Build.Actions.Link is
       Todo     : GPR2.Build.Compilation_Unit.Maps.Map;
 
    begin
-      --  Check the library interface if needed
-
-      Check_Interface (Self, No_Warnings => False);
-
       if Self.Is_Static_Library and then Self.Output.Path.Exists then
          --  Remove the old .a since otherwise ar will just accumulate the
          --  objects there
@@ -2025,8 +1950,23 @@ package body GPR2.Build.Actions.Link is
                         end if;
                      end On_Unit_Part;
 
+                     Comp    : constant Actions.Compile.Ada.Object :=
+                                 Actions.Compile.Ada.Object
+                                   (Self.Tree.Action
+                                      (Actions.Compile.Ada.Create (CU)));
                   begin
-                     CU.For_All_Part (On_Unit_Part'Access);
+                     if Comp.Spec_Needs_Body
+                       or else not CU.Has_Part (S_Spec)
+                     then
+                        CU.For_All_Part (On_Unit_Part'Access);
+                     else
+                        On_Unit_Part
+                          (S_Spec,
+                           CU.Spec.View,
+                           CU.Spec.Source,
+                           CU.Spec.Index,
+                           "");
+                     end if;
 
                      if Has_Error then
                         return False;
@@ -2105,7 +2045,12 @@ package body GPR2.Build.Actions.Link is
    ---------
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class is
-      BN     : constant Simple_Name := Self.Output.Path.Simple_Name;
+      --  Just keep the base name for executables to skip the target-specific
+      --  extension and thus have cleaner output
+      BN     : constant Simple_Name :=
+                 (if not Self.Is_Library
+                  then Self.Output.Path.Base_Filename
+                  else Self.Output.Path.Simple_Name);
       Result : constant Link_Id :=
                  (Name_Len      => BN'Length,
                   Is_Static_Lib => Self.Is_Library and then Self.Is_Static,

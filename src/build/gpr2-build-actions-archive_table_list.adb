@@ -5,10 +5,13 @@
 --
 
 with Ada.Strings.Fixed;
-with GPR2.Build.Actions.Archive_Extract;
+
 with GNAT.String_Split;
+
+with GPR2.Build.Actions.Archive_Extract;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Actions.Link_Options_Extract;
+with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
 
 package body GPR2.Build.Actions.Archive_Table_List is
@@ -26,9 +29,16 @@ package body GPR2.Build.Actions.Archive_Table_List is
    is
       pragma Unreferenced (Slot);
       package PRA renames GPR2.Project.Registry.Attribute;
+
+      Driver : constant Project.Attribute.Object :=
+                 Self.Ctxt.Attribute (PRA.Archive_Builder);
+
    begin
-      Cmd_Line.Set_Driver
-        (Self.Ctxt.Attribute (PRA.Archive_Builder).Values.First_Element.Text);
+      if not Driver.Is_Defined then
+         raise Action_Error with "no archive builder in this configuration";
+      end if;
+
+      Cmd_Line.Set_Driver (Driver.Values.First_Element.Text);
       Cmd_Line.Add_Argument ("-t");
       Cmd_Line.Add_Argument (Self.Archive.Path.String_Value);
    end Compute_Command;

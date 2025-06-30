@@ -821,6 +821,7 @@ package body GPR2.Project.View is
       Alias  : constant Q_Optional_Attribute_Id := PRA.Alias (Name);
       Def    : constant PRA.Def        := PRA.Get (Name);
       Result : Project.Attribute.Set.Object;
+      use type GPR2.Project.Registry.Attribute.Value_Kind;
 
       use type PRA.Inherit_From_Extended_Type;
       use type PRA.Index_Value_Type;
@@ -1015,6 +1016,23 @@ package body GPR2.Project.View is
                      end;
                   end loop;
             end case;
+         end;
+      end if;
+
+      --  Filter out empty value lists
+      if Def.Value = Project.Registry.Attribute.List then
+         declare
+            To_Remove : Project.Attribute.Set.Object;
+         begin
+            for Attr of Result loop
+               if Attr.Values.Is_Empty then
+                  To_Remove.Include (Attr);
+               end if;
+            end loop;
+
+            for Attr of To_Remove loop
+               Result.Delete (Attr);
+            end loop;
          end;
       end if;
 

@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
 
 package body GPR2.Build.Actions.Archive_Extract is
@@ -12,8 +13,7 @@ package body GPR2.Build.Actions.Archive_Extract is
    -- Compute_Command --
    ---------------------
 
-   overriding
-   procedure Compute_Command
+   overriding procedure Compute_Command
      (Self           : in out Object;
       Slot           : Positive;
       Cmd_Line       : in out GPR2.Build.Command_Line.Object;
@@ -21,9 +21,16 @@ package body GPR2.Build.Actions.Archive_Extract is
    is
       pragma Unreferenced (Slot);
       package PRA renames GPR2.Project.Registry.Attribute;
+
+      Driver : constant Project.Attribute.Object :=
+                 Self.Ctxt.Attribute (PRA.Archive_Builder);
+
    begin
-      Cmd_Line.Set_Driver
-        (Self.Ctxt.Attribute (PRA.Archive_Builder).Values.First_Element.Text);
+      if not Driver.Is_Defined then
+         raise Action_Error with "no archive builder in this configuration";
+      end if;
+
+      Cmd_Line.Set_Driver (Driver.Values.First_Element.Text);
       Cmd_Line.Add_Argument ("-x");
       Cmd_Line.Add_Argument (Self.Archive.Path.String_Value);
       Cmd_Line.Add_Argument (String (Self.Extracted_Object.Path.Simple_Name));

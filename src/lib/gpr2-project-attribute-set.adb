@@ -77,6 +77,20 @@ package body GPR2.Project.Attribute.Set is
          At_Pos_Or (Source_Reference.Value.Object (Attribute.Index), 0));
    end Contains;
 
+   ------------
+   -- Delete --
+   ------------
+
+   procedure Delete
+     (Self : in out Object; Attribute : Project.Attribute.Object)
+   is
+      Position : Set.Cursor;
+   begin
+      Position := Self.Attributes.Find (Attribute.Name.Id.Attr);
+      Self.Attributes (Position).Delete (Attribute.Case_Aware_Index);
+      Self.Length := Self.Length - 1;
+   end Delete;
+
    -------------
    -- Element --
    -------------
