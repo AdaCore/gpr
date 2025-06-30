@@ -1084,6 +1084,7 @@ begin
       Value_Case_Sensitive  => False,
       Is_Allowed_In         => Everywhere,
       Inherit_From_Extended => Not_Inherited,
+      Default               => Create ("False"),
       Type_Def              => Boolean_Type_Def);
 
    --  shared_library_minimum_switches
