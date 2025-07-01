@@ -1,7 +1,7 @@
 gnat_packages = [
-   "libadalang",
-   "libadalang-tools",
-   "gnat",
+    "libadalang",
+    "libadalang-tools",
+    "gnat",
 ]
 
 
@@ -76,3 +76,12 @@ def test_gpr2build():
 def test_gpr2build_armhf_linux():
     install_gpr2()
     anod_test("gprbuild", qualifier={"gpr2build": True}, target="armhf-linux,,qemu")
+
+
+def test_gpr2build_arm_elf_zynq7k():
+    install_gpr2()
+    anod_test(
+        "gprbuild",
+        qualifier={"gpr2build": True, "rts": "light-zynq7000", "languages": "Ada;C"},
+        target="arm-elf,,qemu-zynq",
+    )

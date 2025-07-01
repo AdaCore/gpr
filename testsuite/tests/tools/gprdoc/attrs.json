@@ -750,14 +750,18 @@
           "attribute_def": {
             "builtin": false,
             "config_concatenable": false,
+            "default": {
+              "default_value_kind": "value",
+              "value": "False"
+            },
             "empty_value": "ALLOW",
             "has_default_in": {
-              "abstract": false,
-              "aggregate": false,
-              "aggregate_library": false,
-              "configuration": false,
-              "library": false,
-              "standard": false
+              "abstract": true,
+              "aggregate": true,
+              "aggregate_library": true,
+              "configuration": true,
+              "library": true,
+              "standard": true
             },
             "index_optional": false,
             "index_type": "NO_INDEX",

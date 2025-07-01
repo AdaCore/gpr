@@ -147,7 +147,23 @@ begin
          end loop NS_Loop;
 
          if Is_Empty then
-            Opt.Tree.Reporter.Report ("gprbuild: no sources to compile");
+            if Opt.Tree.Log_Messages.Has_Element
+              (Error    => True,
+               End_User => False,
+               Warning  => True,
+               Hint     => False,
+               Lint     => False,
+               Read     => True,
+               Unread   => True)
+            then
+               Handle_Program_Termination
+                 (Force_Exit => False,
+                  Exit_Code  => E_Project,
+                  Exit_Cause => E_Tool,
+                  Message    => "no sources to compile");
+            else
+               Opt.Tree.Reporter.Report ("gprbuild: no sources to compile");
+            end if;
 
             return;
          end if;
