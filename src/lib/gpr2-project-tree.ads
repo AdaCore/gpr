@@ -231,6 +231,10 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined;
    --  Returns the target for the project tree
 
+   function Is_Cross_Target (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns true if the host systel is different from the target system
+
    function Has_Explicit_Target (Self : Object) return Boolean;
    --  Returns True if the target was explicitly set, either on the command
    --  line, in the project file, or in a provided configuration file.
@@ -561,6 +565,9 @@ private
    function Target
      (Self : Object; Canonical : Boolean := False) return Name_Type
    is (Self.Tree.Target (Canonical));
+
+   function Is_Cross_Target (Self : Object) return Boolean is
+     (Self.Target /= Self.Get_KB.Normalized_Target (Target_Name));
 
    function Has_Explicit_Target (Self : Object) return Boolean
    is (Self.Tree.Has_Explicit_Target);
