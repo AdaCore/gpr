@@ -3261,6 +3261,15 @@ package body GPR2.Tree_Internal is
       Self.Update_Search_Paths;
    end Set_Environment;
 
+   ------------
+   -- Set_KB --
+   ------------
+
+   procedure Set_KB (Self : in out Object; KB : GPR2.KB.Object) is
+   begin
+      Self.Base := KB;
+   end Set_KB;
+
    ------------------
    -- Set_Reporter --
    ------------------
