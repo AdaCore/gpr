@@ -1,4 +1,5 @@
 import os
+import shlex
 from e3.os.process import PIPE, Run, STDOUT
 from random import getrandbits
 from e3.testsuite.driver.classic import TestAbortWithFailure
@@ -142,6 +143,14 @@ class BuilderAndRunner(object):
                 env = {}
             file = str(getrandbits(128)) + ".srctrace"
             env["GNATCOV_TRACE_FILE"] = os.path.join(self.traces_dir, file)
+
+            # For debuggability, add metadata so that it is possible to know
+            # which test/command produced which source trace.
+            with open(
+                os.path.join(self.traces_dir, file + "-context.txt"), "w"
+            ) as f:
+                print("CMD:", shlex.join(cmd), file=f)
+                print("PWD:", os.getcwd(), file=f)
 
         if self.valgrind:
             run_cmd = (

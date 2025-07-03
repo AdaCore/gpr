@@ -1,6 +1,7 @@
 import glob
 import logging
 import os.path
+import re
 import shutil
 
 from e3.os.process import Run, quote_arg
@@ -52,8 +53,7 @@ class GNATcov(object):
             shutil.rmtree(dirname)
         os.mkdir(dirname)
 
-    @staticmethod
-    def checked_run(argv):
+    def checked_run(self, argv):
         """
         Run a process with the given arguments. Log its output and raise an
         error if it fails.
@@ -63,6 +63,24 @@ class GNATcov(object):
             logging.error('Command failed: %s',
                           ' '.join(quote_arg(arg) for arg in argv))
             logging.error('Output:\n' + p.out)
+
+            # Look for the name of a source trace if the output, and if we find
+            # one, display some context so that we know how that source trace
+            # was created.
+            srctrace_re = re.compile("[0-9]+\\.srctrace")
+            for filename in srctrace_re.findall(p.out):
+                logging.error("Found a mention of a source trace: " + filename)
+                context_filename = os.path.join(
+                    self.traces_dir, filename + "-context.txt"
+                )
+                try:
+                    f = open(context_filename)
+                except IOError:
+                    logging.error("No context for that source trace")
+                else:
+                    with f:
+                        logging.error(f.read())
+
             raise RuntimeError
 
     def report(self, formats=['dhtml', 'xml', 'cobertura']):
