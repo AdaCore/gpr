@@ -68,6 +68,18 @@ class GNATcov(object):
     def report(self, formats=['dhtml', 'xml', 'cobertura']):
         """Generate coverage reports for all given output formats."""
 
+        gnatcov_base_args = [
+            'gnatcov',
+            'coverage',
+            '--level',
+            self.covlevel,
+            '-P',
+            'gpr2',
+            '-XGPR2_BUILD=gnatcov',
+            '--externally-built-projects',
+            '--no-subprojects',
+        ]
+
         # Get the list of all trace files
         traces_list = os.path.join(self.temp_dir, 'traces.txt')
         with open(traces_list, 'w') as f:
@@ -77,12 +89,12 @@ class GNATcov(object):
         # Load trace files only once, produce a checkpoint for them
         logging.info('Consolidating coverage results')
         ckpt_file = os.path.join(self.temp_dir, 'report.ckpt')
-        self.checked_run(['gnatcov', 'coverage', '--level', self.covlevel,
-                          '-P', 'gpr2',
-                          '-XGPR2_BUILD=gnatcov',
-                          '--externally-built-projects',
-                          '--save-checkpoint', ckpt_file,
-                          '@' + traces_list])
+        self.checked_run([
+            *gnatcov_base_args,
+            '--save-checkpoint',
+            ckpt_file,
+            '@' + traces_list,
+        ])
 
         # Now, generate all requested reports from this checkpoint
         logging.info('Generating coverage reports ({})'
@@ -97,14 +109,15 @@ class GNATcov(object):
                 if gpr2_path is not None:
                     path_opt = ['--source-root=' + gpr2_path]
             self.checked_run([
-                'gnatcov', 'coverage',
-                '--annotate', fmt,
-                '--level', self.covlevel,
-                '--output-dir', report_dir,
-                '-P', 'gpr2',
-                '--externally-built-projects',
-                '-XGPR2_BUILD=gnatcov',
-                '--checkpoint', ckpt_file] + path_opt)
+                *gnatcov_base_args,
+                '--annotate',
+                fmt,
+                '--output-dir',
+                report_dir,
+                '--checkpoint',
+                ckpt_file,
+                *path_opt
+            ])
 
     @property
     def covlevel(self):
