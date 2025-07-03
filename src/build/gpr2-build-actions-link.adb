@@ -362,7 +362,6 @@ package body GPR2.Build.Actions.Link is
          end;
       end loop;
 
-      --  ??? Replace hard coded values
       if Self.Is_Static_Library then
          declare
             Attr : constant GPR2.Project.Attribute.Object :=
@@ -1860,11 +1859,13 @@ package body GPR2.Build.Actions.Link is
                      while First < Buffer'Last loop
                         Last := GNATCOLL.Utils.Next_Line (Buffer, First);
 
-                        if Last > First + 1 and then
-                          Buffer (First .. First + 1) = "P "
+                        if (Last > First + 1 and then
+                            Buffer (First .. First + 1) = "P ")
+                          or else (Last = First and then
+                                   Buffer (First) = 'P')
                         then
-                           FS.Write (Output, Buffer (1 .. First + 1));
-                           FS.Write (Output, "SL");
+                           FS.Write (Output, Buffer (1 .. First - 1));
+                           FS.Write (Output, "P SL");
                            FS.Write
                              (Output, Buffer (First + 1 .. Buffer'Last));
                            Found := True;
