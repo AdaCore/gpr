@@ -233,7 +233,7 @@ package GPR2.Project.Tree is
 
    function Is_Cross_Target (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
-   --  Returns true if the host systel is different from the target system
+   --  Returns True if the host system differs from the target system
 
    function Has_Explicit_Target (Self : Object) return Boolean;
    --  Returns True if the target was explicitly set, either on the command
