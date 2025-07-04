@@ -1857,7 +1857,7 @@ package body GPR2.Build.Actions.Link is
                           String (Self.Ctxt.Name));
 
                      while First < Buffer'Last loop
-                        Last := GNATCOLL.Utils.Next_Line (Buffer, First);
+                        Last := GNATCOLL.Utils.Line_End (Buffer, First);
 
                         if (Last > First + 1 and then
                             Buffer (First .. First + 1) = "P ")
@@ -1873,7 +1873,7 @@ package body GPR2.Build.Actions.Link is
                            exit;
                         end if;
 
-                        First := Last;
+                        First := GNATCOLL.Utils.Next_Line (Buffer, First);
                      end loop;
 
                      if not Found then
