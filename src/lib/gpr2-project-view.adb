@@ -2226,16 +2226,16 @@ package body GPR2.Project.View is
       end if;
 
       declare
+         L_Name  : constant Simple_Name :=
+                     Simple_Name
+                       (Self.Attribute (PRA.Shared_Library_Suffix).Value.Text);
          Version : constant Simple_Name :=
                      Simple_Name (Attr_Version.Value.Text);
          Last    : Natural := Version'Last;
       begin
          for K in reverse Version'First .. Version'Last loop
             if Version (K) = '.' then
-               exit when
-                 Version (K .. Last) =
-                   Simple_Name
-                     (Self.Attribute (PRA.Shared_Library_Suffix).Value.Text);
+               exit when Version (K .. Last) = L_Name;
                Result.Include (Version (Version'First .. K - 1));
                Last := K - 1;
             end if;
