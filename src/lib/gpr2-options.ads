@@ -136,7 +136,9 @@ package GPR2.Options is
 
    function Base
      (Self        : Object;
-      Environment : GPR2.Environment.Object) return GPR2.KB.Object;
+      Environment : GPR2.Environment.Object;
+      Flags       : GPR2.KB.Parsing_Flags := GPR2.KB.Default_Flags)
+      return GPR2.KB.Object;
    --  Loads the KB according to --db and --db- switches and returns it.
 
    function Resolve_Links (Self : Object) return Boolean;
@@ -236,10 +238,12 @@ private
    end record;
 
    function Base
-     (Self : Object;
-      Environment : GPR2.Environment.Object) return GPR2.KB.Object
+     (Self        : Object;
+      Environment : GPR2.Environment.Object;
+      Flags       : GPR2.KB.Parsing_Flags := GPR2.KB.Default_Flags)
+      return GPR2.KB.Object
    is (GPR2.KB.Create
-        (Flags       => GPR2.KB.Default_Flags,
+        (Flags       => Flags,
          Default_KB  => not Self.Skip_Default_KB,
          Custom_KB   => Self.KB_Locations,
          Environment => Environment));

@@ -442,6 +442,10 @@ private package GPR2.Tree_Internal is
    --  line via --RTS:lang. Returns No_Name if not specified.
 
    function Get_KB (Self : Object) return GPR2.KB.Object;
+   --  Returns the parsed knowledge base.
+
+   procedure Set_KB (Self : in out Object; KB : GPR2.KB.Object);
+   --  Sets the knowledge base.
 
    function File_Reader
      (Self : Object) return GPR2.File_Readers.File_Reader_Reference;

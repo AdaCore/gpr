@@ -794,6 +794,16 @@ package body GPR2.Project.Tree is
             File_Reader      => File_Reader,
             Environment      => Environment);
 
+          --  If the knowledge base is not defined, create one while taking
+          --  into account the options. Parse the targets as they are required
+          --  for other public subprograms of the libgpr2 API, such as
+          --  obtaining the normalized targets.
+
+         if not Self.Tree.Get_KB.Is_Defined then
+            Self.Get.Set_KB
+              (Options.Base (Environment, GPR2.KB.Targetset_Only_Flags));
+         end if;
+
          if Options.Target /= "all" then
             --  if target is defined on the command line, and a config
             --  file is specified, issue an error if the target of the config
@@ -806,12 +816,7 @@ package body GPR2.Project.Tree is
                                Self.Tree.Configuration.Corresponding_View.
                                  Attribute (PRA.Target);
                Conf_Target : constant Value_Type := Target_Attr.Value.Text;
-               Base        : constant GPR2.KB.Object :=
-                               (if Self.Tree.Get_KB.Is_Defined
-                                then Self.Tree.Get_KB
-                                else GPR2.KB.Create_Default
-                                  (GPR2.KB.Targetset_Only_Flags,
-                                   Environment));
+               Base        : constant GPR2.KB.Object := Self.Tree.Get_KB;
                Conf_Norm   : constant Name_Type :=
                                Base.Normalized_Target
                                  (Name_Type (Conf_Target));
