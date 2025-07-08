@@ -72,8 +72,10 @@ package GPR2.Build.Command_Line is
 
    procedure Filter_Duplicate_Switches
      (Self   : in out Object;
-      Prefix : String);
-   --  Used to filter out duplicate values in some circumstances. Only the last
+      Prefix : String;
+      Keep_Leftmost : Boolean := False);
+   --  Used to filter out duplicate values in some circumstances.
+   --  If Keep_Leftmost is false, only the last option is kept, else the first
    --  option is kept.
 
 private

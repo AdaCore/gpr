@@ -70,25 +70,57 @@ package body GPR2.Build.Command_Line is
    -------------------------------
 
    procedure Filter_Duplicate_Switches
-     (Self   : in out Object;
-      Prefix : String)
+     (Self          : in out Object;
+      Prefix        : String;
+      Keep_Leftmost : Boolean := False)
    is
+      function To_Be_Removed (Idx : Natural) return Boolean;
+
       Seen     : GPR2.Containers.Value_Set;
-      Inserted : Boolean;
-      Pos      : GPR2.Containers.Value_Type_Set.Cursor;
-   begin
-      for J in reverse Self.Cmd_Line.First_Index ..
-        Self.Cmd_Line.Last_Index
-      loop
-         if GNATCOLL.Utils.Starts_With (Self.Cmd_Line (J), Prefix) then
-            Seen.Insert (Self.Cmd_Line (J), Pos, Inserted);
+
+      -----------
+      -- Check --
+      -----------
+
+      function To_Be_Removed (Idx : Natural) return Boolean is
+         Inserted : Boolean;
+         Pos      : GPR2.Containers.Value_Type_Set.Cursor;
+      begin
+         if GNATCOLL.Utils.Starts_With (Self.Cmd_Line (Idx), Prefix) then
+            Seen.Insert (Self.Cmd_Line (Idx), Pos, Inserted);
 
             if not Inserted then
                --  Remove the duplicated value
-               Self.Remove (J);
+               return True;
             end if;
          end if;
-      end loop;
+
+         return False;
+      end To_Be_Removed;
+
+      Idx : Natural;
+
+   begin
+      if Keep_Leftmost then
+         Idx := Self.Cmd_Line.First_Index;
+
+         while Idx <= Self.Cmd_Line.Last_Index loop
+            if To_Be_Removed (Idx) then
+               Self.Remove (Idx);
+            else
+               Idx := Idx + 1;
+            end if;
+         end loop;
+
+      else
+         for J in reverse Self.Cmd_Line.First_Index ..
+           Self.Cmd_Line.Last_Index
+         loop
+            if To_Be_Removed (J) then
+               Self.Remove (J);
+            end if;
+         end loop;
+      end if;
    end Filter_Duplicate_Switches;
 
    ------------

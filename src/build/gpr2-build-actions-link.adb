@@ -782,6 +782,11 @@ package body GPR2.Build.Actions.Link is
       --  trouble by introducing duplicated symbols in the result.
 
       Cmd_Line.Filter_Duplicate_Switches ("--specs");
+
+      --  Same for linker scripts, this time keeping the first one seen on the
+      --  command line so that order is respected.
+
+      Cmd_Line.Filter_Duplicate_Switches ("-T", Keep_Leftmost => True);
    end Compute_Command;
 
    -----------------------
