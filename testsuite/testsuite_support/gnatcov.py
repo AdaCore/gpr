@@ -1,6 +1,7 @@
 import glob
 import logging
 import os.path
+import re
 import shutil
 
 from e3.os.process import Run, quote_arg
@@ -52,8 +53,7 @@ class GNATcov(object):
             shutil.rmtree(dirname)
         os.mkdir(dirname)
 
-    @staticmethod
-    def checked_run(argv):
+    def checked_run(self, argv):
         """
         Run a process with the given arguments. Log its output and raise an
         error if it fails.
@@ -63,10 +63,40 @@ class GNATcov(object):
             logging.error('Command failed: %s',
                           ' '.join(quote_arg(arg) for arg in argv))
             logging.error('Output:\n' + p.out)
+
+            # Look for the name of a source trace if the output, and if we find
+            # one, display some context so that we know how that source trace
+            # was created.
+            srctrace_re = re.compile("[0-9]+\\.srctrace")
+            for filename in srctrace_re.findall(p.out):
+                logging.error("Found a mention of a source trace: " + filename)
+                context_filename = os.path.join(
+                    self.traces_dir, filename + "-context.txt"
+                )
+                try:
+                    f = open(context_filename)
+                except IOError:
+                    logging.error("No context for that source trace")
+                else:
+                    with f:
+                        logging.error(f.read())
+
             raise RuntimeError
 
     def report(self, formats=['dhtml', 'xml', 'cobertura']):
         """Generate coverage reports for all given output formats."""
+
+        gnatcov_base_args = [
+            'gnatcov',
+            'coverage',
+            '--level',
+            self.covlevel,
+            '-P',
+            'gpr2',
+            '-XGPR2_BUILD=gnatcov',
+            '--externally-built-projects',
+            '--no-subprojects',
+        ]
 
         # Get the list of all trace files
         traces_list = os.path.join(self.temp_dir, 'traces.txt')
@@ -77,12 +107,12 @@ class GNATcov(object):
         # Load trace files only once, produce a checkpoint for them
         logging.info('Consolidating coverage results')
         ckpt_file = os.path.join(self.temp_dir, 'report.ckpt')
-        self.checked_run(['gnatcov', 'coverage', '--level', self.covlevel,
-                          '-P', 'gpr2',
-                          '-XGPR2_BUILD=gnatcov',
-                          '--externally-built-projects',
-                          '--save-checkpoint', ckpt_file,
-                          '@' + traces_list])
+        self.checked_run([
+            *gnatcov_base_args,
+            '--save-checkpoint',
+            ckpt_file,
+            '@' + traces_list,
+        ])
 
         # Now, generate all requested reports from this checkpoint
         logging.info('Generating coverage reports ({})'
@@ -97,14 +127,15 @@ class GNATcov(object):
                 if gpr2_path is not None:
                     path_opt = ['--source-root=' + gpr2_path]
             self.checked_run([
-                'gnatcov', 'coverage',
-                '--annotate', fmt,
-                '--level', self.covlevel,
-                '--output-dir', report_dir,
-                '-P', 'gpr2',
-                '--externally-built-projects',
-                '-XGPR2_BUILD=gnatcov',
-                '--checkpoint', ckpt_file] + path_opt)
+                *gnatcov_base_args,
+                '--annotate',
+                fmt,
+                '--output-dir',
+                report_dir,
+                '--checkpoint',
+                ckpt_file,
+                *path_opt
+            ])
 
     @property
     def covlevel(self):
