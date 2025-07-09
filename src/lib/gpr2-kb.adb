@@ -1216,9 +1216,9 @@ package body GPR2.KB is
       return Result;
    end Create_Filter;
 
-   --------------------------------------
-   -- Default_Knowledge_Base_Directory --
-   --------------------------------------
+   ----------------------
+   -- Default_Location --
+   ----------------------
 
    function Default_Location return GPR2.Path_Name.Object is
       use GNATCOLL.VFS;
