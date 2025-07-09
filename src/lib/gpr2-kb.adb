@@ -343,42 +343,34 @@ package body GPR2.KB is
          Continue          : out Boolean)
       is
          New_Comp : Compiler := Comp;
-         C        : Compiler_Lists.Cursor;
          Index    : Count_Type := 1;
       begin
          --  Do nothing if a runtime needs to be specified, as this is only for
          --  interactive use.
 
          if not Runtime_Specified then
-            if Iterator.Filter_Matched /=
-              (Iterator.Filter_Matched'Range => True)
-            then
-               C := First (Iterator.Filters);
-               while Has_Element (C) loop
-                  if not Iterator.Filter_Matched (Index)
-                    and then Filter_Match
-                      (Base, Comp => Comp, Filter => Element (C))
+            if Iterator.Filters.Is_Empty then
+               --  No filters specified, we accept all the available compilers
+               Append (Iterator.Compilers, Comp);
+            else
+               for Filter of Iterator.Filters loop
+                  if Filter_Match (Base, Comp => Comp, Filter => Filter)
                   then
-                     Set_Selection (New_Comp, True);
-                     Iterator.Filter_Matched (Index) := True;
-                     exit;
+                     if not Iterator.Filter_Matched (Index) then
+                        Set_Selection (New_Comp, True);
+                        Iterator.Filter_Matched (Index) := True;
+                     end if;
+
+                     GNATCOLL.Traces.Trace
+                     (Main_Trace,
+                        "Adding compiler to interactive menu "
+                        & To_String (Comp)
+                        & " selected=" & Is_Selected (New_Comp)'Img);
+                     Append (Iterator.Compilers, New_Comp);
                   end if;
 
                   Index := Index + 1;
-                  Next (C);
                end loop;
-            end if;
-
-            --  Ignore compilers from extra directories, unless they have been
-            --  selected because of a --config argument.
-
-            if Is_Selected (New_Comp) or else not From_Extra_Dir then
-               GNATCOLL.Traces.Trace
-                 (Main_Trace,
-                  "Adding compiler to interactive menu "
-                  & To_String (Comp)
-                  & " selected=" & Is_Selected (New_Comp)'Img);
-               Append (Iterator.Compilers, New_Comp);
             end if;
          end if;
 
@@ -1361,19 +1353,6 @@ package body GPR2.KB is
                   "Incompatible target for: " & To_String (Compilers (Idx)));
                goto Next_Compiler;
             end if;
-
-            for Other_Compiler of Compilers loop
-               if Other_Compiler.Language = Compilers (Idx).Language
-                 and then Other_Compiler.Selected
-               then
-                  Compilers (Idx).Selectable := False;
-                  Trace
-                    (Main_Trace,
-                     "Already selected language for: "
-                     & To_String (Compilers (Idx)));
-                  goto Next_Compiler;
-               end if;
-            end loop;
 
             --  We need to check if the resulting selection would
             --  lead to a supported configuration.
