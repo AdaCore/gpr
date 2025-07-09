@@ -456,7 +456,7 @@ package body GPR2.KB is
       end loop;
 
       Iter.Filters := Filters;
-      Foreach_In_Path
+      GPR2.KB.Compiler_Iterator.Foreach_In_Path
         (Self        => Iter,
          Base        => Self,
          On_Target   => Target,
