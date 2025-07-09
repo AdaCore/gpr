@@ -562,38 +562,36 @@ package body GPR2.KB is
          Continue          : out Boolean)
       is
 
-         C     : Compiler_Lists.Cursor := First (Iterator.Filters);
          Index : Count_Type := 1;
          Ncomp : Compiler;
-         El    : Compiler;
 
          use GPR2.Path_Name;
       begin
-         while Has_Element (C) loop
+         for Filter_Comp of Iterator.Filters loop
             Ncomp := No_Compiler;
-            El := Compiler_Lists.Element (C);
 
             --  A compiler in an "extra_dir" (ie specified on the command line)
             --  can only match if that directory was explicitly specified in
             --  --config. We do not want to find all compilers in /dir if that
             --  directory is not in $PATH
 
-            if (not From_Extra_Dir or else El.Path = Comp.Path)
-              and then Filter_Match (Base, Comp => Comp, Filter => El)
+            if (not From_Extra_Dir or else Filter_Comp.Path = Comp.Path)
+              and then Filter_Match (Base, Comp => Comp, Filter => Filter_Comp)
               and then (not Runtime_Specified
-                         or else El.Runtime_Dir /= Null_Unbounded_String)
+                         or else Filter_Comp.Runtime_Dir /=
+                                 Null_Unbounded_String)
             then
                Ncomp := Comp;
-               if El.Runtime_Dir /= Null_Unbounded_String then
-                  Ncomp.Runtime_Dir := El.Runtime_Dir;
-                  Ncomp.Runtime := El.Runtime;
+               if Filter_Comp.Runtime_Dir /= Null_Unbounded_String then
+                  Ncomp.Runtime_Dir := Filter_Comp.Runtime_Dir;
+                  Ncomp.Runtime := Filter_Comp.Runtime;
                end if;
 
                if not Ncomp.Any_Runtime
                  and then Ncomp.Runtime = Null_Unbounded_String
-                 and then El.Runtime /= Null_Unbounded_String
+                 and then Filter_Comp.Runtime /= Null_Unbounded_String
                then
-                  Ncomp.Runtime := El.Runtime;
+                  Ncomp.Runtime := Filter_Comp.Runtime;
                end if;
 
                Append (Iterator.Compilers, Ncomp);
@@ -603,7 +601,7 @@ package body GPR2.KB is
                   "Saving compiler for possible backtracking: "
                   & To_String (Ncomp)
                   & " (matches --config "
-                  & To_String (El)
+                  & To_String (Filter_Comp)
                   & ")");
 
                if Iterator.Matched (Index) = Compiler_Lists.No_Element then
@@ -642,7 +640,6 @@ package body GPR2.KB is
                end if;
             end if;
             Index := Index + 1;
-            Next (C);
          end loop;
 
          --  Stop at first compiler
