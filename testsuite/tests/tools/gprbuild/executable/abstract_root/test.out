@@ -1,0 +1,10 @@
+$ gprbuild -P empty_prj.gpr
+[Ada Compile]     main.adb
+$ gprbuild -P empty_prj.gpr main
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ ./main
+Hello world!
+
+$ gprclean -Pempty_prj main

@@ -388,30 +388,33 @@ package body GPR2.Build.Actions_Population is
          Full := Path_Name.Create_File (Filename_Type (Basename));
          Src := View.Visible_Source (Full);
 
-      elsif Options.Unique_Compilation
-        or else Options.Unique_Compilation_Recursive
-      then
-         Src := View.Visible_Source (SN, Ambiguous);
       else
-         Src := View.Source (SN);
+         Src := View.Visible_Source (SN, Ambiguous);
       end if;
 
       if not Src.Is_Defined then
-         for Lang of View.Language_Ids loop
-            Src := View.Visible_Source
-              (View.Suffixed_Simple_Name (String (SN), Lang), Ambiguous);
-
-            exit when Src.Is_Defined;
-
-            --  Ada also accepts specs as main
-            if Lang = Ada_Language then
+         for Driver of View.Attributes (PRA.Compiler.Driver) loop
+            --  Check all languages that have a compiler driver
+            declare
+               Lang : constant Language_Id :=
+                        +Name_Type
+                          (GPR2.Project.Attribute.Index (Driver).Value);
+            begin
                Src := View.Visible_Source
-                 (SN & Simple_Name
-                    (View.Attribute
-                         (PRA.Naming.Spec_Suffix,
-                          PAI.Create (Ada_Language)).Value.Text),
-                  Ambiguous);
-            end if;
+                 (View.Suffixed_Simple_Name (String (SN), Lang), Ambiguous);
+
+               exit when Src.Is_Defined;
+
+               --  Ada also accepts specs as main
+               if Lang = Ada_Language then
+                  Src := View.Visible_Source
+                    (SN & Simple_Name
+                       (View.Attribute
+                            (PRA.Naming.Spec_Suffix,
+                             PAI.Create (Ada_Language)).Value.Text),
+                     Ambiguous);
+               end if;
+            end;
 
             exit when Src.Is_Defined;
          end loop;
@@ -671,7 +674,7 @@ package body GPR2.Build.Actions_Population is
                --------------------------
 
                case V.Kind is
-                  when K_Standard =>
+                  when K_Standard | K_Abstract =>
                      if V.Has_Mains or else not Mains.Is_Empty then
                         Result := Populate_Mains (Tree_Db, V, Mains, Options);
                      else

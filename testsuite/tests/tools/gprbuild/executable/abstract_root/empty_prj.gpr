@@ -1,0 +1,5 @@
+with "prj";
+
+project Empty_Prj is
+   for Source_Dirs use ();
+end Empty_Prj;
