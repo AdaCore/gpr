@@ -31,7 +31,7 @@ package body GPR2.KB is
 
    Match_Trace : constant GNATCOLL.Traces.Trace_Handle :=
                    GNATCOLL.Traces.Create
-                     ("KNOWLEDGE_BASE.MATHCING",
+                     ("KNOWLEDGE_BASE.MATCHING",
                       GNATCOLL.Traces.Off);
 
    No_Compatible_Compilers : exception;

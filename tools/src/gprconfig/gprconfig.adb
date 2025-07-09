@@ -814,17 +814,13 @@ begin
 
    if Console_Reporter.Verbosity >= GPR2.Reporter.Verbose then
       GNATCOLL.Traces.Set_Active
-        (GNATCOLL.Traces.Create
-           ("KNOWLEDGE_BASE"), True);
+        (GNATCOLL.Traces.Create ("KNOWLEDGE_BASE"), True);
       GNATCOLL.Traces.Set_Active
-        (GNATCOLL.Traces.Create
-           ("KNOWLEDGE_BASE.PARSING_TRACE"), True);
+        (GNATCOLL.Traces.Create ("KNOWLEDGE_BASE.PARSING_TRACE"), True);
       GNATCOLL.Traces.Set_Active
-        (GNATCOLL.Traces.Create
-           ("KNOWLEDGE_BASE.MATHCING"), True);
+        (GNATCOLL.Traces.Create ("KNOWLEDGE_BASE.MATCHING"), True);
       GNATCOLL.Traces.Set_Active
-        (GNATCOLL.Traces.Create
-           ("KNOWLEDGE_BASE.COMPILER_ITERATOR"), True);
+        (GNATCOLL.Traces.Create ("KNOWLEDGE_BASE.COMPILER_ITERATOR"), True);
    end if;
 
    if Opt_DB then
