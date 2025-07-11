@@ -38,7 +38,7 @@ def run_pagefind(app, exception):
     # Only run if there were no errors during the build, and if the html
     # documentation has actually been ran
     if exception is None and app.builder.name == "html":
-        subprocess.run(["pagefind", "--verbose"])
+        subprocess.run(["pagefind", "--verbose", "--keep-index-url"])
 
 
 def setup(app):
