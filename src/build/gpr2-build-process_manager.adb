@@ -5,6 +5,7 @@
 --
 
 pragma Warnings (Off);
+with GNAT.OS_Lib;
 with GPR2.Build.Options;
 with System.Multiprocessors;
 pragma Warnings (On);
@@ -39,6 +40,9 @@ package body GPR2.Build.Process_Manager is
      (Command    : Argument_List;
       For_Script : Boolean := False) return String;
    --  Return the representation of the command
+
+   function Image_RF (Command : Argument_List) return String;
+   --  Return the formatted content of a response file
 
    Traces : constant GNATCOLL.Traces.Logger :=
               GNATCOLL.Traces.Create
@@ -728,6 +732,42 @@ package body GPR2.Build.Process_Manager is
       return -Result;
    end Image;
 
+   --------------
+   -- Image_RF --
+   --------------
+
+   function Image_RF (Command : Argument_List) return String
+   is
+      Result : Unbounded_String;
+      First  : Boolean := True;
+   begin
+      for Arg of Command loop
+         if First then
+            declare
+               Res     : constant GNATCOLL.Utils.Unbounded_String_Array :=
+                           GNATCOLL.Utils.Split
+                             (Str => Arg,
+                              On  => GNAT.OS_Lib.Directory_Separator);
+               RF_Name : constant String := -Res (Res'Last);
+            begin
+               Append
+                 (Result, "Response file @" & RF_Name & " : {");
+            end;
+            First := False;
+         else
+            if GNATCOLL.Utils.Ends_With (Arg, "" & ASCII.LF) then
+               Append (Result, Arg (Arg'First .. Arg'Last - 1) & "<LF>");
+            else
+               Append (Result, Arg);
+            end if;
+         end if;
+      end loop;
+
+      Append (Result, "}");
+
+      return -Result;
+   end Image_RF;
+
    ----------------
    -- Launch_Job --
    ----------------
@@ -747,6 +787,7 @@ package body GPR2.Build.Process_Manager is
 
       procedure Display (Action : Action_Id'Class);
       procedure Display (Command : Argument_List);
+      procedure Display_RF (Command : Argument_List);
 
       -------------
       -- Display --
@@ -785,6 +826,15 @@ package body GPR2.Build.Process_Manager is
       begin
          Self.Tree_Db.Reporter.Report (Image (Command));
       end Display;
+
+      -------------
+      -- Display --
+      -------------
+
+      procedure Display_RF (Command : Argument_List) is
+      begin
+         Self.Tree_Db.Reporter.Report (Image_RF (Command));
+      end Display_RF;
 
       P_Wo : FS.File_Descriptor;
       P_Ro : FS.File_Descriptor;
@@ -916,6 +966,15 @@ package body GPR2.Build.Process_Manager is
                        and then Self.Tree_Db.Reporter.Verbosity >= Verbose)
             then
                Display (Job.Command_Line.Argument_List);
+
+               if Job.Response_File.Has_Secondary_Response_File then
+                  Display_RF
+                    (Job.Response_File.Secondary_Response_File_Content);
+               end if;
+
+               if Job.Response_File.Has_Primary_Response_File then
+                  Display_RF (Job.Response_File.Primary_Response_File_Content);
+               end if;
             else
                Display (Job.UID);
             end if;

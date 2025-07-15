@@ -4,6 +4,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Characters.Handling; use Ada.Characters.Handling;
+
 with GNATCOLL.Traces;
 
 with GPR2.Build.Actions.Ada_Bind;
@@ -215,27 +217,92 @@ package body GPR2.Build.Actions.Compile.Ada is
       if Self.Global_Config_Pragmas.Is_Defined then
          for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
             Cmd_Line.Add_Argument
-              (Attr.Values.Element (J).Text, Build.Command_Line.Ignore);
+              (Attr.Values.Element (J).Text,
+               Mode => Build.Command_Line.Ignore);
          end loop;
 
          Cmd_Line.Add_Argument
            (Attr.Values.Last_Element.Text &
               Self.Global_Config_Pragmas.String_Value,
-            Build.Command_Line.Ignore);
+            Mode => Build.Command_Line.Ignore);
       end if;
 
       if Self.Local_Config_Pragmas.Is_Defined then
          for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
             Cmd_Line.Add_Argument
-              (Attr.Values.Element (J).Text, Build.Command_Line.Ignore);
+              (Attr.Values.Element (J).Text,
+               Mode => Build.Command_Line.Ignore);
          end loop;
 
          Cmd_Line.Add_Argument
            (Attr.Values.Last_Element.Text &
               Self.Local_Config_Pragmas.String_Value,
-            Build.Command_Line.Ignore);
+            Mode => Build.Command_Line.Ignore);
       end if;
    end Compute_Command;
+
+   ----------------------------
+   -- Compute_Response_Files --
+   ----------------------------
+
+   overriding procedure Compute_Response_Files
+     (Self           : in out Object;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean) is
+   begin
+      if not Signature_Only then
+         declare
+            use Build.Response_Files;
+
+            Lang_Index : constant PAI.Object := PAI.Create (Self.Lang);
+            A_RFF      : constant Project.Attribute.Object :=
+                           Self.View.Attribute
+                             (PRA.Compiler.Response_File_Format, Lang_Index);
+            A_RFS      : constant Project.Attribute.Object :=
+                           Self.View.Attribute
+                             (PRA.Compiler.Response_File_Switches, Lang_Index);
+            A_CLML     : constant Project.Attribute.Object :=
+                           Self.View.Attribute
+                             (PRA.Compiler.Max_Command_Line_Length);
+            Format     : Response_File_Format := None;
+         begin
+            if A_RFF.Is_Defined then
+               declare
+                  LV : constant String := To_Lower (A_RFF.Value.Text);
+               begin
+                  if LV = "gnu" then
+                     Format := GNU;
+                  elsif LV = "object_list" then
+                     Format := Object_List;
+                  elsif LV = "gcc_gnu" then
+                     Format := GCC_GNU;
+                  elsif LV = "gcc_option_list" then
+                     Format := GCC_Option_List;
+                  elsif LV = "gcc_object_list" then
+                     Format := GCC_Object_List;
+                  end if;
+               end;
+            end if;
+
+            if Format = GCC_GNU then
+               Self.Response_Files.Initialize
+                 (Format, Compiler, A_CLML, A_RFS);
+
+               declare
+                  Resp_File : constant Tree_Db.Temp_File :=
+                                Self.Get_Or_Create_Temp_File
+                                  ("response_file", Local);
+               begin
+                  Self.Response_Files.Register
+                    (Resp_File.FD,
+                     Resp_File.Path);
+               end;
+
+               Self.Response_Files.Create (Cmd_Line);
+            end if;
+         end;
+      end if;
+   end Compute_Response_Files;
 
    -----------------------
    -- Compute_Signature --

@@ -207,6 +207,7 @@ package body GPR2.Build.Actions is
          Cmd_Line :=
            GPR2.Build.Command_Line.Create (Self.Working_Directory);
          Self.Compute_Command (1, Cmd_Line, Signature_Only => True);
+         Self.Compute_Response_Files (Cmd_Line, Signature_Only => True);
 
          Ign := Self.Signature.Add_Input
            (Artifacts.Key_Value.Create
@@ -254,6 +255,7 @@ package body GPR2.Build.Actions is
       Self.Cmd_Line :=
         GPR2.Build.Command_Line.Create (Self.Working_Directory);
       Self.Compute_Command (Slot, Self.Cmd_Line, False);
+      Self.Compute_Response_Files (Self.Cmd_Line, False);
 
       if Self.Cmd_Line.Total_Length = 0
         and then not Self.Deactivated

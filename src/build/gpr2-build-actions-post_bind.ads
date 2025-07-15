@@ -38,6 +38,11 @@ package GPR2.Build.Actions.Post_Bind is
       Cmd_Line       : in out GPR2.Build.Command_Line.Object;
       Signature_Only : Boolean);
 
+   overriding procedure Compute_Response_Files
+     (Self           : in out Object;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean);
+
    function Object_File (Self : Object) return Artifacts.Object_File.Object;
 
 private

@@ -91,11 +91,11 @@ package body GPR2.Build.Actions.Compile is
          if Is_List then
             for Val of Attr.Values loop
                if Val.Text'Length > 0 then
-                  Cmd_Line.Add_Argument (Val.Text, Mode);
+                  Cmd_Line.Add_Argument (Val.Text, Mode => Mode);
                end if;
             end loop;
          else
-            Cmd_Line.Add_Argument (Attr.Value.Text, Mode);
+            Cmd_Line.Add_Argument (Attr.Value.Text, Mode => Mode);
          end if;
       end Add_Attr;
 
@@ -442,7 +442,7 @@ package body GPR2.Build.Actions.Compile is
 
                Cmd_Line.Add_Argument
                  ("-specs=" & String (Path_Name.Simple_Name (Spec_File.Path)),
-                  Build.Command_Line.Ignore);
+                  Mode => Build.Command_Line.Ignore);
             end;
 
             return;
@@ -564,11 +564,11 @@ package body GPR2.Build.Actions.Compile is
 
          for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
             Cmd_Line.Add_Argument
-              (Attr.Values.Element (J).Text, Mode);
+              (Attr.Values.Element (J).Text, Mode => Mode);
          end loop;
 
          Cmd_Line.Add_Argument
-           (Attr.Values.Last_Element.Text & Arg, Mode);
+           (Attr.Values.Last_Element.Text & Arg, Mode => Mode);
       end Add_Options_With_Arg;
 
       Driver_Attr : constant GPR2.Project.Attribute.Object :=
@@ -702,7 +702,8 @@ package body GPR2.Build.Actions.Compile is
                True);
          else
             Cmd_Line.Add_Argument
-              (Self.Src.Path_Name.String_Value, Build.Command_Line.Simple);
+              (Self.Src.Path_Name.String_Value,
+               Mode => Build.Command_Line.Simple);
          end if;
 
          if Index /= No_Index then
@@ -775,6 +776,70 @@ package body GPR2.Build.Actions.Compile is
             Level     => GPR2.Message.Important);
          raise Action_Error;
    end Compute_Command;
+
+   ----------------------------
+   -- Compute_Response_Files --
+   ----------------------------
+
+   overriding procedure Compute_Response_Files
+     (Self           : in out Object;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean) is
+   begin
+      if not Signature_Only then
+         declare
+            use Build.Response_Files;
+
+            Lang_Index : constant PAI.Object := PAI.Create (Self.Lang);
+            A_RFF      : constant Project.Attribute.Object :=
+                           Self.View.Attribute
+                             (PRA.Compiler.Response_File_Format, Lang_Index);
+            A_RFS      : constant Project.Attribute.Object :=
+                           Self.View.Attribute
+                             (PRA.Compiler.Response_File_Switches, Lang_Index);
+            A_CLML     : constant Project.Attribute.Object :=
+                           Self.View.Attribute
+                             (PRA.Compiler.Max_Command_Line_Length);
+            Format     : Response_File_Format := None;
+         begin
+            if A_RFF.Is_Defined then
+               declare
+                  LV : constant String :=
+                         Ada.Characters.Handling.To_Lower (A_RFF.Value.Text);
+               begin
+                  if LV = "gnu" then
+                     Format := GNU;
+                  elsif LV = "object_list" then
+                     Format := Object_List;
+                  elsif LV = "gcc_gnu" then
+                     Format := GCC_GNU;
+                  elsif LV = "gcc_option_list" then
+                     Format := GCC_Option_List;
+                  elsif LV = "gcc_object_list" then
+                     Format := GCC_Object_List;
+                  end if;
+               end;
+            end if;
+
+            if Format = GCC_GNU then
+               Self.Response_Files.Initialize
+                 (Format, Compiler, A_CLML, A_RFS);
+
+               declare
+                  Resp_File : constant Tree_Db.Temp_File :=
+                                Self.Get_Or_Create_Temp_File
+                                  ("response_file", Local);
+               begin
+                  Self.Response_Files.Register
+                    (Resp_File.FD,
+                     Resp_File.Path);
+               end;
+
+               Self.Response_Files.Create (Cmd_Line);
+            end if;
+         end;
+      end if;
+   end Compute_Response_Files;
 
    -----------------------
    -- Compute_Signature --

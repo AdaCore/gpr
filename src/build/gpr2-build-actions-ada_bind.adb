@@ -180,14 +180,14 @@ package body GPR2.Build.Actions.Ada_Bind is
                      Cmd_Line.Add_Argument
                        ("-A=" &
                           String (Path.Relative_Path (Self.Working_Directory)),
-                        Mode);
+                        Mode => Mode);
                   end;
                else
-                  Cmd_Line.Add_Argument (Val.Text, Mode);
+                  Cmd_Line.Add_Argument (Val.Text, Mode => Mode);
                end if;
             end loop;
          else
-            Cmd_Line.Add_Argument (Attr.Value.Text, Mode);
+            Cmd_Line.Add_Argument (Attr.Value.Text, Mode => Mode);
          end if;
       end Add_Attr;
 
@@ -249,7 +249,7 @@ package body GPR2.Build.Actions.Ada_Bind is
          end if;
 
          Cmd_Line.Add_Argument
-           ("-F=" & String (Map_File.Path), Build.Command_Line.Ignore);
+           ("-F=" & String (Map_File.Path), Mode => Build.Command_Line.Ignore);
       end Add_Mapping_File;
 
       --------------------------
@@ -457,7 +457,7 @@ package body GPR2.Build.Actions.Ada_Bind is
          begin
             if Comp.Is_Defined then
                Cmd_Line.Add_Argument
-                 (Comp.Local_Ali_File.Path, Build.Command_Line.Simple);
+                 (Comp.Local_Ali_File.Path, Mode => Build.Command_Line.Simple);
             end if;
          end;
       end loop;
@@ -525,6 +525,18 @@ package body GPR2.Build.Actions.Ada_Bind is
          Create_Response_File;
       end if;
    end Compute_Command;
+
+   ----------------------------
+   -- Compute_Response_Files --
+   ----------------------------
+
+   overriding procedure Compute_Response_Files
+     (Self           : in out Object;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean) is
+   begin
+      null;
+   end Compute_Response_Files;
 
    -----------------------
    -- Compute_Signature --

@@ -29,6 +29,7 @@ pragma Warnings (On);
 with GPR2.Reporter;
 with GPR2.Source_Reference;
 with GPR2.Source_Reference.Value;
+with GPR2.Build.Response_Files;
 
 package body GPR2.Build.Actions.Link is
 
@@ -170,7 +171,7 @@ package body GPR2.Build.Actions.Link is
                             (Path.Relative_Path (Self.Working_Directory)));
                   end;
                else
-                  Cmd_Line.Add_Argument (Arg, Mode);
+                  Cmd_Line.Add_Argument (Arg, Mode => Mode);
                end if;
             else
                declare
@@ -180,9 +181,9 @@ package body GPR2.Build.Actions.Link is
                               Self.Ctxt.Dir_Name.Value);
                begin
                   if Full.Exists then
-                     Cmd_Line.Add_Argument (Full, Mode);
+                     Cmd_Line.Add_Argument (Full, Mode => Mode);
                   else
-                     Cmd_Line.Add_Argument (Arg, Mode);
+                     Cmd_Line.Add_Argument (Arg, Mode => Mode);
                   end if;
                end;
             end if;
@@ -426,7 +427,8 @@ package body GPR2.Build.Actions.Link is
       for Obj of Objects loop
          Cmd_Line.Add_Argument
            (Artifacts.Files.Object'Class (Obj).Path,
-            Build.Command_Line.Simple);
+            Kind => Build.Command_Line.Obj,
+            Mode => Build.Command_Line.Simple);
       end loop;
 
       if not Self.Is_Static_Library then
@@ -789,6 +791,94 @@ package body GPR2.Build.Actions.Link is
       Cmd_Line.Filter_Duplicate_Switches ("-T", Keep_Leftmost => True);
    end Compute_Command;
 
+   ----------------------------
+   -- Compute_Response_Files --
+   ----------------------------
+
+   overriding procedure Compute_Response_Files
+     (Self           : in out Object;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean) is
+   begin
+      if not Signature_Only then
+         declare
+            use Build.Response_Files;
+
+            A_RFF  : constant Project.Attribute.Object :=
+                       Self.View.Attribute (PRA.Linker.Response_File_Format);
+            A_RFS  : constant Project.Attribute.Object :=
+                       Self.View.Attribute (PRA.Linker.Response_File_Switches);
+            A_CLML : constant Project.Attribute.Object :=
+                       Self.View.Attribute
+                         (PRA.Linker.Max_Command_Line_Length);
+            Format : Response_File_Format := None;
+         begin
+            if A_RFF.Is_Defined then
+               declare
+                  LV : constant String :=
+                         Ada.Characters.Handling.To_Lower (A_RFF.Value.Text);
+               begin
+                  if LV = "gnu" then
+                     Format := GNU;
+                  elsif LV = "object_list" then
+                     Format := Object_List;
+                  elsif LV = "gcc_gnu" then
+                     Format := GCC_GNU;
+                  elsif LV = "gcc_option_list" then
+                     Format := GCC_Option_List;
+                  elsif LV = "gcc_object_list" then
+                     Format := GCC_Object_List;
+                  end if;
+               end;
+            end if;
+
+            --  [eng/gpr/gpr-issues#446]
+            --  The archive builder has a specific format for its response file
+            --  which does not correspond to what the attribute
+            --  Response_File_Format yields hence the need to override here.
+            --  This should probably be dealt with the KB.
+            if Self.Is_Static_Library then
+               Format := GNU_Archiver;
+            end if;
+
+            Self.Response_Files.Initialize (Format, Linker, A_CLML, A_RFS);
+
+            declare
+               Needs_Formating : constant Boolean :=
+                                   Format in GCC_Formatting_Required;
+            begin
+               if Needs_Formating then
+                  declare
+                     Resp_File : constant Tree_Db.Temp_File :=
+                                   Self.Get_Or_Create_Temp_File
+                                     ("response_file", Local);
+                  begin
+                     Self.Response_Files.Register
+                       (Resp_File.FD,
+                        Resp_File.Path,
+                        Secondary => True);
+                  end;
+               end if;
+
+               declare
+                  RF_Name   : constant Filename_Type :=
+                                (if Needs_Formating
+                                 then "encapsulated_"
+                                 else "") & "response_file";
+                  Resp_File : constant Tree_Db.Temp_File :=
+                                Self.Get_Or_Create_Temp_File (RF_Name, Local);
+               begin
+                  Self.Response_Files.Register
+                    (Resp_File.FD,
+                     Resp_File.Path);
+               end;
+            end;
+
+            Self.Response_Files.Create (Cmd_Line);
+         end;
+      end if;
+   end Compute_Response_Files;
+
    -----------------------
    -- Compute_Signature --
    -----------------------
@@ -830,79 +920,6 @@ package body GPR2.Build.Actions.Link is
          return;
       end if;
    end Compute_Signature;
-
-   --------------------------
-   -- Create_Response_File --
-   --------------------------
-
-   procedure Create_Response_File
-     (Self      : in out Object;
-      Delimiter : String := "")
-   is
-      use GNATCOLL.OS.FS;
-      use GNATCOLL.Utils;
-
-      Resp_File : constant Tree_Db.Temp_File :=
-                    Self.Get_Or_Create_Temp_File ("response_file", Local);
-      New_Args  : GNATCOLL.OS.Process.Argument_List;
-
-      function Format (Arg : String) return String;
-
-      ------------
-      -- Format --
-      ------------
-
-      function Format (Arg : String) return String
-      is
-         Char    : Character;
-         Tmp_Arg : String (1 .. Arg'Length) := Arg (Arg'First .. Arg'Last);
-         New_Arg : String (1 .. Arg'Length * 2);
-         Offset  : Integer := 0;
-      begin
-         for Index in Tmp_Arg'Range loop
-            Char := Tmp_Arg (Index);
-
-            if Char = ' '
-              or else Char = ASCII.HT
-              or else Char = '"'
-              or else Char = '\'
-            then
-               New_Arg (Index + Offset) := '\';
-               Offset := Offset + 1;
-               New_Arg (Index + Offset) := Char;
-            else
-               New_Arg (Index + Offset) := Char;
-            end if;
-         end loop;
-
-         return New_Arg (1 .. Arg'Length + Offset);
-      end Format;
-
-      To_Response_File   : Boolean := False;
-      Response_File_Used : Boolean := False;
-   begin
-      if Resp_File.FD /= Null_FD then
-         for Arg of Self.Cmd_Line.Argument_List loop
-            if To_Response_File then
-               Write (Resp_File.FD, Format (Arg) & ASCII.LF);
-               Response_File_Used := True;
-
-            else
-               New_Args.Append (Arg);
-
-               if Ends_With (Arg, Delimiter)
-               then
-                  To_Response_File := True;
-               end if;
-            end if;
-         end loop;
-
-         if Response_File_Used then
-            New_Args.Append ("@" & String (Resp_File.Path));
-            Self.Cmd_Line.Set_Response_File_Command (New_Args);
-         end if;
-      end if;
-   end Create_Response_File;
 
    ----------------------
    -- Embedded_Objects --
@@ -1356,7 +1373,7 @@ package body GPR2.Build.Actions.Link is
               (Export_File_Switch.Value.Text &
                  String
                  (Symbol_File.Relative_Path (Self.Working_Directory)),
-               Build.Command_Line.Ignore);
+               Mode => Build.Command_Line.Ignore);
          end if;
       end if;
    end Handle_Export_File;

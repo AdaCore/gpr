@@ -56,6 +56,11 @@ package GPR2.Build.Actions.Ada_Bind is
       Cmd_Line       : in out GPR2.Build.Command_Line.Object;
       Signature_Only : Boolean);
 
+   overriding procedure Compute_Response_Files
+     (Self           : in out Object;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean);
+
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object;
 
