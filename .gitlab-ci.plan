@@ -9,14 +9,13 @@ def build():
     anod_build("libgpr2", qualifier={"bare": True})
     anod_build("libgpr2")
     anod_build("gpr2")
-    anod_build("gpr2", qualifier={"gpr2build": True})
 
 
 def install_gpr2():
     if env.host.platform == "x86_64-linux":
         anod_install("gpr2-doc")
     anod_install("libgpr2", qualifier={"bare": True})
-    anod_install("gpr2", qualifier={"gpr2build": True})
+    anod_install("gpr2")
 
 
 def build_gnat_bootstrap():
@@ -58,13 +57,13 @@ def test_gpr2():
 
 def test_gpr2_cov():
     install_gpr2()
-    anod_build("gpr2", qualifier={"gpr2build": True, "coverage": True})
+    anod_build("gpr2", qualifier={"coverage": True})
     anod_test("gpr2", qualifier={"coverage": True})
 
 
 def test_gpr2_valgrind():
     install_gpr2()
-    anod_build("gpr2", qualifier={"gpr2build": True, "valgrind": True})
+    anod_build("gpr2", qualifier={"valgrind": True})
     anod_test("gpr2", qualifier={"valgrind": True})
 
 
