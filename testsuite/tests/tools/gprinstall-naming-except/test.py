@@ -1,0 +1,17 @@
+import os
+
+from e3.env import Env
+from e3.fs import cp
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL
+
+p = BuilderAndRunner().run([GPRINSTALL, '-p',
+                            '--prefix=' + os.path.join(os.getcwd(), 'inst'),
+                            'inst.gpr'])
+
+for P in [ 'inst/lib/inst/pack.ali',
+           'inst/lib/inst/pack__one.ali',
+           'inst/lib/inst/pack__one.o' ]:
+    if os.path.exists(P):
+        print("OK:  " + os.path.basename(P))
+    else:
+        print("NOK: " + P)
