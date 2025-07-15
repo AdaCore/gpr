@@ -166,7 +166,10 @@ package body GPR2.Build.Response_Files is
             end if;
          end loop;
 
-         Write (Self.Secondary_FD, Self.Secondary_Content, -Self.Primary_Path);
+         Write
+           (Self.Secondary_FD,
+            Self.Secondary_Content,
+            Format (-Self.Primary_Path));
          Write (Self.Secondary_FD, Self.Secondary_Content, "" & ASCII.LF);
 
          for Other of Cmd_Line.Argument_List (Build.Command_Line.Other) loop
