@@ -16,15 +16,12 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with "gpr2";
+with "../../gpr2";
 
 abstract project GPR2tools extends "../../gpr2_shared.gpr" is
 
    type Target_type is ("Windows_NT", "UNIX");
    Target : Target_Type := external ("GPR2_OS", external ("OS", "UNIX"));
-
-   type Tools_Prefix_Type is ("gpr", "gpr2");
-   Tools_Prefix : Tools_Prefix_Type := external ("GPR2_TOOLS_PREFIX", "gpr2");
 
    Base_Object_Dir     := GPR2_Shared.Build_Root & "/" & GPR2_Shared.Build & "/obj-tools";
    Base_Exec_Dir       := GPR2_Shared.Build_Root & "/" & GPR2_Shared.Build;

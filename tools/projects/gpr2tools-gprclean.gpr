@@ -1,4 +1,3 @@
-with "gpr2";
 with "gpr2tools-common";
 
 project GPR2tools.GPRClean extends "gpr2tools.gpr" is
@@ -9,7 +8,7 @@ project GPR2tools.GPRClean extends "gpr2tools.gpr" is
    for Exec_Dir use GPR2tools.Base_Exec_Dir;
 
    package Builder extends GPR2_Shared.Builder is
-      for Executable ("gprclean-main.adb") use GPR2tools.Tools_Prefix & "clean";
+      for Executable ("gprclean-main.adb") use "gprclean";
    end Builder;
 
 end GPR2tools.GPRClean;
