@@ -1813,10 +1813,26 @@ package body GPR2.Build.Actions.Link is
                      use GNATCOLL.OS;
                      use type GNATCOLL.OS.FS.File_Descriptor;
 
-                     Buffer : String (1 .. Natural (Stat.Length (Attrs)));
+                     Last   : constant Integer :=
+                                Integer
+                                  (Long_Long_Integer'Min
+                                     (64 * 1024, Stat.Length (Attrs)));
+                     --  64k length: more than enough to find the P line but
+                     --  not too much footprint on the stack to copy the whole
+                     --  ALI file if very large.
+
+                     Offset : Long_Long_Integer := 0;
+                     --  Current offset, used to copy the whole file
+
+                     Buffer : String (1 .. Last);
+                     --  Some ALI files can be pretty large, for example
+                     --  in libadalang the generated source comes with a
+                     --  24MB ali file. We cannot use strings here, so need
+                     --  to move to a more generic solution.
+
+                     Length : Natural;
+                     Idx    : Natural := Buffer'First;
                      Ign    : Natural with Unreferenced;
-                     First  : Natural := 1;
-                     Last   : Natural;
                      Found  : Boolean := False;
                      Input  : GNATCOLL.OS.FS.File_Descriptor;
                      Output : GNATCOLL.OS.FS.File_Descriptor;
@@ -1837,9 +1853,6 @@ package body GPR2.Build.Actions.Link is
                         return False;
                      end if;
 
-                     Ign := FS.Read (Input, Buffer);
-                     FS.Close (Input);
-
                      Output := FS.Open (To.String_Value, FS.Write_Mode);
 
                      if Output = FS.Invalid_FD then
@@ -1851,6 +1864,7 @@ package body GPR2.Build.Actions.Link is
                               GPR2.Source_Reference.Object
                                 (GPR2.Source_Reference.Create
                                      (Self.Ctxt.Path_Name.Value, 0, 0))));
+                        FS.Close (Input);
 
                         return False;
                      end if;
@@ -1861,25 +1875,49 @@ package body GPR2.Build.Actions.Link is
                           """ as library interface for " &
                           String (Self.Ctxt.Name));
 
-                     while First < Buffer'Last loop
-                        Last := GNATCOLL.Utils.Line_End (Buffer, First);
+                     Offset := Long_Long_Integer (FS.Read (Input, Buffer));
 
-                        if (Last > First + 1 and then
-                            Buffer (First .. First + 1) = "P ")
-                          or else (Last = First and then
-                                   Buffer (First) = 'P')
-                        then
-                           FS.Write (Output, Buffer (1 .. First - 1));
-                           FS.Write (Output, "P SL");
-                           FS.Write
-                             (Output, Buffer (First + 1 .. Buffer'Last));
-                           Found := True;
+                     Search_Loop :
+                     while Idx < Buffer'Last loop
+                        --  Check end of line to retrieve the header char
 
-                           exit;
-                        end if;
+                        while Buffer (Idx) in ASCII.CR | ASCII.LF loop
+                           Idx := Idx + 1;
 
-                        First := GNATCOLL.Utils.Next_Line (Buffer, First);
-                     end loop;
+                           exit when Idx > Buffer'Last;
+
+                           if Buffer (Idx) = 'P' then
+                              --  Check if it's followed by a space or a new
+                              --  line.
+
+                              if Idx = Buffer'Last
+                                or else Buffer (Idx + 1) in
+                                  ' ' | ASCII.CR | ASCII.LF
+                              then
+                                 --  we have the P line
+                                 Found := True;
+                                 FS.Write (Output, String (Buffer (1 .. Idx)));
+                                 FS.Write (Output, " SL");
+
+                                 --  Write the rest of the ALI file
+
+                                 FS.Write
+                                   (Output, Buffer (Idx + 1 .. Buffer'Last));
+
+                                 while Offset < Stat.Length (Attrs) loop
+                                    Length := FS.Read (Input, Buffer);
+                                    Offset :=
+                                      Offset + Long_Long_Integer (Length);
+                                    FS.Write (Output, Buffer (1 .. Length));
+                                 end loop;
+
+                                 exit Search_Loop;
+                              end if;
+                           end if;
+                        end loop;
+
+                        Idx := Idx + 1;
+                     end loop Search_Loop;
 
                      if not Found then
                         Self.Tree.Reporter.Report
@@ -1890,9 +1928,27 @@ package body GPR2.Build.Actions.Link is
                               GPR2.Source_Reference.Create
                                 (Self.Ctxt.Path_Name.Value, 0, 0)));
 
-                        FS.Write (Output, Buffer);
+                        FS.Close (Input);
+                        FS.Close (Output);
+
+                        if not GNATCOLL.OS.FSUtil.Copy_File
+                          (From.String_Value, To.String_Value)
+                        then
+                           Self.Tree.Reporter.Report
+                             (GPR2.Message.Create
+                                (GPR2.Message.Error,
+                                 "could not copy ali file " &
+                                   String (From.Simple_Name) &
+                                   " to the library directory",
+                                 GPR2.Source_Reference.Object
+                                   (GPR2.Source_Reference.Create
+                                        (Self.Ctxt.Path_Name.Value, 0, 0))));
+
+                           return False;
+                        end if;
                      end if;
 
+                     FS.Close (Input);
                      FS.Close (Output);
                   end;
                end if;
