@@ -1,6 +1,6 @@
 import os
 from testsuite_support.builder_and_runner import BuilderAndRunner
-from testsuite_support.tools import GPR2BUILD, GPR2CLEAN
+from testsuite_support.tools import GPRBUILD, GPRCLEAN
 
 
 bnr = BuilderAndRunner()
@@ -17,6 +17,6 @@ def run(args):
 
 
 # build then clean 'extending' project & check obj dir deleted
-run([GPR2BUILD, "-p", "-Pextending"])
-run([GPR2CLEAN, "-p", "-Pextending"])
+run([GPRBUILD, "-p", "-Pextending"])
+run([GPRCLEAN, "-p", "-Pextending"])
 check_paths_deleted(["obj"])

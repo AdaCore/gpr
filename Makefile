@@ -38,8 +38,6 @@
 #   GPR2_BUILD    : debug / release / release_checks / gnatcov
 #   PROCESSORS    : nb parallel compilations (0 to use all cores)
 #   PROFILER      : Include gprof support instrumentation (yes / no)
-#   LOCAL_GPR2    : whether tools should be built with the local gpr2
-#                   project or use an installed one. (yes/no)
 #   GPR2KBDIR     : path to the gprconfig_kb repository
 
 # Look for the source directory (in case of out-of-tree builds):
@@ -78,8 +76,6 @@ GPR2_BUILD        ?= release_checks
 PROCESSORS        ?= 0
 # Don't use gcov by default
 PROFILER          ?= no
-# Use local libgpr2 sources to build the gpr2 tools
-LOCAL_GPR2        ?= yes
 # gprconfig_kb repository location
 GPR2KBDIR         ?= ${SOURCE_DIR}/../gprconfig_kb/db
 # Used to pass extra options to GPRBUILD, like -d or -v for instance
@@ -118,14 +114,6 @@ ifeq (${ENABLE_SHARED},yes)
   ifneq (${GPR2_BUILD},gnatcov)
     LIBGPR2_TYPES := static relocatable static-pic
   endif
-endif
-
-# Add SOURCE_DIR in the project search path if LOCAL_GPR2 is set
-AP_GPR2           :=
-BUILD_LIBGPR2     :=
-ifeq (${LOCAL_GPR2},yes)
-  AP_GPR2         := -aP ${SOURCE_DIR}
-  BUILD_LIBGPR2   := build-lib-static
 endif
 
 # Code coverage support
@@ -192,9 +180,8 @@ else
 endif
 
 # Gpr2 tools
-build-tools: ${BUILD_LIBGPR2} coverage-instrument
-	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-		${GPR2TOOLS} ${AP_GPR2}
+build-tools: build-lib-static coverage-instrument
+	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static ${GPR2TOOLS}
 
 # Gnatcov instrumentation
 coverage-instrument:

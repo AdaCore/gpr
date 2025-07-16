@@ -2,7 +2,7 @@ import os
 import json
 from e3.fs import rm
 from testsuite_support.builder_and_runner import BuilderAndRunner
-from testsuite_support.tools import GPR2BUILD, GPR2CLEAN
+from testsuite_support.tools import GPRBUILD, GPRCLEAN
 
 bnr = BuilderAndRunner()
 
@@ -15,7 +15,7 @@ def run(cmd, cwd="", quiet=False):
             print("$ " + cmd);
         else:
             print("$ " + " ".join(cmd));
-    if cmd[0] in (GPR2BUILD, GPR2CLEAN):
+    if cmd[0] in (GPRBUILD, GPRCLEAN):
         bnr.call(cmd)
     else:
         print(bnr.simple_run([cmd], catch_error=True).out)
@@ -23,7 +23,7 @@ def run(cmd, cwd="", quiet=False):
         os.chdir(old_cwd)
 
 def test(prj, switches, cleanup=True):
-    run([GPR2BUILD, "-P", prj, "-q", "-p", "--json-summary", "-j1"] + switches)
+    run([GPRBUILD, "-P", prj, "-q", "-p", "--json-summary", "-j1"] + switches)
     if os.path.exists("jobs.json"):
         with open("jobs.json") as fp:
             cnt = json.load(fp)
@@ -36,7 +36,7 @@ def test(prj, switches, cleanup=True):
                 print(uid)
 
     if cleanup:
-        run([GPR2CLEAN, "-P", prj, "-q", "-r"], quiet=True)
+        run([GPRCLEAN, "-P", prj, "-q", "-r"], quiet=True)
 
 
 test("demo.gpr", ["-u"])

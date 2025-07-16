@@ -2,13 +2,13 @@ import json
 import os
 from e3.fs import mv
 from testsuite_support.builder_and_runner import BuilderAndRunner
-from testsuite_support.tools import GPR2BUILD
+from testsuite_support.tools import GPRBUILD
 
 bnr = BuilderAndRunner()
 
 def run(cmd):
     print("$ " + " ".join(cmd));
-    if cmd[0] == GPR2BUILD:
+    if cmd[0] == GPRBUILD:
         bnr.call(cmd)
     else:
         print(bnr.simple_run([cmd], catch_error=True).out)
@@ -19,7 +19,7 @@ def run(cmd):
 for kind in "static", "relocatable":
     print(f"*** test with {kind} aggregate lib ***")
     lib_kind = "-XAGG_LIBRARY_KIND=" + kind
-    run([GPR2BUILD, "-q", "-Pagglib.gpr", "-p", "--json-summary", lib_kind])
+    run([GPRBUILD, "-q", "-Pagglib.gpr", "-p", "--json-summary", lib_kind])
     with open("jobs.json") as fp:
         cnt = json.load(fp)
     jobs = {job["uid"]: job["command"] for job in cnt}
@@ -28,7 +28,7 @@ for kind in "static", "relocatable":
         if "-fpic" in jobs[uid].lower():
             print("uses fpic")
 
-    run([GPR2BUILD, "-q", "-Pdemo.gpr", "-p", "--json-summary", lib_kind])
+    run([GPRBUILD, "-q", "-Pdemo.gpr", "-p", "--json-summary", lib_kind])
     with open("jobs.json") as fp:
         cnt = json.load(fp)
     for job in cnt:

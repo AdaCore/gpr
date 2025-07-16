@@ -13,7 +13,7 @@ def filter(file):
 
 bnr = BuilderAndRunner()
 
-# copy GPR2 examples here
+# copy GPR examples here
 found = False
 for examples_dir in '../examples/libgpr2', 'examples/libgpr2':
     fulldir = os.path.join(os.environ["root_dir"], examples_dir)
