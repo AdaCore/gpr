@@ -1,0 +1,5 @@
+description:
+    Check overriden runtime sources are in the visible sources set 
+driver: build_and_run
+project_file: prj
+main: main
