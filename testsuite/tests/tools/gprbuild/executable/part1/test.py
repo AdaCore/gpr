@@ -4,7 +4,7 @@ from e3.env import Env
 from e3.os.process import Run
 
 from testsuite_support.builder_and_runner import BuilderAndRunner
-from testsuite_support.tools import GPR2BUILD
+from testsuite_support.tools import GPRBUILD
 
 bnr = BuilderAndRunner()
 test_number = 1
@@ -15,7 +15,7 @@ def test(header):
     print("================================================================")
     print("Case " + str(test_number) + " - " + header)
     proc = bnr.call(
-        [GPR2BUILD, "-P", os.path.join("tree", "main.gpr"), "-p", "--json-summary", "-j1"])
+        [GPRBUILD, "-P", os.path.join("tree", "main.gpr"), "-p", "--json-summary", "-j1"])
 
     if proc.status:
         print("Test return value: " + str(proc.status))
@@ -62,7 +62,7 @@ def testsuite(file_path):
             file.write(file_content)
 
     # Restore state of the project after a correct compilation
-    Run([GPR2BUILD, "-P", os.path.join("tree", "main.gpr"), "-p", "-j1"])
+    Run([GPRBUILD, "-P", os.path.join("tree", "main.gpr"), "-p", "-j1"])
 
     with open(file_path, "a") as file:
         file.write("--  Comment that will not prevent a compilation for Ada files")
@@ -70,7 +70,7 @@ def testsuite(file_path):
     test("Modified " + os.path.basename(file_path) + " (comments only)")
 
     # Restore state of the project after a correct compilation
-    Run([GPR2BUILD, "-P", os.path.join("tree", "main.gpr"), "-p", "-j1"])
+    Run([GPRBUILD, "-P", os.path.join("tree", "main.gpr"), "-p", "-j1"])
 
 
 test("Build from scratch")

@@ -1,5 +1,5 @@
 from testsuite_support.builder_and_runner import BuilderAndRunner
-from testsuite_support.tools import GPR2BUILD
+from testsuite_support.tools import GPRBUILD
 import json
 import os
 import re
@@ -20,13 +20,13 @@ def edit(file, before, after):
 
 def run(cmd):
 	print("$ " + " ".join(cmd));
-	if cmd[0] == GPR2BUILD:
+	if cmd[0] == GPRBUILD:
 		bnr.call(cmd)
 	else:
 		print(bnr.simple_run([cmd], catch_error=True).out)
 
 def test():
-	run([GPR2BUILD, "-Pprj", "-p", "--json-summary", "-q", "-j1"])
+	run([GPRBUILD, "-Pprj", "-p", "--json-summary", "-q", "-j1"])
 	with open(os.path.join("jobs.json")) as fp:
 		cnt = json.load(fp)
 

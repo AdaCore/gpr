@@ -1,7 +1,7 @@
 import os
 from e3.fs import rm
 from testsuite_support.builder_and_runner import BuilderAndRunner
-from testsuite_support.tools import GPR2BUILD, GPR2CLEAN
+from testsuite_support.tools import GPRBUILD, GPRCLEAN
 
 bnr = BuilderAndRunner()
 
@@ -20,40 +20,40 @@ def run(cmd):
     else:
         print("$ " + " ".join(cmd));
         args = cmd
-    if args[0] in (GPR2BUILD, GPR2CLEAN):
+    if args[0] in (GPRBUILD, GPRCLEAN):
         bnr.call(args)
     else:
         print(bnr.simple_run(args, catch_error=True).out)
 
 print("regular run:")
 
-run(f"{GPR2BUILD} -Pprj -p -j1")
-run(f"{GPR2CLEAN} -Pprj")
+run(f"{GPRBUILD} -Pprj -p -j1")
+run(f"{GPRCLEAN} -Pprj")
 
 print("\nread only obj dir:")
 
 chro("obj/prj")
-run(f"{GPR2BUILD} -Pprj -p -j1")
-run(f"{GPR2CLEAN} -Pprj -v")
+run(f"{GPRBUILD} -Pprj -p -j1")
+run(f"{GPRCLEAN} -Pprj -v")
 
 print("\nread only obj dir with built project")
 
 chrw("obj/prj")
-run(f"{GPR2BUILD} -Pprj -p -q")
+run(f"{GPRBUILD} -Pprj -p -q")
 chro("obj/prj")
 
 print("- with externally built dependency")
-run(f"{GPR2BUILD} -Plib -XPRJ_RO=True -p -j1")
+run(f"{GPRBUILD} -Plib -XPRJ_RO=True -p -j1")
 
 print("- with regular dependency")
-run(f"{GPR2BUILD} -Plib -XPRJ_RO=False -p -j1")
+run(f"{GPRBUILD} -Plib -XPRJ_RO=False -p -j1")
 chrw("obj/prj")
 
 print("\nread only lib dir")
-run(f"{GPR2CLEAN} -Plib -r -q")
+run(f"{GPRCLEAN} -Plib -r -q")
 chro("lib/lib")
-run(f"{GPR2BUILD} -Plib -j1")
+run(f"{GPRBUILD} -Plib -j1")
 chrw("lib/lib")
-run(f"{GPR2BUILD} -Plib -q")
+run(f"{GPRBUILD} -Plib -q")
 chro("lib/lib")
-run(f"{GPR2BUILD} -Plib -f -j1")
+run(f"{GPRBUILD} -Plib -f -j1")

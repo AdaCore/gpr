@@ -1,5 +1,5 @@
 from testsuite_support.builder_and_runner import BuilderAndRunner
-from testsuite_support.tools import GPR2BUILD
+from testsuite_support.tools import GPRBUILD
 
 bnr = BuilderAndRunner()
 
@@ -7,7 +7,7 @@ bnr = BuilderAndRunner()
 
 def run(cmd):
     print("$ " + " ".join(cmd))
-    if cmd[0] == GPR2BUILD:
+    if cmd[0] == GPRBUILD:
         out = bnr.run(cmd).out
         # library dependency cycles are not displayed consistently, we need
         # to order the output
@@ -25,5 +25,5 @@ def run(cmd):
     else:
         print(bnr.simple_run(cmd).out)
 
-run([GPR2BUILD, "-q", "prj.gpr", "-j1"])
+run([GPRBUILD, "-q", "prj.gpr", "-j1"])
 run(["./main"])

@@ -1,5 +1,5 @@
 from testsuite_support.builder_and_runner import BuilderAndRunner
-from testsuite_support.tools import GPR2BUILD
+from testsuite_support.tools import GPRBUILD
 from e3.env import Env
 import shutil
 import os
@@ -33,7 +33,7 @@ def generate_makefile(quantity, root_dirname):
 
         for i in range(1, quantity + 1):
             f.write(f"build{i}:\n")
-            f.write(f"\t+{GPR2BUILD} -P {os.path.join(os.getcwd(), f'{root_dirname}{i}', 'prj.gpr')} -j0\n\n")
+            f.write(f"\t+{GPRBUILD} -P {os.path.join(os.getcwd(), f'{root_dirname}{i}', 'prj.gpr')} -j0\n\n")
 
 def generate_sources(directory, quantity):
     print(f"   - Creating \"{directory}\"")

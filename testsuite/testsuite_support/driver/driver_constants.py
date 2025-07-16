@@ -1,7 +1,7 @@
 from enum import IntFlag, Enum
 from e3.env import Env
 
-from testsuite_support.tools import GPRLS, GPR2BUILD, GPRCONFIG, GPRINSTALL, GPR2CLEAN
+from testsuite_support.tools import GPRLS, GPRBUILD, GPRCONFIG, GPRINSTALL, GPRCLEAN
 
 
 class ObjScnTool(Enum):
@@ -369,19 +369,19 @@ SCN_TOOLS_CMD = {
     f"{tool.SCN_TOOL_CUSTOM}.{phase.SCN_PHASE_CUSTOM_SLOT_8}":
         {"cmd": None, "output": None},
     f"{tool.SCN_TOOL_GPRBUILD}.{phase.SCN_PHASE_GPRBUILD_COMPILATION}":
-        {"cmd": [GPR2BUILD, '-c', f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
+        {"cmd": [GPRBUILD, '-c', f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
                  f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
          "output": output.SCN_OUTPUT_CMD_LINE},
     f"{tool.SCN_TOOL_GPRBUILD}.{phase.SCN_PHASE_GPRBUILD_BIND}":
-        {"cmd": [GPR2BUILD, '-b', f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
+        {"cmd": [GPRBUILD, '-b', f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
                  f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
          "output": output.SCN_OUTPUT_CMD_LINE},
     f"{tool.SCN_TOOL_GPRBUILD}.{phase.SCN_PHASE_GPRBUILD_LINK}":
-        {"cmd": [GPR2BUILD, '-l', f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
+        {"cmd": [GPRBUILD, '-l', f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
                  f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
          "output": output.SCN_OUTPUT_CMD_LINE},
     f"{tool.SCN_TOOL_GPRBUILD}.{phase.SCN_PHASE_GPRBUILD_ALL}":
-        {"cmd": [GPR2BUILD, f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
+        {"cmd": [GPRBUILD, f'--build-script={cmd.SCN_CMD_OUTPUT_FILE.value}',
                  f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
          "output": output.SCN_OUTPUT_CMD_LINE},
     f"{tool.SCN_TOOL_GPRCONFIG}.{phase.SCN_PHASE_NONE}":
@@ -389,10 +389,10 @@ SCN_TOOLS_CMD = {
                  f'{cmd.SCN_CMD_CONFIG_FILE.value}'],
          "output": None},
     f"{tool.SCN_TOOL_GPRCLEAN}.{phase.SCN_PHASE_NONE}":
-        {"cmd": [GPR2CLEAN, '-p', '-r', f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
+        {"cmd": [GPRCLEAN, '-p', '-r', f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}'],
          "output": None},
     f"{tool.SCN_TOOL_GPRCLEAN}.{phase.SCN_PHASE_GPRCLEAN_ALL}":
-        {"cmd": [GPR2CLEAN, '-p', '-r', f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}',
+        {"cmd": [GPRCLEAN, '-p', '-r', f'{pattern.SCN_PRJ_SUBSTITUTE_PATTERN.value}',
                  '-n'],
          "output": output.SCN_OUTPUT_CMD_LINE},
     f"{tool.SCN_TOOL_GPRLS}.{phase.SCN_PHASE_GPRLS_SOURCE_PARSING}":

@@ -181,16 +181,8 @@ begin
 
    declare
       Args           : Argument_List;
-      Gpr2build_Test : constant String :=
-                         Ada.Environment_Variables.Value
-                           ("GPR2BUILD_TEST");
-      --  with --gpr2build, gpr2build is installed as the regular gprbuild so
-      --  use the base gprbuild name in this case. Otherwise use it explicitly
-      Gpr2build      : constant String :=
-                         (if Gpr2build_Test = "YES" then "gprbuild"
-                          else "gpr2build");
    begin
-      Args.Append (Gpr2build);
+      Args.Append ("gprbuild");
       Args.Append ("-c");
       Args.Append ("-b");
       Args.Append ("-p");

@@ -44,19 +44,12 @@ class Testsuite(e3.testsuite.Testsuite):
             help="coverage level. can be:"
                  " branch, insn, stmt, stmt+decision, stmt+mcdc, stmt+uc_mcdc")
 
-        parser.add_argument(
-            "--use-gpr2build",
-            action="store_true",
-            help="If provided, gpr2build is used instead of gprbuild")
-
     def set_up(self):
         super(Testsuite, self).set_up()
         self.env.valgrind = self.main.args.valgrind
         self.env.from_gnat = self.main.args.from_gnat
-        self.env.use_gpr2build = self.main.args.use_gpr2build
 
         os.environ["VALGRIND_TEST"] = "YES" if self.env.valgrind else "NO"
-        os.environ["GPR2BUILD_TEST"] = "YES" if self.env.use_gpr2build else "NO"
 
         # If code coverage is requested, initialize our helper and build
         # instrumented programs.

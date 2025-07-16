@@ -32,7 +32,7 @@ with open("%s/p%d.adb" % (src_dir, PN), "w+") as f:
     f.write("end P%d;\n" % PN)
 
 
-BuilderAndRunner().build("check_mem.gpr", args=['-p'], use_gpr2build=True)
+BuilderAndRunner().build("check_mem.gpr", args=['-p'])
 
 EXEC = "obj/check_mem"
 first_final = False
