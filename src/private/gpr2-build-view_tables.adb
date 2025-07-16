@@ -1576,9 +1576,19 @@ package body GPR2.Build.View_Tables is
 
                if Basename_Source_Maps.Has_Element (C) then
                   if Candidate.Is_Defined then
-                     Ambiguous := True;
+                     --  Take care of the special case of runtime sources that
+                     --  are allowed to be overriden by a project. In this case
+                     --  the project source overrides the runtime source.
 
-                     return Candidate;
+                     if Candidate.Owning_View.Is_Runtime then
+                        Candidate := Source (V_Data, C);
+                     elsif V.Is_Runtime then
+                        null;
+                     else
+                        Ambiguous := True;
+
+                        return Candidate;
+                     end if;
 
                   else
                      Candidate := Source (V_Data, C);

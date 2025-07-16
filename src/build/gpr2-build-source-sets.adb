@@ -7,9 +7,8 @@
 with GPR2.Build.Tree_Db;
 with GPR2.Containers;
 with GPR2.Path_Name;
-pragma Warnings (Off);
+with GPR2.Project.Tree;
 with GPR2.Project.View.Vector;
-pragma Warnings (On);
 
 package body GPR2.Build.Source.Sets is
 
@@ -240,17 +239,32 @@ package body GPR2.Build.Source.Sets is
 
          when Recurse =>
             declare
-               Result : Source_Iterator (False);
+               Result    : Source_Iterator (False);
                Basenames : GPR2.Containers.Filename_Set;
+               View      : constant GPR2.Project.View.Object :=
+                             Get_Ref (Self.Db).View;
+               Closure   : GPR2.Project.View.Vector.Object :=
+                             View.Closure (True, True, True);
+               C         : GPR2.Project.View.Vector.Vector.Cursor;
             begin
                Result.Db := Self.Db;
 
                --  Add the withed views sources, not overriding if
                --  there's a basename clash.
 
-               for V
-                 of Get_Ref (Self.Db).View.Closure (True, True, True)
-               loop
+               --  Make sure the runtime is last, since any project may
+               --  override runtime sources
+
+               if View.Tree.Has_Runtime_Project then
+                  C := Closure.Find (View.Tree.Runtime_Project);
+
+                  if GPR2.Project.View.Vector.Vector.Has_Element (C) then
+                     Closure.Delete (C);
+                     Closure.Append (View.Tree.Runtime_Project);
+                  end if;
+               end if;
+
+               for V of Closure loop
                   if V.Kind in With_Object_Dir_Kind
                     and then not V.Is_Extended
                   then
