@@ -5,10 +5,10 @@
 --
 
 with GNATCOLL.OS.FS;
-
 with GNATCOLL.OS.Process;
+
 with GPR2.Build.Command_Line;
-with GPR2.Project.Attribute;
+with GPR2.Containers;
 
 package GPR2.Build.Response_Files is
 
@@ -34,8 +34,8 @@ package GPR2.Build.Response_Files is
      (Self       : in out Object;
       Format     : Response_File_Format;
       Kind       : Response_File_Kind;
-      Max_Length : Project.Attribute.Object;
-      Switches   : Project.Attribute.Object);
+      Max_Length : Natural;
+      Switches   : Containers.Source_Value_List);
 
    procedure Register
      (Self      : in out Object;
@@ -74,6 +74,8 @@ private
 
       Resp_File_Switches  : Build.Command_Line.Args_Vector.Vector;
    end record;
+
+   procedure Close (Self : in out Object);
 
    procedure Create_Linker
      (Self     : in out Object;

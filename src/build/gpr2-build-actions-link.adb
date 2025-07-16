@@ -808,9 +808,17 @@ package body GPR2.Build.Actions.Link is
                        Self.View.Attribute (PRA.Linker.Response_File_Format);
             A_RFS  : constant Project.Attribute.Object :=
                        Self.View.Attribute (PRA.Linker.Response_File_Switches);
+            RFS    : constant Containers.Source_Value_List :=
+                       (if A_RFS.Is_Defined
+                        then A_RFS.Values
+                        else Containers.Empty_Source_Value_List);
             A_CLML : constant Project.Attribute.Object :=
                        Self.View.Attribute
                          (PRA.Linker.Max_Command_Line_Length);
+            CLML   : constant Natural :=
+                       (if A_CLML.Is_Defined
+                        then Natural'Value (A_CLML.Value.Text)
+                        else 0);
             Format : Response_File_Format := None;
          begin
             if A_RFF.Is_Defined then
@@ -841,7 +849,7 @@ package body GPR2.Build.Actions.Link is
                Format := GNU_Archiver;
             end if;
 
-            Self.Response_Files.Initialize (Format, Linker, A_CLML, A_RFS);
+            Self.Response_Files.Initialize (Format, Linker, CLML, RFS);
 
             declare
                Needs_Formating : constant Boolean :=

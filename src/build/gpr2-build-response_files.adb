@@ -36,6 +36,21 @@ package body GPR2.Build.Response_Files is
       return False;
    end Check_Length;
 
+   -----------
+   -- Close --
+   -----------
+
+   procedure Close (Self : in out Object) is
+   begin
+      if Self.Has_Primary_Response_File then
+         GOF.Close (Self.Primary_FD);
+      end if;
+
+      if Self.Has_Secondary_Response_File then
+         GOF.Close (Self.Secondary_FD);
+      end if;
+   end Close;
+
    ------------
    -- Create --
    ------------
@@ -52,6 +67,8 @@ package body GPR2.Build.Response_Files is
          when Unknown =>
             null;
       end case;
+
+      Self.Close;
    end Create;
 
    ---------------------
@@ -106,7 +123,7 @@ package body GPR2.Build.Response_Files is
                              else
                                (if Self.Resp_File_Switches.Is_Empty
                                 then ""
-                                else Self.Resp_File_Switches.First_Element));
+                                else Self.Resp_File_Switches.Last_Element));
    begin
       --  Do not create a response file if it would result in a longer command
       --  line length.
@@ -220,25 +237,11 @@ package body GPR2.Build.Response_Files is
      (Self       : in out Object;
       Format     : Response_File_Format;
       Kind       : Response_File_Kind;
-      Max_Length : Project.Attribute.Object;
-      Switches   : Project.Attribute.Object)
+      Max_Length : Natural;
+      Switches   : Containers.Source_Value_List)
    is
 
       function Define_Switches return Build.Command_Line.Args_Vector.Vector;
-      function Define_Max_Length return Natural;
-
-      -----------------------
-      -- Define_Max_Length --
-      -----------------------
-
-      function Define_Max_Length return Natural is
-      begin
-         if Max_Length.Is_Defined then
-            return Integer'Value (Max_Length.Value.Text);
-         end if;
-
-         return 0;
-      end Define_Max_Length;
 
       ---------------------
       -- Define_Switches --
@@ -248,11 +251,9 @@ package body GPR2.Build.Response_Files is
       is
          V : Build.Command_Line.Args_Vector.Vector;
       begin
-         if Switches.Is_Defined then
-            for Val of Switches.Values loop
-               V.Append (Val.Text);
-            end loop;
-         end if;
+         for Val of Switches loop
+            V.Append (Val.Text);
+         end loop;
 
          return V;
       end Define_Switches;
@@ -260,7 +261,7 @@ package body GPR2.Build.Response_Files is
    begin
       Self.Format              := Format;
       Self.Kind                := Kind;
-      Self.Max_Cmd_Line_Length := Define_Max_Length;
+      Self.Max_Cmd_Line_Length := Max_Length;
       Self.Resp_File_Switches  := Define_Switches;
    end Initialize;
 

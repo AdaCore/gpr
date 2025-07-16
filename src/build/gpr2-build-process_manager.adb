@@ -763,7 +763,9 @@ package body GPR2.Build.Process_Manager is
          end if;
       end loop;
 
-      Append (Result, "}");
+      if not Command.Is_Empty then
+         Append (Result, "}");
+      end if;
 
       return -Result;
    end Image_RF;

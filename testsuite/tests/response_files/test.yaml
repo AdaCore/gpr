@@ -1,0 +1,5 @@
+description:
+    check that response file content and command line are as expected
+driver: build_and_run
+project_file: prj
+main: main

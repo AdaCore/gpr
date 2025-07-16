@@ -162,7 +162,9 @@ package body GPR2.Build.Command_Line is
       --  the response file or needs to be on the command line.
       if not Clear_Other then
          for Arg of Self.Args_By_Kind (Other) loop
-            New_Cmd_Line.Append (Arg);
+            if not New_Cmd_Line.Contains (Arg) then
+               New_Cmd_Line.Append (Arg);
+            end if;
          end loop;
       end if;
 

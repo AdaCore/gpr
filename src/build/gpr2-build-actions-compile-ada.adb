@@ -258,12 +258,6 @@ package body GPR2.Build.Actions.Compile.Ada is
             A_RFF      : constant Project.Attribute.Object :=
                            Self.View.Attribute
                              (PRA.Compiler.Response_File_Format, Lang_Index);
-            A_RFS      : constant Project.Attribute.Object :=
-                           Self.View.Attribute
-                             (PRA.Compiler.Response_File_Switches, Lang_Index);
-            A_CLML     : constant Project.Attribute.Object :=
-                           Self.View.Attribute
-                             (PRA.Compiler.Max_Command_Line_Length);
             Format     : Response_File_Format := None;
          begin
             if A_RFF.Is_Defined then
@@ -285,8 +279,25 @@ package body GPR2.Build.Actions.Compile.Ada is
             end if;
 
             if Format = GCC_GNU then
-               Self.Response_Files.Initialize
-                 (Format, Compiler, A_CLML, A_RFS);
+               declare
+                  A_RFS      : constant Project.Attribute.Object :=
+                                 Self.View.Attribute
+                                   (PRA.Compiler.Response_File_Switches,
+                                    Lang_Index);
+                  RFS        : constant Containers.Source_Value_List :=
+                                 (if A_RFS.Is_Defined
+                                  then A_RFS.Values
+                                  else Containers.Empty_Source_Value_List);
+                  A_CLML     : constant Project.Attribute.Object :=
+                                 Self.View.Attribute
+                                   (PRA.Compiler.Max_Command_Line_Length);
+                  CLML       : constant Natural :=
+                                 (if A_CLML.Is_Defined
+                                  then Natural'Value (A_CLML.Value.Text)
+                                  else 0);
+               begin
+                  Self.Response_Files.Initialize (Format, Compiler, CLML, RFS);
+               end;
 
                declare
                   Resp_File : constant Tree_Db.Temp_File :=
