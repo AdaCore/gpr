@@ -1,0 +1,7 @@
+with "kernel_core.gpr";
+
+project Kernel is
+
+   for Source_Dirs use ("src");
+
+end Kernel;
