@@ -55,11 +55,24 @@ package body Test_Helper is
             end;
             First := False;
          else
-            if GNATCOLL.Utils.Ends_With (Arg, "" & ASCII.LF) then
-               Append (Result, Arg (Arg'First .. Arg'Last - 1) & "<LF>");
-            else
-               Append (Result, Arg);
-            end if;
+            declare
+               Res     : constant GNATCOLL.Utils.Unbounded_String_Array :=
+                           GNATCOLL.Utils.Split
+                             (Str => Arg,
+                              On  => GNAT.OS_Lib.Directory_Separator);
+               New_Arg : constant String :=
+                           (if Res'Length > 1
+                            then "@path_to_file:" & To_String (Res (Res'Last))
+                            else Arg);
+            begin
+               if GNATCOLL.Utils.Ends_With (New_Arg, "" & ASCII.LF) then
+                  Append
+                    (Result, New_Arg (New_Arg'First .. New_Arg'Last - 1)
+                     & "<LF>");
+               else
+                  Append (Result, New_Arg);
+               end if;
+            end;
          end if;
       end loop;
 

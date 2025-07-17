@@ -219,7 +219,7 @@ Response file @primary : {}
 [ Test case 44 ] - [ Response File : GCC_GNU - LINKER - 1 - Encapsulated ]
 random_driver -a -b foo.o bar.o -c -d
 random_driver -a -b @/secondary
-Response file @secondary : {-rfswitch<LF><at>/primary<LF>-c<LF>-d<LF>}
+Response file @secondary : {-rfswitch<LF><at>@path_to_file:primary<LF>-c<LF>-d<LF>}
 Response file @primary : {INPUT ("foo.o"<LF>"bar.o"<LF>)<LF>}
 [ Test case 45 ] - [ Response File : GCC_OBJECT_LIST - LINKER - 0 ]
 random_driver -a -b foo.o bar.o -c -d
@@ -239,7 +239,7 @@ Response file @primary : {}
 [ Test case 48 ] - [ Response File : GCC_OBJECT_LIST - LINKER - 1 - Encapsulated ]
 random_driver -a -b foo.o bar.o -c -d
 random_driver -a -b @/secondary
-Response file @secondary : {-rfswitch<LF><at>/primary<LF>-c<LF>-d<LF>}
+Response file @secondary : {-rfswitch<LF><at>@path_to_file:primary<LF>-c<LF>-d<LF>}
 Response file @primary : {foo.o<LF>bar.o<LF>}
 [ Test case 49 ] - [ Response File : GCC_OPTION_LIST - LINKER - 0 ]
 random_driver -a -b foo.o bar.o -c -d
@@ -259,7 +259,7 @@ Response file @primary : {}
 [ Test case 52 ] - [ Response File : GCC_OPTION_LIST - LINKER - 1 - Encapsulated ]
 random_driver -a -b foo.o bar.o -c -d
 random_driver -a -b @/secondary
-Response file @secondary : {-rfswitch<LF><at>/primary<LF>-c<LF>-d<LF>}
+Response file @secondary : {-rfswitch<LF><at>@path_to_file:primary<LF>-c<LF>-d<LF>}
 Response file @primary : {foo.o<LF>bar.o<LF>}
 [ Test case 53 ] - [ Response File : GNU_ARCHIVER - LINKER - 0 ]
 random_driver -a -b foo.o bar.o -c -d

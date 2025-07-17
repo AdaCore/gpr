@@ -262,7 +262,6 @@ class BaseDriver(DiffTestDriver):
             ReplacePath(gcc_install, replacement="<gcc>"),
             Substitute("c:<gcc>", replacement="<gcc>"),
             Substitute("\\", "/"),
-            Substitute("//", "/"),
             ReplacePath("C:/", "/"),
             Substitute(".exe", ""),
             Substitute(gcc_version, "(gcc-version)"),
