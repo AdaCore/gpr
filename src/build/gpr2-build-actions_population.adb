@@ -1277,6 +1277,62 @@ package body GPR2.Build.Actions_Population is
             Sorted_Libs.Append (Libs_Cache.Element (Id));
          end loop;
 
+         --  Check if we have non-ada objects that will require an archive
+         --  before the final link
+
+         Non_Ada_Archive_Loop :
+         for V of Closure loop
+            --  Add the non-Ada objects as dependencies
+
+            for Src of V.Sources loop
+               Skip := False;
+               Direct_Import := False;
+
+               if Src.Has_Units
+                 or else not Src.Is_Compilable
+                 or else Src.Kind /= S_Body
+               then
+                  Skip := True;
+               end if;
+
+               for Main of Actual_Mains loop
+                  if Src.Path_Name = Main.Source then
+                     --  Don't include mains in the closure of another main
+                     Skip := True;
+                  end if;
+               end loop;
+
+               if not Skip then
+                  declare
+                     Attr : constant Project.Attribute.Object :=
+                              Src.Owning_View.Attribute
+                                (PRA.Linker.Unconditional_Linking,
+                                 PAI.Create (Src.Language));
+                  begin
+                     Direct_Import := Name_Type (Attr.Value.Text) = "True";
+                  end;
+               end if;
+
+               if not Skip then
+                  if not Direct_Import then
+                     --  Need to create an intermediate library so that
+                     --  foreign objects can be ignored by the linker
+                     --  if no symbol is used from them. Else the linker
+                     --  uses all objects that are on the command line.
+
+                     Archive.Initialize
+                       (Kind     => Build.Actions.Link.Global_Archive,
+                        Context  => View);
+
+                     if not Tree_Db.Add_Action (Archive) then
+                        return False;
+                     end if;
+
+                     exit Non_Ada_Archive_Loop;
+                  end if;
+               end if;
+            end loop;
+         end loop Non_Ada_Archive_Loop;
          --  Process the mains one by one
 
          for Main of Actual_Mains loop
@@ -1429,6 +1485,11 @@ package body GPR2.Build.Actions_Population is
                      True);
                end Add_Archive_Table_List_Action;
             begin
+               if Archive.Is_Defined then
+                  Tree_Db.Add_Input
+                    (Link (Idx).UID, Archive.Output, True);
+               end if;
+
                for Lib of Sorted_Libs loop
                   Tree_Db.Add_Input
                     (Link (Idx).UID, Lib.Final_Link_Action.Output, True);
@@ -1551,25 +1612,6 @@ package body GPR2.Build.Actions_Population is
                end if;
 
                if not Skip then
-                  if not Direct_Import and then not Archive.Is_Defined then
-                     --  Need to create an intermediate library so that
-                     --  foreign objects can be ignored by the linker
-                     --  if no symbol is used from them. Else the linker
-                     --  uses all objects that are on the command line.
-
-                     Archive.Initialize
-                       (Kind     => Build.Actions.Link.Global_Archive,
-                        Context  => View);
-
-                     if not Tree_Db.Add_Action (Archive) then
-                        return False;
-                     end if;
-
-                     for J in Link'Range loop
-                        Tree_Db.Add_Input (Link (J).UID, Archive.Output, True);
-                     end loop;
-                  end if;
-
                   Comp.Initialize (Src);
 
                   if not Tree_Db.Add_Action (Comp) then
