@@ -20,8 +20,8 @@ package body GPR2.Build.Command_Line is
    procedure Add_Argument
      (Self : in out Object;
       Arg  : String;
-      Kind : Arg_Kind       := Other;
-      Mode : Signature_Mode := In_Signature) is
+      Mode : Signature_Mode := In_Signature;
+      Kind : Arg_Kind       := Other) is
    begin
       Self.Cmd_Line.Append (Arg);
       Self.Total_Length := Self.Total_Length + 1 + Arg'Length;
@@ -33,15 +33,15 @@ package body GPR2.Build.Command_Line is
    procedure Add_Argument
      (Self : in out Object;
       Arg  : Path_Name.Object;
-      Kind : Arg_Kind       := Other;
-      Mode : Signature_Mode := In_Signature)
+      Mode : Signature_Mode := In_Signature;
+      Kind : Arg_Kind       := Other)
    is
       Rel : constant Filename_Type := Arg.Relative_Path (Self.Cwd);
    begin
       if Rel'Length < Arg.Value'Length then
-         Self.Add_Argument (String (Rel), Kind, Mode);
+         Self.Add_Argument (String (Rel), Mode, Kind);
       else
-         Self.Add_Argument (Arg.String_Value, Kind, Mode);
+         Self.Add_Argument (Arg.String_Value, Mode, Kind);
       end if;
    end Add_Argument;
 

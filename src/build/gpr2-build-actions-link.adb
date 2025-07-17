@@ -171,7 +171,7 @@ package body GPR2.Build.Actions.Link is
                             (Path.Relative_Path (Self.Working_Directory)));
                   end;
                else
-                  Cmd_Line.Add_Argument (Arg, Mode => Mode);
+                  Cmd_Line.Add_Argument (Arg, Mode);
                end if;
             else
                declare
@@ -181,9 +181,9 @@ package body GPR2.Build.Actions.Link is
                               Self.Ctxt.Dir_Name.Value);
                begin
                   if Full.Exists then
-                     Cmd_Line.Add_Argument (Full, Mode => Mode);
+                     Cmd_Line.Add_Argument (Full, Mode);
                   else
-                     Cmd_Line.Add_Argument (Arg, Mode => Mode);
+                     Cmd_Line.Add_Argument (Arg, Mode);
                   end if;
                end;
             end if;
@@ -427,8 +427,8 @@ package body GPR2.Build.Actions.Link is
       for Obj of Objects loop
          Cmd_Line.Add_Argument
            (Artifacts.Files.Object'Class (Obj).Path,
-            Kind => Build.Command_Line.Obj,
-            Mode => Build.Command_Line.Simple);
+            Build.Command_Line.Simple,
+            Build.Command_Line.Obj);
       end loop;
 
       if not Self.Is_Static_Library then
@@ -1381,7 +1381,7 @@ package body GPR2.Build.Actions.Link is
               (Export_File_Switch.Value.Text &
                  String
                  (Symbol_File.Relative_Path (Self.Working_Directory)),
-               Mode => Build.Command_Line.Ignore);
+               Build.Command_Line.Ignore);
          end if;
       end if;
    end Handle_Export_File;

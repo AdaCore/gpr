@@ -217,27 +217,25 @@ package body GPR2.Build.Actions.Compile.Ada is
       if Self.Global_Config_Pragmas.Is_Defined then
          for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
             Cmd_Line.Add_Argument
-              (Attr.Values.Element (J).Text,
-               Mode => Build.Command_Line.Ignore);
+              (Attr.Values.Element (J).Text, Build.Command_Line.Ignore);
          end loop;
 
          Cmd_Line.Add_Argument
            (Attr.Values.Last_Element.Text &
               Self.Global_Config_Pragmas.String_Value,
-            Mode => Build.Command_Line.Ignore);
+            Build.Command_Line.Ignore);
       end if;
 
       if Self.Local_Config_Pragmas.Is_Defined then
          for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
             Cmd_Line.Add_Argument
-              (Attr.Values.Element (J).Text,
-               Mode => Build.Command_Line.Ignore);
+              (Attr.Values.Element (J).Text, Build.Command_Line.Ignore);
          end loop;
 
          Cmd_Line.Add_Argument
            (Attr.Values.Last_Element.Text &
               Self.Local_Config_Pragmas.String_Value,
-            Mode => Build.Command_Line.Ignore);
+            Build.Command_Line.Ignore);
       end if;
    end Compute_Command;
 

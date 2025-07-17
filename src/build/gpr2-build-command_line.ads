@@ -45,14 +45,14 @@ package GPR2.Build.Command_Line is
    procedure Add_Argument
      (Self : in out Object;
       Arg  : String;
-      Kind : Arg_Kind       := Other;
-      Mode : Signature_Mode := In_Signature);
+      Mode : Signature_Mode := In_Signature;
+      Kind : Arg_Kind       := Other);
 
    procedure Add_Argument
      (Self : in out Object;
       Arg  : Path_Name.Object;
-      Kind : Arg_Kind       := Other;
-      Mode : Signature_Mode := In_Signature);
+      Mode : Signature_Mode := In_Signature;
+      Kind : Arg_Kind       := Other);
 
    procedure Add_Env_Variable
      (Self  : in out Object;

@@ -43,18 +43,6 @@ package body GPR2.Build.Actions.Archive_Table_List is
       Cmd_Line.Add_Argument (Self.Archive.Path.String_Value);
    end Compute_Command;
 
-   ----------------------------
-   -- Compute_Response_Files --
-   ----------------------------
-
-   overriding procedure Compute_Response_Files
-     (Self           : in out Object;
-      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
-      Signature_Only : Boolean) is
-   begin
-      null;
-   end Compute_Response_Files;
-
    -----------------------
    -- Compute_Signature --
    -----------------------

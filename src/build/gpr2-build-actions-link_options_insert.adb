@@ -84,24 +84,12 @@ package body GPR2.Build.Actions.Link_Options_Insert is
       if not Signature_Only then
          Cmd_Line.Add_Argument
            (GPR_Section & "=" & String (Options_File.Simple_Name),
-            Mode => GPR2.Build.Command_Line.Ignore);
+            GPR2.Build.Command_Line.Ignore);
       end if;
 
       Cmd_Line.Add_Argument (Self.Input_Object_File.Path);
       Cmd_Line.Add_Argument (Self.Output_Object_File.Path);
    end Compute_Command;
-
-   ----------------------------
-   -- Compute_Response_Files --
-   ----------------------------
-
-   overriding procedure Compute_Response_Files
-     (Self           : in out Object;
-      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
-      Signature_Only : Boolean) is
-   begin
-      null;
-   end Compute_Response_Files;
 
    -----------------------
    -- Compute_Signature --

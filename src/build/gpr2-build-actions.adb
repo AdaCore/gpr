@@ -61,6 +61,18 @@ package body GPR2.Build.Actions is
       Self.Tmp_Files.Clear;
    end Cleanup_Temp_Files;
 
+   ----------------------------
+   -- Compute_Response_Files --
+   ----------------------------
+
+   procedure Compute_Response_Files
+     (Self           : in out Object;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean) is
+   begin
+      null;
+   end Compute_Response_Files;
+
    -----------------
    -- Db_Filename --
    -----------------

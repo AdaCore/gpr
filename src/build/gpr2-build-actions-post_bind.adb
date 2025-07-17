@@ -115,18 +115,6 @@ package body GPR2.Build.Actions.Post_Bind is
       Add_Attr (PRA.Compiler.Trailing_Required_Switches, Ada_Lang, True);
    end Compute_Command;
 
-   ----------------------------
-   -- Compute_Response_Files --
-   ----------------------------
-
-   overriding procedure Compute_Response_Files
-     (Self           : in out Object;
-      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
-      Signature_Only : Boolean) is
-   begin
-      null;
-   end Compute_Response_Files;
-
    -----------------------
    -- Compute_Signature --
    -----------------------

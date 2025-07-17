@@ -91,11 +91,11 @@ package body GPR2.Build.Actions.Compile is
          if Is_List then
             for Val of Attr.Values loop
                if Val.Text'Length > 0 then
-                  Cmd_Line.Add_Argument (Val.Text, Mode => Mode);
+                  Cmd_Line.Add_Argument (Val.Text, Mode);
                end if;
             end loop;
          else
-            Cmd_Line.Add_Argument (Attr.Value.Text, Mode => Mode);
+            Cmd_Line.Add_Argument (Attr.Value.Text, Mode);
          end if;
       end Add_Attr;
 
@@ -442,7 +442,7 @@ package body GPR2.Build.Actions.Compile is
 
                Cmd_Line.Add_Argument
                  ("-specs=" & String (Path_Name.Simple_Name (Spec_File.Path)),
-                  Mode => Build.Command_Line.Ignore);
+                  Build.Command_Line.Ignore);
             end;
 
             return;
@@ -564,11 +564,11 @@ package body GPR2.Build.Actions.Compile is
 
          for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
             Cmd_Line.Add_Argument
-              (Attr.Values.Element (J).Text, Mode => Mode);
+              (Attr.Values.Element (J).Text, Mode);
          end loop;
 
          Cmd_Line.Add_Argument
-           (Attr.Values.Last_Element.Text & Arg, Mode => Mode);
+           (Attr.Values.Last_Element.Text & Arg, Mode);
       end Add_Options_With_Arg;
 
       Driver_Attr : constant GPR2.Project.Attribute.Object :=
@@ -702,8 +702,7 @@ package body GPR2.Build.Actions.Compile is
                True);
          else
             Cmd_Line.Add_Argument
-              (Self.Src.Path_Name.String_Value,
-               Mode => Build.Command_Line.Simple);
+              (Self.Src.Path_Name.String_Value, Build.Command_Line.Simple);
          end if;
 
          if Index /= No_Index then

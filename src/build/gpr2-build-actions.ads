@@ -154,7 +154,7 @@ package GPR2.Build.Actions is
    procedure Compute_Response_Files
      (Self           : in out Object;
       Cmd_Line       : in out GPR2.Build.Command_Line.Object;
-      Signature_Only : Boolean) is abstract;
+      Signature_Only : Boolean);
    --  Return the command line and response files corresponding to the action
    --  If Signature_Only is set, then no temp file should be generated, and
    --  only the arguments that are part of the signature are to be computed.
@@ -345,6 +345,6 @@ private
    function UID_Artifact (Self : Object'Class)
      return GPR2.Build.Artifacts.Key_Value.Object is
        (GPR2.Build.Artifacts.Key_Value.Create
-         (Key => "UID_Artifact", Value => Self.UID.Serialize));
+          (Key => "UID_Artifact", Value => Self.UID.Serialize));
 
 end GPR2.Build.Actions;
