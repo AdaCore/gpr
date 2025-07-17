@@ -30,8 +30,8 @@ package body GPR2.Build.Response_Files is
          return True;
       end if;
 
-      Self.Primary_FD   := GOF.Invalid_FD;
-      Self.Secondary_FD := GOF.Invalid_FD;
+      Self.Has_Primary_Content   := False;
+      Self.Has_Secondary_Content := False;
 
       return False;
    end Check_Length;
@@ -279,10 +279,12 @@ package body GPR2.Build.Response_Files is
          Self.Secondary_FD   := FD;
          Self.Secondary_Path := +Path;
          Self.Secondary_Content.Append (String (Path));
+         Self.Has_Secondary_Content := True;
       else
          Self.Primary_FD   := FD;
          Self.Primary_Path := +Path;
          Self.Primary_Content.Append (String (Path));
+         Self.Has_Primary_Content := True;
       end if;
    end Register;
 

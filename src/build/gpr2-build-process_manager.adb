@@ -969,12 +969,12 @@ package body GPR2.Build.Process_Manager is
             then
                Display (Job.Command_Line.Argument_List);
 
-               if Job.Response_File.Has_Secondary_Response_File then
+               if Job.Response_File.Has_Secondary_Content then
                   Display_RF
                     (Job.Response_File.Secondary_Response_File_Content);
                end if;
 
-               if Job.Response_File.Has_Primary_Response_File then
+               if Job.Response_File.Has_Primary_Content then
                   Display_RF (Job.Response_File.Primary_Response_File_Content);
                end if;
             else
