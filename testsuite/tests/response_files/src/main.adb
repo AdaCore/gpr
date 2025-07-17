@@ -16,17 +16,6 @@ function Main return Integer is
    use GPR2.Build;
    use type Response_Files.Response_File_Kind;
 
-   Primary_Name   : constant String :=
-                      GNATCOLL.Utils.Executable_Location & "primary";
-   Primary_FD     : constant GNATCOLL.OS.FS.File_Descriptor :=
-                      GNATCOLL.OS.FS.Open
-                        (Primary_Name, GNATCOLL.OS.FS.Write_Mode);
-   Secondary_Name : constant String :=
-                      GNATCOLL.Utils.Executable_Location & "secondary";
-   Secondary_FD   : constant GNATCOLL.OS.FS.File_Descriptor :=
-                      GNATCOLL.OS.FS.Open
-                        (Secondary_Name, GNATCOLL.OS.FS.Write_Mode);
-
    procedure Run_Test_Case
      (Format       : Response_Files.Response_File_Format;
       Kind         : Response_Files.Response_File_Kind;
@@ -43,6 +32,17 @@ function Main return Integer is
    is
       RF       : Response_Files.Object;
       Cmd_Line : Command_Line.Object;
+
+      Primary_Name   : constant String :=
+                         GNATCOLL.Utils.Executable_Location & "primary";
+      Primary_FD     : constant GNATCOLL.OS.FS.File_Descriptor :=
+                         GNATCOLL.OS.FS.Open
+                           (Primary_Name, GNATCOLL.OS.FS.Write_Mode);
+      Secondary_Name : constant String :=
+                         GNATCOLL.Utils.Executable_Location & "secondary";
+      Secondary_FD   : constant GNATCOLL.OS.FS.File_Descriptor :=
+                         GNATCOLL.OS.FS.Open
+                           (Secondary_Name, GNATCOLL.OS.FS.Write_Mode);
    begin
       Test_Helper.New_Test_Case
         ("Response File : " & Format'Img
@@ -77,7 +77,6 @@ function Main return Integer is
         (Test_Helper.Image_RF (RF.Secondary_Response_File_Content));
       Ada.Text_IO.Put_Line
         (Test_Helper.Image_RF (RF.Primary_Response_File_Content));
-
    end Run_Test_Case;
 
    RFS      : Containers.Source_Value_List;
