@@ -104,6 +104,9 @@ package GPR2.Containers is
 
    subtype Source_Value_List is Source_Value_Type_List.Vector;
 
+   Empty_Source_Value_List : Source_Value_List renames
+                               Source_Value_Type_List.Empty_Vector;
+
    function Image (Values : Source_Value_List) return String;
    --  Returns a string representation of the list of values
 

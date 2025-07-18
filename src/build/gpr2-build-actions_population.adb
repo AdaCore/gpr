@@ -915,7 +915,8 @@ package body GPR2.Build.Actions_Population is
         View.Is_Library_Standalone
         and then (View.Is_Static_Library
                   or else (Response_File.Is_Defined
-                           and then Response_File.Value.Text = "None"))
+                           and then Ada.Characters.Handling.To_Lower
+                             (Response_File.Value.Text) = "none"))
         and then Partial_Linker.Is_Defined
         and then (Partial_Linker.Values.Length > 0
                   and then Partial_Linker.Values.First_Element.Text /= "");

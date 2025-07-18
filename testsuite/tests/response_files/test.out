@@ -1,0 +1,426 @@
+===============================================================================================================================================================
+===== No differenciation between response file format for compilation command line, the creation of the response file is the responsibility of the action =====
+===============================================================================================================================================================
+[ Test case 1 ] - [ Response File : NONE - COMPILER - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 2 ] - [ Response File : NONE - COMPILER - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver @/primary
+
+Response file @primary : {-a<LF>-b<LF>foo.o<LF>bar.o<LF>-c<LF>-d<LF>}
+[ Test case 3 ] - [ Response File : NONE - COMPILER - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 4 ] - [ Response File : NONE - COMPILER - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver @/primary
+Response file @secondary : {}
+Response file @primary : {-a<LF>-b<LF>foo.o<LF>bar.o<LF>-c<LF>-d<LF>}
+[ Test case 5 ] - [ Response File : GNU - COMPILER - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 6 ] - [ Response File : GNU - COMPILER - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver @/primary
+
+Response file @primary : {-a<LF>-b<LF>foo.o<LF>bar.o<LF>-c<LF>-d<LF>}
+[ Test case 7 ] - [ Response File : GNU - COMPILER - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 8 ] - [ Response File : GNU - COMPILER - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver @/primary
+Response file @secondary : {}
+Response file @primary : {-a<LF>-b<LF>foo.o<LF>bar.o<LF>-c<LF>-d<LF>}
+[ Test case 9 ] - [ Response File : OBJECT_LIST - COMPILER - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 10 ] - [ Response File : OBJECT_LIST - COMPILER - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver @/primary
+
+Response file @primary : {-a<LF>-b<LF>foo.o<LF>bar.o<LF>-c<LF>-d<LF>}
+[ Test case 11 ] - [ Response File : OBJECT_LIST - COMPILER - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 12 ] - [ Response File : OBJECT_LIST - COMPILER - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver @/primary
+Response file @secondary : {}
+Response file @primary : {-a<LF>-b<LF>foo.o<LF>bar.o<LF>-c<LF>-d<LF>}
+[ Test case 13 ] - [ Response File : GCC_GNU - COMPILER - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 14 ] - [ Response File : GCC_GNU - COMPILER - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver @/primary
+
+Response file @primary : {-a<LF>-b<LF>foo.o<LF>bar.o<LF>-c<LF>-d<LF>}
+[ Test case 15 ] - [ Response File : GCC_GNU - COMPILER - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 16 ] - [ Response File : GCC_GNU - COMPILER - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver @/primary
+Response file @secondary : {}
+Response file @primary : {-a<LF>-b<LF>foo.o<LF>bar.o<LF>-c<LF>-d<LF>}
+[ Test case 17 ] - [ Response File : GCC_OBJECT_LIST - COMPILER - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 18 ] - [ Response File : GCC_OBJECT_LIST - COMPILER - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver @/primary
+
+Response file @primary : {-a<LF>-b<LF>foo.o<LF>bar.o<LF>-c<LF>-d<LF>}
+[ Test case 19 ] - [ Response File : GCC_OBJECT_LIST - COMPILER - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 20 ] - [ Response File : GCC_OBJECT_LIST - COMPILER - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver @/primary
+Response file @secondary : {}
+Response file @primary : {-a<LF>-b<LF>foo.o<LF>bar.o<LF>-c<LF>-d<LF>}
+[ Test case 21 ] - [ Response File : GCC_OPTION_LIST - COMPILER - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 22 ] - [ Response File : GCC_OPTION_LIST - COMPILER - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver @/primary
+
+Response file @primary : {-a<LF>-b<LF>foo.o<LF>bar.o<LF>-c<LF>-d<LF>}
+[ Test case 23 ] - [ Response File : GCC_OPTION_LIST - COMPILER - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 24 ] - [ Response File : GCC_OPTION_LIST - COMPILER - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver @/primary
+Response file @secondary : {}
+Response file @primary : {-a<LF>-b<LF>foo.o<LF>bar.o<LF>-c<LF>-d<LF>}
+[ Test case 25 ] - [ Response File : GNU_ARCHIVER - COMPILER - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 26 ] - [ Response File : GNU_ARCHIVER - COMPILER - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver @/primary
+
+Response file @primary : {-a<LF>-b<LF>foo.o<LF>bar.o<LF>-c<LF>-d<LF>}
+[ Test case 27 ] - [ Response File : GNU_ARCHIVER - COMPILER - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 28 ] - [ Response File : GNU_ARCHIVER - COMPILER - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver @/primary
+Response file @secondary : {}
+Response file @primary : {-a<LF>-b<LF>foo.o<LF>bar.o<LF>-c<LF>-d<LF>}
+[ Test case 29 ] - [ Response File : NONE - LINKER - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 30 ] - [ Response File : NONE - LINKER - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b <at>/primary -c -d
+
+Response file @primary : {foo.o<LF>bar.o<LF>}
+[ Test case 31 ] - [ Response File : NONE - LINKER - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 32 ] - [ Response File : NONE - LINKER - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b <at>/secondary -c -d
+Response file @secondary : {}
+Response file @primary : {foo.o<LF>bar.o<LF>}
+[ Test case 33 ] - [ Response File : GNU - LINKER - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 34 ] - [ Response File : GNU - LINKER - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b <at>/primary -c -d
+
+Response file @primary : {INPUT ("foo.o"<LF>"bar.o"<LF>)<LF>}
+[ Test case 35 ] - [ Response File : GNU - LINKER - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 36 ] - [ Response File : GNU - LINKER - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b <at>/secondary -c -d
+Response file @secondary : {}
+Response file @primary : {INPUT ("foo.o"<LF>"bar.o"<LF>)<LF>}
+[ Test case 37 ] - [ Response File : OBJECT_LIST - LINKER - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 38 ] - [ Response File : OBJECT_LIST - LINKER - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b <at>/primary -c -d
+
+Response file @primary : {foo.o<LF>bar.o<LF>}
+[ Test case 39 ] - [ Response File : OBJECT_LIST - LINKER - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 40 ] - [ Response File : OBJECT_LIST - LINKER - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b <at>/secondary -c -d
+Response file @secondary : {}
+Response file @primary : {foo.o<LF>bar.o<LF>}
+[ Test case 41 ] - [ Response File : GCC_GNU - LINKER - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 42 ] - [ Response File : GCC_GNU - LINKER - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b @/primary
+
+Response file @primary : {INPUT ("foo.o"<LF>"bar.o"<LF>)<LF>}
+[ Test case 43 ] - [ Response File : GCC_GNU - LINKER - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 44 ] - [ Response File : GCC_GNU - LINKER - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b @/secondary
+Response file @secondary : {-rfswitch<LF><at>@path_to_file:primary<LF>-c<LF>-d<LF>}
+Response file @primary : {INPUT ("foo.o"<LF>"bar.o"<LF>)<LF>}
+[ Test case 45 ] - [ Response File : GCC_OBJECT_LIST - LINKER - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 46 ] - [ Response File : GCC_OBJECT_LIST - LINKER - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b @/primary
+
+Response file @primary : {foo.o<LF>bar.o<LF>}
+[ Test case 47 ] - [ Response File : GCC_OBJECT_LIST - LINKER - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 48 ] - [ Response File : GCC_OBJECT_LIST - LINKER - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b @/secondary
+Response file @secondary : {-rfswitch<LF><at>@path_to_file:primary<LF>-c<LF>-d<LF>}
+Response file @primary : {foo.o<LF>bar.o<LF>}
+[ Test case 49 ] - [ Response File : GCC_OPTION_LIST - LINKER - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 50 ] - [ Response File : GCC_OPTION_LIST - LINKER - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b @/primary
+
+Response file @primary : {foo.o<LF>bar.o<LF>}
+[ Test case 51 ] - [ Response File : GCC_OPTION_LIST - LINKER - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 52 ] - [ Response File : GCC_OPTION_LIST - LINKER - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b @/secondary
+Response file @secondary : {-rfswitch<LF><at>@path_to_file:primary<LF>-c<LF>-d<LF>}
+Response file @primary : {foo.o<LF>bar.o<LF>}
+[ Test case 53 ] - [ Response File : GNU_ARCHIVER - LINKER - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 54 ] - [ Response File : GNU_ARCHIVER - LINKER - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b @/primary
+
+Response file @primary : {foo.o bar.o}
+[ Test case 55 ] - [ Response File : GNU_ARCHIVER - LINKER - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 56 ] - [ Response File : GNU_ARCHIVER - LINKER - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b @/secondary
+Response file @secondary : {}
+Response file @primary : {foo.o bar.o}
+=========================================================================================
+===== Unknown kind, no response files should be used, raw command line used instead =====
+=========================================================================================
+[ Test case 57 ] - [ Response File : NONE - UNKNOWN - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 58 ] - [ Response File : NONE - UNKNOWN - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 59 ] - [ Response File : NONE - UNKNOWN - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 60 ] - [ Response File : NONE - UNKNOWN - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 61 ] - [ Response File : GNU - UNKNOWN - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 62 ] - [ Response File : GNU - UNKNOWN - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 63 ] - [ Response File : GNU - UNKNOWN - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 64 ] - [ Response File : GNU - UNKNOWN - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 65 ] - [ Response File : OBJECT_LIST - UNKNOWN - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 66 ] - [ Response File : OBJECT_LIST - UNKNOWN - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 67 ] - [ Response File : OBJECT_LIST - UNKNOWN - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 68 ] - [ Response File : OBJECT_LIST - UNKNOWN - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 69 ] - [ Response File : GCC_GNU - UNKNOWN - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 70 ] - [ Response File : GCC_GNU - UNKNOWN - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 71 ] - [ Response File : GCC_GNU - UNKNOWN - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 72 ] - [ Response File : GCC_GNU - UNKNOWN - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 73 ] - [ Response File : GCC_OBJECT_LIST - UNKNOWN - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 74 ] - [ Response File : GCC_OBJECT_LIST - UNKNOWN - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 75 ] - [ Response File : GCC_OBJECT_LIST - UNKNOWN - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 76 ] - [ Response File : GCC_OBJECT_LIST - UNKNOWN - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 77 ] - [ Response File : GCC_OPTION_LIST - UNKNOWN - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 78 ] - [ Response File : GCC_OPTION_LIST - UNKNOWN - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 79 ] - [ Response File : GCC_OPTION_LIST - UNKNOWN - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 80 ] - [ Response File : GCC_OPTION_LIST - UNKNOWN - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 81 ] - [ Response File : GNU_ARCHIVER - UNKNOWN - 0 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 82 ] - [ Response File : GNU_ARCHIVER - UNKNOWN - 1 ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+
+Response file @primary : {}
+[ Test case 83 ] - [ Response File : GNU_ARCHIVER - UNKNOWN - 0 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}
+[ Test case 84 ] - [ Response File : GNU_ARCHIVER - UNKNOWN - 1 - Encapsulated ]
+random_driver -a -b foo.o bar.o -c -d
+random_driver -a -b foo.o bar.o -c -d
+Response file @secondary : {}
+Response file @primary : {}

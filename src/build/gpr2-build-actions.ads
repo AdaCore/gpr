@@ -10,6 +10,7 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 with GPR2.Build.Artifacts.Key_Value;
 with GPR2.Build.Command_Line;
+with GPR2.Build.Response_Files;
 with GPR2.Build.Signature;
 with GPR2.Containers;
 with GPR2.Path_Name;
@@ -150,6 +151,14 @@ package GPR2.Build.Actions is
    --  If Signature_Only is set, then no temp file should be generated, and
    --  only the arguments that are part of the signature are to be computed.
 
+   procedure Compute_Response_Files
+     (Self           : in out Object;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean);
+   --  Return the command line and response files corresponding to the action
+   --  If Signature_Only is set, then no temp file should be generated, and
+   --  only the arguments that are part of the signature are to be computed.
+
    function Pre_Command
      (Self : in out Object) return Boolean;
    --  Pre-processing that should occur before executing the command
@@ -231,6 +240,9 @@ package GPR2.Build.Actions is
 
    function Command_Line (Self : Object) return GPR2.Build.Command_Line.Object;
 
+   function Response_File
+     (Self : Object) return GPR2.Build.Response_Files.Object;
+
    ---------------------------
    -- Temp files management --
    ---------------------------
@@ -260,16 +272,18 @@ private
    use type GPR2.View_Ids.View_Id;
 
    type Object is abstract tagged record
-      Tree       : access Tree_Db.Object;
+      Tree          : access Tree_Db.Object;
       --  Owning Tree
-      Signature  : GPR2.Build.Signature.Object;
+      Signature     : GPR2.Build.Signature.Object;
       --  Stored signature for the action
-      Tmp_Files  : GPR2.Containers.Filename_Set;
+      Tmp_Files     : GPR2.Containers.Filename_Set;
       --  List of tmp files to be cleaned up
-      Deactivated : Boolean := False;
+      Deactivated   : Boolean := False;
       --  Set when the action is deactivated
-      Cmd_Line    : GPR2.Build.Command_Line.Object;
+      Cmd_Line      : GPR2.Build.Command_Line.Object;
       --  Command line used to run the action. Used also in the signature
+      Response_Files : GPR2.Build.Response_Files.Object;
+      --  Response files used in the command line
    end record;
 
    function "<" (L, R : Action_Id'Class) return Boolean is
@@ -319,6 +333,10 @@ private
    function Command_Line (Self : Object) return GPR2.Build.Command_Line.Object
    is (Self.Cmd_Line);
 
+   function Response_File
+     (Self : Object) return GPR2.Build.Response_Files.Object
+   is (Self.Response_Files);
+
    function Saved_Stdout (Self : Object'Class) return Unbounded_String is
      (Self.Signature.Stdout);
    function Saved_Stderr (Self : Object'Class) return Unbounded_String is
@@ -327,6 +345,6 @@ private
    function UID_Artifact (Self : Object'Class)
      return GPR2.Build.Artifacts.Key_Value.Object is
        (GPR2.Build.Artifacts.Key_Value.Create
-         (Key => "UID_Artifact", Value => Self.UID.Serialize));
+          (Key => "UID_Artifact", Value => Self.UID.Serialize));
 
 end GPR2.Build.Actions;

@@ -103,6 +103,11 @@ package GPR2.Build.Actions.Link is
       Cmd_Line       : in out GPR2.Build.Command_Line.Object;
       Signature_Only : Boolean);
 
+   overriding procedure Compute_Response_Files
+     (Self           : in out Object;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean);
+
    overriding function Pre_Command
      (Self : in out Object) return Boolean;
 
@@ -147,7 +152,7 @@ private
 
    type Object is new Actions.Object with record
       Is_Library     : Boolean := False;
-      Is_Static      : Boolean := True;
+      Is_Static      : Boolean := False;
       In_Obj         : Boolean := False;
 
       Executable     : Artifacts.Files.Object;
@@ -201,12 +206,6 @@ private
 
    function Check_Linker_Driver (Self : Object) return Boolean;
    --  True if the linker driver is found
-
-   procedure Create_Response_File
-     (Self      : in out Object;
-      Delimiter : String := "");
-   --  Create a reponse file for object Self, where all arguments after
-   --  Delimiter will be put in the response file.
 
    function Is_Library (Self : Object'Class) return Boolean is
      (Self.Is_Library);

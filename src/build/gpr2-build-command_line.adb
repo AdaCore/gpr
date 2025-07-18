@@ -13,31 +13,35 @@ package body GPR2.Build.Command_Line is
 
    use GPR2.Path_Name;
 
-------------------
--- Add_Argument --
-------------------
+   ------------------
+   -- Add_Argument --
+   ------------------
 
    procedure Add_Argument
      (Self : in out Object;
       Arg  : String;
-      Mode : Signature_Mode := In_Signature) is
+      Mode : Signature_Mode := In_Signature;
+      Kind : Arg_Kind       := Other) is
    begin
       Self.Cmd_Line.Append (Arg);
       Self.Total_Length := Self.Total_Length + 1 + Arg'Length;
+      Self.Arg_Length   := Self.Arg_Length + 1 + Arg'Length;
+      Self.Args_By_Kind (Kind).Append (Arg);
       Self.In_Signature.Append (Mode);
    end Add_Argument;
 
    procedure Add_Argument
      (Self : in out Object;
       Arg  : Path_Name.Object;
-      Mode : Signature_Mode := In_Signature)
+      Mode : Signature_Mode := In_Signature;
+      Kind : Arg_Kind       := Other)
    is
       Rel : constant Filename_Type := Arg.Relative_Path (Self.Cwd);
    begin
       if Rel'Length < Arg.Value'Length then
-         Self.Add_Argument (String (Rel), Mode);
+         Self.Add_Argument (String (Rel), Mode, Kind);
       else
-         Self.Add_Argument (Arg.String_Value, Mode);
+         Self.Add_Argument (Arg.String_Value, Mode, Kind);
       end if;
    end Add_Argument;
 
@@ -123,6 +127,50 @@ package body GPR2.Build.Command_Line is
       end if;
    end Filter_Duplicate_Switches;
 
+   ---------------------------------
+   -- Recompute_For_Response_File --
+   ---------------------------------
+
+   procedure Recompute_For_Response_File
+     (Self          : in out Object;
+      Clear_Other   : Boolean;
+      Resp_File_Arg : String;
+      Delimiter     : RF_Delimiter := First_Obj)
+   is
+      New_Cmd_Line : GNATCOLL.OS.Process.Argument_List;
+   begin
+      if Delimiter = First_Obj then
+         --  Put args on the new command line until the first object which will
+         --  be contained in the response file.
+         for Arg of Self.Cmd_Line loop
+            if Self.Args_By_Kind (Obj).Contains (Arg) then
+               exit;
+            end if;
+
+            New_Cmd_Line.Append (Arg);
+         end loop;
+      elsif Delimiter = All_Args then
+         --  All args are inside the response file, just put the driver on the
+         --  new command line.
+         New_Cmd_Line.Append (Self.Cmd_Line.First_Element);
+      end if;
+
+      --  Add the response file as a new arg of the command line
+      New_Cmd_Line.Append (Resp_File_Arg);
+
+      --  Depending on the response file structure, options can be contained in
+      --  the response file or needs to be on the command line.
+      if not Clear_Other then
+         for Arg of Self.Args_By_Kind (Other) loop
+            if not New_Cmd_Line.Contains (Arg) then
+               New_Cmd_Line.Append (Arg);
+            end if;
+         end loop;
+      end if;
+
+      Self.Set_Response_File_Command (New_Cmd_Line);
+   end Recompute_For_Response_File;
+
    ------------
    -- Remove --
    ------------
@@ -143,18 +191,19 @@ package body GPR2.Build.Command_Line is
      (Self : in out Object;
       Arg  : String)
    is
-      procedure Internal (Driver : String);
+      procedure Internal (Arg : String);
 
-      procedure Internal (Driver : String) is
+      procedure Internal (Arg : String) is
       begin
          if Self.Cmd_Line.Is_Empty then
-            Self.Total_Length := Driver'Length;
+            Self.Total_Length := Arg'Length;
          else
-            Self.Total_Length := Self.Total_Length + Driver'Length + 1;
+            Self.Total_Length := Self.Total_Length + Arg'Length + 1;
          end if;
 
-         Self.Cmd_Line.Prepend (Driver);
+         Self.Cmd_Line.Prepend (Arg);
          Self.In_Signature.Prepend (Simple);
+         Self.Args_By_Kind (Driver).Append (Arg);
       end Internal;
    begin
       if GNAT.OS_Lib.Is_Absolute_Path (Arg) then
