@@ -284,8 +284,8 @@ package GPR2.KB is
       return Compiler_Array;
    --  Returns the list of all compilers for given target, or all compilers
    --  for any target when "all" is passed as Target.
-   --  Settings affect the selection status of the compilers, but do not
-   --  exclude any compilers from the resulting list.
+   --  The resulting list of compilers is also influenced by the provided
+   --  settings.
 
    function Configuration
      (Self        : in out Object;
@@ -311,8 +311,8 @@ package GPR2.KB is
    --  Based on the currently selected compilers, check which other compilers
    --  can or cannot be selected by the user.
    --  This is not the case if the resulting selection in Compilers is not a
-   --  supported config (multiple compilers for the same language, set of
-   --  compilers explicitly marked as unsupported in the knowledge base,...).
+   --  supported config (set of compilers explicitly marked as unsupported in
+   --  the knowledge base,...).
 
 private
 

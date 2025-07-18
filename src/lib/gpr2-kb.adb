@@ -31,7 +31,7 @@ package body GPR2.KB is
 
    Match_Trace : constant GNATCOLL.Traces.Trace_Handle :=
                    GNATCOLL.Traces.Create
-                     ("KNOWLEDGE_BASE.MATHCING",
+                     ("KNOWLEDGE_BASE.MATCHING",
                       GNATCOLL.Traces.Off);
 
    No_Compatible_Compilers : exception;
@@ -343,42 +343,34 @@ package body GPR2.KB is
          Continue          : out Boolean)
       is
          New_Comp : Compiler := Comp;
-         C        : Compiler_Lists.Cursor;
          Index    : Count_Type := 1;
       begin
          --  Do nothing if a runtime needs to be specified, as this is only for
          --  interactive use.
 
          if not Runtime_Specified then
-            if Iterator.Filter_Matched /=
-              (Iterator.Filter_Matched'Range => True)
-            then
-               C := First (Iterator.Filters);
-               while Has_Element (C) loop
-                  if not Iterator.Filter_Matched (Index)
-                    and then Filter_Match
-                      (Base, Comp => Comp, Filter => Element (C))
+            if Iterator.Filters.Is_Empty then
+               --  No filters specified, we accept all the available compilers
+               Append (Iterator.Compilers, Comp);
+            else
+               for Filter of Iterator.Filters loop
+                  if Filter_Match (Base, Comp => Comp, Filter => Filter)
                   then
-                     Set_Selection (New_Comp, True);
-                     Iterator.Filter_Matched (Index) := True;
-                     exit;
+                     if not Iterator.Filter_Matched (Index) then
+                        Set_Selection (New_Comp, True);
+                        Iterator.Filter_Matched (Index) := True;
+                     end if;
+
+                     GNATCOLL.Traces.Trace
+                     (Main_Trace,
+                        "Adding compiler to interactive menu "
+                        & To_String (Comp)
+                        & " selected=" & Is_Selected (New_Comp)'Img);
+                     Append (Iterator.Compilers, New_Comp);
                   end if;
 
                   Index := Index + 1;
-                  Next (C);
                end loop;
-            end if;
-
-            --  Ignore compilers from extra directories, unless they have been
-            --  selected because of a --config argument.
-
-            if Is_Selected (New_Comp) or else not From_Extra_Dir then
-               GNATCOLL.Traces.Trace
-                 (Main_Trace,
-                  "Adding compiler to interactive menu "
-                  & To_String (Comp)
-                  & " selected=" & Is_Selected (New_Comp)'Img);
-               Append (Iterator.Compilers, New_Comp);
             end if;
          end if;
 
@@ -464,7 +456,7 @@ package body GPR2.KB is
       end loop;
 
       Iter.Filters := Filters;
-      Foreach_In_Path
+      GPR2.KB.Compiler_Iterator.Foreach_In_Path
         (Self        => Iter,
          Base        => Self,
          On_Target   => Target,
@@ -570,38 +562,36 @@ package body GPR2.KB is
          Continue          : out Boolean)
       is
 
-         C     : Compiler_Lists.Cursor := First (Iterator.Filters);
          Index : Count_Type := 1;
          Ncomp : Compiler;
-         El    : Compiler;
 
          use GPR2.Path_Name;
       begin
-         while Has_Element (C) loop
+         for Filter_Comp of Iterator.Filters loop
             Ncomp := No_Compiler;
-            El := Compiler_Lists.Element (C);
 
             --  A compiler in an "extra_dir" (ie specified on the command line)
             --  can only match if that directory was explicitly specified in
             --  --config. We do not want to find all compilers in /dir if that
             --  directory is not in $PATH
 
-            if (not From_Extra_Dir or else El.Path = Comp.Path)
-              and then Filter_Match (Base, Comp => Comp, Filter => El)
+            if (not From_Extra_Dir or else Filter_Comp.Path = Comp.Path)
+              and then Filter_Match (Base, Comp => Comp, Filter => Filter_Comp)
               and then (not Runtime_Specified
-                         or else El.Runtime_Dir /= Null_Unbounded_String)
+                         or else Filter_Comp.Runtime_Dir /=
+                                 Null_Unbounded_String)
             then
                Ncomp := Comp;
-               if El.Runtime_Dir /= Null_Unbounded_String then
-                  Ncomp.Runtime_Dir := El.Runtime_Dir;
-                  Ncomp.Runtime := El.Runtime;
+               if Filter_Comp.Runtime_Dir /= Null_Unbounded_String then
+                  Ncomp.Runtime_Dir := Filter_Comp.Runtime_Dir;
+                  Ncomp.Runtime := Filter_Comp.Runtime;
                end if;
 
                if not Ncomp.Any_Runtime
                  and then Ncomp.Runtime = Null_Unbounded_String
-                 and then El.Runtime /= Null_Unbounded_String
+                 and then Filter_Comp.Runtime /= Null_Unbounded_String
                then
-                  Ncomp.Runtime := El.Runtime;
+                  Ncomp.Runtime := Filter_Comp.Runtime;
                end if;
 
                Append (Iterator.Compilers, Ncomp);
@@ -611,7 +601,7 @@ package body GPR2.KB is
                   "Saving compiler for possible backtracking: "
                   & To_String (Ncomp)
                   & " (matches --config "
-                  & To_String (El)
+                  & To_String (Filter_Comp)
                   & ")");
 
                if Iterator.Matched (Index) = Compiler_Lists.No_Element then
@@ -650,7 +640,6 @@ package body GPR2.KB is
                end if;
             end if;
             Index := Index + 1;
-            Next (C);
          end loop;
 
          --  Stop at first compiler
@@ -1224,9 +1213,9 @@ package body GPR2.KB is
       return Result;
    end Create_Filter;
 
-   --------------------------------------
-   -- Default_Knowledge_Base_Directory --
-   --------------------------------------
+   ----------------------
+   -- Default_Location --
+   ----------------------
 
    function Default_Location return GPR2.Path_Name.Object is
       use GNATCOLL.VFS;
@@ -1361,19 +1350,6 @@ package body GPR2.KB is
                   "Incompatible target for: " & To_String (Compilers (Idx)));
                goto Next_Compiler;
             end if;
-
-            for Other_Compiler of Compilers loop
-               if Other_Compiler.Language = Compilers (Idx).Language
-                 and then Other_Compiler.Selected
-               then
-                  Compilers (Idx).Selectable := False;
-                  Trace
-                    (Main_Trace,
-                     "Already selected language for: "
-                     & To_String (Compilers (Idx)));
-                  goto Next_Compiler;
-               end if;
-            end loop;
 
             --  We need to check if the resulting selection would
             --  lead to a supported configuration.

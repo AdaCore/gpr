@@ -53,12 +53,9 @@ procedure Main is
      (KB            : in out GPR2.KB.Object;
       Compiler_Name : String)
    is
-      --  Result       : Boolean := True;
       Found        : Boolean := False;
       Config_Log   : Log.Object;
-      Descriptions : GPC.Description_Set :=
-        (Positive'First => GPC.Create
-           (Language => +"Ada"));
+      Descriptions : GPC.Description_Set := (1 .. 0 => <>);
       Compilers    : GPR2.KB.Compiler_Array := KB.All_Compilers
         (Settings => Descriptions,
          Target   => "fake-target",

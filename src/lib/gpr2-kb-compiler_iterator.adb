@@ -235,7 +235,7 @@ package body GPR2.KB.Compiler_Iterator is
             declare
                Config : constant CDM.Constant_Reference_Type :=
                           CDM.Constant_Reference (Base.Compilers, C);
-               F      : constant String :=
+               Exec   : constant String :=
                           GNAT.OS_Lib.Normalize_Pathname
                             (Name           => To_String (Config.Executable),
                              Directory      => Directory,
@@ -243,7 +243,7 @@ package body GPR2.KB.Compiler_Iterator is
                              Case_Sensitive => On_Windows)
                           & Exec_Suffix;
             begin
-               if Ada.Directories.Exists (F) then
+               if Ada.Directories.Exists (Exec) then
                   Trace (Main_Trace, "--------------------------------------");
                   Trace (Main_Trace,
                          "Processing "

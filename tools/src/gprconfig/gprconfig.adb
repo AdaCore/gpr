@@ -17,6 +17,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Command_Line;
+with Ada.Containers.Ordered_Maps;
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Characters.Handling;
 with Ada.Directories;
@@ -582,6 +583,44 @@ procedure GPRconfig is
    is
       Input : Unbounded_String;
       Comp  : Compiler;
+
+      package List_Idx_To_Compiler_Idx is new
+        Ada.Containers.Ordered_Maps (Positive, Positive);
+
+      function Compiler_Image (Comp : Compiler) return String;
+      --  Returns a string representation of the compiler, including
+      --  its language, version, runtime, path and name.
+
+      function Compiler_Image (Comp : Compiler) return String is
+         Result : Unbounded_String;
+      begin
+         Append
+           (Result,
+            (String (Name (Comp))
+             & " for "
+             & Image (Language (Comp))
+             & " in "
+             & String (Path (Comp))));
+
+         if For_Target = "all" then
+            Append (Result, " on " & String (Target (Comp)));
+         end if;
+
+         Append (Result, " version " & String (KB.Version (Comp)));
+
+         if Runtime (Comp, True) /= No_Name then
+            Append
+              (Result, " (" & String (Runtime (Comp, True)) & " runtime)");
+         end if;
+         Append (Result, " (" & String (Executable (Comp)) & ") ");
+
+         return To_String (Result);
+      end Compiler_Image;
+
+      Previous_Comp        : Compiler;
+      To_Skip              : Boolean := False;
+      List_Idx             : Positive;
+      List_Idx_To_Comp_Idx : List_Idx_To_Compiler_Idx.Map;
    begin
       loop
          Base.Filter_Compilers_List (Compilers, For_Target);
@@ -591,53 +630,63 @@ procedure GPRconfig is
          Text_IO.Put_Line
            ("gprconfig has found the following compilers on your PATH.");
          Text_IO.Put_Line
-           ("Only those matching the target and the selected compilers"
-            & " are displayed.");
+           ("Only those matching the target, languages and the selected"
+            & " compilers are displayed.");
+
+         List_Idx := 1;
+         List_Idx_To_Comp_Idx.Clear;
+         Previous_Comp := No_Compiler;
 
          for Idx in Compilers'Range loop
             Comp := Compilers (Idx);
 
-            if Is_Selectable (Comp) then
+            if Previous_Comp /= No_Compiler then
+               if Requires_Compiler (Comp)
+                 and then Requires_Compiler (Previous_Comp)
+                 and then Name (Comp) = Name (Previous_Comp)
+                 and then GPR2.KB.Version (Comp)
+                          = GPR2.KB.Version (Previous_Comp)
+                 and then Language (Comp) = Language (Previous_Comp)
+                 and then Target (Comp) = Target (Previous_Comp)
+                 and then Runtime (Comp) = Runtime (Previous_Comp)
+                 and then Path (Comp) = Path (Previous_Comp)
+               then
+
+                  --  Only some compiler properties are displayed in the list.
+                  --  To avoid displaying the same compiler twice, since
+                  --  properties like "executable" are not shown. Only the
+                  --  first occurrence is displayed. As compilers are sorted,
+                  --  this check is efficient: only the previous compiler
+                  --  needs to be compared.
+
+                  To_Skip := True;
+               end if;
+            end if;
+
+            if not To_Skip and then Is_Selectable (Comp) then
 
                if Is_Selected (Comp) then
                   Text_IO.Put ("*");
-                  Integer_Text_IO.Put (Idx, Width => 3);
+                  Integer_Text_IO.Put (List_Idx, Width => 3);
                else
-                  Integer_Text_IO. Put (Idx, Width => 4);
+                  Integer_Text_IO.Put (List_Idx, Width => 4);
                end if;
 
                Text_IO.Put (". ");
 
                if Requires_Compiler (Comp) then
-                  Text_IO.Put
-                    (String (Name (Comp))
-                     & " for "
-                     & Image (Language (Comp))
-                     & " in "
-                     & String (Path (Comp)));
-
-                  if For_Target = "all" then
-                     Text_IO.Put (" on " & String (Target (Comp)));
-                  end if;
-
-                  Text_IO.Put
-                    (" version " & String (KB.Version (Comp)));
-
-                  if Runtime (Comp, True) = No_Name then
-                     Text_IO.New_Line;
-                  else
-                     Text_IO.Put_Line
-                       (" ("
-                        & String (Runtime (Comp, True))
-                        & " runtime)");
-                  end if;
-
+                  Text_IO.Put_Line (Compiler_Image (Comp));
                else
                   Text_IO.Put_Line
-                    (Image (Language (Comp)) &
-                       " (no compiler required)");
+                    (Image (Language (Comp)) & " (no compiler required)");
                end if;
+
+               List_Idx_To_Comp_Idx.Insert (List_Idx, Idx);
+               List_Idx := List_Idx + 1;
             end if;
+
+            To_Skip := False;
+            Previous_Comp := Comp;
          end loop;
 
          Text_IO.Put
@@ -651,15 +700,35 @@ procedure GPRconfig is
          begin
             Choice := Positive'Value (To_String (Input));
 
-            if Choice > Compilers'Last then
+            if not List_Idx_To_Comp_Idx.Contains (Choice) then
                Text_IO.Put_Line ("Unrecognized choice");
 
             else
+               Choice := List_Idx_To_Comp_Idx (Choice);
                if Is_Selected (Compilers (Choice)) then
                   Set_Selection (Compilers (Choice), False);
                else
 
                   Set_Selection (Compilers (Choice), True);
+
+                  --  Ensure that only one compiler per language is selected.
+                  --  If the user selects a compiler for a language that
+                  --  already has a selected compiler, the previously selected
+                  --  compiler will be unselected.
+
+                  for Comp of Compilers loop
+                     if Is_Selected (Comp)
+                       and then Comp /= Compilers (Choice)
+                       and then Language (Comp) = Language (Compilers (Choice))
+                     then
+                        Set_Selection (Comp, False);
+                        Text_IO.Put_Line
+                          ("Unselecting "
+                           & Compiler_Image (Comp)
+                           & " because only one compiler per language can be"
+                           & " selected at a time.");
+                     end if;
+                  end loop;
                end if;
             end if;
          exception
@@ -814,17 +883,13 @@ begin
 
    if Console_Reporter.Verbosity >= GPR2.Reporter.Verbose then
       GNATCOLL.Traces.Set_Active
-        (GNATCOLL.Traces.Create
-           ("KNOWLEDGE_BASE"), True);
+        (GNATCOLL.Traces.Create ("KNOWLEDGE_BASE"), True);
       GNATCOLL.Traces.Set_Active
-        (GNATCOLL.Traces.Create
-           ("KNOWLEDGE_BASE.PARSING_TRACE"), True);
+        (GNATCOLL.Traces.Create ("KNOWLEDGE_BASE.PARSING_TRACE"), True);
       GNATCOLL.Traces.Set_Active
-        (GNATCOLL.Traces.Create
-           ("KNOWLEDGE_BASE.MATHCING"), True);
+        (GNATCOLL.Traces.Create ("KNOWLEDGE_BASE.MATCHING"), True);
       GNATCOLL.Traces.Set_Active
-        (GNATCOLL.Traces.Create
-           ("KNOWLEDGE_BASE.COMPILER_ITERATOR"), True);
+        (GNATCOLL.Traces.Create ("KNOWLEDGE_BASE.COMPILER_ITERATOR"), True);
    end if;
 
    if Opt_DB then
