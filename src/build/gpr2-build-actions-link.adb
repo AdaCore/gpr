@@ -851,38 +851,41 @@ package body GPR2.Build.Actions.Link is
 
             Self.Response_Files.Initialize (Format, Linker, CLML, RFS);
 
-            declare
-               Needs_Formating : constant Boolean :=
-                                   Format in GCC_Formatting_Required;
-            begin
-               if Needs_Formating then
+            if Self.Response_Files.Length_Restriction (Cmd_Line) then
+               declare
+                  Needs_Formating : constant Boolean :=
+                                      Format in GCC_Formatting_Required;
+               begin
+                  if Needs_Formating then
+                     declare
+                        Resp_File : constant Tree_Db.Temp_File :=
+                                      Self.Get_Or_Create_Temp_File
+                                        ("response_file", Local);
+                     begin
+                        Self.Response_Files.Register
+                          (Resp_File.FD,
+                           Resp_File.Path,
+                           Secondary => True);
+                     end;
+                  end if;
+
                   declare
+                     RF_Name   : constant Filename_Type :=
+                                   (if Needs_Formating
+                                    then "encapsulated_"
+                                    else "") & "response_file";
                      Resp_File : constant Tree_Db.Temp_File :=
                                    Self.Get_Or_Create_Temp_File
-                                     ("response_file", Local);
+                                     (RF_Name, Local);
                   begin
                      Self.Response_Files.Register
                        (Resp_File.FD,
-                        Resp_File.Path,
-                        Secondary => True);
+                        Resp_File.Path);
                   end;
-               end if;
-
-               declare
-                  RF_Name   : constant Filename_Type :=
-                                (if Needs_Formating
-                                 then "encapsulated_"
-                                 else "") & "response_file";
-                  Resp_File : constant Tree_Db.Temp_File :=
-                                Self.Get_Or_Create_Temp_File (RF_Name, Local);
-               begin
-                  Self.Response_Files.Register
-                    (Resp_File.FD,
-                     Resp_File.Path);
                end;
-            end;
 
-            Self.Response_Files.Create (Cmd_Line);
+               Self.Response_Files.Create (Cmd_Line);
+            end if;
          end;
       end if;
    end Compute_Response_Files;

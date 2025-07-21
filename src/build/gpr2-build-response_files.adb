@@ -24,9 +24,7 @@ package body GPR2.Build.Response_Files is
 
       --  If we have a length restriction, and the current command line length
       --  exceeds that restriction, we should create a response file.
-      if Self.Max_Cmd_Line_Length > 0
-        and then Cmd_Line.Arg_Length > Self.Max_Cmd_Line_Length
-      then
+      if Self.Length_Restriction (Cmd_Line) then
          return True;
       end if;
 

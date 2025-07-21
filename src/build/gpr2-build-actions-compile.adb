@@ -835,17 +835,19 @@ package body GPR2.Build.Actions.Compile is
                   Self.Response_Files.Initialize (Format, Compiler, CLML, RFS);
                end;
 
-               declare
-                  Resp_File : constant Tree_Db.Temp_File :=
-                                Self.Get_Or_Create_Temp_File
-                                  ("response_file", Local);
-               begin
-                  Self.Response_Files.Register
-                    (Resp_File.FD,
-                     Resp_File.Path);
-               end;
+               if Self.Response_Files.Length_Restriction (Cmd_Line) then
+                  declare
+                     Resp_File : constant Tree_Db.Temp_File :=
+                                   Self.Get_Or_Create_Temp_File
+                                     ("response_file", Local);
+                  begin
+                     Self.Response_Files.Register
+                       (Resp_File.FD,
+                        Resp_File.Path);
+                  end;
 
-               Self.Response_Files.Create (Cmd_Line);
+                  Self.Response_Files.Create (Cmd_Line);
+               end if;
             end if;
          end;
       end if;
