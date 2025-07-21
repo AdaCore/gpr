@@ -276,7 +276,7 @@ private
       --  Owning Tree
       Signature     : GPR2.Build.Signature.Object;
       --  Stored signature for the action
-      Tmp_Files     : GPR2.Containers.Filename_Set;
+      Tmp_Files     : GPR2.Containers.Filename_Map;
       --  List of tmp files to be cleaned up
       Deactivated   : Boolean := False;
       --  Set when the action is deactivated

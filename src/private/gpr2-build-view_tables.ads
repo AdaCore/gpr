@@ -7,7 +7,6 @@
 with Ada.Containers.Hashed_Maps;
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Containers.Indefinite_Hashed_Sets;
-with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Indefinite_Ordered_Sets;
 
 with GNATCOLL.Refcount;
@@ -139,9 +138,6 @@ private package GPR2.Build.View_Tables is
       GPR2."=",
       GPR2.Project.View.Set."=");
 
-   package Temp_File_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Simple_Name, Filename_Type);
-
    package Source_Set renames GPR2.Containers.Filename_Type_Set;
 
    type View_Data (Is_Root : Boolean) is record
@@ -184,7 +180,7 @@ private package GPR2.Build.View_Tables is
       Own_CUs         : Unit_Maps.Map;
       --  The compilation units whose main unit belongs to the table's view
 
-      Temp_Files      : Temp_File_Maps.Map;
+      Temp_Files      : GPR2.Containers.Filename_Map;
       --  Holds the path of temp files created during build
 
       Visible_Source_Closure : GPR2.Project.View.Vector.Object;

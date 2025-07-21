@@ -8,6 +8,7 @@ with Ada.Characters.Handling;
 with Ada.Strings.Maps;
 with Ada.Strings.Fixed;
 
+with GNATCOLL.OS.Temp;
 with GNATCOLL.OS.FS;
 with GNATCOLL.OS.FSUtil;
 with GNATCOLL.Traces;
@@ -15,6 +16,9 @@ with GNATCOLL.Traces;
 with GPR2.Build.Tree_Db;
 
 package body GPR2.Build.Actions is
+
+   package GOF renames GNATCOLL.OS.FS;
+   package GOT renames GNATCOLL.OS.Temp;
 
    Traces : constant GNATCOLL.Traces.Trace_Handle :=
               GNATCOLL.Traces.Create
@@ -48,12 +52,9 @@ package body GPR2.Build.Actions is
          Self.Tree.Clear_Temp_Files;
       else
          for F of Self.Tmp_Files loop
-            if not Remove_File
-              (Self.View.Object_Directory.Compose (F).String_Value)
-            then
+            if not Remove_File (String (F)) then
                Traces.Trace
-                 ("error: could not remove temp file " & String (F) & " in " &
-                    Self.View.Object_Directory.String_Value);
+                 ("error: could not remove temp file " & String (F));
             end if;
          end loop;
       end if;
@@ -127,38 +128,50 @@ package body GPR2.Build.Actions is
      (Self      : in out Object'Class;
       Purpose   : Filename_Type;
       Scope     : Temp_File_Scope;
-      Extension : Simple_Name := ".tmp") return Tree_Db.Temp_File
-   is
+      Extension : Simple_Name := ".tmp") return Tree_Db.Temp_File is
    begin
       if Scope = Global then
          return Self.Tree.Get_Or_Create_Temp_File
            (Self.View, Purpose, Extension);
       else
-         declare
-            --  ??? Naive implementation as first try
-            BN   : constant Filename_Type :=
-                     Self.UID.Db_Filename (True) & "-" & Purpose & Extension;
-            Dest : constant GPR2.Path_Name.Object :=
-                     Self.View.Object_Directory.Compose (BN);
-            FD   : GNATCOLL.OS.FS.File_Descriptor;
-            use GNATCOLL.OS.FS;
+         if Self.Tmp_Files.Contains (Purpose) then
+            declare
+               Path : constant Filename_Type :=
+                        Self.Tmp_Files.Element (Purpose);
+            begin
+               return (Path_Len => Path'Length,
+                       FD       => GOF.Null_FD,
+                       Path     => Path);
+            end;
+         else
+            declare
+               Handle : constant GOT.Temp_File_Handle :=
+                          GNATCOLL.OS.Temp.Create_Temp_File
+                            (Prefix      => String
+                               (Self.UID.Db_Filename (True) & "-" & Purpose
+                                & "_"),
+                             Suffix      => String (Extension),
+                             Dir         =>
+                               Self.View.Object_Directory.String_Value,
+                             Auto_Close  => False);
+               Dest   : constant Filename_Type :=
+                          Filename_Type (GNATCOLL.OS.Temp.Path (Handle));
+               FD     : constant GOF.File_Descriptor :=
+                          GOT.File_Descriptor (Handle);
 
-         begin
-            if Self.Tmp_Files.Contains (BN) then
-               FD := Null_FD;
-            else
-               FD := GNATCOLL.OS.FS.Open
-                 (Dest.String_Value,
-                  GNATCOLL.OS.FS.Write_Mode);
-               pragma Assert (FD /= Null_FD and then FD /= Invalid_FD,
-                              "could not create " & Dest.String_Value);
-               Self.Tmp_Files.Insert (BN);
-            end if;
+               use type GOF.File_Descriptor;
+            begin
+               pragma Assert (FD /= GOF.Null_FD
+                              and then FD /= GOF.Invalid_FD,
+                              "could not create " & String (Dest));
 
-            return (Path_Len => Dest.Value'Length,
-                    FD       => FD,
-                    Path     => Dest.Value);
-         end;
+               Self.Tmp_Files.Insert (Purpose, Dest);
+
+               return (Path_Len => Dest'Length,
+                       FD       => FD,
+                       Path     => Dest);
+            end;
+         end if;
       end if;
    end Get_Or_Create_Temp_File;
 

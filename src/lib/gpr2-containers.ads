@@ -93,6 +93,11 @@ package GPR2.Containers is
 
    subtype External_Name_Value_Map is External_Name_Value_Map_Package.Map;
 
+   package Filename_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (Simple_Name, Filename_Type);
+
+   subtype Filename_Map is Filename_Maps.Map;
+
    function "=" (Left, Right : Source_Reference.Value.Object) return Boolean
      renames GPR2.Source_Reference.Value."=";
 
