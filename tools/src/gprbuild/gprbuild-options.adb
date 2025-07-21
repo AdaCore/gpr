@@ -91,6 +91,15 @@ package body GPRbuild.Options is
                  Parameter      => "script_file"));
       Parser.Add_Argument
         (Build_Group,
+         Create (Name           => "--compiler-subst",
+                 Help           => "Use tool for compiling files in " &
+                                   "language lang, instead of the normal " &
+                                   "compiler",
+                 In_Switch_Attr => False,
+                 Delimiter      => Equal,
+                 Parameter      => "lang,tool"));
+      Parser.Add_Argument
+        (Build_Group,
          Create (Name => "--no-indirect-imports",
                  Help => "Sources can import only from directly "  &
                          "imported projects"));
@@ -486,6 +495,23 @@ package body GPRbuild.Options is
                end if;
             end loop;
          end;
+      elsif Arg = "--compiler-subst" then
+         for Idx in Param'Range loop
+            if Param (Idx) = ',' then
+               declare
+                  Lang : constant String :=
+                           Param (Param'First .. Idx - 1);
+                  Compiler : constant String :=
+                     Param (Idx + 1 .. Param'Last);
+               begin
+                  if Lang'Length > 0 and then Compiler'Length > 0 then
+                     Result.Build_Options.Comp_Substr.Include
+                        (+Optional_Name_Type (Lang),
+                         Value_Type (Compiler));
+                  end if;
+               end;
+            end if;
+         end loop;
 
       elsif Arg = "-b" then
          Result.Build_Options.Restricted_Build_Phase := True;

@@ -208,6 +208,17 @@ private package GPR2.Tree_Internal is
    --  The version string, or an empty string if no toolchain version could
    --  be determined.
 
+   function Languages_To_Compilers
+     (Self : Object) return Containers.Lang_Value_Map;
+   --  Returns the compilers that have been explicitly specified by the user
+   --  for particular languages.
+
+   procedure Set_Languages_To_Compilers
+     (Self                  : in out Object;
+     Languages_To_Compilers : Containers.Lang_Value_Map);
+   --  Sets the mapping of languages to compilers, overriding any
+   --  configuration settings.
+
    function Target
      (Self      : Object;
       Canonical : Boolean := False) return Name_Type;
@@ -525,6 +536,9 @@ private
       Explicit_Runtimes : Containers.Lang_Value_Map;
       Langs_Of_Interest : Containers.Language_Set;
       --  Languages that auto-configuration should be reduced to
+      Lang_To_Compilers : Containers.Lang_Value_Map;
+      --  Overrides the configuration to use specific compilers for given
+      --  languages.
       File_Reader_Ref   : GPR2.File_Readers.File_Reader_Reference;
       Environment       : GPR2.Environment.Object :=
                             GPR2.Environment.Process_Environment;
@@ -649,5 +663,9 @@ private
 
    function Has_Explicit_Target (Self : Object) return Boolean is
      (Self.Has_Explicit_Target);
+
+   function Languages_To_Compilers
+     (Self : Object) return Containers.Lang_Value_Map is
+     (Self.Lang_To_Compilers);
 
 end GPR2.Tree_Internal;

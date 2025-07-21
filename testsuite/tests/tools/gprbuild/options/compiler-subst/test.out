@@ -1,0 +1,6 @@
+Default compiler:
+<gcc>/bin/gcc -c -x ada -gnatA -gnatem=.ada_mapping_1_782ehx2uwmvwr.tmp -gnatec=.ada_config_1it3q0uqd3kd0.tmp /projects/src/pkg.adb
+
+Substituted compiler:
+/fake-ada-fake-compiler/bin/fake-compiler-gcc -c -x ada -gnatA -gnatem=.ada_mapping_1_frl4s3xnff8un.tmp -gnatec=.ada_config_83d9qa3uixi8u.tmp /projects/src/pkg.adb
+Running gcc -c -x ada -gnatA -gnatem=.ada_mapping_1_frl4s3xnff8un.tmp -gnatec=.ada_config_83d9qa3uixi8u.tmp /projects/src/pkg.adb

@@ -430,6 +430,12 @@ begin
       end;
    end if;
 
+   --  Set the explicit language to compiler mapping if any
+
+   if not Opt.Build_Options.Comp_Substr.Is_Empty then
+      Opt.Tree.Set_Languages_To_Compilers (Opt.Build_Options.Comp_Substr);
+   end if;
+
    --  Set user-specified cargs/bargs/largs if any
 
    Opt.Tree.Artifacts_Database.Set_External_Options (Opt.Extra_Args);

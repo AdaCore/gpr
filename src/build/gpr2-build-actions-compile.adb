@@ -21,6 +21,7 @@ with GPR2.Project.Tree;
 with GPR2.Source_Reference;
 with GPR2.Tree_Internal;
 with GPR2.View_Internal;
+with GNAT.OS_Lib;
 
 package body GPR2.Build.Actions.Compile is
 
@@ -574,10 +575,46 @@ package body GPR2.Build.Actions.Compile is
       Driver_Attr : constant GPR2.Project.Attribute.Object :=
                       Self.Ctxt.Attribute (PRA.Compiler.Driver, Lang_Idx);
 
+      Tree : constant access GPR2.Tree_Internal.Object :=
+        View_Internal.Get_RO (Self.Ctxt).Tree;
    begin
-      if Driver_Attr.Is_Defined then
-         Cmd_Line.Set_Driver
-           (Driver_Attr.Value.Text);
+      if Tree.Languages_To_Compilers.Contains (Self.Lang) then
+         declare
+            Path : constant GPR2.Path_Name.Object :=
+              GPR2.Path_Name.Create_File
+                (Filename_Type
+                   (Tree.Languages_To_Compilers.Element (Self.Lang)));
+         begin
+            if Path.Exists
+              and then GNAT.OS_Lib.Is_Executable_File (Path.String_Value)
+            then
+               Cmd_Line.Set_Driver (Path);
+            else
+               declare
+                  Found_Path : constant String :=
+                    Locate_Exec_On_Path (String (Path.Simple_Name));
+               begin
+                  if Found_Path /= "" then
+                     Cmd_Line.Set_Driver (Found_Path);
+                  else
+                     Self.Tree.Reporter.Report
+                       (GPR2.Message.Create
+                          (GPR2.Message.Error,
+                           "compiler """
+                           & Path.String_Value
+                           & """"
+                           & " not found, cannot compile """
+                           & String (Self.Src.Path_Name.Simple_Name)
+                           & '"',
+                           GPR2.Source_Reference.Create
+                             (Self.Ctxt.Path_Name.Value, 0, 0)));
+                     return;
+                  end if;
+               end;
+            end if;
+         end;
+      elsif Driver_Attr.Is_Defined then
+         Cmd_Line.Set_Driver (Driver_Attr.Value.Text);
       else
          if not Self.Deactivated then
             Self.Tree.Reporter.Report

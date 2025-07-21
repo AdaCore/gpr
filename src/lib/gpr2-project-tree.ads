@@ -76,6 +76,12 @@ package GPR2.Project.Tree is
    --  from the actual set of languages used in project tree. Empty set of
    --  languages means regular auto-configuration with no reductions.
 
+   procedure Set_Languages_To_Compilers
+     (Self                   : in out Object;
+      Languages_To_Compilers : Containers.Lang_Value_Map);
+   --  Sets the mapping of languages to compilers, overriding any
+   --  configuration settings.
+
    procedure Set_Reporter
      (Self : in out Object; Reporter : GPR2.Reporter.Object'Class);
    --  Set the reporter used by the tree and all tree-related operations,

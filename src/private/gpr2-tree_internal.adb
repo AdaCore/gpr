@@ -3270,6 +3270,17 @@ package body GPR2.Tree_Internal is
       Self.Base := KB;
    end Set_KB;
 
+   --------------------------------
+   -- Set_Languages_To_Compilers --
+   --------------------------------
+
+   procedure Set_Languages_To_Compilers
+     (Self                  : in out Object;
+     Languages_To_Compilers : Containers.Lang_Value_Map) is
+   begin
+      Self.Lang_To_Compilers := Languages_To_Compilers;
+   end Set_Languages_To_Compilers;
+
    ------------------
    -- Set_Reporter --
    ------------------
