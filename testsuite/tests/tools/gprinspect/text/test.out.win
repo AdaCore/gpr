@@ -53,6 +53,7 @@
        - Project_Files [ LIST ]
           - Values : 
              - "agg.gpr"
+    - Packages          :
 
 * Agg ($<cwd>/agg.gpr) [ aggregate project ]
     - Project file      : <cwd>/agg.gpr
@@ -73,13 +74,14 @@
        - Project_Files [ LIST ]
           - Values : 
              - "prj.gpr"
-    - Variables      : 
+    - Packages          :
+    - Variables         : 
        - Answer [ SINGLE ]
           - Variable type : "Yes_No"
           - Value : "yes"
        - Var2 [ SINGLE ]
           - Value : "no"
-    - Types          : 
+    - Types             : 
        - Yes_No
           - Values : 
              - "yes"
@@ -113,7 +115,8 @@
        - Source_Dirs [ LIST ]
           - Values : 
              - <gnat rts>/adainclude"
-    - Variables      : 
+    - Packages          :
+    - Variables         : 
        - Compiler_Version [ SINGLE ]
           - Value : <version>
 
@@ -141,7 +144,8 @@
           - Value : "."
        - Project_Dir [ SINGLE ]
           - Value : "<cwd>/"
-    - Variables      : 
+    - Packages          :
+    - Variables         : 
        - Languages [ LIST ]
           - Values : 
              - "Ada"
@@ -191,6 +195,7 @@
        - Source_Dirs [ LIST ]
           - Values : 
              - "."
+    - Packages          :
 
 * Base ($<cwd>/base.gpr>$<cwd>/prj.gpr) [ standard project ]
     - Project file      : <cwd>/base.gpr
@@ -221,6 +226,7 @@
        - Source_Dirs [ LIST ]
           - Values : 
              - "src"
+    - Packages          :
 
 * Prj ($<cwd>/prj.gpr) [ standard project ]
     - Project file      : <cwd>/prj.gpr
@@ -251,36 +257,43 @@
        - Source_Dirs [ LIST ]
           - Values : 
              - "src2"
-       - Linker'Group_End_Switch [ SINGLE ]
-          - Value : "-Wl,--end-group"
-       - Linker'Group_Start_Switch [ SINGLE ]
-          - Value : "-Wl,--start-group"
-       - Naming'Body_Suffix [ SINGLE ]
-          - Index value : "ada"
-          - Value : ".adb"
-       - Naming'Body_Suffix [ SINGLE ]
-          - Index value : "c"
-          - Value : ".c"
-       - Naming'Dot_Replacement [ SINGLE ]
-          - Value : "~"
-       - Naming'Implementation_Suffix [ SINGLE ]
-          - Index value : "ada"
-          - Value : ".adb"
-       - Naming'Implementation_Suffix [ SINGLE ]
-          - Index value : "c"
-          - Value : ".c"
-       - Naming'Spec_Suffix [ SINGLE ]
-          - Index value : "ada"
-          - Value : ".ads"
-       - Naming'Spec_Suffix [ SINGLE ]
-          - Index value : "c"
-          - Value : ".h"
-       - Naming'Specification_Suffix [ SINGLE ]
-          - Index value : "ada"
-          - Value : ".ads"
-       - Naming'Specification_Suffix [ SINGLE ]
-          - Index value : "c"
-          - Value : ".h"
+    - Packages          :
+       - Binder
+       - Builder
+       - Clean
+       - Compiler
+       - Linker
+          - Linker'Group_End_Switch [ SINGLE ]
+             - Value : "-Wl,--end-group"
+          - Linker'Group_Start_Switch [ SINGLE ]
+             - Value : "-Wl,--start-group"
+       - Naming
+          - Naming'Body_Suffix [ SINGLE ]
+             - Index value : "ada"
+             - Value : ".adb"
+          - Naming'Body_Suffix [ SINGLE ]
+             - Index value : "c"
+             - Value : ".c"
+          - Naming'Dot_Replacement [ SINGLE ]
+             - Value : "~"
+          - Naming'Implementation_Suffix [ SINGLE ]
+             - Index value : "ada"
+             - Value : ".adb"
+          - Naming'Implementation_Suffix [ SINGLE ]
+             - Index value : "c"
+             - Value : ".c"
+          - Naming'Spec_Suffix [ SINGLE ]
+             - Index value : "ada"
+             - Value : ".ads"
+          - Naming'Spec_Suffix [ SINGLE ]
+             - Index value : "c"
+             - Value : ".h"
+          - Naming'Specification_Suffix [ SINGLE ]
+             - Index value : "ada"
+             - Value : ".ads"
+          - Naming'Specification_Suffix [ SINGLE ]
+             - Index value : "c"
+             - Value : ".h"
 
 {
   "info": {

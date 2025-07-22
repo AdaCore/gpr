@@ -745,19 +745,22 @@ is
       --------------------
 
       procedure Print_Projects is
-         First_Attr : Boolean := True;
+         First_Attr   : Boolean := True;
+         Ident_Offset : Natural := 0;
 
          procedure Print_Attributes
-           (View : GPR2.Project.View.Object;
-            Pack : GPR2.Package_Id);
+           (View   : GPR2.Project.View.Object;
+            Pack   : GPR2.Package_Id;
+            Offset : Natural := 0);
 
          ----------------------
          -- Print_Attributes --
          ----------------------
 
          procedure Print_Attributes
-           (View : GPR2.Project.View.Object;
-            Pack : GPR2.Package_Id) is
+           (View   : GPR2.Project.View.Object;
+            Pack   : GPR2.Package_Id;
+            Offset : Natural := 0) is
          begin
             for Attr of View.Attributes
               (Pack, With_Config => Options.Display_Config_Attributes)
@@ -765,26 +768,26 @@ is
                if First_Attr then
                   --  Actually has attributes to display, print the
                   --  category
-                  Indent (2, "Attributes        : ");
+                  Indent (2 + Offset, "Attributes        : ");
                   First_Attr := False;
                end if;
 
-               Indent (3, Image (Attr.Name.Id) &
+               Indent (3 + Offset, Image (Attr.Name.Id) &
                          " [ " & Attr.Kind'Img & " ]");
 
                if Attr.Has_Index then
-                  Indent (4, "Index value : """ &
+                  Indent (4 + Offset, "Index value : """ &
                             Attr.Index.Value & '"');
                end if;
 
                if Attr.Kind = PRA.Single  then
-                  Indent (4, "Value : """ & Attr.Value.Text & '"');
+                  Indent (4 + Offset, "Value : """ & Attr.Value.Text & '"');
 
                elsif Attr.Kind = PRA.List then
-                  Indent (4, "Values : ");
+                  Indent (4 + Offset, "Values : ");
 
                   for V of Attr.Values loop
-                     Indent (5, '"' & V.Text & '"');
+                     Indent (5 + Offset, '"' & V.Text & '"');
                   end loop;
                end if;
             end loop;
@@ -896,26 +899,45 @@ is
                     or else Options.Display_Everything
                   then
                      First_Attr := True;
+                     Print_Attributes
+                       (View, Project_Level_Scope);
+                  end if;
 
-                     Print_Attributes (View, Project_Level_Scope);
-
+                  if Options.Display_Packages
+                    or else Options.Display_Attributes
+                    or else Options.Display_Everything
+                  then
                      if Options.Display_Packages
                        or else Options.Display_Everything
                      then
-                        for P of View.Packages
-                          (With_Defaults => False,
-                           With_Config   => Options.Display_Config_Attributes)
-                        loop
-                           Print_Attributes (View, P);
-                        end loop;
+                        Ident_Offset := 1;
+                        First_Attr := False;
+                        Indent (2, "Packages          :");
                      end if;
+
+                     for P of View.Packages
+                       (With_Defaults => False,
+                        With_Config   => Options.Display_Config_Attributes)
+                     loop
+                        if Options.Display_Packages
+                          or else Options.Display_Everything
+                        then
+                           Indent (3, Image (P));
+                        end if;
+
+                        if Options.Display_Attributes
+                          or else Options.Display_Everything
+                        then
+                           Print_Attributes (View, P, Ident_Offset);
+                        end if;
+                     end loop;
                   end if;
 
                   if Options.Display_Variables
                     or else Options.Display_Everything
                   then
                      if not View.Variables.Is_Empty then
-                        Indent (2, "Variables      : ");
+                        Indent (2, "Variables         : ");
 
                         for Var of View.Variables loop
                            Indent (3, String (Var.Name.Text) &
@@ -944,7 +966,7 @@ is
                     or else Options.Display_Everything
                   then
                      if not View.Types.Is_Empty then
-                        Indent (2, "Types          : ");
+                        Indent (2, "Types             : ");
 
                         for T of View.Types loop
                            Indent (3, String (T.Name.Text));
