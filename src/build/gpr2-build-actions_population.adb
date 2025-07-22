@@ -1243,6 +1243,7 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       declare
+         Tree          : constant GPR2.Project.Tree.Object := View.Tree;
          Bind          : Bind_Array (1 .. Natural (Actual_Mains.Length));
          Link          : Link_Array (1 .. Natural (Actual_Mains.Length));
          Attr          : GPR2.Project.Attribute.Object;
@@ -1403,6 +1404,12 @@ package body GPR2.Build.Actions_Population is
 
                if (for some Lib of Closure =>
                      Lib.Language_Ids.Contains (Ada_Language))
+                 or else (for some Lib of Static_Libs =>
+                            Tree.Get_View
+                              (Lib).Language_Ids.Contains (Ada_Language)
+                          and then
+                            not Tree.Get_View
+                              (Lib).Is_Library_Standalone)
                  or else not Main.View.Attributes (PRA.Roots).Is_Empty
                then
                   --  ??? We don't need a bind phase per non-Ada main, we just
@@ -1419,6 +1426,19 @@ package body GPR2.Build.Actions_Population is
                      for CU of V.Own_Units loop
                         Bind (Idx).Add_Root_Unit (CU);
                      end loop;
+                  end loop;
+
+                  for Lib of Static_Libs loop
+                     declare
+                        V : constant Project.View.Object :=
+                              Tree.Get_View (Lib);
+                     begin
+                        if not V.Is_Library_Standalone then
+                           for CU of V.Own_Units loop
+                              Bind (Idx).Add_Root_Unit (CU);
+                           end loop;
+                        end if;
+                     end;
                   end loop;
 
                   if not Tree_Db.Add_Action (Bind (Idx)) then
