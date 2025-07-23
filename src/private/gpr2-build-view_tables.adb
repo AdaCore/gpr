@@ -802,7 +802,9 @@ package body GPR2.Build.View_Tables is
 
    procedure Refresh
      (Data     : View_Data_Ref;
-      Messages : in out GPR2.Log.Object) is
+      Messages : in out GPR2.Log.Object)
+   is
+      Sources : Filename_Source_Maps.Map;
    begin
       Update_Sources_List.Process (Data, False, Messages);
 
@@ -814,10 +816,12 @@ package body GPR2.Build.View_Tables is
       then
          --  Check separates of separates
 
-         for C_Proxy in Data.Sources.Iterate loop
+         --  Work on a copy since this operation might change Data.Sources
+         --  so we don't want to hold cursors on this container.
+         Sources := Data.Sources;
+
+         for Proxy of Sources loop
             declare
-               Proxy : constant Source_Proxy :=
-                         Filename_Source_Maps.Element (C_Proxy);
                Db    : constant View_Data_Ref :=
                          Get_Data (Data.Tree_Db, Proxy.View);
                S_Ref : constant Src_Info_Maps.Reference_Type :=
