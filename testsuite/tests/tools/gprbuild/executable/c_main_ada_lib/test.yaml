@@ -1,0 +1,3 @@
+description: Compile a C project with a non standalone Ada library
+driver: python_script
+timeout: 800
