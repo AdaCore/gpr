@@ -6,6 +6,7 @@
 
 with GNATCOLL.Directed_Graph; use GNATCOLL.Directed_Graph;
 with GNATCOLL.OS.FSUtil;
+with GNATCOLL.OS.Temp;
 
 pragma Warnings (Off);
 with GPR2.Build.Artifacts.Files;
@@ -24,6 +25,8 @@ with GPR2.Tree_Internal;
 
 package body GPR2.Build.Tree_Db is
 
+   package GOF renames GNATCOLL.OS.FS;
+   package GOT renames GNATCOLL.OS.Temp;
    package PRA renames GPR2.Project.Registry.Attribute;
    package PAI renames GPR2.Project.Attribute_Index;
 
@@ -647,39 +650,43 @@ package body GPR2.Build.Tree_Db is
    is
       Data : constant View_Tables.View_Data_Ref :=
                View_Tables.Get_Ref (Self.Build_Dbs (For_View.Id));
-      C    : View_Tables.Temp_File_Maps.Cursor;
-      Dest : Path_Name.Object;
-      Done : Boolean;
 
    begin
-      C := Data.Temp_Files.Find (Purpose);
-
-      if not View_Tables.Temp_File_Maps.Has_Element (C) then
+      if Data.Temp_Files.Contains (Purpose) then
          declare
-            BN : constant Simple_Name :=
-                   "." & Purpose & Extension;
-         begin
-            Dest := For_View.Object_Directory.Compose (BN);
-            Data.Temp_Files.Insert (Purpose, Dest.Value, C, Done);
-
-            pragma Assert (Done);
-
-            return
-              (Path_Len => Dest.Value'Length,
-               FD       => GNATCOLL.OS.FS.Open
-                             (Dest.String_Value,
-                              GNATCOLL.OS.FS.Write_Mode),
-               Path     => Dest.Value);
-         end;
-      else
-         declare
-            Path : Filename_Type renames
-                     View_Tables.Temp_File_Maps.Element (C);
+            Path : constant Filename_Type := Data.Temp_Files.Element (Purpose);
          begin
             return
               (Path_Len => Path'Length,
-               FD       => GNATCOLL.OS.FS.Null_FD,
+               FD       => GOF.Null_FD,
                Path     => Path);
+         end;
+      else
+         declare
+            Handle : constant GOT.Temp_File_Handle :=
+                       GNATCOLL.OS.Temp.Create_Temp_File
+                         (Prefix      => String ("." & Purpose & "_"),
+                          Suffix      => String (Extension),
+                          Dir         =>
+                            For_View.Object_Directory.String_Value,
+                          Auto_Close  => False);
+            Dest   : constant Filename_Type :=
+                       Filename_Type (GNATCOLL.OS.Temp.Path (Handle));
+            FD     : constant GOF.File_Descriptor :=
+                       GOT.File_Descriptor (Handle);
+
+            use type GOF.File_Descriptor;
+         begin
+            pragma Assert (FD /= GOF.Null_FD
+                           and then FD /= GOF.Invalid_FD,
+                           "could not create " & String (Dest));
+
+            Data.Temp_Files.Insert (Purpose, Dest);
+
+            return
+              (Path_Len => Dest'Length,
+               FD       => FD,
+               Path     => Dest);
          end;
       end if;
    end Get_Or_Create_Temp_File;

@@ -1,4 +1,5 @@
 import os.path
+import glob
 
 from testsuite_support.builder_and_runner import BuilderAndRunner
 from testsuite_support.tools import GPRBUILD, GPRCLEAN
@@ -18,7 +19,10 @@ run([os.path.join("tree", "main")])
 run([GPRCLEAN, os.path.join("tree", "main.gpr"), "-r"])
 
 # now execution of the script
-run(["cat", "tree/obj/.ada_bind_main-mapping.tmp"])
+for file in glob.glob("tree/obj/.ada_bind_main-mapping_*.tmp"):
+    print("$ cat tree/obj/.ada_bind_main-mapping_*.tmp")
+    print(bnr.simple_run(["cat", file], catch_error=True).out)
+
 try:
     run([os.environ["SHELL"], "./script.sh"])
 except:

@@ -53,6 +53,10 @@ package GPR2.Build.Response_Files is
    function Secondary_Response_File_Content
      (Self : Object) return GNATCOLL.OS.Process.Argument_List;
 
+   function Length_Restriction
+     (Self     : Object;
+      Cmd_Line : GPR2.Build.Command_Line.Object) return Boolean;
+
 private
 
    use GNATCOLL;
@@ -117,5 +121,11 @@ private
    function Secondary_Response_File_Content
      (Self : Object) return OS.Process.Argument_List is
      (Self.Secondary_Content);
+
+   function Length_Restriction
+     (Self     : Object;
+      Cmd_Line : GPR2.Build.Command_Line.Object) return Boolean is
+     (Self.Max_Cmd_Line_Length > 0
+      and then Cmd_Line.Arg_Length > Self.Max_Cmd_Line_Length);
 
 end  GPR2.Build.Response_Files;
