@@ -525,7 +525,7 @@ package Builder of the main project:
   this is displayed after the invocation of the compiler. These lines are
   displayed even in quiet output mode (switch :samp:`-q`).
 
-* :samp:`-I{nn}` (Index of main unit in multi-unit source file)
+* :samp:`-eI{nn}` (Index of main unit in multi-unit source file)
   Indicate the index of the main unit in a multi-unit source file.
   The index must be a positive number and there should be one and only
   one main source file name on the command line.
