@@ -105,8 +105,7 @@ package GPR2.Build.Actions.Link is
 
    overriding procedure Compute_Response_Files
      (Self           : in out Object;
-      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
-      Signature_Only : Boolean);
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object);
 
    overriding function Pre_Command
      (Self : in out Object) return Boolean;

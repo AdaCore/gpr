@@ -59,8 +59,7 @@ package GPR2.Build.Actions.Compile is
 
    overriding procedure Compute_Response_Files
      (Self           : in out Object;
-      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
-      Signature_Only : Boolean);
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object);
 
    function Dependencies
      (Self : Object) return GPR2.Containers.Filename_Set;

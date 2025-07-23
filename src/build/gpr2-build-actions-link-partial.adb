@@ -126,87 +126,82 @@ package body GPR2.Build.Actions.Link.Partial is
 
    overriding procedure Compute_Response_Files
      (Self           : in out Object;
-      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
-      Signature_Only : Boolean) is
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object)
+   is
+      use Build.Response_Files;
+
+      A_RFF  : constant Project.Attribute.Object :=
+                 Self.View.Attribute (PRA.Linker.Response_File_Format);
+      A_RFS  : constant Project.Attribute.Object :=
+                 Self.View.Attribute (PRA.Linker.Response_File_Switches);
+      RFS    : constant Containers.Source_Value_List :=
+                 (if A_RFS.Is_Defined
+                  then A_RFS.Values
+                  else Containers.Empty_Source_Value_List);
+      A_CLML : constant Project.Attribute.Object :=
+                 Self.View.Attribute
+                   (PRA.Linker.Max_Command_Line_Length);
+      CLML   : constant Natural :=
+                 (if A_CLML.Is_Defined
+                  then Natural'Value (A_CLML.Value.Text)
+                  else 0);
+      Format : Response_File_Format := None;
    begin
-      if not Signature_Only then
+      if A_RFF.Is_Defined then
          declare
-            use Build.Response_Files;
-
-            A_RFF  : constant Project.Attribute.Object :=
-                       Self.View.Attribute (PRA.Linker.Response_File_Format);
-            A_RFS  : constant Project.Attribute.Object :=
-                       Self.View.Attribute (PRA.Linker.Response_File_Switches);
-            RFS    : constant Containers.Source_Value_List :=
-                       (if A_RFS.Is_Defined
-                        then A_RFS.Values
-                        else Containers.Empty_Source_Value_List);
-            A_CLML : constant Project.Attribute.Object :=
-                       Self.View.Attribute
-                         (PRA.Linker.Max_Command_Line_Length);
-            CLML   : constant Natural :=
-                       (if A_CLML.Is_Defined
-                        then Natural'Value (A_CLML.Value.Text)
-                        else 0);
-            Format : Response_File_Format := None;
+            LV : constant String :=
+                   Ada.Characters.Handling.To_Lower (A_RFF.Value.Text);
          begin
-            if A_RFF.Is_Defined then
-               declare
-                  LV : constant String :=
-                         Ada.Characters.Handling.To_Lower (A_RFF.Value.Text);
-               begin
-                  if LV = "gnu" then
-                     Format := GNU;
-                  elsif LV = "object_list" then
-                     Format := Object_List;
-                  elsif LV = "gcc_gnu" then
-                     Format := GCC_GNU;
-                  elsif LV = "gcc_option_list" then
-                     Format := GCC_Option_List;
-                  elsif LV = "gcc_object_list" then
-                     Format := GCC_Object_List;
-                  end if;
-               end;
-            end if;
-
-            Self.Response_Files.Initialize (Format, Linker, CLML, RFS);
-
-            if Self.Response_Files.Length_Restriction (Cmd_Line) then
-               declare
-                  Needs_Formating : constant Boolean :=
-                                      Format in GCC_Formatting_Required;
-               begin
-                  if Needs_Formating then
-                     declare
-                        Resp_File : constant Tree_Db.Temp_File :=
-                                      Self.Get_Or_Create_Temp_File
-                                        ("response_file", Local);
-                     begin
-                        Self.Response_Files.Register
-                          (Resp_File.FD,
-                           Resp_File.Path,
-                           Secondary => True);
-                     end;
-                  end if;
-
-                  declare
-                     RF_Name   : constant Filename_Type :=
-                                   (if Needs_Formating
-                                    then "encapsulated_"
-                                    else "") & "response_file";
-                     Resp_File : constant Tree_Db.Temp_File :=
-                                   Self.Get_Or_Create_Temp_File
-                                     (RF_Name, Local);
-                  begin
-                     Self.Response_Files.Register
-                       (Resp_File.FD,
-                        Resp_File.Path);
-                  end;
-               end;
-
-               Self.Response_Files.Create (Cmd_Line);
+            if LV = "gnu" then
+               Format := GNU;
+            elsif LV = "object_list" then
+               Format := Object_List;
+            elsif LV = "gcc_gnu" then
+               Format := GCC_GNU;
+            elsif LV = "gcc_option_list" then
+               Format := GCC_Option_List;
+            elsif LV = "gcc_object_list" then
+               Format := GCC_Object_List;
             end if;
          end;
+      end if;
+
+      Self.Response_Files.Initialize (Format, Linker, CLML, RFS);
+
+      if Self.Response_Files.Length_Restriction (Cmd_Line) then
+         declare
+            Needs_Formating : constant Boolean :=
+                                Format in GCC_Formatting_Required;
+         begin
+            if Needs_Formating then
+               declare
+                  Resp_File : constant Tree_Db.Temp_File :=
+                                Self.Get_Or_Create_Temp_File
+                                  ("response_file", Local);
+               begin
+                  Self.Response_Files.Register
+                    (Resp_File.FD,
+                     Resp_File.Path,
+                     Secondary => True);
+               end;
+            end if;
+
+            declare
+               RF_Name   : constant Filename_Type :=
+                             (if Needs_Formating
+                              then "encapsulated_"
+                              else "") & "response_file";
+               Resp_File : constant Tree_Db.Temp_File :=
+                             Self.Get_Or_Create_Temp_File
+                               (RF_Name, Local);
+            begin
+               Self.Response_Files.Register
+                 (Resp_File.FD,
+                  Resp_File.Path);
+            end;
+         end;
+
+         Self.Response_Files.Create (Cmd_Line);
       end if;
    end Compute_Response_Files;
 
