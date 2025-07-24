@@ -1166,7 +1166,7 @@ package body GPRinstall.Install is
                   if Action in GPR2.Build.Actions.Compile.Ada.Object'Class then
                      declare
                         U    : constant GPR2.Build.Compilation_Unit.Object :=
-                                 AC (Action).Input_Unit;
+                                 AC (Action).Unit;
                         ALI  : constant Path_Name.Object :=
                                  AC (Action).Intf_Ali_File.Path;
                         TALI : constant Filename_Optional :=
