@@ -96,7 +96,7 @@ begin
    end;
 
    declare
-      Unit : GPR2.Build.Compilation_Unit.Object := Ada_Comp.Input_Unit;
+      Unit : GPR2.Build.Compilation_Unit.Object := Ada_Comp.Unit;
    begin
       Assert (Unit.Is_Defined, "Check that input unit is defined");
       Assert (Unit.Main_Part.Source.Base_Name = "main", "Check unit");
