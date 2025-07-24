@@ -1,0 +1,6 @@
+project AdaLib is
+   for Source_Dirs use ("libsrc");
+   for Object_Dir use "libobj";
+   for Library_Name use "adalib";
+   for Library_Dir use "lib";
+end AdaLib;

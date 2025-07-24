@@ -78,7 +78,11 @@ package body GPR2.Build.Actions.Post_Bind is
       for Arg of Self.Tree.External_Options.Fetch
                    (External_Options.Compiler, Ada_Language)
       loop
-         Cmd_Line.Add_Argument (Arg);
+         if Arg /= "-gnatg"
+           and then not GNATCOLL.Utils.Starts_With (Arg, "-gnaty")
+         then
+            Cmd_Line.Add_Argument (Arg);
+         end if;
       end loop;
 
       --  Get the command line used for the first ALI given as input and

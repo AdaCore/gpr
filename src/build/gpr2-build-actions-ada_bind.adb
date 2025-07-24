@@ -454,10 +454,19 @@ package body GPR2.Build.Actions.Ada_Bind is
                     Actions.Compile.Ada.Create (Unit);
             Comp : constant Actions.Compile.Ada.Object :=
                      Actions.Compile.Ada.Object (Self.Tree.Action (UID));
+
+            use type Project.View.Object;
          begin
             if Comp.Is_Defined then
-               Cmd_Line.Add_Argument
-                 (Comp.Local_Ali_File.Path, Build.Command_Line.Simple);
+               if Unit.Owning_View /= Self.Ctxt
+                 and then Unit.Owning_View.Is_Library
+               then
+                  Cmd_Line.Add_Argument
+                    (Comp.Intf_Ali_File.Path, Build.Command_Line.Simple);
+               else
+                  Cmd_Line.Add_Argument
+                    (Comp.Local_Ali_File.Path, Build.Command_Line.Simple);
+               end if;
             end if;
          end;
       end loop;
@@ -1114,7 +1123,9 @@ package body GPR2.Build.Actions.Ada_Bind is
    -------------------------
 
    overriding function On_Tree_Propagation
-     (Self : in out Object) return Boolean is
+     (Self : in out Object) return Boolean
+   is
+      use type GPR2.Project.View.Object;
    begin
       --  Now add our explicit inputs
 
@@ -1129,7 +1140,13 @@ package body GPR2.Build.Actions.Ada_Bind is
                return False;
             end if;
 
-            Self.Tree.Add_Input (Self.UID, Ada_Comp.Local_Ali_File, True);
+            if Self.Ctxt /= CU.Owning_View
+              and then CU.Owning_View.Is_Library
+            then
+               Self.Tree.Add_Input (Self.UID, Ada_Comp.Intf_Ali_File, True);
+            else
+               Self.Tree.Add_Input (Self.UID, Ada_Comp.Local_Ali_File, True);
+            end if;
 
             if Link.Is_Defined and then Ada_Comp.Object_File.Is_Defined then
                Self.Tree.Add_Input (Link.UID, Ada_Comp.Object_File, True);
