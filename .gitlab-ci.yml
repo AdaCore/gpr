@@ -170,6 +170,22 @@ include:
       rules:
         - allow_failure: true
 
+  # gprconfig testsuite
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/test@~latest
+    inputs:
+      job-name: test_gprconfig
+      anod-args: run test_gprconfig
+      disk: 80
+      save-anod-logs: true
+      needs: ["build:linux"]
+      windows: true
+      windows-cpus: 8
+      windows-mem: 16
+      windows-needs: ["build:windows"]
+      artifacts: ["xunit-*.xml"]
+      rules:
+        - allow_failure: true
+
 # Make some jobs optional
 
 # on windows, considering the machines we have for the CI (the fast-startup

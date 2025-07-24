@@ -84,3 +84,8 @@ def test_gpr2build_arm_elf_zynq7k():
         qualifier={"gpr2build": True, "rts": "light-zynq7000", "languages": "Ada;C"},
         target="arm-elf,,qemu-zynq",
     )
+
+def test_gprconfig():
+    install_gpr2()
+    anod_build("gprbuild")
+    anod_test("gprconfig")

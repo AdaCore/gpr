@@ -612,7 +612,6 @@ procedure GPRconfig is
             Append
               (Result, " (" & String (Runtime (Comp, True)) & " runtime)");
          end if;
-         Append (Result, " (" & String (Executable (Comp)) & ") ");
 
          return To_String (Result);
       end Compiler_Image;
