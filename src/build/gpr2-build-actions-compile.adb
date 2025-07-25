@@ -1083,7 +1083,9 @@ package body GPR2.Build.Actions.Compile is
             end if;
 
             if not Self.Input.Is_Inherited
-              or else (Obj_Path.Exists and then Local_Dep.Exists)
+              or else (Obj_Path.Exists
+                       and then (Local_Dep.Is_Defined
+                                 and then Local_Dep.Exists))
             then
                Self.Obj_File := Artifacts.Object_File.Create (Obj_Path);
                if Has_Dep then
