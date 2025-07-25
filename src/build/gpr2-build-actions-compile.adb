@@ -819,54 +819,42 @@ package body GPR2.Build.Actions.Compile is
    is
       use Build.Response_Files;
 
-      Lang_Index : constant PAI.Object := PAI.Create (Self.Lang);
-      A_RFF      : constant Project.Attribute.Object :=
-                     Self.View.Attribute
-                       (PRA.Compiler.Response_File_Format, Lang_Index);
-      Format     : Response_File_Format := None;
-      A_CLML     : constant Project.Attribute.Object :=
-                     Self.View.Attribute
-                       (PRA.Compiler.Max_Command_Line_Length);
-      CLML       : constant Natural :=
-                     (if A_CLML.Is_Defined
-                      then Natural'Value (A_CLML.Value.Text)
-                      else Natural'Last);
+      CL_Max_Length_Attr : constant Project.Attribute.Object :=
+                             Self.View.Attribute
+                               (PRA.Compiler.Max_Command_Line_Length);
+      CL_Max_Length      : constant Natural :=
+                             (if CL_Max_Length_Attr.Is_Defined
+                              then Natural'Value
+                                (CL_Max_Length_Attr.Value.Text)
+                              else Natural'Last);
+      Lang_Index         : constant PAI.Object := PAI.Create (Self.Lang);
+      Format_Attr        : constant Project.Attribute.Object :=
+                             Self.View.Attribute
+                               (PRA.Compiler.Response_File_Format, Lang_Index);
+      Format             : Response_File_Format := None;
+
    begin
-      if Self.Cmd_Line.Total_Length <= CLML then
+      if Cmd_Line.Total_Length <= CL_Max_Length then
          return;
       end if;
 
-      if A_RFF.Is_Defined then
-         declare
-            LV : constant String :=
-                   Ada.Characters.Handling.To_Lower (A_RFF.Value.Text);
-         begin
-            if LV = "gnu" then
-               Format := GNU;
-            elsif LV = "object_list" then
-               Format := Object_List;
-            elsif LV = "gcc_gnu" then
-               Format := GCC_GNU;
-            elsif LV = "gcc_option_list" then
-               Format := GCC_Option_List;
-            elsif LV = "gcc_object_list" then
-               Format := GCC_Object_List;
-            end if;
-         end;
+      if Format_Attr.Is_Defined then
+         Format := Response_File_Format'Value (Format_Attr.Value.Text);
       end if;
 
       if Format = GCC_GNU then
          declare
-            A_RFS  : constant Project.Attribute.Object :=
-                       Self.View.Attribute
-                         (PRA.Compiler.Response_File_Switches,
-                          Lang_Index);
-            RFS    : constant Containers.Source_Value_List :=
-                       (if A_RFS.Is_Defined
-                        then A_RFS.Values
-                        else Containers.Empty_Source_Value_List);
+            Switches_Attr : constant Project.Attribute.Object :=
+                              Self.View.Attribute
+                                (PRA.Compiler.Response_File_Switches,
+                                 Lang_Index);
+            Switches      : constant Containers.Source_Value_List :=
+                              (if Switches_Attr.Is_Defined
+                               then Switches_Attr.Values
+                               else Containers.Empty_Source_Value_List);
          begin
-            Self.Response_Files.Initialize (Format, Compiler, RFS);
+            Self.Response_Files.Initialize
+              (Format, Compiler, Switches);
          end;
 
          declare
