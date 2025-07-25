@@ -6,7 +6,6 @@
 
 with GNAT.OS_Lib;
 
-with GPR2.Build.Response_Files;
 with GPR2.Project;
 with GPR2.Project.Attribute;
 

@@ -824,7 +824,18 @@ package body GPR2.Build.Actions.Compile is
                      Self.View.Attribute
                        (PRA.Compiler.Response_File_Format, Lang_Index);
       Format     : Response_File_Format := None;
+      A_CLML     : constant Project.Attribute.Object :=
+                     Self.View.Attribute
+                       (PRA.Compiler.Max_Command_Line_Length);
+      CLML       : constant Natural :=
+                     (if A_CLML.Is_Defined
+                      then Natural'Value (A_CLML.Value.Text)
+                      else Natural'Last);
    begin
+      if Self.Cmd_Line.Total_Length <= CLML then
+         return;
+      end if;
+
       if A_RFF.Is_Defined then
          declare
             LV : constant String :=
@@ -854,30 +865,21 @@ package body GPR2.Build.Actions.Compile is
                        (if A_RFS.Is_Defined
                         then A_RFS.Values
                         else Containers.Empty_Source_Value_List);
-            A_CLML : constant Project.Attribute.Object :=
-                       Self.View.Attribute
-                         (PRA.Compiler.Max_Command_Line_Length);
-            CLML   : constant Natural :=
-                       (if A_CLML.Is_Defined
-                        then Natural'Value (A_CLML.Value.Text)
-                        else 0);
          begin
-            Self.Response_Files.Initialize (Format, Compiler, CLML, RFS);
+            Self.Response_Files.Initialize (Format, Compiler, RFS);
          end;
 
-         if Self.Response_Files.Length_Restriction (Cmd_Line) then
-            declare
-               Resp_File : constant Tree_Db.Temp_File :=
-                             Self.Get_Or_Create_Temp_File
-                               ("response_file", Local);
-            begin
-               Self.Response_Files.Register
-                 (Resp_File.FD,
-                  Resp_File.Path);
-            end;
+         declare
+            Resp_File : constant Tree_Db.Temp_File :=
+                          Self.Get_Or_Create_Temp_File
+                            ("response_file", Local);
+         begin
+            Self.Response_Files.Register
+              (Resp_File.FD,
+               Resp_File.Path);
+         end;
 
-            Self.Response_Files.Create (Cmd_Line);
-         end if;
+         Self.Response_Files.Create (Cmd_Line);
       end if;
    end Compute_Response_Files;
 

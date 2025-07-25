@@ -13,27 +13,6 @@ package body GPR2.Build.Response_Files is
       Vector : in out GNATCOLL.OS.Process.Argument_List;
       Buffer : String);
 
-   ------------------
-   -- Check_Length --
-   ------------------
-
-   function Check_Length
-     (Self     : in out Object;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object) return Boolean is
-   begin
-
-      --  If we have a length restriction, and the current command line length
-      --  exceeds that restriction, we should create a response file.
-      if Self.Length_Restriction (Cmd_Line) then
-         return True;
-      end if;
-
-      Self.Has_Primary_Content   := False;
-      Self.Has_Secondary_Content := False;
-
-      return False;
-   end Check_Length;
-
    -----------
    -- Close --
    -----------
@@ -79,12 +58,6 @@ package body GPR2.Build.Response_Files is
    is
       First : Boolean := True;
    begin
-      --  Do not create a response file if it would result in a longer command
-      --  line length.
-      if not Self.Check_Length (Cmd_Line) then
-         return;
-      end if;
-
       for Arg of Cmd_Line.Argument_List loop
          if First then
             First := False;
@@ -123,12 +96,6 @@ package body GPR2.Build.Response_Files is
                                 then ""
                                 else Self.Resp_File_Switches.Last_Element));
    begin
-      --  Do not create a response file if it would result in a longer command
-      --  line length.
-      if not Self.Check_Length (Cmd_Line) then
-         return;
-      end if;
-
       --  Recompute the command line depending on the response file
       Cmd_Line.Recompute_For_Response_File
         (GCC_Info or else GNU_Archiver_Info,
@@ -232,11 +199,10 @@ package body GPR2.Build.Response_Files is
    ----------------
 
    procedure Initialize
-     (Self       : in out Object;
-      Format     : Response_File_Format;
-      Kind       : Response_File_Kind;
-      Max_Length : Natural;
-      Switches   : Containers.Source_Value_List)
+     (Self     : in out Object;
+      Format   : Response_File_Format;
+      Kind     : Response_File_Kind;
+      Switches : Containers.Source_Value_List)
    is
 
       function Define_Switches return Build.Command_Line.Args_Vector.Vector;
@@ -259,7 +225,6 @@ package body GPR2.Build.Response_Files is
    begin
       Self.Format              := Format;
       Self.Kind                := Kind;
-      Self.Max_Cmd_Line_Length := Max_Length;
       Self.Resp_File_Switches  := Define_Switches;
    end Initialize;
 

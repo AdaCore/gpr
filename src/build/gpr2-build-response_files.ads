@@ -31,11 +31,10 @@ package GPR2.Build.Response_Files is
       Cmd_Line : in out GPR2.Build.Command_Line.Object);
 
    procedure Initialize
-     (Self       : in out Object;
-      Format     : Response_File_Format;
-      Kind       : Response_File_Kind;
-      Max_Length : Natural;
-      Switches   : Containers.Source_Value_List);
+     (Self     : in out Object;
+      Format   : Response_File_Format;
+      Kind     : Response_File_Kind;
+      Switches : Containers.Source_Value_List);
 
    procedure Register
      (Self      : in out Object;
@@ -53,10 +52,6 @@ package GPR2.Build.Response_Files is
    function Secondary_Response_File_Content
      (Self : Object) return GNATCOLL.OS.Process.Argument_List;
 
-   function Length_Restriction
-     (Self     : Object;
-      Cmd_Line : GPR2.Build.Command_Line.Object) return Boolean;
-
 private
 
    use GNATCOLL;
@@ -67,7 +62,6 @@ private
    type Object is tagged record
       Format                : Response_File_Format     := None;
       Kind                  : Response_File_Kind       := Unknown;
-      Max_Cmd_Line_Length   : Natural                  := 0;
 
       Primary_FD            : OS.FS.File_Descriptor    := GOF.Invalid_FD;
       Primary_Path          : Unbounded_String;
@@ -91,10 +85,6 @@ private
    procedure Create_Compiler
      (Self     : in out Object;
       Cmd_Line : in out GPR2.Build.Command_Line.Object);
-
-   function Check_Length
-     (Self     : in out Object;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object) return Boolean;
 
    function Has_Primary_Response_File (Self : Object) return Boolean;
 
@@ -121,11 +111,5 @@ private
    function Secondary_Response_File_Content
      (Self : Object) return OS.Process.Argument_List is
      (Self.Secondary_Content);
-
-   function Length_Restriction
-     (Self     : Object;
-      Cmd_Line : GPR2.Build.Command_Line.Object) return Boolean is
-     (Self.Max_Cmd_Line_Length > 0
-      and then Cmd_Line.Arg_Length > Self.Max_Cmd_Line_Length);
 
 end  GPR2.Build.Response_Files;
