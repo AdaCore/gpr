@@ -9,6 +9,7 @@ with GNATCOLL.OS.Process;
 
 with GPR2.Build.Command_Line;
 with GPR2.Containers;
+with GPR2.Path_Name;
 
 package GPR2.Build.Response_Files is
 
@@ -47,10 +48,14 @@ package GPR2.Build.Response_Files is
    function Primary_Response_File_Content
      (Self : Object) return GNATCOLL.OS.Process.Argument_List;
 
+   function Primary_Response_File (Self : Object) return Path_Name.Object;
+
    function Has_Secondary_Content (Self : Object) return Boolean;
 
    function Secondary_Response_File_Content
      (Self : Object) return GNATCOLL.OS.Process.Argument_List;
+
+   function Secondary_Response_File (Self : Object) return Path_Name.Object;
 
 private
 
@@ -64,12 +69,12 @@ private
       Kind                  : Response_File_Kind       := Unknown;
 
       Primary_FD            : OS.FS.File_Descriptor    := GOF.Invalid_FD;
-      Primary_Path          : Unbounded_String;
+      Primary_Path          : Path_Name.Object;
       Primary_Content       : OS.Process.Argument_List;
       Has_Primary_Content   : Boolean                  := False;
 
       Secondary_FD          : OS.FS.File_Descriptor    := GOF.Invalid_FD;
-      Secondary_Path        : Unbounded_String;
+      Secondary_Path        : Path_Name.Object;
       Secondary_Content     : OS.Process.Argument_List;
       Has_Secondary_Content : Boolean                  := False;
 
@@ -96,20 +101,26 @@ private
      (Self.Primary_FD /= GOF.Invalid_FD);
 
    function Has_Primary_Content (Self : Object) return Boolean is
-     (Self.Has_Primary_Content);
+     (Self.Primary_Path.Is_Defined);
 
    function Primary_Response_File_Content
      (Self : Object) return OS.Process.Argument_List is
      (Self.Primary_Content);
 
+   function Primary_Response_File (Self : Object) return Path_Name.Object is
+     (Self.Primary_Path);
+
    function Has_Secondary_Response_File (Self : Object) return Boolean is
      (Self.Secondary_FD /= GOF.Invalid_FD);
 
    function Has_Secondary_Content (Self : Object) return Boolean is
-     (Self.Has_Secondary_Content);
+     (Self.Secondary_Path.Is_Defined);
 
    function Secondary_Response_File_Content
      (Self : Object) return OS.Process.Argument_List is
      (Self.Secondary_Content);
+
+   function Secondary_Response_File (Self : Object) return Path_Name.Object is
+     (Self.Secondary_Path);
 
 end  GPR2.Build.Response_Files;

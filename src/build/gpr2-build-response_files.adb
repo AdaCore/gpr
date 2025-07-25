@@ -69,7 +69,9 @@ package body GPR2.Build.Response_Files is
 
       --  Recompute the command line with the response file
       Cmd_Line.Recompute_For_Response_File
-        (True, "@" & (-Self.Primary_Path), Build.Command_Line.All_Args);
+        (True,
+         "@" & Self.Primary_Path.String_Value,
+         Build.Command_Line.All_Args);
    end Create_Compiler;
 
    -------------------
@@ -100,8 +102,8 @@ package body GPR2.Build.Response_Files is
       Cmd_Line.Recompute_For_Response_File
         (GCC_Info or else GNU_Archiver_Info,
          (if Self.Secondary_FD = GOF.Invalid_FD
-          then Resp_File_Prefix & (-Self.Primary_Path)
-          else Resp_File_Prefix & (-Self.Secondary_Path)));
+          then Resp_File_Prefix & Self.Primary_Path.String_Value
+          else Resp_File_Prefix & Self.Secondary_Path.String_Value));
 
       if GNU_Info_Needed then
          Write (Self.Primary_FD, Self.Primary_Content, GNU_Header);
@@ -151,7 +153,7 @@ package body GPR2.Build.Response_Files is
          Write
            (Self.Secondary_FD,
             Self.Secondary_Content,
-            Format (-Self.Primary_Path));
+            Format (Self.Primary_Path.String_Value));
          Write (Self.Secondary_FD, Self.Secondary_Content, "" & ASCII.LF);
 
          for Other of Cmd_Line.Argument_List (Build.Command_Line.Other) loop
@@ -240,12 +242,12 @@ package body GPR2.Build.Response_Files is
    begin
       if Secondary then
          Self.Secondary_FD   := FD;
-         Self.Secondary_Path := +Path;
+         Self.Secondary_Path := Path_Name.Create_File (Path);
          Self.Secondary_Content.Append (String (Path));
          Self.Has_Secondary_Content := True;
       else
          Self.Primary_FD   := FD;
-         Self.Primary_Path := +Path;
+         Self.Primary_Path := Path_Name.Create_File (Path);
          Self.Primary_Content.Append (String (Path));
          Self.Has_Primary_Content := True;
       end if;
