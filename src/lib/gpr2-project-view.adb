@@ -2168,10 +2168,8 @@ package body GPR2.Project.View is
    -- Library_Filename_Internal --
    -------------------------------
 
-   function Library_Filename_Internal
-     (Self : Object) return Simple_Name
-   is
-      File_Name    : Unbounded_String;
+   function Library_Filename_Internal (Self : Object) return Simple_Name is
+      File_Name : Unbounded_String;
    begin
       --  Library prefix
 
@@ -2209,7 +2207,7 @@ package body GPR2.Project.View is
    function Library_Filename_Variants
      (Self : Object) return GPR2.Containers.Filename_Set
    is
-      Result : Containers.Filename_Set;
+      Result       : Containers.Filename_Set;
       Attr_Version : GPR2.Project.Attribute.Object;
    begin
       --  Library version
