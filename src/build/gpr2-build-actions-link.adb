@@ -830,7 +830,7 @@ package body GPR2.Build.Actions.Link is
       --  which does not correspond to what the attribute
       --  Response_File_Format yields hence the need to override here.
       --  This should probably be dealt with the KB.
-      if Self.Is_Static_Library then
+      if Object'Class (Self).Is_Static_Library then
          Format := GNU_Archiver;
       elsif Format_Attr.Is_Defined then
          Format :=

@@ -68,6 +68,9 @@ private
    overriding function Extended (Self : Object) return Object is
      (raise Internal_Error with "This action is not extending");
 
+   overriding function Is_Static_Library (Self : Object) return Boolean is
+     (False);
+
    Undefined : constant Object := (others => <>);
 
    overriding function Output
