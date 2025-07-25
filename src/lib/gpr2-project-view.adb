@@ -2127,7 +2127,9 @@ package body GPR2.Project.View is
          --  Attribute library_version is only available on unix for shared
          --  libraries.
 
-         if not Self.Is_Static_Library and then Shared_Ext /= ".dll" then
+         if not Self.Is_Static_Library
+           and then not Self.Tree.Is_Windows_Target
+         then
             Attr_Version := Self.Attribute (PRA.Library_Version);
 
             if Attr_Version.Is_Defined then
@@ -2212,7 +2214,7 @@ package body GPR2.Project.View is
    begin
       --  Library version
       if not Self.Is_Static_Library
-        and then not GPR2.On_Windows
+        and then not Self.Tree.Is_Windows_Target
       then
          pragma Warnings (Off, "this code can never be executed*");
          Attr_Version := Self.Attribute (PRA.Library_Version);
@@ -2285,7 +2287,7 @@ package body GPR2.Project.View is
      (Self : Object) return GPR2.Path_Name.Object is
    begin
       return Self.Library_Directory.Compose
-        ((if On_Windows
+        ((if Self.Tree.Is_Windows_Target
          then Self.Library_Filename_Internal
          else Simple_Name (Self.Attribute (PRA.Library_Version).Value.Text)));
    end Library_Version_Filename;
