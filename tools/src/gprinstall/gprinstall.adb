@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2024, AdaCore                     --
+--                     Copyright (C) 2019-2025, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -53,8 +53,7 @@ package body GPRinstall is
    -- Delete_Directory --
    ----------------------
 
-   procedure Delete_Directory (Root_Dir, Dir : String)
-   is
+   procedure Delete_Directory (Root_Dir, Dir : String) is
    begin
       Delete_Dir := True;
 
@@ -90,8 +89,7 @@ package body GPRinstall is
    -- Delete_Registered_Directory --
    ---------------------------------
 
-   procedure Delete_Registered_Directory (Root_Dir : String)
-   is
+   procedure Delete_Registered_Directory (Root_Dir : String) is
       N_Root_Dir : constant String := Normalize_Pathname (Root_Dir);
 
       procedure Delete (Position : P_Directory_Map.Cursor);
