@@ -10,8 +10,12 @@ package body GPR2.Build.Response_Files is
 
    procedure Write
      (FD     : GNATCOLL.OS.FS.File_Descriptor;
-      Vector : in out GNATCOLL.OS.Process.Argument_List;
+      Vector : in out Unbounded_String;
       Buffer : String);
+
+   procedure New_Line
+     (FD     : GNATCOLL.OS.FS.File_Descriptor;
+      Vector : in out Unbounded_String);
 
    -----------
    -- Close --
@@ -85,8 +89,8 @@ package body GPR2.Build.Response_Files is
       GNU_Info_Needed   : constant Boolean := Self.Format in GNU | GCC_GNU;
       GNU_Header        : constant String := "INPUT (";
       GNU_Opening       : constant String := """";
-      GNU_Closing       : constant String := '"' & ASCII.LF;
-      GNU_Footer        : constant String := ')' & ASCII.LF;
+      GNU_Closing       : constant String := GNU_Opening;
+      GNU_Footer        : constant String := ")";
       GCC_Info          : constant Boolean :=
                            Self.Format in GCC_Formatting_Required;
       GNU_Archiver_Info : constant Boolean := Self.Format in GNU_Archiver;
@@ -98,13 +102,6 @@ package body GPR2.Build.Response_Files is
                                 then ""
                                 else Self.Resp_File_Switches.Last_Element));
    begin
-      --  Recompute the command line depending on the response file
-      Cmd_Line.Recompute_For_Response_File
-        (GCC_Info or else GNU_Archiver_Info,
-         (if Self.Secondary_FD = GOF.Invalid_FD
-          then Resp_File_Prefix & Self.Primary_Path.String_Value
-          else Resp_File_Prefix & Self.Secondary_Path.String_Value));
-
       if GNU_Info_Needed then
          Write (Self.Primary_FD, Self.Primary_Content, GNU_Header);
       end if;
@@ -112,41 +109,27 @@ package body GPR2.Build.Response_Files is
       for Obj of Cmd_Line.Argument_List (Build.Command_Line.Obj) loop
          if GNU_Info_Needed then
             Write (Self.Primary_FD, Self.Primary_Content, GNU_Opening);
-         end if;
-
-         if GNU_Info_Needed then
             Write (Self.Primary_FD, Self.Primary_Content, Format (Obj));
             Write (Self.Primary_FD, Self.Primary_Content, GNU_Closing);
 
-         elsif GNU_Archiver_Info then
-            declare
-               First : constant Boolean :=
-                         (Obj = Cmd_Line.Argument_List
-                            (Build.Command_Line.Obj).First_Element);
-            begin
-               Write
-                 (Self.Primary_FD,
-                  Self.Primary_Content,
-                  (if First then "" else " ") & Format (Obj));
-            end;
-
          else
-            Write
-              (Self.Primary_FD, Self.Primary_Content, Format (Obj) & ASCII.LF);
+            Write (Self.Primary_FD, Self.Primary_Content, Format (Obj));
          end if;
+
+         New_Line (Self.Primary_FD, Self.Primary_Content);
       end loop;
 
       if GNU_Info_Needed then
          Write (Self.Primary_FD, Self.Primary_Content, GNU_Footer);
+         New_Line (Self.Primary_FD, Self.Primary_Content);
       end if;
 
-      if GCC_Info and then Self.Secondary_FD /= GOF.Invalid_FD then
+      if GCC_Info and then Self.Has_Secondary_Response_File then
          for Switch of Self.Resp_File_Switches loop
             Write (Self.Secondary_FD, Self.Secondary_Content, Switch);
 
             if Switch /= Self.Resp_File_Switches.Last_Element then
-               Write
-                 (Self.Secondary_FD, Self.Secondary_Content, "" & ASCII.LF);
+               New_Line (Self.Secondary_FD, Self.Secondary_Content);
             end if;
          end loop;
 
@@ -154,17 +137,24 @@ package body GPR2.Build.Response_Files is
            (Self.Secondary_FD,
             Self.Secondary_Content,
             Format (Self.Primary_Path.String_Value));
-         Write (Self.Secondary_FD, Self.Secondary_Content, "" & ASCII.LF);
+         New_Line (Self.Secondary_FD, Self.Secondary_Content);
 
          for Other of Cmd_Line.Argument_List (Build.Command_Line.Other) loop
-            if not Cmd_Line.Argument_List.Contains (Other) then
-               Write
-                 (Self.Secondary_FD,
-                  Self.Secondary_Content,
-                  Format (Other) & ASCII.LF);
-            end if;
+            Write
+              (Self.Secondary_FD,
+               Self.Secondary_Content,
+               Format (Other));
+            New_Line (Self.Secondary_FD, Self.Secondary_Content);
          end loop;
       end if;
+
+      --  Recompute the command line depending on the response file
+      Cmd_Line.Recompute_For_Response_File
+        (Clear_Other   => Self.Has_Secondary_Response_File,
+         Resp_File_Arg =>
+           (if not Self.Has_Secondary_Response_File
+            then Resp_File_Prefix & Self.Primary_Path.String_Value
+            else Resp_File_Prefix & Self.Secondary_Path.String_Value));
    end Create_Linker;
 
    ------------
@@ -201,34 +191,29 @@ package body GPR2.Build.Response_Files is
    ----------------
 
    procedure Initialize
-     (Self     : in out Object;
-      Format   : Response_File_Format;
-      Kind     : Response_File_Kind;
-      Switches : Containers.Source_Value_List)
-   is
-
-      function Define_Switches return Build.Command_Line.Args_Vector.Vector;
-
-      ---------------------
-      -- Define_Switches --
-      ---------------------
-
-      function Define_Switches return Build.Command_Line.Args_Vector.Vector
-      is
-         V : Build.Command_Line.Args_Vector.Vector;
-      begin
-         for Val of Switches loop
-            V.Append (Val.Text);
-         end loop;
-
-         return V;
-      end Define_Switches;
-
+     (Self       : in out Object;
+      Format     : Response_File_Format;
+      Kind       : Response_File_Kind;
+      Switches   : Containers.Source_Value_List) is
    begin
       Self.Format              := Format;
       Self.Kind                := Kind;
-      Self.Resp_File_Switches  := Define_Switches;
+      for Val of Switches loop
+         Self.Resp_File_Switches.Append (Val.Text);
+      end loop;
    end Initialize;
+
+   --------------
+   -- New_Line --
+   --------------
+
+   procedure New_Line
+     (FD     : GNATCOLL.OS.FS.File_Descriptor;
+      Vector : in out Unbounded_String) is
+   begin
+      GOF.Write (FD, "" & ASCII.LF);
+      Append (Vector, "<LF>");
+   end New_Line;
 
    --------------
    -- Register --
@@ -243,13 +228,9 @@ package body GPR2.Build.Response_Files is
       if Secondary then
          Self.Secondary_FD   := FD;
          Self.Secondary_Path := Path_Name.Create_File (Path);
-         Self.Secondary_Content.Append (String (Path));
-         Self.Has_Secondary_Content := True;
       else
          Self.Primary_FD   := FD;
          Self.Primary_Path := Path_Name.Create_File (Path);
-         Self.Primary_Content.Append (String (Path));
-         Self.Has_Primary_Content := True;
       end if;
    end Register;
 
@@ -259,11 +240,11 @@ package body GPR2.Build.Response_Files is
 
    procedure Write
      (FD     : GNATCOLL.OS.FS.File_Descriptor;
-      Vector : in out GNATCOLL.OS.Process.Argument_List;
+      Vector : in out Unbounded_String;
       Buffer : String) is
    begin
       GOF.Write (FD, Buffer);
-      Vector.Append (Buffer);
+      Append (Vector, Buffer);
    end Write;
 
 

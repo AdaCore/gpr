@@ -4,6 +4,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Strings.Unbounded;
+
 with GNATCOLL.OS.FS;
 with GNATCOLL.OS.Process;
 
@@ -46,14 +48,14 @@ package GPR2.Build.Response_Files is
    function Has_Primary_Content (Self : Object) return Boolean;
 
    function Primary_Response_File_Content
-     (Self : Object) return GNATCOLL.OS.Process.Argument_List;
+     (Self : Object) return Ada.Strings.Unbounded.Unbounded_String;
 
    function Primary_Response_File (Self : Object) return Path_Name.Object;
 
    function Has_Secondary_Content (Self : Object) return Boolean;
 
    function Secondary_Response_File_Content
-     (Self : Object) return GNATCOLL.OS.Process.Argument_List;
+     (Self : Object) return Ada.Strings.Unbounded.Unbounded_String;
 
    function Secondary_Response_File (Self : Object) return Path_Name.Object;
 
@@ -70,15 +72,13 @@ private
 
       Primary_FD            : OS.FS.File_Descriptor    := GOF.Invalid_FD;
       Primary_Path          : Path_Name.Object;
-      Primary_Content       : OS.Process.Argument_List;
-      Has_Primary_Content   : Boolean                  := False;
+      Primary_Content       : Unbounded_String;
 
       Secondary_FD          : OS.FS.File_Descriptor    := GOF.Invalid_FD;
       Secondary_Path        : Path_Name.Object;
-      Secondary_Content     : OS.Process.Argument_List;
-      Has_Secondary_Content : Boolean                  := False;
+      Secondary_Content     : Unbounded_String;
 
-      Resp_File_Switches    : Build.Command_Line.Args_Vector.Vector;
+      Resp_File_Switches    : GNATCOLL.OS.Process.Argument_List;
    end record;
 
    procedure Close (Self : in out Object);
@@ -104,7 +104,7 @@ private
      (Self.Primary_Path.Is_Defined);
 
    function Primary_Response_File_Content
-     (Self : Object) return OS.Process.Argument_List is
+     (Self : Object) return Unbounded_String is
      (Self.Primary_Content);
 
    function Primary_Response_File (Self : Object) return Path_Name.Object is
@@ -117,7 +117,7 @@ private
      (Self.Secondary_Path.Is_Defined);
 
    function Secondary_Response_File_Content
-     (Self : Object) return OS.Process.Argument_List is
+     (Self : Object) return Unbounded_String is
      (Self.Secondary_Content);
 
    function Secondary_Response_File (Self : Object) return Path_Name.Object is

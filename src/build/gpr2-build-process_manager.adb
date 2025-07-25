@@ -41,11 +41,6 @@ package body GPR2.Build.Process_Manager is
       For_Script : Boolean := False) return String;
    --  Return the representation of the command
 
-   function Image_RF
-     (Resp_File_Path : Path_Name.Object;
-      Command        : Argument_List) return String;
-   --  Return the formatted content of a response file
-
    Traces : constant GNATCOLL.Traces.Logger :=
               GNATCOLL.Traces.Create
                 ("GPR.PROCESS_MANAGER",
@@ -734,35 +729,6 @@ package body GPR2.Build.Process_Manager is
       return -Result;
    end Image;
 
-   --------------
-   -- Image_RF --
-   --------------
-
-   function Image_RF
-     (Resp_File_Path : Path_Name.Object;
-      Command        : Argument_List) return String
-   is
-      Result : Unbounded_String;
-   begin
-      Append
-        (Result,
-         "Response file @" & String (Resp_File_Path.Simple_Name) & ": {");
-
-      for Arg of Command loop
-         if GNATCOLL.Utils.Ends_With (Arg, "" & ASCII.LF) then
-            Append (Result, Arg (Arg'First .. Arg'Last - 1) & "<LF>");
-         else
-            Append (Result, Arg);
-         end if;
-      end loop;
-
-      if not Command.Is_Empty then
-         Append (Result, "}");
-      end if;
-
-      return -Result;
-   end Image_RF;
-
    ----------------
    -- Launch_Job --
    ----------------
@@ -784,7 +750,7 @@ package body GPR2.Build.Process_Manager is
       procedure Display (Command : Argument_List);
       procedure Display_RF
         (Resp_File_Path : Path_Name.Object;
-         Command        : Argument_List);
+         Command        : Unbounded_String);
 
       -------------
       -- Display --
@@ -830,9 +796,17 @@ package body GPR2.Build.Process_Manager is
 
       procedure Display_RF
         (Resp_File_Path : Path_Name.Object;
-         Command        : Argument_List) is
+         Command        : Unbounded_String)
+      is
+         Msg : Unbounded_String;
       begin
-         Self.Tree_Db.Reporter.Report (Image_RF (Resp_File_Path, Command));
+         Append (Msg, "Response file: @");
+         Append (Msg, String (Resp_File_Path.Simple_Name));
+         Append (Msg, ": {");
+         Append (Msg, Command);
+         Append (Msg, "}");
+
+         Self.Tree_Db.Reporter.Report (To_String (Msg));
       end Display_RF;
 
       P_Wo : FS.File_Descriptor;
