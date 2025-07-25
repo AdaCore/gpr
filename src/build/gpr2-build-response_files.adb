@@ -74,8 +74,7 @@ package body GPR2.Build.Response_Files is
       --  Recompute the command line with the response file
       Cmd_Line.Recompute_For_Response_File
         (True,
-         "@" & Self.Primary_Path.String_Value,
-         Build.Command_Line.All_Args);
+         "@" & Self.Primary_Path.String_Value);
    end Create_Compiler;
 
    -------------------
