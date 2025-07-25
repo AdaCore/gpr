@@ -41,6 +41,8 @@ package body GPR2.Build.Response_Files is
       Cmd_Line  : in out GPR2.Build.Command_Line.Object) is
    begin
       case Self.Kind is
+         when Binder =>
+            Self.Create_Binder (Cmd_Line);
          when Compiler =>
             Self.Create_Compiler (Cmd_Line);
          when Linker =>
@@ -51,6 +53,79 @@ package body GPR2.Build.Response_Files is
 
       Self.Close;
    end Create;
+
+   -------------------
+   -- Create_Binder --
+   -------------------
+
+   procedure Create_Binder
+     (Self     : in out Object;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object)
+   is
+      function Format_Binder_Arg (Arg : String) return String;
+
+      function Format_Binder_Arg (Arg : String) return String
+      is
+         Char          : Character;
+         Quotes_Needed : Boolean := False;
+      begin
+         for Index in Arg'Range loop
+            Char := Arg (Index);
+
+            if Char = ' '
+              or else Char = ASCII.HT
+              or else Char = '"'
+            then
+               Quotes_Needed := True;
+               exit;
+            end if;
+         end loop;
+
+         if Quotes_Needed then
+            declare
+               New_Arg : String (1 .. Arg'Length * 2 + 2);
+               Offset  : Integer := 0;
+            begin
+               New_Arg (1) := '"';
+               Offset := Offset + 1;
+
+               for Index in Arg'Range loop
+                  Char := Arg (Index);
+                  New_Arg (Index + Offset) := Char;
+
+                  if Char = '"' then
+                     Offset := Offset + 1;
+                     New_Arg (Index + Offset) := '"';
+                  end if;
+               end loop;
+
+               Offset := Offset + 1;
+               New_Arg (Arg'Length + Offset) := '"';
+
+               return New_Arg (1 .. Arg'Length + Offset);
+            end;
+         end if;
+
+         return Arg;
+      end Format_Binder_Arg;
+
+      First : Boolean := True;
+   begin
+      for Arg of Cmd_Line.Argument_List loop
+         if First then
+            First := False;
+         else
+            Write
+              (Self.Primary_FD, Self.Primary_Content, Format_Binder_Arg (Arg));
+            New_Line (Self.Primary_FD, Self.Primary_Content);
+         end if;
+      end loop;
+
+      --  Recompute the command line with the response file
+      Cmd_Line.Recompute_For_Response_File
+        (True,
+         "@" & Self.Primary_Path.String_Value);
+   end Create_Binder;
 
    ---------------------
    -- Create_Compiler --
@@ -67,7 +142,8 @@ package body GPR2.Build.Response_Files is
             First := False;
          else
             Write
-              (Self.Primary_FD, Self.Primary_Content, Format (Arg) & ASCII.LF);
+              (Self.Primary_FD, Self.Primary_Content, Format (Arg));
+            New_Line (Self.Primary_FD, Self.Primary_Content);
          end if;
       end loop;
 

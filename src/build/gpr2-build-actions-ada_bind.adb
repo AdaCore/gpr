@@ -97,8 +97,6 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       procedure Add_Mapping_File;
 
-      procedure Create_Response_File;
-
       Lang_Ada_Idx      : constant PAI.Object :=
                             PAI.Create (GPR2.Ada_Language);
       Binder_From_Attrs : Unbounded_String;
@@ -251,76 +249,6 @@ package body GPR2.Build.Actions.Ada_Bind is
          Cmd_Line.Add_Argument
            ("-F=" & String (Map_File.Path), Build.Command_Line.Ignore);
       end Add_Mapping_File;
-
-      --------------------------
-      -- Create_Response_File --
-      --------------------------
-
-      procedure Create_Response_File
-      is
-         use GNATCOLL.OS.FS;
-         Resp_File : constant Tree_Db.Temp_File :=
-                       Self.Get_Or_Create_Temp_File ("response_file", Local);
-         New_Args  : GNATCOLL.OS.Process.Argument_List;
-      begin
-         New_Args.Append (Cmd_Line.Argument_List.First_Element);
-
-         if Resp_File.FD /= Null_FD then
-            for Arg of Cmd_Line.Argument_List loop
-               if Arg /= New_Args.First_Element then
-                  declare
-                     Char          : Character;
-                     Quotes_Needed : Boolean := False;
-                  begin
-                     for Index in Arg'Range loop
-                        Char := Arg (Index);
-
-                        if Char = ' '
-                          or else Char = ASCII.HT
-                          or else Char = '"'
-                        then
-                           Quotes_Needed := True;
-                           exit;
-                        end if;
-                     end loop;
-
-                     if Quotes_Needed then
-                        declare
-                           New_Arg : String (1 .. Arg'Length * 2 + 2);
-                           Offset  : Integer := 0;
-                        begin
-                           New_Arg (1) := '"';
-                           Offset := Offset + 1;
-
-                           for Index in Arg'Range loop
-                              Char := Arg (Index);
-                              New_Arg (Index + Offset) := Char;
-
-                              if Char = '"' then
-                                 Offset := Offset + 1;
-                                 New_Arg (Index + Offset) := '"';
-                              end if;
-                           end loop;
-
-                           Offset := Offset + 1;
-                           New_Arg (Arg'Length + Offset) := '"';
-
-                           Write
-                             (Resp_File.FD,
-                              New_Arg (1 .. Arg'Length + Offset) & ASCII.LF);
-                        end;
-                     else
-                        Write (Resp_File.FD, Arg & ASCII.LF);
-                     end if;
-                  end;
-               end if;
-            end loop;
-         end if;
-
-         New_Args.Append ("@" & String (Resp_File.Path));
-
-         Cmd_Line.Set_Response_File_Command (New_Args);
-      end Create_Response_File;
 
       --------------------
       -- Resolve_Binder --
@@ -527,13 +455,39 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       --  Now that all switches have been analyzed, set the driver
       Cmd_Line.Set_Driver (Resolve_Binder);
-
-      if not Signature_Only
-        and then Cmd_Line.Total_Length > Command_Line_Limit
-      then
-         Create_Response_File;
-      end if;
    end Compute_Command;
+
+   ----------------------------
+   -- Compute_Response_Files --
+   ----------------------------
+
+   overriding procedure Compute_Response_Files
+     (Self           : in out Object;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object)
+   is
+      use Build.Response_Files;
+   begin
+      if Cmd_Line.Total_Length <= Command_Line_Limit then
+         return;
+      end if;
+
+      Self.Response_Files.Initialize
+        (None,
+         Binder,
+         Containers.Empty_Source_Value_List);
+
+      declare
+         Resp_File : constant Tree_Db.Temp_File :=
+                       Self.Get_Or_Create_Temp_File
+                         ("response_file", Local);
+      begin
+         Self.Response_Files.Register
+           (Resp_File.FD,
+            Resp_File.Path);
+      end;
+
+      Self.Response_Files.Create (Cmd_Line);
+   end Compute_Response_Files;
 
    -----------------------
    -- Compute_Signature --

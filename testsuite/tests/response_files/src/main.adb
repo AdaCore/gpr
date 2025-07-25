@@ -1,3 +1,4 @@
+with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNATCOLL.OS.FS;
@@ -32,17 +33,6 @@ function Main return Integer is
    is
       RF       : Response_Files.Object;
       Cmd_Line : Command_Line.Object;
-
-      Primary_Name   : constant String :=
-                         GNATCOLL.Utils.Executable_Location & "primary";
-      Primary_FD     : constant GNATCOLL.OS.FS.File_Descriptor :=
-                         GNATCOLL.OS.FS.Open
-                           (Primary_Name, GNATCOLL.OS.FS.Write_Mode);
-      Secondary_Name : constant String :=
-                         GNATCOLL.Utils.Executable_Location & "secondary";
-      Secondary_FD   : constant GNATCOLL.OS.FS.File_Descriptor :=
-                         GNATCOLL.OS.FS.Open
-                           (Secondary_Name, GNATCOLL.OS.FS.Write_Mode);
    begin
       Test_Helper.New_Test_Case
         ("Response File : " & Format'Img
@@ -56,27 +46,54 @@ function Main return Integer is
       Cmd_Line.Add_Argument ("bar.o", Kind => Command_Line.Obj);
       Cmd_Line.Add_Argument ("-c");
       Cmd_Line.Add_Argument ("-d");
+      Cmd_Line.Add_Argument ("check format");
 
-      RF.Initialize
-        (Format     => Format,
-         Kind       => Kind,
-         Max_Length => Max_Length,
-         Switches   => Switches);
+      Ada.Text_IO.Put_Line (Test_Helper.Image (Cmd_Line.Argument_List));
 
-      if Encapsulated then
-         RF.Register (Secondary_FD, Filename_Type (Secondary_Name), True);
+      if Cmd_Line.Total_Length > Max_Length then
+         RF.Initialize
+           (Format     => Format,
+            Kind       => Kind,
+            Switches   => Switches);
+
+         declare
+            Primary_Name   : constant String :=
+                               GNATCOLL.Utils.Executable_Location & "primary";
+            Secondary_Name : constant String :=
+                               GNATCOLL.Utils.Executable_Location
+                               & "secondary";
+            Primary_FD     : constant GNATCOLL.OS.FS.File_Descriptor :=
+                               GNATCOLL.OS.FS.Open
+                                 (Primary_Name, GNATCOLL.OS.FS.Write_Mode);
+
+            Secondary_FD   : constant GNATCOLL.OS.FS.File_Descriptor :=
+                               (if Encapsulated
+                                then GNATCOLL.OS.FS.Open
+                                  (Secondary_Name, GNATCOLL.OS.FS.Write_Mode)
+                                else GNATCOLL.OS.FS.Invalid_FD);
+         begin
+            if Encapsulated then
+               RF.Register (Secondary_FD, Filename_Type (Secondary_Name), True);
+            end if;
+            RF.Register (Primary_FD, Filename_Type (Primary_Name));
+
+            RF.Create (Cmd_Line);
+
+            Ada.Text_IO.Put_Line (Test_Helper.Image (Cmd_Line.Argument_List));
+            if RF.Has_Secondary_Content then
+               Ada.Text_IO.Put_Line
+                 (Test_Helper.Image_RF
+                    (RF.Secondary_Response_File,
+                     RF.Secondary_Response_File_Content));
+            end if;
+            Ada.Text_IO.Put_Line
+              (Test_Helper.Image_RF
+                 (RF.Primary_Response_File,
+                  RF.Primary_Response_File_Content));
+         end;
+      else
+         Ada.Text_IO.Put_Line (Test_Helper.Image (Cmd_Line.Argument_List));
       end if;
-      RF.Register (Primary_FD, Filename_Type (Primary_Name));
-
-      Ada.Text_IO.Put_Line (Test_Helper.Image (Cmd_Line.Argument_List));
-
-      RF.Create (Cmd_Line);
-
-      Ada.Text_IO.Put_Line (Test_Helper.Image (Cmd_Line.Argument_List));
-      Ada.Text_IO.Put_Line
-        (Test_Helper.Image_RF (RF.Secondary_Response_File_Content));
-      Ada.Text_IO.Put_Line
-        (Test_Helper.Image_RF (RF.Primary_Response_File_Content));
    end Run_Test_Case;
 
    RFS      : Containers.Source_Value_List;
@@ -89,19 +106,16 @@ begin
    RFS.Append (Source_Reference.Value.Object (Second));
 
    for K in Response_Files.Response_File_Kind loop
-      if K = Response_Files.Compiler then
+      if K = Response_Files.Compiler or else K = Response_Files.Binder then
          Ada.Text_IO.Put_Line
            ("======================================================"
-            & "============================================================"
-            & "=============================================");
+            & "==================================");
          Ada.Text_IO.Put_Line
            ("===== No differenciation between response file format for "
-            & "compilation command line, the creation of the response file "
-            & "is the responsibility of the action =====");
+            & "compilation command line =====");
          Ada.Text_IO.Put_Line
            ("======================================================"
-            & "============================================================"
-            & "=============================================");
+            & "==================================");
       elsif K = Response_Files.Unknown then
          Ada.Text_IO.Put_Line
            ("======================================================"
@@ -115,9 +129,9 @@ begin
       end if;
 
       for F in Response_Files.Response_File_Format loop
-         Run_Test_Case (F, K, 0, RFS);
+         Run_Test_Case (F, K, 1000, RFS);
          Run_Test_Case (F, K, 1, RFS);
-         Run_Test_Case (F, K, 0, RFS, True);
+         Run_Test_Case (F, K, 1000, RFS, True);
          Run_Test_Case (F, K, 1, RFS, True);
       end loop;
    end loop;

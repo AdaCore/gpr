@@ -23,7 +23,7 @@ package GPR2.Build.Response_Files is
      with Static_Predicate =>
        GCC_Formatting_Required in GCC_GNU | GCC_Object_List | GCC_Option_List;
 
-   type Response_File_Kind is (Compiler, Linker, Unknown);
+   type Response_File_Kind is (Binder, Compiler, Linker, Unknown);
 
    type Object is tagged private;
 
@@ -88,6 +88,10 @@ private
       Cmd_Line : in out GPR2.Build.Command_Line.Object);
 
    procedure Create_Compiler
+     (Self     : in out Object;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object);
+
+   procedure Create_Binder
      (Self     : in out Object;
       Cmd_Line : in out GPR2.Build.Command_Line.Object);
 
