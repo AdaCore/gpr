@@ -1757,7 +1757,8 @@ package body GPRinstall.Install is
                      else
                         Line := +"         for library_Interfaces use (";
 
-                        for Source of Project.Sources (Interface_Only => True)
+                        for Source
+                          of Project.Sources (Interface_Only => True)
                         loop
                            if Source.Has_Units then
                               for CU of Source.Units loop
