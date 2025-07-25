@@ -867,18 +867,20 @@ package body GPR2.Build.Actions.Compile is
          declare
             Deps : constant GPR2.Containers.Filename_Set := Self.Dependencies;
          begin
-            if Deps.Is_Empty and then not Load_Mode then
-               --  An expected dependency file is missing after compilation, or
-               --  is badly formatted: we clear the signature here so that the
-               --  action will report an error and won't save the signature.
+            if Deps.Is_Empty then
+               --  Dependency file parsing went wrong, at least put the direct
+               --  source as an input.
+               if not Self.Signature.Add_Input
+                 (Artifacts.Files.Create (Self.Src.Path_Name))
+                 and then Load_Mode
+               then
+                  return;
+               end if;
 
-               Self.Tree.Reporter.Report
-                 ("file """ & Self.Dep_File.Path.String_Value &
-                    """ is missing or is wrongly formatted",
-                  To_Stderr => True,
-                  Level     => GPR2.Message.Important);
-               Self.Signature.Clear;
-               return;
+               --  This actions should be done no matter what since the
+               --  dependencies states are unknown.
+               Self.Force_Action := True;
+               Self.Signature.Invalidate;
             end if;
 
             for Dep of Deps loop
@@ -1231,14 +1233,18 @@ package body GPR2.Build.Actions.Compile is
          begin
             Local_O := Artifacts.Object_File.Create
               (Self.View.Object_Directory.Compose (BN & O_Suff));
-
-            Local_Dep := Artifacts.Files.Create
-              (Self.View.Object_Directory.Compose (BN & Dep_Suff));
-
             Self.Tree.Replace_Artifact (Self.Obj_File, Local_O);
-            Self.Tree.Replace_Artifact (Self.Dep_File, Local_Dep);
             Self.Obj_File := Local_O;
-            Self.Dep_File := Local_Dep;
+
+            --  Only replace the dep file artifact if we had a dep file to
+            --  begin with.
+            if Self.Dep_File.Is_Defined then
+               Local_Dep := Artifacts.Files.Create
+                 (Self.View.Object_Directory.Compose (BN & Dep_Suff));
+               Self.Tree.Replace_Artifact (Self.Dep_File, Local_Dep);
+               Self.Dep_File := Local_Dep;
+            end if;
+
             Self.Inh_From := GPR2.Project.View.Undefined;
          end;
       end if;

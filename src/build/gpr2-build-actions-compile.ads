@@ -62,6 +62,8 @@ package GPR2.Build.Actions.Compile is
       Cmd_Line       : in out GPR2.Build.Command_Line.Object;
       Signature_Only : Boolean);
 
+   overriding function Valid_Signature (Self : Object) return Boolean;
+
    function Dependencies
      (Self : Object) return GPR2.Containers.Filename_Set;
    --  Fetch dependencies from a .d dependency file with a makefile parser
@@ -133,6 +135,8 @@ private
       Global_Config_File : Path_Name.Object;
       --  The global configuration pragma file specified by the root project
       --  Global_Configuration_Pragmas attribute
+
+      Force_Action       : Boolean := False;
    end record;
 
    overriding function Post_Command
@@ -147,6 +151,10 @@ private
    function Src_Index (Self : Object) return Unit_Index is
      (No_Index);
    --  Need that for indexed sources, for now only Ada multi-unit sources
+
+   overriding function Valid_Signature (Self : Object) return Boolean is
+     (not Self.Force_Action
+      and then GPR2.Build.Actions.Object (Self).Valid_Signature);
 
    Undefined : constant Object := (others => <>);
 
