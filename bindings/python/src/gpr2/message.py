@@ -1,5 +1,5 @@
 #
-#  Copyright (C) 2020, AdaCore
+#  Copyright (C) 2020-2025, AdaCore
 #
 #  SPDX-License-Identifier: Apache-2.0
 #
@@ -33,8 +33,14 @@ class Sloc:
 
         :param data: dict as returned by json.loads.
         """
-        return cls(
-            filename=data["filename"], line=data.get("line"), column=data.get("column")
+        return (
+            None
+            if data is None
+            else cls(
+                filename=data["filename"],
+                line=data.get("line"),
+                column=data.get("column"),
+            )
         )
 
     def __str__(self):
@@ -53,8 +59,8 @@ class Message:
         :param level: message level
         :param sloc: file location associated with the message
         """
-        self.level = level
         self.message = message
+        self.level = level
         self.sloc = sloc
 
     @classmethod
@@ -63,10 +69,14 @@ class Message:
 
         :param data: dict as returned by json.loads
         """
-        return cls(
-            message=data["message"],
-            level=data["level"],
-            sloc=Sloc.from_dict(data["sloc"]),
+        return (
+            None
+            if data is None
+            else cls(
+                message=data["message"],
+                level=data["level"],
+                sloc=Sloc.from_dict(data["sloc"]),
+            )
         )
 
     def __str__(self):

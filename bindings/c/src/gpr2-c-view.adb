@@ -1,107 +1,107 @@
 --
---  Copyright (C) 2020-2024, AdaCore
+--  Copyright (C) 2020-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.C.JSON; use GPR2.C.JSON;
-with GPR2.C.JSON.Encoders; use GPR2.C.JSON.Encoders;
-with GPR2.C.Utils; use GPR2.C.Utils;
+pragma Warnings (Off);
+with GPR2.Build.Source.Sets;  --  GNAT 20250530 bug: not referenced warning
+pragma Warnings (On);
+with GPR2.C.JSON.Arrays;
+with GPR2.C.JSON.Codecs.Path_Names;
+with GPR2.C.JSON.Codecs.Sources;
+with GPR2.C.JSON.Values;
+with GPR2.C.Registry;
+with GPR2.Project.View;
 
 package body GPR2.C.View is
 
-   ---------------
-   -- Attribute --
-   ---------------
+   function Get_View
+     (Request : GPR2.C.JSON.Objects.JSON_Object)
+      return GPR2.Project.View.Object;
 
-   procedure Attribute
-      (Request : GPR2.C.JSON.JSON_Value; Result : GPR2.C.JSON.JSON_Value)
+   ----------------
+   -- Destructor --
+   ----------------
+
+   procedure Destructor
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
    is
-      Tree : constant GPR_Tree_Access :=
-         Get_GPR_Tree (Request, "tree_id");
-      View : constant GPR_View := To_GPR_View
-         (Tree.all, Get (Request, "view_id"));
-      Attr_Name : constant String := To_String (Get (Request, "name"));
-      Pkg  : constant String := To_String (Get (Request, "pkg"), "");
+      pragma Unreferenced (Result);
 
-      Filename : constant String := To_String (Get
-         (Request, "filename"), "");
-      Position : constant Unit_Index := To_Unit_Index
-         (Get (Request, "position"), No_Unit_Index);
-      Language : constant String := To_String
-         (Get (Request, "language"), "");
-      Name     : constant String := To_String (Get (Request, "index"), "");
-
-      Attr : GPR_Attribute;
    begin
-      if Filename'Length > 0 then
-         Attr := GPR2.C.Utils.Attribute
-            (View,
-             Name  => Attr_Name,
-             Pkg   => Pkg,
-             Index => GPR2.C.Utils.Filename
-                (Name => Filename, Position => Position));
-      elsif Language'Length > 0 then
-         Attr := GPR2.C.Utils.Attribute
-            (View,
-             Name  => Attr_Name,
-             Pkg   => Pkg,
-             Index => GPR2.C.Utils.Language (Language));
-      elsif Name'Length > 0 then
-         Attr := GPR2.C.Utils.Attribute
-            (View,
-             Name  => Attr_Name,
-             Pkg   => Pkg,
-             Index => GPR2.C.Utils.Name (Name => Name));
-      else
-         Attr := GPR2.C.Utils.Attribute
-            (View,
-             Name  => Attr_Name,
-             Pkg   => Pkg);
-      end if;
+      GPR2.C.Registry.View.Unregister (Request.Value ("view_id"));
+   end Destructor;
 
-      Set (Result, "attribute", From_GPR_Attribute (Attr));
-   end Attribute;
+   -----------------
+   -- Executables --
+   -----------------
 
-   ----------
-   -- Load --
-   ----------
+   procedure Executables
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
+   is
+      View : constant GPR2.Project.View.Object := Get_View (Request);
 
-   procedure Load (Request : JSON_Value; Result : JSON_Value) is
-      Tree : constant GPR_Tree_Access := Get_GPR_Tree (Request, "tree_id");
-      View : constant GPR_View := To_GPR_View
-         (Tree.all, Get (Request, "view_id"));
    begin
-      Set (Result, "id", From_GPR_View (View));
-      Set (Result, "path", From_GPR_Path (View.Path_Name));
-      Set (Result, "dir", From_GPR_Path (View.Dir_Name));
-      Set (Result, "name", From_Name (View.Name));
-      Set (Result, "kind", From_Project_Kind (View.Kind));
-   end Load;
+      Result.Insert
+        ("executables",
+         (if View.Is_Defined
+          then GPR2.C.JSON.Codecs.Path_Names.Encode
+                 (View.Executables).To_JSON_Value
+          else GPR2.C.JSON.Values.Null_Value));
+   end Executables;
+
+   --------------
+   -- Get_View --
+   --------------
+
+   function Get_View
+     (Request : GPR2.C.JSON.Objects.JSON_Object)
+      return GPR2.Project.View.Object is
+   begin
+      return GPR2.C.Registry.View.Lookup (Request.Value ("view_id"));
+   end Get_View;
+
+   ----------------------
+   -- Object_Directory --
+   ----------------------
+
+   procedure Object_Directory
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
+   is
+      View : constant GPR2.Project.View.Object := Get_View (Request);
+
+   begin
+      Result.Insert
+        ("object_directory",
+         (if View.Is_Defined and then View.Kind in With_Object_Dir_Kind
+          then GPR2.C.JSON.Values.To_JSON_Value
+                 (String (View.Object_Directory.Value))
+          else GPR2.C.JSON.Values.Null_Value));
+   end Object_Directory;
 
    -------------
    -- Sources --
    -------------
 
-   procedure Sources (Request : JSON_Value; Result : JSON_Value) is
-      Tree : constant GPR_Tree_Access :=
-         Get_GPR_Tree (Request, "tree_id");
-      View : constant GPR_View := To_GPR_View
-         (Tree.all, Get (Request, "view_id"));
+   procedure Sources
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
+   is
+      View    : constant GPR2.Project.View.Object := Get_View (Request);
+      Sources : GPR2.C.JSON.Arrays.JSON_Array;
+
    begin
-      Set (Result, "sources", From_GPR_Sources (View.Sources));
+      if View.Is_Defined then
+         for Source of View.Sources loop
+            Sources.Append (GPR2.C.JSON.Codecs.Sources.Encode (Source));
+         end loop;
+      end if;
+
+      Result.Insert ("sources", Sources);
    end Sources;
-
-   -----------
-   -- Units --
-   -----------
-
-   procedure Units (Request : JSON_Value; Result : JSON_Value) is
-      Tree : constant GPR_Tree_Access := Get_GPR_Tree (Request, "tree_id");
-      View : constant GPR_View := To_GPR_View
-         (Tree.all, Get (Request, "view_id"));
-   begin
-      Set (Result, "units", From_Unit_Infos (View.Units));
-   end Units;
 
 end GPR2.C.View;

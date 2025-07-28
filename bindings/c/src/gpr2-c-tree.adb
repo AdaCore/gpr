@@ -1,169 +1,218 @@
 --
---  Copyright (C) 2020-2024, AdaCore
+--  Copyright (C) 2020-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Unchecked_Deallocation;
-
-with GNATCOLL.JSON;
-
-with GPR2.Log;
+with GPR2.C.JSON.Arrays;
+with GPR2.C.JSON.Values;
+with GPR2.C.JSON.Codecs.Contexts;
+with GPR2.C.JSON.Codecs.Messages;
+with GPR2.C.JSON.Codecs.Options;
+with GPR2.C.Registry;
+with GPR2.C.Reporter;
+with GPR2.Context;
 with GPR2.Project.Tree;
-
-with GPR2.C.JSON;
-with GPR2.C.JSON.Encoders; use GPR2.C.JSON.Encoders;
-with GPR2.C.Utils;         use GPR2.C.Utils;
 
 package body GPR2.C.Tree is
 
-   use GPR2.C.JSON;
+   function Get_Tree
+     (Request : GPR2.C.JSON.Objects.JSON_Object)
+      return GPR2.Project.Tree.Object;
 
-   ----------------------------
-   -- Invalidate_Source_List --
-   ----------------------------
+   -------------------------
+   -- Artifacts_Directory --
+   -------------------------
 
-   procedure Invalidate_Source_List
-      (Request : JSON_Value; Result : JSON_Value)
+   procedure Artifacts_Directory
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
+   is
+      Tree : constant GPR2.Project.Tree.Object := Get_Tree (Request);
+
+   begin
+      Result.Insert
+        ("artifacts_directory",
+         (if Tree.Is_Defined
+          then GPR2.C.JSON.Values.To_JSON_Value
+                 (String (Tree.Artifacts_Dir.Value))
+          else GPR2.C.JSON.Values.Null_Value));
+   end Artifacts_Directory;
+
+   -------------
+   -- Context --
+   -------------
+
+   procedure Context
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
+   is
+      Tree : constant GPR2.Project.Tree.Object := Get_Tree (Request);
+
+   begin
+      Result.Insert
+        ("context",
+         (if Tree.Is_Defined
+          then GPR2.C.JSON.Codecs.Contexts.Encode (Tree.Context).To_JSON_Value
+          else GPR2.C.JSON.Values.Null_Value));
+   end Context;
+
+   ----------------
+   -- Destructor --
+   ----------------
+
+   procedure Destructor
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
    is
       pragma Unreferenced (Result);
 
-      Tree : constant GPR_Tree_Access := Get_GPR_Tree (Request, "tree_id");
    begin
-      GPR2.Project.Tree.Invalidate_Sources (Self => Tree.all);
-   end Invalidate_Source_List;
+      GPR2.C.Registry.Tree.Unregister (Request.Value ("tree_id"));
+   end Destructor;
 
-   ---------
-   -- Load--
-   ---------
+   --------------
+   -- Get_Tree --
+   --------------
 
-   procedure Load (Request : JSON_Value; Result : JSON_Value) is
-      Tree : constant GPR_Tree_Access := new GPR2.Project.Tree.Object;
+   function Get_Tree
+     (Request : GPR2.C.JSON.Objects.JSON_Object)
+      return GPR2.Project.Tree.Object is
    begin
-      Load_Project
-        (Tree             => Tree.all,
-         Filename         => To_String (Get (Request, "filename"), ""),
-         Context          => To_Context (Get (Request, "context")),
-         Build_Path       => To_String (Get (Request, "build_path"), ""),
-         Subdirs          => To_String (Get (Request, "subdirs"), ""),
-         Src_Subdirs      => To_String (Get (Request, "src_subdirs"), ""),
-         Project_Dir      => To_String (Get (Request, "project_dir"), ""),
-         Check_Shared_Lib =>
-           To_Boolean (Get (Request, "check_shared_lib"), True),
-         Absent_Dir_Error =>
-           To_Boolean (Get (Request, "absent_dir_error"), False),
-         Implicit_With => To_Path_Name_Set (Get (Request, "implicit_with")),
-         Config        => To_String (Get (Request, "config"), ""),
-         Target        => To_String (Get (Request, "target"), ""),
-         Runtimes      => To_Lang_Value_Map (Get (Request, "runtimes")));
+      return GPR2.C.Registry.Tree.Lookup (Request.Value ("tree_id"));
+   end Get_Tree;
 
-      Set (Result, "id", From_GPR_Tree (Tree));
+   ----------
+   -- Load --
+   ----------
 
-      if Tree.Is_Defined then
-         Set (Result, "root_view", From_GPR_View (Root_View (Tree.all)));
-         Set
-           (Result, "runtime_view",
-            From_GPR_View (Runtime_View (Tree.all)));
-         Set
-           (Result, "target",
-            From_Name (Tree.all.Target (Canonical => False)));
-         Set
-           (Result, "canonical_target",
-            From_Name (Tree.all.Target (Canonical => True)));
-         Set
-           (Result, "search_paths",
-            From_GPR_Paths (Search_Paths (Tree.all)));
-         if GPR2.Project.Tree.Has_Src_Subdirs (Tree.all) then
-            Set
-              (Result, "src_subdirs",
-               From_Filename (GPR2.Project.Tree.Src_Subdirs (Tree.all)));
-         else
-            Set (Result, "src_subdirs", GNATCOLL.JSON.JSON_Null);
-         end if;
-         Set
-           (Result, "subdirs",
-            From_Filename (GPR2.Project.Tree.Subdirs (Tree.all)));
-         Set
-           (Result, "build_path",
-            From_GPR_Path (GPR2.Project.Tree.Build_Path (Tree.all)));
-         Set (Result, "views", From_GPR_Views (Tree.all.Ordered_Views));
+   procedure Load
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
+   is
+      Tree     : GPR2.Project.Tree.Object;
+      Reporter : GPR2.C.Reporter.Object;
+      Dummy    : Boolean;
 
-         if Tree.Has_Context then
-            Set (Result, "context", From_Context (Tree.all.Context));
-         else
-            Set (Result, "context", GNATCOLL.JSON.Create_Object);
-         end if;
-      end if;
+   begin
+      Dummy :=
+        Tree.Load
+          (Options      =>
+             GPR2.C.JSON.Codecs.Options.Decode (Request.Value ("options")),
+           With_Runtime => Request.Value ("with_runtime").To_Boolean,
+           Reporter     => Reporter);
+
+      Result.Insert ("tree_id", GPR2.C.Registry.Tree.Register (Tree));
    end Load;
 
    ------------------
    -- Log_Messages --
    ------------------
 
-   procedure Log_Messages (Request : JSON_Value; Result : JSON_Value) is
-      Tree : constant GPR_Tree_Access := Get_GPR_Tree (Request, "tree_id");
-      Information : constant Boolean         :=
-        To_Boolean (Get (Request, "information"), True);
-      Warning : constant Boolean :=
-        To_Boolean (Get (Request, "warning"), True);
-      Error : constant Boolean := To_Boolean (Get (Request, "error"), True);
-      Read   : constant Boolean := To_Boolean (Get (Request, "read"), True);
-      Unread : constant Boolean :=
-        To_Boolean (Get (Request, "unread"), True);
+   procedure Log_Messages
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
+   is
+      Tree     : constant GPR2.Project.Tree.Object := Get_Tree (Request);
+      Messages : GPR2.C.JSON.Arrays.JSON_Array;
 
-      Message_Array : GNATCOLL.JSON.JSON_Array;
-      Messages      : constant GNATCOLL.JSON.JSON_Value :=
-        GNATCOLL.JSON.Create (Message_Array);
    begin
-      if Tree.all.Has_Messages then
-         for C in Tree.all.Log_Messages.Iterate
-           (Information => Information, Warning => Warning, Error => Error,
-            Read        => Read, Unread => Unread)
-         loop
-            Messages.Append (From_GPR_Message (GPR2.Log.Element (C)));
+      if Tree.Is_Defined and then Tree.Has_Messages then
+         for Message of Tree.Log_Messages.all loop
+            Messages.Append (GPR2.C.JSON.Codecs.Messages.Encode (Message));
          end loop;
       end if;
 
-      GNATCOLL.JSON.Set_Field (Result, "messages", Messages);
+      Result.Insert ("messages", Messages);
    end Log_Messages;
 
+   ------------------
+   -- Root_Project --
+   ------------------
+
+   procedure Root_Project
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
+   is
+      Tree : constant GPR2.Project.Tree.Object := Get_Tree (Request);
+
+   begin
+      Result.Insert
+        ("view_id",
+         (if Tree.Is_Defined
+          then GPR2.C.Registry.View.Register (Tree.Root_Project)
+          else GPR2.C.JSON.Values.Null_Value));
+   end Root_Project;
+
+   ---------------------
+   -- Runtime_Project --
+   ---------------------
+
+   procedure Runtime_Project
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
+   is
+      Tree : constant GPR2.Project.Tree.Object := Get_Tree (Request);
+
+   begin
+      Result.Insert
+        ("view_id",
+         (if Tree.Is_Defined
+          then GPR2.C.Registry.View.Register (Tree.Runtime_Project)
+          else GPR2.C.JSON.Values.Null_Value));
+   end Runtime_Project;
+
+   -----------------
+   -- Set_Context --
+   -----------------
+
+   procedure Set_Context
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
+   is
+      Tree    : GPR2.Project.Tree.Object := Get_Tree (Request);
+      Context : constant GPR2.Context.Object :=
+        GPR2.C.JSON.Codecs.Contexts.Decode (Request.Value ("context"));
+
+   begin
+      Result.Insert
+        ("success",
+         GPR2.C.JSON.Values.To_JSON_Value (Tree.Set_Context (Context)));
+   end Set_Context;
+
    ------------
-   -- Unload --
+   -- Target --
    ------------
 
-   procedure Unload (Request : JSON_Value; Result : JSON_Value) is
+   procedure Target
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
+   is
+      Tree : constant GPR2.Project.Tree.Object := Get_Tree (Request);
+
+   begin
+      if Tree.Is_Defined then
+         Result.Insert ("target", String (Tree.Target));
+
+      else
+         Result.Insert ("target", GPR2.C.JSON.Values.Null_Value);
+      end if;
+   end Target;
+
+   --------------------
+   -- Update_Sources --
+   --------------------
+
+   procedure Update_Sources
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
+   is
       pragma Unreferenced (Result);
 
-      procedure Free is new Ada.Unchecked_Deallocation
-        (GPR2.Project.Tree.Object, GPR_Tree_Access);
+      Tree : constant GPR2.Project.Tree.Object := Get_Tree (Request);
 
-      Tree : GPR_Tree_Access := Get_GPR_Tree (Request, "tree_id");
    begin
-      GPR2.Project.Tree.Unload (Tree.all);
-      Free (Tree);
-   end Unload;
-
-   -------------------------
-   -- Update_Source_Infos --
-   -------------------------
-
-   procedure Update_Source_Infos (Request : JSON_Value; Result : JSON_Value) is
-      pragma Unreferenced (Result);
-   begin
-      Update_Source_Infos
-        (Tree                 => Get_GPR_Tree (Request, "tree_id").all,
-         Allow_Source_Parsing =>
-           To_Boolean (Get (Request, "allow_source_parsing"), False));
-   end Update_Source_Infos;
-
-   ------------------------
-   -- Update_Source_List --
-   ------------------------
-
-   procedure Update_Source_List (Request : JSON_Value; Result : JSON_Value) is
-      pragma Unreferenced (Result);
-   begin
-      Update_Source_List (Tree => Get_GPR_Tree (Request, "tree_id").all);
-   end Update_Source_List;
+      Tree.Update_Sources;
+   end Update_Sources;
 
 end GPR2.C.Tree;
