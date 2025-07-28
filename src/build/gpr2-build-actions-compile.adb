@@ -1066,6 +1066,9 @@ package body GPR2.Build.Actions.Compile is
       Has_Dep   : Boolean;
 
    begin
+      --  Assure the object wasn't previously initialized prior to this call
+      Self := Undefined;
+
       Self.Ctxt     := Src.Owning_View;
       Self.Src      := Src;
       Self.Lang     := Src.Language;

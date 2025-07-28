@@ -644,6 +644,9 @@ package body GPR2.Build.Actions.Ada_Bind is
       end Add_Root_Attr;
 
    begin
+      --  Assure the object wasn't previously initialized prior to this call
+      Self := Undefined;
+
       Self.Ctxt        := Context;
       Self.Basename    := +Basename;
       Self.Has_Main    := Main_Unit.Is_Defined;

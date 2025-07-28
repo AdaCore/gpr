@@ -64,6 +64,9 @@ package body GPR2.Build.Actions.Archive_Extract is
       Extracted_Object : Simple_Name;
       View             : GPR2.Project.View.Object) is
    begin
+      --  Assure the object wasn't previously initialized prior to this call
+      Self := Undefined;
+
       Self.Ctxt := View;
       Self.Archive := Archive;
       Self.Extracted_Object :=
