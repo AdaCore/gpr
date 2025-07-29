@@ -1,0 +1,8 @@
+FOUND    : pack.ads
+FOUND    : pack-impl.ads
+NOTFOUND : inst/include/inst/pack-impl__unix.adb
+FOUND    : pack.ali
+FOUND    : pack-impl.ali
+NOTFOUND : inst/lib/inst/pack-impl__unix.ali
+NOTFOUND : inst/lib/inst/libnex.so
+FOUND    : libnex.dll
