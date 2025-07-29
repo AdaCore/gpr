@@ -1,0 +1,15 @@
+
+with "inst/share/gpr/inst.gpr";
+
+library project Shr is
+
+   for Source_Dirs use ("msrc");
+   for Object_Dir use "mobj";
+
+   for Library_Dir use "mlib";
+   for Library_Name use "shr";
+   for Library_Kind use "relocatable";
+   for Library_Standalone use "standard";
+   for Interfaces use ("lshr.ads");
+
+end Shr;
