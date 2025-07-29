@@ -32,6 +32,7 @@ demo.gpr: warning: unit "GOO" is not in the interface set, but it is needed by "
 main.adb:(.text+0x<nn>): undefined reference to `ioo'
 collect2: error: ld returned 1 exit status
 app.gpr: warning: [Link] main (app.gpr) failed with status 1
+gprbuild: process manager execution failed
 ========================
 lib attribute: library_interface
 app sources: app2

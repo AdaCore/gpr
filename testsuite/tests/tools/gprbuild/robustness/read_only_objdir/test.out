@@ -9,6 +9,7 @@ $ chmod 0x555 obj/prj
 $ gprbuild -Pprj -p -j1
 Problem accessing the object directory for project "Prj"
 Command '[Ada Compile] pkg.ads (prj.gpr)' failed.
+gprbuild: process manager execution failed
 $ gprclean -Pprj -v
 
 read only obj dir with built project
@@ -41,6 +42,7 @@ $ gprbuild -Plib -j1
 [Partial Link]    p__lib.o
 lib.gpr: error: could not create the ali file "pkg2.ali"
 Command '[Archive] liblib.a (lib.gpr)' failed.
+gprbuild: process manager execution failed
 $ chmod 0x777 lib/lib
 $ gprbuild -Plib -q
 $ chmod 0x555 lib/lib
@@ -53,3 +55,4 @@ $ gprbuild -Plib -f -j1
 [Partial Link]    p__lib.o
 lib.gpr: error: cannot remove the old archive liblib.a
 Command '[Archive] liblib.a (lib.gpr)' failed.
+gprbuild: process manager execution failed
