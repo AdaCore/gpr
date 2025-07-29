@@ -1,0 +1,7 @@
+$ gprbuild -q -P tree/app.gpr -p
+$ ./tree/main.first
+Hi from Main1!
+
+$ ./tree/main.second
+Hi from Main2!
+

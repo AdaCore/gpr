@@ -2138,12 +2138,7 @@ package body GPR2.Build.Actions.Link is
    ---------
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class is
-      --  Just keep the base name for executables to skip the target-specific
-      --  extension and thus have cleaner output
-      BN     : constant Simple_Name :=
-                 (if not Self.Is_Library
-                  then Self.Output.Path.Base_Filename
-                  else Self.Output.Path.Simple_Name);
+      BN     : constant Simple_Name := Self.Output.Path.Simple_Name;
       Result : constant Link_Id :=
                  (Name_Len      => BN'Length,
                   Is_Static_Lib => Self.Is_Library and then Self.Is_Static,
