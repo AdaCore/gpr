@@ -1,0 +1,5 @@
+using project file /test.gpr
+=== Parsing switches from dummy.ali
+- -x
+- ada
+- -gnatA

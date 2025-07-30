@@ -7,6 +7,7 @@
 with GNATCOLL.Buffer;
 with GNATCOLL.JSON;
 with GNATCOLL.OS.FS;
+with GNATCOLL.Traces;
 
 with GPR2.Build.Actions;
 
@@ -20,6 +21,11 @@ package body GPR2.Build.Signature is
       Art            : Artifacts.Object'Class;
       IO             : IO_Type;
       Checksum_Check : Boolean := True) return Boolean;
+
+   Traces : constant GNATCOLL.Traces.Trace_Handle :=
+              GNATCOLL.Traces.Create
+                ("GPR.BUILD.SIGNATURE",
+                 GNATCOLL.Traces.Off);
 
    ------------------------
    -- Add_Console_Output --
@@ -61,6 +67,8 @@ package body GPR2.Build.Signature is
    begin
       Self.Artifacts (IO).Insert (Art, C, Added);
 
+      Traces.Trace (Art.Serialize);
+
       if not Checksum_Check then
          return True;
 
@@ -82,6 +90,12 @@ package body GPR2.Build.Signature is
          if not Checksum_Maps.Has_Element (CC)
            or else Checksum_Maps.Element (CC) /= Chk
          then
+            Traces.Trace
+              ((if Checksum_Maps.Has_Element (CC)
+               then "   - " & Checksum_Maps.Element (CC)
+               else "   - No checksum found"));
+            Traces.Trace ("   - " & Chk);
+
             --  Invalidate the saved checksums
             Self.Checksums (Input).Clear;
             Self.Checksums (Output).Clear;
@@ -229,18 +243,17 @@ package body GPR2.Build.Signature is
                            end if;
 
                            declare
-                              Art : Artifacts.Object'Class :=
-                                      Artifacts.New_Instance
-                                        (Data.Token
-                                           (Protocol.First + 1,
-                                            Protocol.Last - 1));
-                              Chk : constant String :=
-                                       JSON.Decode_As_String (Value, Data);
+                              Art   : Artifacts.Object'Class :=
+                                        Artifacts.New_Instance
+                                          (Data.Token
+                                             (Protocol.First + 1,
+                                              Protocol.Last - 1));
+                              Chk   : constant String :=
+                                        JSON.Decode_As_String (Value, Data);
+                              Uri_F : constant String :=
+                                        JSON.Decode_As_String (Uri, Data);
                            begin
-                              Art.Unserialize
-                                (Data.Token (Uri.First + 1, Uri.Last - 1),
-                                 Chk,
-                                 Ctxt);
+                              Art.Unserialize (Uri_F, Chk, Ctxt);
 
                               Signature.Checksums (IO).Include (Art, Chk);
                            end;

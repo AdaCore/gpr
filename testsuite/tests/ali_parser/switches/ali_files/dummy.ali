@@ -1,0 +1,19 @@
+V "GNAT-LLVM Lib v26.20250727"
+M P W=b
+A -x
+A ada
+A -gnatA
+P ZX
+
+RN
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U dummy%b		dummy.adb		17434e83 NE OO SU
+
+D dummy.adb		20250728092042 17434e83 dummy%b
+D system.ads		20250709073038 a869df9e system%s
+G a e
+G c Z b b [dummy standard 1 11 none]
+X 1 dummy.adb
+1U11*Dummy 1b11 4l5 4t10
+

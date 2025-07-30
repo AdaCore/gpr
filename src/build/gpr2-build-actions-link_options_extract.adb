@@ -58,6 +58,9 @@ package body GPR2.Build.Actions.Link_Options_Extract is
       Object_File : Simple_Name;
       View        : GPR2.Project.View.Object) is
    begin
+      --  Ensure the object wasn't previously initialized prior to this call
+      Self := Undefined;
+
       Self.Ctxt := View;
       Self.Object_File :=
         GPR2.Build.Artifacts.Object_File.Create (Object_File);

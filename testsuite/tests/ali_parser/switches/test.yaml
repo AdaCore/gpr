@@ -1,0 +1,4 @@
+description: check the ALI parser to retrieve switches
+driver: build_and_run
+project_file: test
+main: main

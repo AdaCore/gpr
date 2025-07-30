@@ -275,6 +275,9 @@ package body GPR2.Build.Actions.Link.Partial is
    is
       use type GPR2.Project.Standalone_Library_Kind;
    begin
+      --  Ensure the object wasn't previously initialized prior to this call
+      Self := Undefined;
+
       Self.Partial_Object :=
         Artifacts.Object_File.Create
           (Context.Object_Directory.Compose

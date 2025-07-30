@@ -657,19 +657,13 @@ package body GPR2.Build.ALI_Parser is
      (ALI_File : GPR2.Path_Name.Object) return GPR2.Containers.Value_List
    is
       Result      : GPR2.Containers.Value_List;
-      Reader      : GB.Reader :=  GB.Open (ALI_File.String_Value);
+      Reader      : GB.Reader := GB.Open (ALI_File.String_Value);
       Word        : Character := ASCII.NUL;
       In_Switches : Boolean := False;
       EOL         : Boolean := False;
    begin
       loop
-         if not EOL then
-            IO.Next_Line (Reader, Word);
-         elsif not GB.Next (Reader, Word) then
-            return Result;
-         end if;
-
-         EOL := False;
+         IO.Next_Line (Reader, Word);
 
          if not In_Switches and then Word = 'A' then
             In_Switches := True;

@@ -131,6 +131,9 @@ package body GPR2.Build.Actions.Link_Options_Insert is
       View        : GPR2.Project.View.Object)
    is
    begin
+      --  Ensure the object wasn't previously initialized prior to this call
+      Self := Undefined;
+
       Self.Input_Object_File := Object_File;
       Self.Output_Object_File :=
         Artifacts.Object_File.Create
