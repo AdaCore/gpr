@@ -31,9 +31,14 @@ def generate_makefile(quantity, root_dirname):
             f.write(f" build{i}")
         f.write("\n\n")
 
+        if bnr.gnatcov:
+             additional_args = ["-XGPR2_BUILD=gnatcov", "--src-subdirs=gnatcov-instr", "--implicit-with=gnatcov_rts"]
+        else:
+             additional_args = []
+
         for i in range(1, quantity + 1):
             f.write(f"build{i}:\n")
-            f.write(f"\t+{GPRBUILD} -P {os.path.join(os.getcwd(), f'{root_dirname}{i}', 'prj.gpr')} -j0\n\n")
+            f.write(f"\t+{GPRBUILD} -P {os.path.join(os.getcwd(), f'{root_dirname}{i}', 'prj.gpr')} -j0 {' '.join(additional_args)}\n\n")
 
 def generate_sources(directory, quantity):
     print(f"   - Creating \"{directory}\"")
