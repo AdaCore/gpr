@@ -1,3 +1,4 @@
 description:
     Test Executable and Executable_Suffix attributes
 driver: python_script
+timeout: 600
