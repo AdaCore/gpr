@@ -1,7 +1,6 @@
 $ gprbuild -Pprj1 -q --no-indirect-imports
 p.adb: error: unit "P" cannot import unit "PKG3:
  "Prj1" does not directly import project "Prj3"
-gprbuild: process manager execution failed
 $ gprbuild -Pprj1 -q
 $ ./p
 TRUE

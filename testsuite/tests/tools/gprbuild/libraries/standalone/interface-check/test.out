@@ -1,25 +1,20 @@
 $ gprbuild prj.gpr -q -j1
 prj.gpr: error: "main.c" cannot import "imp/titi.h":
  it is not part of the interfaces of its project "Imp"
-gprbuild: process manager execution failed
 $ gprbuild prj.gpr -q -j1
 prj.gpr: error: "main.c" cannot import "imp/titi.h":
  it is not part of the interfaces of its project "Imp"
-gprbuild: process manager execution failed
 $ gprbuild -f prj2.gpr -q -j1
 prj2.gpr: error: unit "MAIN" can not import unit "PKG2":
  it is not part of the interfaces of the project Imp2
-gprbuild: process manager execution failed
 $ gprbuild -f prj3.gpr -q -j1
 prj3.gpr: error: unit "MAIN" can not import unit "PKG2":
  it is not part of the interfaces of the project Imp2
-gprbuild: process manager execution failed
 $ gprbuild -f prj4.gpr -q -j1
 $ gprbuild -f prj5.gpr -q -j1
 $ gprbuild -f prj6.gpr -q -j1
 prj6.gpr: error: unit "MAIN" can not import unit "PKG2":
  it is not part of the interfaces of the project Prj5
-gprbuild: process manager execution failed
 $ gprbuild -f --no-indirect-imports direct/prj.gpr -k -q -j1
 main2.adb: error: unit "MAIN2" cannot import unit "PKG2:
  "Prj" does not directly import project "Imp2"
@@ -27,4 +22,3 @@ prj.gpr: error: "toto.c" cannot import "imp1/imp2/titi.h":
  it is not part of the interfaces of its project "Imp2"
 prj.gpr: error: "toto.c" cannot import "imp1/imp2/titi.h:
  "Prj" does not directly import project "Imp2"
-gprbuild: process manager execution failed

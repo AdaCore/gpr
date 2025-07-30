@@ -1,4 +1,3 @@
 $ gprbuild -q -P tree/a.gpr -p
 a.gpr: error: unit "A" can not import unit "INTERNAL":
  it is not part of the interfaces of the project B
-gprbuild: process manager execution failed
