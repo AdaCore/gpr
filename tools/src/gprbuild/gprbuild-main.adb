@@ -459,11 +459,9 @@ begin
       end if;
 
       if Result /= E_Success then
-         --  GPRbuild silently fails with a error code, which makes it
-         --  not obvious at first glance something went wrong.
          Handle_Program_Termination
            (Exit_Code => Result,
-            Message   => "process manager execution failed");
+            Message   => "");
       end if;
    end;
 
