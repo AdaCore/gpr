@@ -868,6 +868,14 @@ package body GPR2.Build.Actions.Compile is
             Deps : constant GPR2.Containers.Filename_Set := Self.Dependencies;
          begin
             if Deps.Is_Empty then
+               if Load_Mode then
+                  Self.Tree.Reporter.Report
+                    ("file """ & Self.Dep_File.Path.String_Value &
+                       """ is missing or is wrongly formatted",
+                     To_Stderr => True,
+                     Level     => GPR2.Message.Important);
+               end if;
+
                --  Dependency file parsing went wrong, at least put the direct
                --  source as an input.
                if not Self.Signature.Add_Input
@@ -879,7 +887,7 @@ package body GPR2.Build.Actions.Compile is
 
                --  This actions should be done no matter what since the
                --  dependencies states are unknown.
-               Self.Force_Action := True;
+               Self.Force := True;
                Self.Signature.Invalidate;
             end if;
 
@@ -1066,7 +1074,7 @@ package body GPR2.Build.Actions.Compile is
       Has_Dep   : Boolean;
 
    begin
-      --  Assure the object wasn't previously initialized prior to this call
+      --  Ensure the object wasn't previously initialized prior to this call
       Self := Undefined;
 
       Self.Ctxt     := Src.Owning_View;

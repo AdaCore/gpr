@@ -272,18 +272,20 @@ private
    use type GPR2.View_Ids.View_Id;
 
    type Object is abstract tagged record
-      Tree          : access Tree_Db.Object;
+      Tree           : access Tree_Db.Object;
       --  Owning Tree
-      Signature     : GPR2.Build.Signature.Object;
+      Signature      : GPR2.Build.Signature.Object;
       --  Stored signature for the action
-      Tmp_Files     : GPR2.Containers.Filename_Map;
+      Tmp_Files      : GPR2.Containers.Filename_Map;
       --  List of tmp files to be cleaned up
-      Deactivated   : Boolean := False;
+      Deactivated    : Boolean := False;
       --  Set when the action is deactivated
-      Cmd_Line      : GPR2.Build.Command_Line.Object;
+      Cmd_Line       : GPR2.Build.Command_Line.Object;
       --  Command line used to run the action. Used also in the signature
       Response_Files : GPR2.Build.Response_Files.Object;
       --  Response files used in the command line
+      Force          : Boolean := False;
+      --  Force the action no matter the state of its signature
    end record;
 
    function "<" (L, R : Action_Id'Class) return Boolean is
@@ -299,8 +301,9 @@ private
       (L.UID < R.UID);
 
    function Valid_Signature (Self : Object) return Boolean is
-     (Object'Class (Self).View.Is_Externally_Built
-      or else Self.Signature.Valid);
+     (not Self.Force
+      and then (Object'Class (Self).View.Is_Externally_Built
+        or else Self.Signature.Valid));
 
    function On_Tree_Propagation
      (Self : in out Object) return Boolean is

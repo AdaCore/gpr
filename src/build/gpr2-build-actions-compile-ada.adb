@@ -465,7 +465,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       Closure  : GPR2.Project.View.Set.Object;
 
    begin
-      --  Assure the object wasn't previously initialized prior to this call
+      --  Ensure the object wasn't previously initialized prior to this call
       Self := Undefined;
 
       Self.Ctxt   := Src.Owning_View;

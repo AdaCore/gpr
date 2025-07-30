@@ -1403,7 +1403,7 @@ package body GPR2.Build.Actions.Link is
    is
       Attr : GPR2.Project.Attribute.Object;
    begin
-      --  Assure the object wasn't previously initialized prior to this call
+      --  Ensure the object wasn't previously initialized prior to this call
       Self := Undefined;
 
       case Kind is
