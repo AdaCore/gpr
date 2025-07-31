@@ -1,0 +1,5 @@
+Configuration without compiler:
+warning: no compiler driver defined for language 'Ada'
+Configuration with C compiler:
+warning: no compiler driver defined for language 'Ada'
+Configuration with Ada compiler:

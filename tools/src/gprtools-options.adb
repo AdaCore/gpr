@@ -440,7 +440,8 @@ package body GPRtools.Options is
          Absent_Dir_Error         => Absent_Dir_Error,
          Create_Missing_Dirs      => Create_Missing_Dirs,
          Allow_Implicit_Project   => Opt.Find_Implicit_Project,
-         Check_Shared_Libs_Import => Opt.Check_Shared_Libs);
+         Check_Shared_Libs_Import => Opt.Check_Shared_Libs,
+         Check_Drivers            => False);
 
       if Handle_Errors and then not Loaded then
          if Opt.Project_File.Is_Defined then

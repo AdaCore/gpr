@@ -39,6 +39,7 @@ renames_nonexist.gpr: warning: there are no sources of language "Ada" in this pr
 conf.gpr:3:08: error: cannot set configuration attribute "Target" after it was referenced
 builtin.gpr:3:04: error: builtin attribute "Name" is read-only
 empty_warning.gpr:6:44: warning: empty attribute "Builder'Executable" ignored
+warning: no compiler driver defined for language 'New_Language_No_Driver'
 empty_warning.gpr:3:23: warning: there are no sources of language "Ada" in this project
 empty_error.gpr:4:31: error: attribute "Naming'Dot_Replacement" cannot be empty
 no_package.gpr:3:19: error: unknown package or project "Unknown"

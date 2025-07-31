@@ -2,5 +2,6 @@ TEST 1
 TEST 2
 TEST 3
 TEST 4
+warning: no compiler driver defined for language 'Ada'
 
 TEST 5

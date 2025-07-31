@@ -1,4 +1,5 @@
 kb: info: can't find a toolchain for the following configuration: language 'Fortran', target '(host)', default runtime
+warning: no compiler driver defined for language 'Fortran'
 Demo     K_STANDARD
 for Languages use ("Ada", "C", "FoRtRan");
 ada TRUE

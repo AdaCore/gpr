@@ -121,6 +121,7 @@ package GPR2.Project.Tree is
       Config                   : GPR2.Project.Configuration.Object :=
                                    GPR2.Project.Configuration.Undefined;
       Check_Shared_Libs_Import : Boolean := False;
+      Check_Drivers            : Boolean := True;
       File_Reader              : GPR2.File_Readers.File_Reader_Reference :=
                                    GPR2.File_Readers.No_File_Reader_Reference)
       return Boolean;
@@ -157,6 +158,8 @@ package GPR2.Project.Tree is
    --   This prevents having a static library being imported both on the
    --   application side and by the shared library and thus ending up with
    --   duplicated global states for this static library.
+   --  Check_Drivers: when true, raise warning when a project language does not
+   --   have a builder driver.
    --  File_Reader: if set, this file reader is used instead of the standard
    --   text file reader to load the projects.
    --
