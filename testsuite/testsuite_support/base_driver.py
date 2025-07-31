@@ -279,6 +279,7 @@ class BaseDriver(DiffTestDriver):
             Substitute("x86_64-windows", replacement="(host)"),
             Substitute("x86-windows", replacement="(host)"),
             PatternSubstitute(r"[.]text\+0x[0-9a-f]+", ".text+0x<nn>"),
+            PatternSubstitute(r"_.{13}\.tmp", ".tmp"),
         ]
 
     # Convenience path builders
