@@ -31,7 +31,7 @@ demo.gpr: warning: unit "GOO" is not in the interface set, but it is needed by "
 <gcc>/bin/../lib/gcc/(host)/(gcc-version)/../../../../(host)/bin/ld: library_interface/obj/app/main.o: in function `_ada_main':
 main.adb:(.text+0x<nn>): undefined reference to `ioo'
 collect2: error: ld returned 1 exit status
-app.gpr: warning: [Link] main (app.gpr) failed with status 1
+app.gpr: error: [Link] main (app.gpr) failed with status 1
 ========================
 lib attribute: library_interface
 app sources: app2
