@@ -45,8 +45,10 @@ package GPRbuild.Options is
       Dash_A_Option            : Boolean := False;
       --  Ignored but reporting has to be done after the options are parsed
       --  to prevent multiple messages if the switch appears several times.
+
+      Compiler_Substitution    : GPR2.Containers.Value_List;
    end record;
-   --  Options for gprls
+   --  Options for gprbuild
 
    type GPRbuild_Parser is
      new GPRtools.Options.Command_Line_Parser with null record;

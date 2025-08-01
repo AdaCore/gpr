@@ -7,8 +7,15 @@ from typing import NoReturn
 from e3.env import Env
 from e3.fs import mkdir
 from e3.os.process import which
+from e3.os.fs import unixpath
 from e3.testsuite.driver.classic import TestAbortWithError
-from e3.testsuite.driver.diff import DiffTestDriver, ReplacePath, Substitute, PatternSubstitute
+from e3.testsuite.driver.diff import (
+    DiffTestDriver,
+    ReplacePath,
+    Substitute,
+    PatternSubstitute,
+    RefiningChain,
+)
 
 
 # create_fake_ada_compiler routine copied from gprbuild-internal testsuite
@@ -246,9 +253,33 @@ class BaseDriver(DiffTestDriver):
 
     @property
     def output_refiners(self):
+        class ReplacePathIgnoreCasing(RefiningChain[str]):
+            """Return an output refiner that replaces the given path, regardless of its case."""
+
+            def __init__(self, path: str, replacement: str = "") -> None:
+                # First replace the normalized path, then the Unix-style path (which
+                # some tool may output even on Windows) and finally the very path that
+                # was given.
+
+                def get_substitute_for(pattern: str):
+                    substitute_ignore_casing = PatternSubstitute(
+                        pattern=pattern,
+                        replacement=replacement,
+                    )
+                    # Manually set the case-insensitive flag
+                    substitute_ignore_casing.regexp = re.compile(pattern, re.IGNORECASE)
+                    return substitute_ignore_casing
+
+                super().__init__(
+                    [
+                        get_substitute_for(r"%s" % re.escape(substring))
+                        for substring in [os.path.realpath(path), unixpath(path), path]
+                    ]
+                )
+
         # Find gcc
         gcc = which("gcc")
-        gcc_install = os.path.dirname (os.path.dirname (gcc))
+        _, gcc_install = os.path.splitdrive(os.path.dirname (os.path.dirname (gcc)).lower())
 
         # and figure out gcc version
         out = check_output([gcc, "--version"]).decode().splitlines()[0]
@@ -257,9 +288,13 @@ class BaseDriver(DiffTestDriver):
         # Remove working directory from output and
         # make all filenames look like Unix ones (forward slashes for directory
         # separators, no drive letter).
+
+        def to_lower(match: re.Match) -> str:
+            return match.group(0).lower()
+
         return super().output_refiners + [
             ReplacePath(self.working_dir(), replacement=""),
-            ReplacePath(gcc_install, replacement="<gcc>"),
+            ReplacePathIgnoreCasing(gcc_install, replacement="<gcc>"),
             Substitute("c:<gcc>", replacement="<gcc>"),
             Substitute("\\", "/"),
             ReplacePath("C:/", "/"),
@@ -279,6 +314,7 @@ class BaseDriver(DiffTestDriver):
             Substitute("x86_64-windows", replacement="(host)"),
             Substitute("x86-windows", replacement="(host)"),
             PatternSubstitute(r"[.]text\+0x[0-9a-f]+", ".text+0x<nn>"),
+            PatternSubstitute(r"_.{13}\.tmp", ".tmp"),
         ]
 
     # Convenience path builders

@@ -58,6 +58,9 @@ package GPR2.Build.Options is
       --  -z option: tell the binder to not generate an actual main subprogram
       Restricted_To_Languages      : GPR2.Containers.Language_Set;
       --  Restrict the compile actions to the given set of languages
+      Comp_Substr                  : GPR2.Containers.Lang_Value_Map;
+      --  Map of languages to compiler names, used to restrict the compilation
+      --  to a specific compiler.
    end record;
 
 end GPR2.Build.Options;

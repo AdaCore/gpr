@@ -1,0 +1,4 @@
+description: Test the --compiler-subst behavior
+driver: python_script
+fake_ada_target:
+- [ 'fake-compiler' ]

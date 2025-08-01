@@ -1,0 +1,24 @@
+project App is
+   for Main use ("main1.adb", "main2.adb");
+
+   for Languages use ("Ada");
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj";
+   for Exec_Dir use ".";
+   for Create_Missing_Dirs use "True";
+
+   --  Test also that extension are not removed from UIDs with having same base
+   --  name but not complete name.
+
+   package Builder is
+      for Executable ("main1.adb") use
+         "main.first";
+      for Executable ("main2.adb") use
+         "main.second";
+   end Builder;
+
+   package Compiler is
+      for Switches ("Ada") use ("-gnatwI", "-g",
+                "-gnat2022", "-gnatf", "-gnatwa");
+   end Compiler;
+end App;

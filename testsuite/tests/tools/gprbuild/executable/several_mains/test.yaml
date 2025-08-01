@@ -1,0 +1,3 @@
+description: Compile a project with several main files
+driver: python_script
+timeout: 800

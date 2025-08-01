@@ -1141,6 +1141,21 @@ package body GPR2.Project.Tree is
          return False;
    end Set_Context;
 
+   -------------------------------
+   -- Set_Languages_To_Compilers --
+   -------------------------------
+
+   procedure Set_Languages_To_Compilers
+     (Self                   : in out Object;
+      Languages_To_Compilers : Containers.Lang_Value_Map) is
+   begin
+      if not Self.Is_Defined then
+         Self.Create;
+      end if;
+
+      Self.Tree.Set_Languages_To_Compilers (Languages_To_Compilers);
+   end Set_Languages_To_Compilers;
+
    ------------------
    -- Set_Reporter --
    ------------------
