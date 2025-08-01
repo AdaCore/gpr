@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2024, AdaCore                     --
+--                     Copyright (C) 2019-2025, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -20,10 +20,8 @@ with Ada.Command_Line;
 with Ada.Exceptions;
 with Ada.Strings.Unbounded;
 
-with GPR2.Interrupt_Handler;
 with GPR2.Options;
 with GPR2.Project.Tree;
-with GPRtools.Sigint;
 with GPRtools.Util;
 with GPRtools.Program_Termination;
 
@@ -36,19 +34,15 @@ function GPRinstall.Main return Ada.Command_Line.Exit_Status is
 
    use Ada;
    use Ada.Exceptions;
+   use Ada.Strings.Unbounded;
 
    use GPR2;
 
    use GPRtools.Program_Termination;
 
    Tree    : GPR2.Project.Tree.Object;
-
-   Dummy   : aliased Boolean;
-   --  A dummy boolean for supporting default switch like -a
-
    Options : GPRinstall.Options.Object;
 
-   use Ada.Strings.Unbounded;
 
 begin
    GPRtools.Util.Set_Program_Name ("gprinstall");
@@ -57,13 +51,10 @@ begin
 
    GPRinstall.Options.Parse_Command_Line (Options, Tree);
 
-   --  And install Ctrl-C handler
-
-   Interrupt_Handler.Install_Sigint (GPRtools.Sigint.Handler'Access);
-
    if Options.Uninstall_Mode then
       if Options.Global_Install_Name.Default then
-         Uninstall.Process (Options.Args.First_Element, Options);
+         Uninstall.Process
+           (String (Options.Project_File.Base_Name), Options);
       else
          Uninstall.Process
            (To_String (Options.Global_Install_Name.V), Options);
@@ -73,28 +64,24 @@ begin
       DB.List (Options);
 
    else
-      if not Options.Load_Project
-        (Absent_Dir_Error   => Project.Tree.No_Error,
-         Handle_Information => Options.Verbose,
-         Handle_Lint        => Options.Verbose)
-      then
-         Handle_Program_Termination
-           (Opt     => Options,
-            Message => '"'
-            & (if Options.Config_Project_Has_Error
-              then String (Options.Config_Project.Simple_Name)
-              else String (Options.Filename.Simple_Name))
-            & """ processing failed");
+      if not Options.Load_Project (GPR2.No_Error) then
+         Handle_Program_Termination (Message => "");
       end if;
 
+      --  If verbose on, display non fatal log messages (info, warnings)
+
       if Options.Verbose then
-         for M of Options.Config_Project_Log loop
-            M.Output;
-         end loop;
+         if Tree.Has_Configuration
+           and then Tree.Configuration.Has_Messages
+         then
+            for M of Tree.Configuration.Log_Messages loop
+               Tree.Reporter.Report (M.Format);
+            end loop;
+         end if;
 
          if Tree.Has_Messages then
             for M of Tree.Log_Messages.all loop
-               M.Output;
+               Tree.Reporter.Report (M.Format);
             end loop;
          end if;
       end if;
@@ -104,12 +91,13 @@ begin
         and then Tree.Root_Project.Archive_Builder.Empty_Values
       then
          Handle_Program_Termination
-           (Opt       => Options,
-            Exit_Code => E_Success,
-            Message   => "empty Archive_builder is not supported yet.");
+           (Exit_Code => E_Success,
+            Message   => "empty Archive_Builder is not supported yet.");
       end if;
 
-      Install.Process (Tree, Options);
+      Options.Tree.Update_Sources;
+
+      Install.Process (Options.Tree, Options);
    end if;
 
    return To_Exit_Status (E_Success);
@@ -117,28 +105,14 @@ begin
 exception
    when E : GPR2.Options.Usage_Error =>
       Handle_Program_Termination
-        (Opt                       => Options,
-         Display_Command_Line_Help => True,
+        (Display_Command_Line_Help => True,
          Force_Exit                => False,
          Message                   => Exception_Message (E));
       return To_Exit_Status (E_Fatal);
 
-   when Project_Error | Processing_Error =>
-      Handle_Program_Termination
-        (Opt                   => Options,
-         Display_Tree_Messages => True,
-         Force_Exit            => False,
-         Message               => '"'
-         & (if Options.Config_Project_Has_Error
-            then String (Options.Config_Project.Simple_Name)
-            else String (Options.Filename.Simple_Name))
-         & """ processing failed");
-      return To_Exit_Status (E_Fatal);
-
    when E : GPRinstall_Error_No_Message | GPRinstall_Error =>
       Handle_Program_Termination
-        (Opt        => Options,
-         Force_Exit => False,
+        (Force_Exit => False,
          Exit_Code  => E_Errors,
          Message    => Exception_Message (E));
       return To_Exit_Status (E_Errors);
@@ -148,8 +122,7 @@ exception
 
    when E : others =>
       Handle_Program_Termination
-        (Opt        => Options,
-         Force_Exit => False,
+        (Force_Exit => False,
          Exit_Cause => E_Generic,
          Message    => Exception_Message (E));
       return To_Exit_Status (E_Fatal);
