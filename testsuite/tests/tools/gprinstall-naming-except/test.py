@@ -1,8 +1,12 @@
 import os
+import subprocess
 
+from e3.os.process import Run
 from e3.env import Env
 from e3.fs import cp
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRBUILD, GPRINSTALL
+
+p = Run([GPRBUILD, '-p', 'inst.gpr'])
 
 p = BuilderAndRunner().run([GPRINSTALL, '-p',
                             '--prefix=' + os.path.join(os.getcwd(), 'inst'),

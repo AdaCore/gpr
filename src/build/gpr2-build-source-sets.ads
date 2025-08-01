@@ -65,9 +65,7 @@ package GPR2.Build.Source.Sets is
      (Db     : Build.View_Db.Object;
       Option : Source_Set_Option := Unsorted;
       Filter : Filter_Function := null;
-      F_Data : Filter_Data'Class := No_Data) return Object
-     with Post => (for all E of Create'Result =>
-                   E.Is_Defined and then E.Owning_View.Is_Defined);
+      F_Data : Filter_Data'Class := No_Data) return Object;
    --  Create a source iterator set representing the sources stored in the
    --  view db object.
    --  If sorted is set, the iterated list is sorted alphabetically (but doing
