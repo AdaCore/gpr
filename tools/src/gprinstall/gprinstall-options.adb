@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2024, AdaCore                     --
+--                     Copyright (C) 2019-2025, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -18,9 +18,10 @@
 
 with Ada.Characters.Handling;
 
+with GPR2.Containers;
+with GPR2.Options;
 with GPR2.Path_Name;
 
-with GPR2.Options;
 with GPRtools.Command_Line;
 with GPRtools.Util;
 
@@ -183,20 +184,16 @@ package body GPRinstall.Options is
    is
       use GPRtools.Command_Line;
 
-      Parser          : GPRtools.Options.Command_Line_Parser;
-      Install_Group   : GPRtools.Command_Line.Argument_Group;
+      Parser        : GPRtools.Options.Command_Line_Parser :=
+                         GPRtools.Options.Create
+                          (Initial_Year           => "2018",
+                           Allow_No_Project       => False,
+                           Allow_Implicit_Project => False);
+      Install_Group : GPRtools.Command_Line.Argument_Group;
 
    begin
       --  Call parent/generic command line setup
       GPRtools.Options.Setup (GPRtools.Install);
-
-      Parser := GPRtools.Options.Create
-        (Initial_Year           => "2018",
-         Allow_No_Project       => False,
-         Allow_Distributed      => False,
-         Allow_Implicit_Project => False);
-
-      Options.Tree := Tree.Reference;
 
       Install_Group := Parser.Add_Argument_Group
         (Name     => "install",
@@ -377,26 +374,30 @@ package body GPRinstall.Options is
 
       if Options.Uninstall_Mode then
          if Options.Project_File.Is_Defined then
-            Options.Args.Include
-              (String (Options.Project_File.Name
-               (Extension => False)));
+            Set_Param
+              (Options.Global_Install_Name,
+               (String (Options.Project_File.Name (Extension => False))));
+
+         else
+            declare
+               Args : constant GPR2.Containers.Value_Set :=
+                        Options.Remaining_Arguments;
+            begin
+               case Args.Length is
+                  when 0 =>
+                     raise GPR2.Options.Usage_Error with
+                       "A project file or an install name is"
+                       & " required with --uninstall";
+                  when 1 =>
+                     Set_Param
+                       (Options.Global_Install_Name,
+                        String (Args.First_Element));
+                  when others =>
+                     raise GPR2.Options.Usage_Error with
+                       "Can have only one uninstall name";
+               end case;
+            end;
          end if;
-
-         case Options.Args.Length is
-            when 0 =>
-               raise GPR2.Options.Usage_Error with
-                 "A project file or an install name is"
-                 & " required with --uninstall";
-            when 1 =>
-               null;
-            when others =>
-               raise GPR2.Options.Usage_Error with
-                 "Can have only one uninstall name";
-         end case;
-
-      elsif not Options.Args.Is_Empty then
-         raise GPR2.Options.Usage_Error with
-           "Parameter " & Options.Args.First_Element & " unrecognized";
       end if;
 
       --  check -a & -m
@@ -441,15 +442,6 @@ package body GPRinstall.Options is
            "cannot specify --no-project and --project-subdir";
       end if;
 
-      --  If no project file was specified, this is an error
-
-      if not Options.Project_Is_Defined
-        and then not Options.List_Mode
-        and then not Options.Uninstall_Mode
-      then
-         raise GPR2.Options.Usage_Error with "no project file specified";
-      end if;
-
       --  Check prefix, if not specified set to default toolchain
 
       if Options.Global_Prefix_Dir.Default then
@@ -469,9 +461,10 @@ package body GPRinstall.Options is
       if OS_Lib.Is_Absolute_Path (+Self.Global_Project_Subdir.V) then
          return +Self.Global_Project_Subdir.V;
       else
-         return Path_Name.Create_Directory
-           (Filename_Type (+Self.Global_Project_Subdir.V),
-            Filename_Type (+Self.Global_Prefix_Dir.V)).Dir_Name;
+         return String
+           (Path_Name.Create_Directory
+              (Filename_Type (+Self.Global_Project_Subdir.V),
+               Filename_Type (+Self.Global_Prefix_Dir.V)).Dir_Name);
       end if;
    end Project_Dir;
 

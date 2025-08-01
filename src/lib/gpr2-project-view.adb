@@ -2137,7 +2137,12 @@ package body GPR2.Project.View is
                   V : constant String := Attr_Version.Value.Text;
                begin
                   if Without_Version then
-                     --  Remove the version part
+                     --  Remove the version part, note that we handle the
+                     --  following namings:
+                     --
+                     --    lib<NAME>.so.<VERSION>
+                     --    lib<NAME>.<VERSION>.so
+
                      for J in V'Range loop
                         if V (J) = '.' then
                            --  The dot could separate the base name from
@@ -2147,7 +2152,17 @@ package body GPR2.Project.View is
                              or else
                                V (J .. J + SE_Len - 1) /= Shared_Ext
                            then
-                              return Simple_Name (V (V'First .. J - 1));
+                              declare
+                                 SN      : constant String :=
+                                             V (V'First .. J - 1);
+                                 Has_Ext : constant Boolean :=
+                                             GNATCOLL.Utils.Ends_With
+                                               (SN, Shared_Ext);
+                              begin
+                                 return Simple_Name
+                                   (SN
+                                    & (if Has_Ext then "" else Shared_Ext));
+                              end;
                            end if;
                         end if;
                      end loop;
@@ -2226,18 +2241,31 @@ package body GPR2.Project.View is
       end if;
 
       declare
-         L_Name  : constant Simple_Name :=
-                     Simple_Name
-                       (Self.Attribute (PRA.Shared_Library_Suffix).Value.Text);
-         Version : constant Simple_Name :=
-                     Simple_Name (Attr_Version.Value.Text);
-         Last    : Natural := Version'Last;
+         Shared_Ext : constant String :=
+                        Self.Attribute
+                          (PRA.Shared_Library_Suffix).Value.Text;
+         Version    : constant Simple_Name :=
+                        Simple_Name (Attr_Version.Value.Text);
       begin
+         --  Note that we handle the following namings:
+         --
+         --    lib<NAME>.so.<VERSION>
+         --    lib<NAME>.<VERSION>.so
+
          for K in reverse Version'First .. Version'Last loop
             if Version (K) = '.' then
-               exit when Version (K .. Last) = L_Name;
-               Result.Include (Version (Version'First .. K - 1));
-               Last := K - 1;
+               declare
+                  Name : constant String :=
+                           String (Version (Version'First .. K - 1));
+               begin
+                  if GNATCOLL.Utils.Ends_With (Name, Shared_Ext)
+                    or else Strings.Fixed.Index (Name, Shared_Ext & '.') /= 0
+                  then
+                     Result.Include (Simple_Name (Name));
+                  elsif Simple_Name (Name & Shared_Ext) /= Version then
+                     Result.Include (Simple_Name (Name & Shared_Ext));
+                  end if;
+               end;
             end if;
          end loop;
       end;
