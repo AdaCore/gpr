@@ -5,6 +5,8 @@ from testsuite_support.tools import GPRBUILD, GPRCLEAN
 
 bnr = BuilderAndRunner()
 
+bnr.setup_tmpdir ("obj/prj")
+
 def chro(path):
     print ("$ chmod 0x555 " + path)
     os.chmod(path, 0o555)
@@ -41,6 +43,8 @@ print("\nread only obj dir with built project")
 chrw("obj/prj")
 run(f"{GPRBUILD} -Pprj -p -q")
 chro("obj/prj")
+
+bnr.setup_tmpdir ("obj/lib")
 
 print("- with externally built dependency")
 run(f"{GPRBUILD} -Plib -XPRJ_RO=True -p -j1")

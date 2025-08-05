@@ -151,8 +151,7 @@ package body GPR2.Build.Actions is
                                (Self.UID.Db_Filename (True) & "-" & Purpose
                                 & "_"),
                              Suffix      => String (Extension),
-                             Dir         =>
-                               Self.View.Object_Directory.String_Value,
+                             Dir         => GNATCOLL.OS.Temp.System_Temp_Dir,
                              Auto_Close  => False);
                Dest   : constant Filename_Type :=
                           Filename_Type (GNATCOLL.OS.Temp.Path (Handle));
