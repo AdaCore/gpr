@@ -46,12 +46,12 @@ package body GPR2.Build.Jobserver is
          end if;
 
          declare
-            Token : Character := ASCII.NUL;
+            Token  : Character := ASCII.NUL;
+            Result : Boolean;
          begin
             --  Read a token
-            if Self.Protocol.Element.Get_Token (Token) then
-               Self.Current_Token.Set (Token);
-            end if;
+            Result := Self.Protocol.Element.Get_Token (Token);
+            Self.Current_Token.Set (Token, Result);
          end;
       end loop;
 
@@ -111,11 +111,11 @@ package body GPR2.Build.Jobserver is
       -- Set --
       ---------
 
-      entry Set (Char : Character)
+      entry Set (Char : Character; Result : Boolean := True)
         when not Is_Set is
       begin
          Token         := Char;
-         Is_Set        := True;
+         Is_Set        := Result;
          Is_Processing := False;
       end Set;
    end Token_Holder;

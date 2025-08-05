@@ -71,9 +71,9 @@ private
          Available : out Boolean);
       --  If a token is available, then Token will be set to its value and
       --  available will be true, else a request will be done for a new token
-      --  and available with be False.
+      --  and available will be False.
 
-      entry Set (Char : Character);
+      entry Set (Char : Character; Result : Boolean := True);
       --  Used by the Token_Reader to store a newly available token
 
    private
