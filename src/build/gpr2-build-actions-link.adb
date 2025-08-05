@@ -49,7 +49,7 @@ package body GPR2.Build.Actions.Link is
    ----------------
 
    procedure Add_Objects_From_Attribute
-     (Self : Object;
+     (Self : Object'Class;
       Id   : Q_Attribute_Id)
    is
       Attr : constant GPR2.Project.Attribute.Object :=
@@ -1642,10 +1642,6 @@ package body GPR2.Build.Actions.Link is
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      --  Add all object files contained in Library_Options attribute if they
-      --  actually exist.
-      Self.Add_Objects_From_Attribute (PRA.Library_Options);
-
       if not Db.Add_Output (UID, Self.Output) then
          return False;
       end if;

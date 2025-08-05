@@ -73,12 +73,13 @@ private
       --  available will be true, else a request will be done for a new token
       --  and available will be False.
 
-      entry Set (Char : Character; Result : Boolean := True);
-      --  Used by the Token_Reader to store a newly available token
+      entry Set (Char : Character; Validity : Boolean);
+      --  Used by the Token_Reader to store a newly available token and its
+      --  validity.
 
    private
       Token         : Character := ASCII.NUL;
-      Is_Set        : Boolean := False;
+      Is_Available  : Boolean := False;
       Is_Processing : Boolean := False;
       Has_Event     : Boolean := False;
       Event         : Wake_Up_Reason;

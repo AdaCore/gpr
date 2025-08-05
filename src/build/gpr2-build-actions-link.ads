@@ -38,7 +38,7 @@ package GPR2.Build.Actions.Link is
       Output   : Filename_Optional              := "");
 
    procedure Add_Objects_From_Attribute
-     (Self : Object;
+     (Self : Object'Class;
       Id   : Q_Attribute_Id);
 
    overriding function View (Self : Object) return GPR2.Project.View.Object;
