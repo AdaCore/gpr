@@ -6,8 +6,6 @@ from testsuite_support.tools import GPRBUILD, GPRCLEAN
 
 bnr = BuilderAndRunner()
 
-bnr.setup_tmpdir("tree/obj")
-
 def run(cmd):
     print("$ " + " ".join(cmd));
     if cmd[0] in (GPRBUILD, GPRCLEAN):

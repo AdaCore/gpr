@@ -38,8 +38,6 @@ class BuilderAndRunner(object):
         # associated TestDriver object
         self.driver = driver
 
-        self.tmpdir = os.environ["TMPDIR"]
-
         if driver is not None:
 
             # valgrind mode enabled status
@@ -62,9 +60,6 @@ class BuilderAndRunner(object):
             self.gnatcov = USE_GNATCOV in os.environ
             self.traces_dir = os.environ.get(COV_TRACES_DIR)
             self.level = os.environ.get(COV_LEVEL)
-
-    def __del__(self):
-        os.environ["TMPDIR"] = self.tmpdir
 
     def simple_run(
         self,
@@ -195,7 +190,3 @@ class BuilderAndRunner(object):
             env[USE_GNATCOV] = "true"
             env[COV_TRACES_DIR] = self.traces_dir
             env[COV_LEVEL] = self.level
-
-    def setup_tmpdir(self, tmpdir):
-        self.tmpdir = os.environ["TMPDIR"]
-        os.environ["TMPDIR"] = os.path.join(os.getcwd(), tmpdir)

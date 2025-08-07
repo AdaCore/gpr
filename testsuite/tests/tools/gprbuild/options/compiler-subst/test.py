@@ -3,11 +3,9 @@ from testsuite_support.tools import GPRBUILD
 
 bnr = BuilderAndRunner()
 
-bnr.setup_tmpdir("projects")
-
 print("Default compiler:")
-bnr.call ([GPRBUILD, "-Pprojects/prj", "-c", "-v"])
+bnr.call ([GPRBUILD, "-Pprojects/prj", "-c", "-v", "--temp-dir=obj"])
 print("")
 
 print ("Substituted compiler:")
-bnr.call ([GPRBUILD, "-Pprojects/prj", "--compiler-subst=Ada,fake-compiler-gcc", "-c", "-v"])
+bnr.call ([GPRBUILD, "-Pprojects/prj", "--compiler-subst=Ada,fake-compiler-gcc", "-c", "-v", "--temp-dir=obj"])

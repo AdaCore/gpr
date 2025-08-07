@@ -145,13 +145,17 @@ package body GPR2.Build.Actions is
             end;
          else
             declare
+               Dir    : constant String :=
+                          (if Self.Tree.Build_Options.Use_Obj_Dir_As_Temp_Dir
+                           then Self.View.Object_Directory.String_Value
+                           else GNATCOLL.OS.Temp.System_Temp_Dir);
                Handle : constant GOT.Temp_File_Handle :=
                           GNATCOLL.OS.Temp.Create_Temp_File
                             (Prefix      => String
                                (Self.UID.Db_Filename (True) & "-" & Purpose
                                 & "_"),
                              Suffix      => String (Extension),
-                             Dir         => GNATCOLL.OS.Temp.System_Temp_Dir,
+                             Dir         => Dir,
                              Auto_Close  => False);
                Dest   : constant Filename_Type :=
                           Filename_Type (GNATCOLL.OS.Temp.Path (Handle));
