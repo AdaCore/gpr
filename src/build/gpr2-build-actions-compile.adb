@@ -815,74 +815,59 @@ package body GPR2.Build.Actions.Compile is
 
    overriding procedure Compute_Response_Files
      (Self           : in out Object;
-      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
-      Signature_Only : Boolean) is
-   begin
-      if not Signature_Only then
-         declare
-            use Build.Response_Files;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object)
+   is
+      use Build.Response_Files;
 
-            Lang_Index : constant PAI.Object := PAI.Create (Self.Lang);
-            A_RFF      : constant Project.Attribute.Object :=
-                           Self.View.Attribute
-                             (PRA.Compiler.Response_File_Format, Lang_Index);
-            Format     : Response_File_Format := None;
-         begin
-            if A_RFF.Is_Defined then
-               declare
-                  LV : constant String :=
-                         Ada.Characters.Handling.To_Lower (A_RFF.Value.Text);
-               begin
-                  if LV = "gnu" then
-                     Format := GNU;
-                  elsif LV = "object_list" then
-                     Format := Object_List;
-                  elsif LV = "gcc_gnu" then
-                     Format := GCC_GNU;
-                  elsif LV = "gcc_option_list" then
-                     Format := GCC_Option_List;
-                  elsif LV = "gcc_object_list" then
-                     Format := GCC_Object_List;
-                  end if;
-               end;
-            end if;
-
-            if Format = GCC_GNU then
-               declare
-                  A_RFS  : constant Project.Attribute.Object :=
-                             Self.View.Attribute
-                               (PRA.Compiler.Response_File_Switches,
-                                Lang_Index);
-                  RFS    : constant Containers.Source_Value_List :=
-                             (if A_RFS.Is_Defined
-                              then A_RFS.Values
-                              else Containers.Empty_Source_Value_List);
-                  A_CLML : constant Project.Attribute.Object :=
+      CL_Max_Length_Attr : constant Project.Attribute.Object :=
                              Self.View.Attribute
                                (PRA.Compiler.Max_Command_Line_Length);
-                  CLML   : constant Natural :=
-                             (if A_CLML.Is_Defined
-                              then Natural'Value (A_CLML.Value.Text)
-                              else 0);
-               begin
-                  Self.Response_Files.Initialize (Format, Compiler, CLML, RFS);
-               end;
+      CL_Max_Length      : constant Natural :=
+                             (if CL_Max_Length_Attr.Is_Defined
+                              then Natural'Value
+                                (CL_Max_Length_Attr.Value.Text)
+                              else Natural'Last);
+      Lang_Index         : constant PAI.Object := PAI.Create (Self.Lang);
+      Format_Attr        : constant Project.Attribute.Object :=
+                             Self.View.Attribute
+                               (PRA.Compiler.Response_File_Format, Lang_Index);
+      Format             : Response_File_Format := None;
 
-               if Self.Response_Files.Length_Restriction (Cmd_Line) then
-                  declare
-                     Resp_File : constant Tree_Db.Temp_File :=
-                                   Self.Get_Or_Create_Temp_File
-                                     ("response_file", Local);
-                  begin
-                     Self.Response_Files.Register
-                       (Resp_File.FD,
-                        Resp_File.Path);
-                  end;
+   begin
+      if Cmd_Line.Total_Length <= CL_Max_Length then
+         return;
+      end if;
 
-                  Self.Response_Files.Create (Cmd_Line);
-               end if;
-            end if;
+      if Format_Attr.Is_Defined then
+         Format := Response_File_Format'Value (Format_Attr.Value.Text);
+      end if;
+
+      if Format = GCC_GNU then
+         declare
+            Switches_Attr : constant Project.Attribute.Object :=
+                              Self.View.Attribute
+                                (PRA.Compiler.Response_File_Switches,
+                                 Lang_Index);
+            Switches      : constant Containers.Source_Value_List :=
+                              (if Switches_Attr.Is_Defined
+                               then Switches_Attr.Values
+                               else Containers.Empty_Source_Value_List);
+         begin
+            Self.Response_Files.Initialize
+              (Format, Compiler, Switches);
          end;
+
+         declare
+            Resp_File : constant Tree_Db.Temp_File :=
+                          Self.Get_Or_Create_Temp_File
+                            ("response_file", Local);
+         begin
+            Self.Response_Files.Register
+              (Resp_File.FD,
+               Resp_File.Path);
+         end;
+
+         Self.Response_Files.Create (Cmd_Line);
       end if;
    end Compute_Response_Files;
 

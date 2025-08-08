@@ -56,11 +56,6 @@ package GPR2.Build.Actions.Compile.Ada is
       Cmd_Line       : in out GPR2.Build.Command_Line.Object;
       Signature_Only : Boolean);
 
-   overriding procedure Compute_Response_Files
-     (Self           : in out Object;
-      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
-      Signature_Only : Boolean);
-
    overriding function On_Tree_Insertion
      (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;

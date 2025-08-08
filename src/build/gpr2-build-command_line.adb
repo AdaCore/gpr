@@ -24,10 +24,9 @@ package body GPR2.Build.Command_Line is
       Kind : Arg_Kind       := Other) is
    begin
       Self.Cmd_Line.Append (Arg);
-      Self.Total_Length := Self.Total_Length + 1 + Arg'Length;
-      Self.Arg_Length   := Self.Arg_Length + 1 + Arg'Length;
-      Self.Args_By_Kind (Kind).Append (Arg);
+      Self.Kind.Append (Kind);
       Self.In_Signature.Append (Mode);
+      Self.Total_Length := Self.Total_Length + 1 + Arg'Length;
    end Add_Argument;
 
    procedure Add_Argument
@@ -56,6 +55,23 @@ package body GPR2.Build.Command_Line is
    begin
       Self.Env.Include (Var, Value);
    end Add_Env_Variable;
+
+   -------------------
+   -- Argument_List --
+   -------------------
+
+   function Argument_List
+     (Self : Object; Kind : Arg_Kind) return GNATCOLL.OS.Process.Argument_List
+   is
+   begin
+      return Result : GNATCOLL.OS.Process.Argument_List do
+         for J in Self.Cmd_Line.First_Index .. Self.Cmd_Line.Last_Index loop
+            if Self.Kind (J) = Kind then
+               Result.Append (Self.Cmd_Line (J));
+            end if;
+         end loop;
+      end return;
+   end Argument_List;
 
    ------------
    -- Create --
@@ -134,25 +150,27 @@ package body GPR2.Build.Command_Line is
    procedure Recompute_For_Response_File
      (Self          : in out Object;
       Clear_Other   : Boolean;
-      Resp_File_Arg : String;
-      Delimiter     : RF_Delimiter := First_Obj)
+      Resp_File_Arg : String)
    is
       New_Cmd_Line : GNATCOLL.OS.Process.Argument_List;
+      Index        : Natural;
    begin
-      if Delimiter = First_Obj then
-         --  Put args on the new command line until the first object which will
-         --  be contained in the response file.
-         for Arg of Self.Cmd_Line loop
-            if Self.Args_By_Kind (Obj).Contains (Arg) then
-               exit;
-            end if;
+      --  All args are inside the response file, just put the driver on the
+      --  new command line.
+      New_Cmd_Line.Append (Self.Cmd_Line.First_Element);
 
-            New_Cmd_Line.Append (Arg);
+      Index := Self.Cmd_Line.First_Index + 1;
+
+      if not Clear_Other then
+         --  Skip the indexes until we find the first object
+         --  This is important since some tools depend on the order of the
+         --  switches
+
+         while Index <= Self.Cmd_Line.Last_Index loop
+            exit when Self.Kind (Index) = Obj;
+            New_Cmd_Line.Append (Self.Cmd_Line (Index));
+            Index := Index + 1;
          end loop;
-      elsif Delimiter = All_Args then
-         --  All args are inside the response file, just put the driver on the
-         --  new command line.
-         New_Cmd_Line.Append (Self.Cmd_Line.First_Element);
       end if;
 
       --  Add the response file as a new arg of the command line
@@ -161,10 +179,12 @@ package body GPR2.Build.Command_Line is
       --  Depending on the response file structure, options can be contained in
       --  the response file or needs to be on the command line.
       if not Clear_Other then
-         for Arg of Self.Args_By_Kind (Other) loop
-            if not New_Cmd_Line.Contains (Arg) then
-               New_Cmd_Line.Append (Arg);
+         while Index <= Self.Cmd_Line.Last_Index loop
+            if Self.Kind (Index) = Other then
+               New_Cmd_Line.Append (Self.Cmd_Line  (Index));
             end if;
+
+            Index := Index + 1;
          end loop;
       end if;
 
@@ -177,10 +197,14 @@ package body GPR2.Build.Command_Line is
 
    procedure Remove
      (Self  : in out Object;
-      Index : Natural) is
+      Index : Natural)
+   is
+      Arg : constant String := Self.Cmd_Line (Index);
    begin
       Self.Cmd_Line.Delete (Index);
       Self.In_Signature.Delete (Index);
+      Self.Kind.Delete (Index);
+      Self.Total_Length := Self.Total_Length - Arg'Length - 1;
    end Remove;
 
    ----------------
@@ -203,7 +227,7 @@ package body GPR2.Build.Command_Line is
 
          Self.Cmd_Line.Prepend (Arg);
          Self.In_Signature.Prepend (Simple);
-         Self.Args_By_Kind (Driver).Append (Arg);
+         Self.Kind.Prepend (Driver);
       end Internal;
    begin
       if GNAT.OS_Lib.Is_Absolute_Path (Arg) then

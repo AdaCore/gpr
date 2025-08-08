@@ -62,7 +62,7 @@ package GPR2.Build.Actions.Link is
 
    function Is_Library (Self : Object'Class) return Boolean;
 
-   function Is_Static_Library (Self : Object'Class) return Boolean;
+   function Is_Static_Library (Self : Object) return Boolean;
 
    function Interface_Units
      (Self : Object'Class) return Compilation_Unit.Maps.Map
@@ -105,8 +105,7 @@ package GPR2.Build.Actions.Link is
 
    overriding procedure Compute_Response_Files
      (Self           : in out Object;
-      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
-      Signature_Only : Boolean);
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object);
 
    overriding function Pre_Command
      (Self : in out Object) return Boolean;
@@ -210,7 +209,7 @@ private
    function Is_Library (Self : Object'Class) return Boolean is
      (Self.Is_Library);
 
-   function Is_Static_Library (Self : Object'Class) return Boolean is
+   function Is_Static_Library (Self : Object) return Boolean is
      (Self.Is_Library and then Self.Is_Static);
 
    function Output (Self : Object) return Artifacts.Files.Object'Class is
@@ -236,8 +235,9 @@ private
       and then Self.View.Attribute (PRA.Linker.Driver).Value.Text'Length > 0);
 
    overriding function Skip (Self : Object) return Boolean is
-     ((Self.Is_Static_Library and then not Self.Check_Archive_Driver) or else
-      not Self.Check_Linker_Driver);
+     ((Object'Class (Self).Is_Static_Library
+      and then not Self.Check_Archive_Driver)
+      or else not Self.Check_Linker_Driver);
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object is

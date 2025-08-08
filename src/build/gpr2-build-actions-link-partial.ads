@@ -26,11 +26,6 @@ package GPR2.Build.Actions.Link.Partial is
       Cmd_Line       : in out GPR2.Build.Command_Line.Object;
       Signature_Only : Boolean);
 
-   overriding procedure Compute_Response_Files
-     (Self           : in out Object;
-      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
-      Signature_Only : Boolean);
-
    overriding function On_Tree_Insertion
      (Self : Object;
       Db   : in out GPR2.Build.Tree_Db.Object) return Boolean;
@@ -72,6 +67,9 @@ private
 
    overriding function Extended (Self : Object) return Object is
      (raise Internal_Error with "This action is not extending");
+
+   overriding function Is_Static_Library (Self : Object) return Boolean is
+     (False);
 
    Undefined : constant Object := (others => <>);
 

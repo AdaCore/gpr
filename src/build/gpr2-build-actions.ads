@@ -153,8 +153,7 @@ package GPR2.Build.Actions is
 
    procedure Compute_Response_Files
      (Self           : in out Object;
-      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
-      Signature_Only : Boolean);
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object) is null;
    --  Return the command line and response files corresponding to the action
    --  If Signature_Only is set, then no temp file should be generated, and
    --  only the arguments that are part of the signature are to be computed.

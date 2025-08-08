@@ -3,6 +3,7 @@ with Ada.Text_IO;
 
 with GNAT.OS_Lib;
 with GNATCOLL.Utils;
+with GPR2.Utils;
 
 package body Test_Helper is
 
@@ -36,49 +37,41 @@ package body Test_Helper is
    -- Image_RF --
    --------------
 
-   function Image_RF (Command : Argument_List) return String
+   function Image_RF (Path    : Path_Name.Object;
+                      Command : Unbounded_String) return String
    is
-      Result : Unbounded_String;
-      First  : Boolean := True;
+      Result    : Unbounded_String;
+      Local_Cmd : Unbounded_String;
    begin
-      for Arg of Command loop
-         if First then
-            declare
-               Res     : constant GNATCOLL.Utils.Unbounded_String_Array :=
-                           GNATCOLL.Utils.Split
-                             (Str => Arg,
-                              On  => GNAT.OS_Lib.Directory_Separator);
-               RF_Name : constant String := To_String (Res (Res'Last));
-            begin
-               Append
-                 (Result, "Response file @" & RF_Name & " : {");
-            end;
-            First := False;
-         else
-            declare
-               Res     : constant GNATCOLL.Utils.Unbounded_String_Array :=
-                           GNATCOLL.Utils.Split
-                             (Str => Arg,
-                              On  => GNAT.OS_Lib.Directory_Separator);
-               New_Arg : constant String :=
-                           (if Res'Length > 1
-                            then "@path_to_file:" & To_String (Res (Res'Last))
-                            else Arg);
-            begin
-               if GNATCOLL.Utils.Ends_With (New_Arg, "" & ASCII.LF) then
-                  Append
-                    (Result, New_Arg (New_Arg'First .. New_Arg'Last - 1)
-                     & "<LF>");
-               else
-                  Append (Result, New_Arg);
-               end if;
-            end;
-         end if;
-      end loop;
-
-      if not Command.Is_Empty then
-         Append (Result, "}");
+      if not Path.Is_Defined then
+         return "";
       end if;
+
+      Append (Result, "Response file @");
+      Append (Result, String (Path.Simple_Name));
+      Append (Result, " : {");
+
+      declare
+         function Replace (Item : String) return Boolean;
+         function Replace (Item : String) return Boolean is
+         begin
+            if GNATCOLL.Utils.Starts_With (Item, "<at>") then
+               Append (Local_Cmd, "<at>path_to_file:primary<LF>");
+            else
+               Append (Local_Cmd, Item & "<LF>");
+            end if;
+
+            return True;
+         end Replace;
+      begin
+         GNATCOLL.Utils.Split
+           (Str      => To_String (Command),
+            On       => "<LF>",
+            For_Each => Replace'Access);
+      end;
+
+      Append (Result, Local_Cmd);
+      Append (Result, "}");
 
       return To_String (Result);
    end Image_RF;

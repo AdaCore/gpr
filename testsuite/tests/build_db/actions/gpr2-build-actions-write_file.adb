@@ -28,18 +28,6 @@ package body GPR2.Build.Actions.Write_File is
       Cmd_Line.Add_Argument ("Does-Not-Work!");
    end Compute_Command;
 
-   ----------------------------
-   -- Compute_Response_Files --
-   ----------------------------
-
-   overriding procedure Compute_Response_Files
-     (Self           : in out Object;
-      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
-      Signature_Only : Boolean) is
-   begin
-      null;
-   end Compute_Response_Files;
-
    -----------------------
    -- Compute_Signature --
    -----------------------

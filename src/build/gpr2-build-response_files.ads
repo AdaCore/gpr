@@ -4,11 +4,14 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Strings.Unbounded;
+
 with GNATCOLL.OS.FS;
 with GNATCOLL.OS.Process;
 
 with GPR2.Build.Command_Line;
 with GPR2.Containers;
+with GPR2.Path_Name;
 
 package GPR2.Build.Response_Files is
 
@@ -20,7 +23,7 @@ package GPR2.Build.Response_Files is
      with Static_Predicate =>
        GCC_Formatting_Required in GCC_GNU | GCC_Object_List | GCC_Option_List;
 
-   type Response_File_Kind is (Compiler, Linker, Unknown);
+   type Response_File_Kind is (Binder, Compiler, Linker, Unknown);
 
    type Object is tagged private;
 
@@ -31,11 +34,10 @@ package GPR2.Build.Response_Files is
       Cmd_Line : in out GPR2.Build.Command_Line.Object);
 
    procedure Initialize
-     (Self       : in out Object;
-      Format     : Response_File_Format;
-      Kind       : Response_File_Kind;
-      Max_Length : Natural;
-      Switches   : Containers.Source_Value_List);
+     (Self     : in out Object;
+      Format   : Response_File_Format;
+      Kind     : Response_File_Kind;
+      Switches : Containers.Source_Value_List);
 
    procedure Register
      (Self      : in out Object;
@@ -46,16 +48,16 @@ package GPR2.Build.Response_Files is
    function Has_Primary_Content (Self : Object) return Boolean;
 
    function Primary_Response_File_Content
-     (Self : Object) return GNATCOLL.OS.Process.Argument_List;
+     (Self : Object) return Ada.Strings.Unbounded.Unbounded_String;
+
+   function Primary_Response_File (Self : Object) return Path_Name.Object;
 
    function Has_Secondary_Content (Self : Object) return Boolean;
 
    function Secondary_Response_File_Content
-     (Self : Object) return GNATCOLL.OS.Process.Argument_List;
+     (Self : Object) return Ada.Strings.Unbounded.Unbounded_String;
 
-   function Length_Restriction
-     (Self     : Object;
-      Cmd_Line : GPR2.Build.Command_Line.Object) return Boolean;
+   function Secondary_Response_File (Self : Object) return Path_Name.Object;
 
 private
 
@@ -67,19 +69,16 @@ private
    type Object is tagged record
       Format                : Response_File_Format     := None;
       Kind                  : Response_File_Kind       := Unknown;
-      Max_Cmd_Line_Length   : Natural                  := 0;
 
       Primary_FD            : OS.FS.File_Descriptor    := GOF.Invalid_FD;
-      Primary_Path          : Unbounded_String;
-      Primary_Content       : OS.Process.Argument_List;
-      Has_Primary_Content   : Boolean                  := False;
+      Primary_Path          : Path_Name.Object;
+      Primary_Content       : Unbounded_String;
 
       Secondary_FD          : OS.FS.File_Descriptor    := GOF.Invalid_FD;
-      Secondary_Path        : Unbounded_String;
-      Secondary_Content     : OS.Process.Argument_List;
-      Has_Secondary_Content : Boolean                  := False;
+      Secondary_Path        : Path_Name.Object;
+      Secondary_Content     : Unbounded_String;
 
-      Resp_File_Switches    : Build.Command_Line.Args_Vector.Vector;
+      Resp_File_Switches    : GNATCOLL.OS.Process.Argument_List;
    end record;
 
    procedure Close (Self : in out Object);
@@ -92,9 +91,9 @@ private
      (Self     : in out Object;
       Cmd_Line : in out GPR2.Build.Command_Line.Object);
 
-   function Check_Length
+   procedure Create_Binder
      (Self     : in out Object;
-      Cmd_Line : in out GPR2.Build.Command_Line.Object) return Boolean;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object);
 
    function Has_Primary_Response_File (Self : Object) return Boolean;
 
@@ -106,26 +105,26 @@ private
      (Self.Primary_FD /= GOF.Invalid_FD);
 
    function Has_Primary_Content (Self : Object) return Boolean is
-     (Self.Has_Primary_Content);
+     (Self.Primary_Path.Is_Defined);
 
    function Primary_Response_File_Content
-     (Self : Object) return OS.Process.Argument_List is
+     (Self : Object) return Unbounded_String is
      (Self.Primary_Content);
+
+   function Primary_Response_File (Self : Object) return Path_Name.Object is
+     (Self.Primary_Path);
 
    function Has_Secondary_Response_File (Self : Object) return Boolean is
      (Self.Secondary_FD /= GOF.Invalid_FD);
 
    function Has_Secondary_Content (Self : Object) return Boolean is
-     (Self.Has_Secondary_Content);
+     (Self.Secondary_Path.Is_Defined);
 
    function Secondary_Response_File_Content
-     (Self : Object) return OS.Process.Argument_List is
+     (Self : Object) return Unbounded_String is
      (Self.Secondary_Content);
 
-   function Length_Restriction
-     (Self     : Object;
-      Cmd_Line : GPR2.Build.Command_Line.Object) return Boolean is
-     (Self.Max_Cmd_Line_Length > 0
-      and then Cmd_Line.Arg_Length > Self.Max_Cmd_Line_Length);
+   function Secondary_Response_File (Self : Object) return Path_Name.Object is
+     (Self.Secondary_Path);
 
 end  GPR2.Build.Response_Files;
