@@ -147,7 +147,7 @@ package body GPR2.Build.Process_Manager is
             if Proc_Handler.Process_Status /= PROCESS_STATUS_OK then
                Self.Tree_Db.Reporter.Report
                  (Message.Create
-                    (Message.Warning,
+                    (Message.Error,
                      Job.UID.Image & " failed with status" &
                        Proc_Handler.Process_Status'Image,
                      Source_Reference.Create
