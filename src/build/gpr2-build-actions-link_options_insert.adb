@@ -83,7 +83,7 @@ package body GPR2.Build.Actions.Link_Options_Insert is
 
       if not Signature_Only then
          Cmd_Line.Add_Argument
-           (GPR_Section & "=" & String (Options_File.Simple_Name),
+           (GPR_Section & "=" & Options_File.String_Value,
             GPR2.Build.Command_Line.Ignore);
       end if;
 

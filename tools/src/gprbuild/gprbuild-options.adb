@@ -232,6 +232,15 @@ package body GPRbuild.Options is
                  & "job slots"));
       Parser.Add_Argument
         (Build_Group,
+         Create (Name           => "--temp-dir",
+                 Help           => "Determinte where temporary files should be"
+                 & "located. Either in the object directory of the owning "
+                 & "project or the default system temporary directory",
+                 In_Switch_Attr => False,
+                 Delimiter      => Equal,
+                 Parameter      => "[os|obj]"));
+      Parser.Add_Argument
+        (Build_Group,
          Create (Name   => "-vh",
                  Help   => "Very high verbosity level",
                  Hidden => True));
@@ -453,6 +462,7 @@ package body GPRbuild.Options is
          Result.PM_Options.Script_File :=
            GPR2.Path_Name.Create_File (Filename_Type (Param));
          Result.PM_Options.Keep_Temp_Files := True;
+         Result.Build_Options.Use_Obj_Dir_As_Temp_Dir := True;
 
       elsif Arg = "--no-indirect-imports" then
          Result.Build_Options.No_Indirect_Imports := True;
@@ -608,6 +618,16 @@ package body GPRbuild.Options is
          --  is on the command line. Otherwise we can fallback to the normal
          --  gprbuild mode (spawn as many process as the -jX option allows)
          Result.PM_Options.Force_Jobserver := True;
+
+      elsif Arg = "--temp-dir" then
+         if Param = "obj" then
+            Result.Build_Options.Use_Obj_Dir_As_Temp_Dir := True;
+         elsif Param = "os" then
+            Result.Build_Options.Use_Obj_Dir_As_Temp_Dir := False;
+         else
+            raise GPR2.Options.Usage_Error with
+              "'" & Param & "' is not a valid parameter for --temp-dir=";
+         end if;
 
       elsif Arg = "-nostdinc" then
          Add_Ada_Compiler_Option (String (Arg));

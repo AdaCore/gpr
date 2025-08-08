@@ -88,28 +88,6 @@ package body GPR2.Build.Actions.Link.Partial is
          end;
       end loop;
 
-      --  Add the possible object files given in the Library_Options attribute
-      declare
-         Attr : constant GPR2.Project.Attribute.Object :=
-                  Self.View.Attribute (PRA.Library_Options);
-      begin
-         if Attr.Is_Defined then
-            for Val of Attr.Values loop
-               declare
-                  Path : constant Path_Name.Object :=
-                           Path_Name.Create_File
-                             (Filename_Type (Val.Text),
-                              Self.View.Object_Directory.Value);
-               begin
-                  if Path.Exists then
-                     Cmd_Line.Add_Argument
-                       (Val.Text, Kind => Build.Command_Line.Obj);
-                  end if;
-               end;
-            end loop;
-         end if;
-      end;
-
       --  If the library is encapsulated
       if Self.Is_Encapsulated then
 
@@ -299,10 +277,6 @@ package body GPR2.Build.Actions.Link.Partial is
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      --  Add all object files contained in Library_Options attribute if they
-      --  actually exist.
-      Self.Add_Objects_From_Attribute (PRA.Library_Options);
-
       if not Db.Add_Output (UID, Self.Output) then
          return False;
       end if;

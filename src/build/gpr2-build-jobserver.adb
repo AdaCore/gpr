@@ -47,11 +47,11 @@ package body GPR2.Build.Jobserver is
 
          declare
             Token : Character := ASCII.NUL;
+            Valid : Boolean;
          begin
             --  Read a token
-            if Self.Protocol.Element.Get_Token (Token) then
-               Self.Current_Token.Set (Token);
-            end if;
+            Valid := Self.Protocol.Element.Get_Token (Token);
+            Self.Current_Token.Set (Token, Valid);
          end;
       end loop;
 
@@ -94,11 +94,11 @@ package body GPR2.Build.Jobserver is
          Available : out Boolean)
       is
       begin
-         Available := Is_Set;
+         Available := Is_Available;
 
-         if Is_Set then
-            Token := Token_Holder.Token;
-            Is_Set := False;
+         if Is_Available then
+            Token        := Token_Holder.Token;
+            Is_Available := False;
          elsif not Is_Processing then
             Traces.Trace ("Will actually ask a token");
             Event         := Fetch_Token;
@@ -111,11 +111,11 @@ package body GPR2.Build.Jobserver is
       -- Set --
       ---------
 
-      entry Set (Char : Character)
-        when not Is_Set is
+      entry Set (Char : Character; Validity : Boolean)
+        when not Is_Available is
       begin
          Token         := Char;
-         Is_Set        := True;
+         Is_Available  := Validity;
          Is_Processing := False;
       end Set;
    end Token_Holder;

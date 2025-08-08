@@ -1,22 +1,22 @@
 regular run:
-$ gprbuild -Pprj -p -j1
+$ gprbuild -Pprj -p -j1 --temp-dir=obj
 "obj/prj" created
 [Ada Compile]     pkg.ads
 $ gprclean -Pprj
 
 read only obj dir:
 $ chmod 0x555 obj/prj
-$ gprbuild -Pprj -p -j1
+$ gprbuild -Pprj -p -j1 --temp-dir=obj
 Problem accessing the object directory for project "Prj"
 Command '[Ada Compile] pkg.ads (prj.gpr)' failed.
 $ gprclean -Pprj -v
 
 read only obj dir with built project
 $ chmod 0x777 obj/prj
-$ gprbuild -Pprj -p -q
+$ gprbuild -Pprj -p -q --temp-dir=obj
 $ chmod 0x555 obj/prj
 - with externally built dependency
-$ gprbuild -Plib -XPRJ_RO=True -p -j1
+$ gprbuild -Plib -XPRJ_RO=True -p -j1 --temp-dir=obj
 "obj/lib" created
 "lib/lib" created
 [Ada Compile]     pkg2.ads
@@ -26,13 +26,13 @@ $ gprbuild -Plib -XPRJ_RO=True -p -j1
 [Partial Link]    p__lib.o
 [Archive]         liblib.a
 - with regular dependency
-$ gprbuild -Plib -XPRJ_RO=False -p -j1
+$ gprbuild -Plib -XPRJ_RO=False -p -j1 --temp-dir=obj
 $ chmod 0x777 obj/prj
 
 read only lib dir
 $ gprclean -Plib -r -q
 $ chmod 0x555 lib/lib
-$ gprbuild -Plib -j1
+$ gprbuild -Plib -j1 --temp-dir=obj
 [Ada Compile]     pkg2.ads
 [Ada Compile]     pkg.ads
 [Ada Bind]        lib
@@ -42,9 +42,9 @@ $ gprbuild -Plib -j1
 lib.gpr: error: could not create the ali file "pkg2.ali"
 Command '[Archive] liblib.a (lib.gpr)' failed.
 $ chmod 0x777 lib/lib
-$ gprbuild -Plib -q
+$ gprbuild -Plib -q --temp-dir=obj
 $ chmod 0x555 lib/lib
-$ gprbuild -Plib -f -j1
+$ gprbuild -Plib -f -j1 --temp-dir=obj
 [Ada Compile]     pkg2.ads
 [Ada Compile]     pkg.ads
 [Ada Bind]        lib

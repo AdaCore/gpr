@@ -27,33 +27,33 @@ def run(cmd):
 
 print("regular run:")
 
-run(f"{GPRBUILD} -Pprj -p -j1")
+run(f"{GPRBUILD} -Pprj -p -j1 --temp-dir=obj")
 run(f"{GPRCLEAN} -Pprj")
 
 print("\nread only obj dir:")
 
 chro("obj/prj")
-run(f"{GPRBUILD} -Pprj -p -j1")
+run(f"{GPRBUILD} -Pprj -p -j1 --temp-dir=obj")
 run(f"{GPRCLEAN} -Pprj -v")
 
 print("\nread only obj dir with built project")
 
 chrw("obj/prj")
-run(f"{GPRBUILD} -Pprj -p -q")
+run(f"{GPRBUILD} -Pprj -p -q --temp-dir=obj")
 chro("obj/prj")
 
 print("- with externally built dependency")
-run(f"{GPRBUILD} -Plib -XPRJ_RO=True -p -j1")
+run(f"{GPRBUILD} -Plib -XPRJ_RO=True -p -j1 --temp-dir=obj")
 
 print("- with regular dependency")
-run(f"{GPRBUILD} -Plib -XPRJ_RO=False -p -j1")
+run(f"{GPRBUILD} -Plib -XPRJ_RO=False -p -j1 --temp-dir=obj")
 chrw("obj/prj")
 
 print("\nread only lib dir")
 run(f"{GPRCLEAN} -Plib -r -q")
 chro("lib/lib")
-run(f"{GPRBUILD} -Plib -j1")
+run(f"{GPRBUILD} -Plib -j1 --temp-dir=obj")
 chrw("lib/lib")
-run(f"{GPRBUILD} -Plib -q")
+run(f"{GPRBUILD} -Plib -q --temp-dir=obj")
 chro("lib/lib")
-run(f"{GPRBUILD} -Plib -f -j1")
+run(f"{GPRBUILD} -Plib -f -j1 --temp-dir=obj")

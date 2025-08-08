@@ -663,12 +663,15 @@ package body GPR2.Build.Tree_Db is
          end;
       else
          declare
+            Dir    : constant String :=
+                       (if Self.Build_Options.Use_Obj_Dir_As_Temp_Dir
+                        then For_View.Object_Directory.String_Value
+                        else GNATCOLL.OS.Temp.System_Temp_Dir);
             Handle : constant GOT.Temp_File_Handle :=
                        GNATCOLL.OS.Temp.Create_Temp_File
                          (Prefix      => String ("." & Purpose & "_"),
                           Suffix      => String (Extension),
-                          Dir         =>
-                            For_View.Object_Directory.String_Value,
+                          Dir         => Dir,
                           Auto_Close  => False);
             Dest   : constant Filename_Type :=
                        Filename_Type (GNATCOLL.OS.Temp.Path (Handle));

@@ -1,3 +1,2 @@
 description: Test jobservers in the process manager of gprbuild
 driver: python_script
-timeout: 600

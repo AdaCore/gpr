@@ -61,6 +61,9 @@ package GPR2.Build.Options is
       Comp_Substr                  : GPR2.Containers.Lang_Value_Map;
       --  Map of languages to compiler names, used to restrict the compilation
       --  to a specific compiler.
+      Use_Obj_Dir_As_Temp_Dir      : Boolean := False;
+      --  Flag to now if we should use the view object dir to store temp file
+      --  or if we are using the regular OS temp dir logic.
    end record;
 
 end GPR2.Build.Options;
