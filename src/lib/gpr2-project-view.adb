@@ -2127,7 +2127,9 @@ package body GPR2.Project.View is
          --  Attribute library_version is only available on unix for shared
          --  libraries.
 
-         if not Self.Is_Static_Library and then Shared_Ext /= ".dll" then
+         if not Self.Is_Static_Library
+           and then not Self.Tree.Is_Windows_Target
+         then
             Attr_Version := Self.Attribute (PRA.Library_Version);
 
             if Attr_Version.Is_Defined then
@@ -2168,10 +2170,8 @@ package body GPR2.Project.View is
    -- Library_Filename_Internal --
    -------------------------------
 
-   function Library_Filename_Internal
-     (Self : Object) return Simple_Name
-   is
-      File_Name    : Unbounded_String;
+   function Library_Filename_Internal (Self : Object) return Simple_Name is
+      File_Name : Unbounded_String;
    begin
       --  Library prefix
 
@@ -2209,12 +2209,12 @@ package body GPR2.Project.View is
    function Library_Filename_Variants
      (Self : Object) return GPR2.Containers.Filename_Set
    is
-      Result : Containers.Filename_Set;
+      Result       : Containers.Filename_Set;
       Attr_Version : GPR2.Project.Attribute.Object;
    begin
       --  Library version
       if not Self.Is_Static_Library
-        and then not GPR2.On_Windows
+        and then not Self.Tree.Is_Windows_Target
       then
          pragma Warnings (Off, "this code can never be executed*");
          Attr_Version := Self.Attribute (PRA.Library_Version);
@@ -2226,16 +2226,16 @@ package body GPR2.Project.View is
       end if;
 
       declare
+         L_Name  : constant Simple_Name :=
+                     Simple_Name
+                       (Self.Attribute (PRA.Shared_Library_Suffix).Value.Text);
          Version : constant Simple_Name :=
                      Simple_Name (Attr_Version.Value.Text);
          Last    : Natural := Version'Last;
       begin
          for K in reverse Version'First .. Version'Last loop
             if Version (K) = '.' then
-               exit when
-                 Version (K .. Last) =
-                   Simple_Name
-                     (Self.Attribute (PRA.Shared_Library_Suffix).Value.Text);
+               exit when Version (K .. Last) = L_Name;
                Result.Include (Version (Version'First .. K - 1));
                Last := K - 1;
             end if;
@@ -2287,7 +2287,7 @@ package body GPR2.Project.View is
      (Self : Object) return GPR2.Path_Name.Object is
    begin
       return Self.Library_Directory.Compose
-        ((if On_Windows
+        ((if Self.Tree.Is_Windows_Target
          then Self.Library_Filename_Internal
          else Simple_Name (Self.Attribute (PRA.Library_Version).Value.Text)));
    end Library_Version_Filename;

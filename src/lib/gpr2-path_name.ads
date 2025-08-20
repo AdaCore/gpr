@@ -190,6 +190,10 @@ package GPR2.Path_Name is
      with Pre => Self.Is_Defined;
    --  Returns True if Self is an existing and readable file or directory
 
+   procedure Create_Sym_Link (Self, To : Object)
+     with Pre => Self.Is_Defined and then To.Is_Defined;
+   --  Creates a symlink for Self as To
+
    function Relative_Path (Self, From : Object) return Filename_Type
      with Pre  => Self.Is_Defined and then From.Is_Defined,
           Post => Relative_Path'Result'Length > 0;
