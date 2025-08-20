@@ -57,8 +57,8 @@ package GPR2.Build.Actions.Compile.Ada is
       Signature_Only : Boolean);
 
    overriding function On_Tree_Insertion
-     (Self : Object;
-      Db   : in out GPR2.Build.Tree_Db.Object) return Boolean;
+     (Self     : Object;
+      Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
    overriding function Post_Command
      (Self   : in out Object;
@@ -170,5 +170,4 @@ private
 
    function Spec_Needs_Body (Self : Object) return Boolean is
      (Self.Needs_Body);
-
 end GPR2.Build.Actions.Compile.Ada;

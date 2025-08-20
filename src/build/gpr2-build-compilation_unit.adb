@@ -314,13 +314,12 @@ package body GPR2.Build.Compilation_Unit is
    function Is_Body_Needed_For_SAL (Self : Object) return Boolean is
       Tree : constant access GPR2.Tree_Internal.Object :=
                View_Internal.Get_RO (Self.Root_View).Tree;
+      Main : constant Unit_Location := Self.Main_Part;
+      BN   : constant Simple_Name := Main.Source.Base_Filename;
    begin
-      if Self.Has_Main_Part then
+      if Main.Index = No_Index then
          declare
             use ALI_Parser;
-
-            Main : constant Unit_Location := Self.Main_Part;
-            BN   : constant Simple_Name := Main.Source.Base_Filename;
 
             Dir : constant Path_Name.Object :=
                     (if Main.View.Is_Library

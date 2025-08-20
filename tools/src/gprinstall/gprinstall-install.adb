@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2025, AdaCore                     --
+--                     Copyright (C) 2019-2024, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -31,23 +31,25 @@ with GNAT.OS_Lib;
 with GNAT.String_Split;
 
 with GNATCOLL.OS.Constants;
-with GNATCOLL.OS.FSUtil;
 
-with GPR2.Build.Actions_Population;
-with GPR2.Build.Actions.Compile.Ada;
-with GPR2.Build.Actions.Link;
-with GPR2.Build.Artifacts.Files;
-with GPR2.Build.Compilation_Unit;
-with GPR2.Build.Unit_Info.List;
-with GPR2.Build.Source.Sets;
-with GPR2.Build.View_Db;
+with GPR2.Unit.List;
 with GPR2.Containers;
-with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
+with GPR2.Project.Source.Artifact;
+with GPR2.Project.Source.Set;
+pragma Warnings (Off, "* is not referenced");
+--  GPR2.Project.Source.Dependencies return a Part_Set but only has limited
+--  visibility on it. So in order to be able to manipulate the returned object
+--  we need to have full vilibility so need to add this with clause.
+--  However we never reference the package explicitly, so the compiler will
+--  complain that the using is not referenced.
+--  So let's just kill the warning.
+with GPR2.Project.Source.Part_Set;
+pragma Warnings (On, "* is not referenced");
 with GPR2.Project.Typ;
 with GPR2.Project.Variable;
 with GPR2.Project.View.Set;
@@ -56,7 +58,7 @@ with GPR2.Source_Reference;
 with GPR2.Source_Reference.Value;
 
 with GPRtools;
-with GPRtools.Options;
+with GPRtools.Program_Termination;
 with GPRtools.Util;
 
 package body GPRinstall.Install is
@@ -69,9 +71,10 @@ package body GPRinstall.Install is
 
    use GPR2;
 
-   --  use GPRtools.Program_Termination;
+   use GPRtools.Program_Termination;
 
-   use all type GPRtools.Options.Reporting_Mode;
+   use all type Unit.Library_Unit_Type;
+
    use type GNATCOLL.OS.OS_Type;
 
    package String_Vector renames GPR2.Containers.Value_Type_List;
@@ -104,6 +107,16 @@ package body GPRinstall.Install is
 
    Installed : GPR2.Project.View.Set.Object;
    --  Record already installed project
+
+   function Other_Part_Need_Body
+     (Source : GPR2.Project.Source.Object;
+      Index  : Unit_Index) return Boolean
+   is
+     (Source.Has_Other_Part (Index)
+      and then Source.Other_Part
+        (Index).Source.Is_Implementation_Required
+          (Source.Other_Part (Index).Index));
+   --  Returns True if Source has other part and this part need body
 
    procedure Double_Buffer;
    --  Double the size of the Buffer
@@ -151,24 +164,6 @@ package body GPRinstall.Install is
 
       package A renames GPR2.Project.Registry.Attribute;
       package P renames GPR2.Project.Registry.Pack;
-      package I renames GPR2.Project.Attribute_Index;
-
-      --  Helpers convertion routines
-
-      function OC
-        (A : GPR2.Build.Actions.Object'Class)
-         return GPR2.Build.Actions.Compile.Object'Class
-      is (GPR2.Build.Actions.Compile.Object'Class (A));
-
-      function AC
-        (A : GPR2.Build.Actions.Object'Class)
-         return GPR2.Build.Actions.Compile.Ada.Object'Class
-      is (GPR2.Build.Actions.Compile.Ada.Object'Class (A));
-
-      function AL
-        (A : GPR2.Build.Actions.Object'Class)
-         return GPR2.Build.Actions.Link.Object'Class
-      is (GPR2.Build.Actions.Link.Object'Class (A));
 
       subtype Param is GPRinstall.Options.Param;
 
@@ -313,9 +308,7 @@ package body GPRinstall.Install is
         with Pre => Options.Install_Manifest;
       --  Add filename to manifest
 
-      function Has_Sources
-        (Project : GPR2.Project.View.Object;
-         Direct  : Boolean := True) return Boolean
+      function Has_Sources (Project : GPR2.Project.View.Object) return Boolean
         with Inline;
       --  Returns True if the project contains sources
 
@@ -357,7 +350,7 @@ package body GPRinstall.Install is
             function N (Str : String) return String
               is (OS_Lib.Normalize_Pathname (Str, Case_Sensitive => False));
 
-            MD5 : constant String := String (Content_MD5 (Pathname));
+            MD5  : constant String := String (Pathname.Content_MD5);
          begin
             if not Aggregate_Only and then Is_Open (Man) then
                declare
@@ -635,7 +628,7 @@ package body GPRinstall.Install is
                                     else File)
                             else To);
          T             : constant String := String (Dest_Path.Dir_Name);
-         Dest_Filename : aliased String  := String (Dest_Path.Value);
+         Dest_Filename : aliased String  := Dest_Path.Value;
       begin
          pragma Warnings (Off, "*can never be executed*");
 
@@ -649,13 +642,13 @@ package body GPRinstall.Install is
          if not Sym_Link
            and then Directories.Exists (Dest_Filename)
            and then not Options.Force_Installations
-           and then Content_MD5 (Src_Path) /= Content_MD5 (Dest_Path)
+           and then Src_Path.Content_MD5 /= Dest_Path.Content_MD5
          then
             raise GPRinstall_Error
               with "file " & String (File) & " exists, use -f to overwrite";
          end if;
 
-         if Options.Dry_Run or else Options.Verbosity = Verbose then
+         if Options.Dry_Run or else Options.Verbose then
             if Sym_Link then
                Put ("ln -s ");
             else
@@ -699,7 +692,7 @@ package body GPRinstall.Install is
                if Options.Create_Dest_Dir then
                   begin
                      if Sym_Link then
-                        Directories.Create_Path (String (Src_Path.Dir_Name));
+                        Directories.Create_Path (Src_Path.Dir_Name);
                      else
                         Directories.Create_Path (T);
                      end if;
@@ -708,9 +701,7 @@ package body GPRinstall.Install is
                         --  Cannot create path, permission issue
                         raise GPRinstall_Error with
                           "cannot create destination directory "
-                          & (if Sym_Link
-                             then String (Src_Path.Dir_Name)
-                             else T)
+                          & (if Sym_Link then Src_Path.Dir_Name else T)
                           & " check permissions";
                   end;
 
@@ -724,17 +715,6 @@ package body GPRinstall.Install is
             --  Do copy
 
             if Sym_Link then
-               if Src_Path.Exists then
-                  declare
-                     R : constant Boolean :=
-                           GNATCOLL.OS.FSUtil.Remove_File
-                             (String (Src_Path.Value))
-                       with Unreferenced;
-                  begin
-                     null;
-                  end;
-               end if;
-
                Src_Path.Create_Sym_Link (To => Dest_Path);
 
                --  Add file to manifest
@@ -782,13 +762,13 @@ package body GPRinstall.Install is
 
                   if Extract_Debug then
                      if Objcopy = "" then
-                        Options.Tree.Reporter.Report
+                        Put_Line
                           (Objcopy_Exec & " not found, "
                            & "cannot create side debug file for "
                            & Dest_Filename);
 
                      elsif Strip = "" then
-                        Options.Tree.Reporter.Report
+                        Put_Line
                           (Strip_Exec & " not found, "
                            & "cannot create side debug file for "
                            & Dest_Filename);
@@ -837,7 +817,7 @@ package body GPRinstall.Install is
                                    (Objcopy, Args (1 .. 2), Success);
 
                                  if not Success then
-                                    Options.Tree.Reporter.Report
+                                    Put_Line
                                       (Objcopy_Exec & " error, "
                                        & "cannot link debug symbol file with"
                                        & " original executable "
@@ -845,14 +825,14 @@ package body GPRinstall.Install is
                                  end if;
 
                               else
-                                 Options.Tree.Reporter.Report
+                                 Put_Line
                                    (Strip_Exec & " error, "
                                     & "cannot remove debug symbols from "
                                     & Dest_Filename);
                               end if;
 
                            else
-                              Options.Tree.Reporter.Report
+                              Put_Line
                                 (Objcopy_Exec & " error, "
                                  & "cannot create side debug file for "
                                  & Dest_Filename);
@@ -878,31 +858,11 @@ package body GPRinstall.Install is
       procedure Copy_Files is
 
          procedure Copy_Project_Sources (Project : GPR2.Project.View.Object);
-         --  Copy sources from the given project. This never install the
-         --  body because it is noy needed for non Ada language and is needed
-         --  for Ada language only if part of a library and is required has
-         --  containing generic or inlining. The Ada bodies are copied using
-         --  the link action.
-
-         procedure Copy_Project_Artifacts (Project : GPR2.Project.View.Object);
-         --  Copy artifacts (.o, .ali) resulting from compilation
-
-         procedure Copy_Project_Library
-           (Project      : GPR2.Project.View.Object;
-            Library_Name : Path_Name.Object);
-         --  Copy library and create needed symlinks depending on library
-         --  version being set and/or platform.
-
-         function Copy_Ada_Source
-           (View    : GPR2.Project.View.Object;
-            Source  : GPR2.Build.Source.Object;
-            Do_Copy : Boolean := True) return Boolean;
-         --  Copy an Ada source (if Do_Copy is set) and record all unit's
-         --  naming exception if any.
+         --  Copy sources from the given project
 
          function Copy_Source
-           (View   : GPR2.Project.View.Object;
-            Source : Path_Name.Object) return Boolean;
+           (Source : GPR2.Project.Source.Object) return Boolean;
+         --  Copy Source and returns either artefactes need to be copied too
 
          procedure Copy_Artifacts
            (Pathname    : Path_Name.Object;
@@ -910,42 +870,7 @@ package body GPRinstall.Install is
             Required    : Boolean);
          --  Copy items from the artifacts attribute
 
-         Source_Copied : GPR2.Containers.Name_Set;
-
-         ---------------------
-         -- Copy_Ada_Source --
-         ---------------------
-
-         function Copy_Ada_Source
-           (View    : GPR2.Project.View.Object;
-            Source  : GPR2.Build.Source.Object;
-            Do_Copy : Boolean := True) return Boolean
-         is
-            Done : Boolean := True;
-         begin
-            if Do_Copy then
-               Done := Copy_Source (View, Source.Path_Name);
-            end if;
-
-            if Source.Has_Units
-              and then Source.Has_Naming_Exception
-              and then not Options.All_Sources
-            then
-               declare
-                  CUs : GPR2.Build.Unit_Info.List.Object := Source.Units;
-               begin
-                  --  When a naming exception is present for a body which
-                  --  is not installed we must exclude the Naming from the
-                  --  generated project.
-
-                  for CU of CUs loop
-                     Excluded_Naming.Include (CU.Name);
-                  end loop;
-               end;
-            end if;
-
-            return Done;
-         end Copy_Ada_Source;
+         Source_Copied : GPR2.Project.Source.Set.Object;
 
          --------------------
          -- Copy_Artifacts --
@@ -1005,405 +930,26 @@ package body GPRinstall.Install is
 
          begin
             Ada.Directories.Search
-              (Directory => String (Pathname.Dir_Name),
+              (Directory => Pathname.Dir_Name,
                Pattern   => String (Pathname.Simple_Name),
                Process   => Copy_Entry'Access);
 
             if Required and not Something_Copied then
                Rollback_Manifests;
                raise GPRinstall_Error with
-                 "error: file does not exist '"
-                 & String (Pathname.Value) & ''';
+                 "error: file does not exist '" & Pathname.Value & ''';
             end if;
          exception
             when Text_IO.Name_Error =>
                if Required then
                   Rollback_Manifests;
                   raise GPRinstall_Error with
-                    "error: file does not exist '"
-                    & String (Pathname.Value) & ''';
+                    "error: file does not exist '" & Pathname.Value & ''';
+               elsif Options.Warnings then
+                  Put_Line
+                    ("warning: file does not exist '" & Pathname.Value & ''');
                end if;
          end Copy_Artifacts;
-
-         ----------------------------
-         -- Copy_Project_Artifacts --
-         ----------------------------
-
-         procedure Copy_Project_Artifacts
-           (Project : GPR2.Project.View.Object)
-         is
-            use type GPR2.Build.Compilation_Unit.Unit_Location;
-
-            D_Sfx  : constant String :=
-                       String
-                         (Tree.Configuration.Dependency_File_Suffix
-                            (Ada_Language));
-            --  The dependency file suffix for Ada compilation
-
-            procedure Copy_ALI_Other_Part
-              (From  : GPR2.Path_Name.Object;
-               To    : GPR2.Path_Name.Object;
-               Unit  : GPR2.Build.Compilation_Unit.Object)
-              with Pre => Unit.Has_Main_Part
-                          and then Unit.Main_Part /= Unit.Spec;
-            --  Copy ALI for other part of source if the naming exception
-            --  brings different base names for the spec and body.
-
-            -------------------------
-            -- Copy_ALI_Other_Part --
-            -------------------------
-
-            procedure Copy_ALI_Other_Part
-              (From  : GPR2.Path_Name.Object;
-               To    : GPR2.Path_Name.Object;
-               Unit  : GPR2.Build.Compilation_Unit.Object)
-            is
-               S_Part : constant GPR2.Build.Compilation_Unit.Unit_Location :=
-                          Unit.Spec;
-               B_Part : constant GPR2.Build.Compilation_Unit.Unit_Location :=
-                          Unit.Main_Body;
-               S_BN   : constant String :=
-                          String (S_Part.Source.Base_Name);
-               O_BN   : constant String :=
-                          String (B_Part.Source.Base_Name);
-            begin
-               if S_BN /= O_BN then
-                  Copy_File
-                    (From => From,
-                     To   => To,
-                     File => Filename_Optional (S_BN & D_Sfx));
-               end if;
-            end Copy_ALI_Other_Part;
-
-            Done : Boolean with Unreferenced;
-         begin
-            for Action
-              of Tree.Artifacts_Database (Project).Tree_Db.All_Actions
-            loop
-               --  Copy object
-
-               if Copy (Object)
-                 and then Action in GPR2.Build.Actions.Compile.Object'Class
-                 and then Action.View = Project
-               then
-                  Copy_File
-                    (From => OC (Action).Object_File.Path,
-                     To   => Lib_Dir);
-               end if;
-
-               --  Copy object artifacts like coverage or callgraph
-
-               if (Copy (Object) or else Copy (Library))
-                 and then Action in GPR2.Build.Actions.Compile.Object'Class
-                 and then Action.View = Project
-               then
-                  for Artifact of
-                    Options.Tree.Artifacts_Database.Outputs (Action.UID)
-                  loop
-                     if Artifact in
-                       GPR2.Build.Artifacts.Files.Object'Class
-                     then
-                        --  For every compilation artifacts we get the
-                        --  basename and check if a known artifacts next
-                        --  to the file has a defined extension as set in
-                        --  Object_Artifact_Extensions.
-
-                        declare
-                           Lang     : constant GPR2.Language_Id :=
-                                        OC (Action).Language;
-                           A_Path   : constant GPR2.Path_Name.Object :=
-                                        GPR2.Build.Artifacts.Files.Object'Class
-                                          (Artifact).Path;
-                           Obj_Exts : constant GPR2.Project.Attribute.Object :=
-                                        Action.View.Attribute
-                                          (A.Clean.Object_Artifact_Extensions,
-                                           I.Create (Lang));
-                           Obj_BN   : constant Filename_Type :=
-                                        A_Path.Base_Filename;
-                           Obj_Dir  : constant Path_Name.Object :=
-                                        A_Path.Containing_Directory;
-                        begin
-                           if Obj_Exts.Is_Defined then
-                              for Ext of Obj_Exts.Values loop
-                                 declare
-                                    File : constant GPR2.Path_Name.Object :=
-                                             Obj_Dir.Compose
-                                               (Obj_BN
-                                                & Filename_Type (Ext.Text));
-                                 begin
-                                    --  This is an optional file, check first
-                                    --  if it exists.
-
-                                    if File.Exists then
-                                       Copy_File (From => File, To => Lib_Dir);
-                                    end if;
-                                 end;
-                              end loop;
-                           end if;
-                        end;
-                     end if;
-                  end loop;
-               end if;
-
-               --  Copy dependency file (.ali or .d)
-               --  Name the .ali against the spec file in case of minimal
-               --  installation.
-
-               if Copy (Dependency)
-                 and then Action.View = Project
-                 and then not Options.Sources_Only
-               then
-                  if Action in GPR2.Build.Actions.Compile.Ada.Object'Class then
-                     declare
-                        U    : constant GPR2.Build.Compilation_Unit.Object :=
-                                 AC (Action).Input_Unit;
-                        ALI  : constant Path_Name.Object :=
-                                 AC (Action).Intf_Ali_File.Path;
-                        TALI : constant Filename_Optional :=
-                                 (if Options.All_Sources
-                                  then ALI.Simple_Name
-                                  else Filename_Optional
-                                    (String
-                                       (U.Spec.Source.Base_Name) & D_Sfx));
-                        To   : constant Path_Name.Object :=
-                                 (if Project.Kind = K_Library
-                                  then ALI_Dir
-                                  else Lib_Dir);
-                     begin
-                        --  Copy the <body>.ali
-
-                        if not Project.Is_Library
-                          or else not Project.Is_Library_Standalone
-                          or else Project.Interface_Closure.Contains (U.Name)
-                          or else U.Is_Body_Needed_For_SAL
-                        then
-                           Copy_File
-                             (From => ALI,
-                              To   => To,
-                              File => TALI);
-                        end if;
-
-                        --  The <body>.ali has been copied, we now also want to
-                        --  create a file based on <body>.ali for <spec>.ali if
-                        --  needed.
-
-                        if U.Has_Part (S_Body)
-                          and then U.Has_Part (S_Spec)
-                          and then U.Main_Body /= U.Spec
-                        then
-                           Copy_ALI_Other_Part
-                             (From => ALI,
-                              To   => To,
-                              Unit => U);
-                        end if;
-                     end;
-
-                  elsif Action in GPR2.Build.Actions.Compile.Object'Class then
-                     Copy_File
-                       (From => OC (Action).Dependency_File.Path,
-                        To   => (if Project.Kind = K_Library
-                                 then ALI_Dir
-                                 else Lib_Dir));
-                  end if;
-               end if;
-
-               if Copy (Library)
-                 and then Action in GPR2.Build.Actions.Link.Object
-                 and then Action.View = Project
-                 and then AL (Action).Is_Library
-                 and then not Options.Sources_Only
-               then
-                  Copy_Project_Library (Project, AL (Action).Output.Path);
-               end if;
-
-               --  Copy executable(s)
-
-               if Copy (Executable)
-                 and then Action in GPR2.Build.Actions.Link.Object'Class
-                 and then Action.View = Project
-                 and then not AL (Action).Is_Library
-                 and then not Options.Sources_Only
-               then
-                  Copy_File
-                    (From          => AL (Action).Output.Path,
-                     To            => Exec_Dir,
-                     Executable    => True,
-                     Extract_Debug => Side_Debug);
-               end if;
-            end loop;
-
-            --  Copy explicit artifacts from Install package
-
-            for E of Artifacts loop
-               declare
-                  Destination : constant Filename_Type :=
-                                  Filename_Type (To_String (E.Destination));
-                  Filename    : constant Filename_Type :=
-                                  Filename_Type (To_String (E.Filename));
-               begin
-                  Copy_Artifacts
-                    (Path_Name.Compose (Project.Dir_Name, Filename),
-                     Path_Name.Create_Directory
-                       (Destination,
-                        Filename_Optional (-Prefix_Dir.V)),
-                     E.Required);
-               end;
-            end loop;
-         end Copy_Project_Artifacts;
-
-         --------------------------
-         -- Copy_Project_Library --
-         --------------------------
-
-         procedure Copy_Project_Library
-           (Project      : GPR2.Project.View.Object;
-            Library_Name : Path_Name.Object) is
-         begin
-            if not Project.Is_Static_Library
-              and then Project.Has_Library_Version
-              and then Project.Library_Filename (Without_Version => True).Name
-                        /= Project.Library_Version_Filename.Name
-            then
-               if Windows_Target then
-                  --  No support for version, do a simple copy
-
-                  Copy_File
-                    (From          => Library_Name,
-                     To            => Lib_Dir,
-                     Executable    => True,
-                     Extract_Debug => Side_Debug);
-
-               elsif Is_Windows_Host then
-                  --  On cross-windows, Library_Filename is generated.
-
-                  Copy_File
-                    (From          => Library_Name,
-                     To            => Lib_Dir,
-                     Executable    => True,
-                     Extract_Debug => Side_Debug);
-
-                  --  And copy variants, no sym-link supported
-
-                  for L_Name of Project.Library_Filename_Variants loop
-                     Copy_File
-                       (From => Path_Name.Compose
-                          (Lib_Dir,
-                           Library_Name.Simple_Name),
-                        To   => Lib_Dir,
-                        File =>
-                          Path_Name.Compose (Lib_Dir, L_Name).Simple_Name);
-                  end loop;
-
-               else
-                  Copy_File
-                    (From          => Library_Name,
-                     To            => Lib_Dir,
-                     Executable    => True,
-                     Extract_Debug => Side_Debug);
-
-                  for L_Name of Project.Library_Filename_Variants loop
-                     Copy_File
-                       (From     => Path_Name.Compose (Lib_Dir, L_Name),
-                        To       => Path_Name.Compose
-                          (Lib_Dir,
-                           Library_Name.Simple_Name),
-                        Sym_Link => True);
-                  end loop;
-               end if;
-
-            else
-               Copy_File
-                 (From          => Library_Name,
-                  To            => Lib_Dir,
-                  Executable    => not Project.Is_Static_Library,
-                  Extract_Debug => Side_Debug
-                                     and then not Project.Is_Static_Library);
-            end if;
-
-            --  On Windows copy the shared libraries into the bin
-            --  directory for it to be found in the PATH when running
-            --  executable. On non Windows platforms add a symlink into
-            --  the lib directory.
-
-            if not Project.Is_Static_Library
-              and then not Options.No_Lib_Link
-            then
-               if Windows_Target then
-                  if Lib_Dir /= Exec_Dir then
-                     Copy_File
-                       (From          => Library_Name,
-                        To            => Exec_Dir,
-                        Executable    => True,
-                        Extract_Debug => False);
-                  end if;
-
-               elsif Link_Lib_Dir /= Lib_Dir then
-                  pragma Warnings
-                    (Off,
-                     "* can never be executed and has been deleted");
-                  if Is_Windows_Host then
-                     Copy_File
-                       (From     => Library_Name,
-                        To       => Link_Lib_Dir,
-                        Sym_Link => False);
-
-                     for L_Name of Project.Library_Filename_Variants loop
-                        Copy_File
-                          (From  => Path_Name.Compose
-                                      (Link_Lib_Dir,
-                                       Library_Name.Simple_Name),
-                           To    => Link_Lib_Dir,
-                           File  => Path_Name.Compose
-                                      (Link_Lib_Dir, L_Name).Simple_Name);
-                     end loop;
-
-                  else
-                     Copy_File
-                       (From     => Path_Name.Compose
-                                      (Link_Lib_Dir,
-                                       Project.Library_Filename (True)
-                                         .Simple_Name),
-                        To       => Lib_Dir,
-                        Sym_Link => True);
-                  end if;
-                  pragma Warnings
-                    (On,
-                     "* can never be executed and has been deleted");
-
-                  --  Copy also the versioned library if any
-
-                  if not Is_Windows_Host
-                    and then Project.Has_Library_Version
-                    and then
-                      Project.Library_Filename (Without_Version => True).Name
-                        /= Project.Library_Version_Filename.Name
-                  then
-                     --  Link the library itself
-
-                     Copy_File
-                       (From     => Path_Name.Compose
-                                      (Link_Lib_Dir,
-                                       Project.Library_Filename.Simple_Name),
-                        To       => Lib_Dir,
-                        From_Ver => Path_Name.Compose
-                                      (Link_Lib_Dir,
-                                       Project.Library_Filename.Simple_Name),
-                        Sym_Link => True);
-
-                     --  Then link the variants
-
-                     for L_Name of Project.Library_Filename_Variants loop
-                        Copy_File
-                          (From     => Path_Name.Compose
-                                         (Link_Lib_Dir, L_Name),
-                           To       => Path_Name.Compose
-                                         (Lib_Dir, L_Name),
-                           Sym_Link => True);
-                     end loop;
-                  end if;
-               end if;
-            end if;
-         end Copy_Project_Library;
 
          --------------------------
          -- Copy_Project_Sources --
@@ -1411,155 +957,276 @@ package body GPRinstall.Install is
 
          procedure Copy_Project_Sources (Project : GPR2.Project.View.Object) is
 
+            function Is_Ada
+              (Source : GPR2.Project.Source.Object) return Boolean
+            is (Source.Language = Ada_Language);
+            --  Returns True if Source is an Ada source
+
             procedure Install_Project_Source
-              (Source : GPR2.Build.Source.Object);
-            --  Install the project source
+              (Source               : GPR2.Project.Source.Object;
+               Is_Interface_Closure : Boolean := False);
+            --  Install the project source and possibly the corresponding
+            --  artifacts.
 
-            function Body_Has_Naming_Exception
-              (U : GPR2.Build.Compilation_Unit.Object) return Boolean
-              with Pre => U.Has_Part (S_Body);
-            --  Returns True if the unit has a naming exception for the body
+            procedure Copy_Interface_Closure
+              (Source : GPR2.Project.Source.Object;
+               Index  : GPR2.Unit_Index)
+            with Pre => Source.Has_Units;
+            --  Copy all sources and artifacts part of the close of Source
 
-            -------------------------------
-            -- Body_Has_Naming_Exception --
-            -------------------------------
+            ----------------------------
+            -- Copy_Interface_Closure --
+            ----------------------------
 
-            function Body_Has_Naming_Exception
-              (U : GPR2.Build.Compilation_Unit.Object) return Boolean
-            is
-               S : constant GPR2.Build.Source.Object :=
-                     Project.Source (U.Main_Body.Source.Simple_Name);
+            procedure Copy_Interface_Closure
+              (Source : GPR2.Project.Source.Object;
+               Index  : GPR2.Unit_Index) is
             begin
-               return S.Is_Defined
-                 and then S.Has_Naming_Exception;
-            end Body_Has_Naming_Exception;
+               --  Note that we only install the interface from the same view
+               --  to avoid installing the runtime file for example.
+
+               for D of Source.Dependencies
+                 (Index, Closure => True, Sorted => False)
+               loop
+                  if not Source_Copied.Contains (D.Source)
+                    and then (D.Source.Kind (D.Index) in Unit.Spec_Kind
+                              or else Other_Part_Need_Body (D.Source, D.Index))
+                    and then Source.View = D.Source.View
+                  then
+                     Install_Project_Source
+                       (D.Source, Is_Interface_Closure => True);
+                  end if;
+               end loop;
+            end Copy_Interface_Closure;
 
             ----------------------------
             -- Install_Project_Source --
             ----------------------------
 
             procedure Install_Project_Source
-              (Source : GPR2.Build.Source.Object)
+              (Source               : GPR2.Project.Source.Object;
+               Is_Interface_Closure : Boolean := False)
             is
-               Done : Boolean := True with Unreferenced;
-            begin
-               if Options.All_Sources
-                 or else Source.Kind in S_Spec
-               then
-                  Done := Copy_Ada_Source (Project, Source);
+               Atf     : GPR2.Project.Source.Artifact.Object;
+               CUs     : GPR2.Unit.List.Object;
+               Done    : Boolean := True;
+               Has_Atf : Boolean := False;
+               --  Has artefacts to install
 
-               else
-                  Done := Copy_Ada_Source (Project, Source, Do_Copy => False);
+               function Is_Interface return Boolean;
+               --  Returns True if Source is an interface (spec or body)
+
+               procedure Copy_ALI_Other_Part
+                 (From   : GPR2.Path_Name.Object;
+                  To     : GPR2.Path_Name.Object;
+                  Source : GPR2.Project.Source.Object)
+                 with Pre => Source.Has_Other_Part;
+               --  Copy ALI for other part of source if the naming exception
+               --  brings different base names for the spec and body.
+
+               -------------------------
+               -- Copy_ALI_Other_Part --
+               -------------------------
+
+               procedure Copy_ALI_Other_Part
+                 (From   : GPR2.Path_Name.Object;
+                  To     : GPR2.Path_Name.Object;
+                  Source : GPR2.Project.Source.Object)
+               is
+                  S_BN  : constant String :=
+                            String (Source.Path_Name.Base_Name);
+                  O_Src : constant GPR2.Project.Source.Object :=
+                            Source.Other_Part.Source;
+                  O_BN  : constant String :=
+                            String (O_Src.Path_Name.Base_Name);
+                  D_Sfx : constant String :=
+                            String
+                              (Source.View.Tree.Dependency_Suffix
+                                 (Source.Language));
+               begin
+                  if S_BN /= O_BN then
+                     Copy_File
+                       (From => From,
+                        To   => To,
+                        File => Filename_Optional (O_BN & D_Sfx));
+                  end if;
+               end Copy_ALI_Other_Part;
+
+               ------------------
+               -- Is_Interface --
+               ------------------
+
+               function Is_Interface return Boolean is
+               begin
+                  return Source.Is_Interface
+                    or else (Source.Has_Other_Part
+                             and then Source.Other_Part.Source.Is_Interface);
+               end Is_Interface;
+
+            begin
+               --  Skip sources that are removed/excluded and sources not
+               --  part of the interface for standalone libraries.
+
+               Atf := Source.Artifacts;
+
+               if not Project.Is_Library
+                 or else not Project.Is_Library_Standalone
+                 or else Is_Interface_Closure
+                 or else Is_Interface
+               then
+                  if Source.Has_Units then
+                     CUs := Source.Units;
+                  end if;
+
+                  if Options.All_Sources
+                    or else Source.Kind in Unit.Spec_Kind
+                    or else Other_Part_Need_Body (Source, No_Index)
+                    or else Source.Is_Generic (No_Index)
+                    or else
+                      (Source.Kind = S_Separate
+                       and then Source.Separate_From
+                         (No_Index).Source.Is_Generic (No_Index))
+                  then
+                     Done := Copy_Source (Source);
+
+                     --  If this source is an interface of the project we
+                     --  need to also install the full-closure for this source.
+
+                     if Source.Is_Interface
+                       and then Source.Has_Units
+                       and then not Is_Interface_Closure
+                     then
+                        if Source.Has_Units then
+                           for CU of CUs loop
+                              Copy_Interface_Closure (Source, CU.Index);
+                           end loop;
+                        else
+                           Copy_Interface_Closure (Source, No_Index);
+                        end if;
+                     end if;
+
+                  elsif Source.Has_Naming_Exception then
+                     --  When a naming exception is present for a body which
+                     --  is not installed we must exclude the Naming from the
+                     --  generated project.
+
+                     for CU of CUs loop
+                        Excluded_Naming.Include (CU.Name);
+                     end loop;
+                  end if;
+
+                  --  Objects / Deps
+
+                  Check_For_Artefacts : for CU of CUs loop
+                     if CU.Kind not in S_Spec | S_Separate then
+                        Has_Atf := True;
+                        exit Check_For_Artefacts;
+                     end if;
+                  end loop Check_For_Artefacts;
+
+                  if Done
+                    and then not Options.Sources_Only
+                    and then Has_Atf
+                  then
+                     if Copy (Object) then
+                        for CU of CUs loop
+                           if CU.Kind not in S_Spec | S_Separate
+                             and then Atf.Has_Object_Code (CU.Index)
+                           then
+                              Copy_File
+                                (From => Atf.Object_Code (CU.Index),
+                                 To   => Lib_Dir);
+                           end if;
+                        end loop;
+                     end if;
+
+                     --  Install Ada .ali files (name the .ali
+                     --  against the spec file in case of minimal
+                     --  installation).
+
+                     if Copy (Dependency) then
+                        declare
+                           use GPR2.Project.Source.Artifact;
+                           Proj  : GPR2.Project.View.Object;
+                           Satf  : GPR2.Project.Source.Artifact.Object;
+                        begin
+                           if Options.All_Sources
+                             or else not Source.Has_Naming_Exception
+                             or else not Source.Has_Single_Unit
+                             or else not Source.Has_Other_Part
+                           then
+                              Satf := Atf;
+                           else
+                              Satf :=
+                                Source.Other_Part.Source.Artifacts
+                                  (Force_Spec => True);
+                           end if;
+
+                           if Project.Qualifier = K_Aggregate_Library then
+                              Proj := Project;
+                           else
+                              Proj := Source.View;
+                           end if;
+
+                           if Is_Ada (Source) then
+                              for CU of Source.Units loop
+                                 if Source.Kind (CU.Index)
+                                      not in S_Spec | S_Separate
+                                   and then Atf.Has_Dependency (CU.Index)
+                                 then
+                                    Copy_File
+                                      (From => Atf.Dependency (CU.Index),
+                                       To   => (if Proj.Kind = K_Library
+                                                then ALI_Dir
+                                                else Lib_Dir),
+                                       File => Satf.Dependency.Simple_Name);
+
+                                    --  The <body>.ali has been copied, we now
+                                    --  also want to create a file based on
+                                    --  <body>.ali for <spec>.ali if needed.
+
+                                    if Source.Has_Other_Part then
+                                       Copy_ALI_Other_Part
+                                         (From => Atf.Dependency (CU.Index),
+                                          To   => (if Proj.Kind = K_Library
+                                                   then ALI_Dir
+                                                   else Lib_Dir),
+                                          Source => Source);
+                                    end if;
+                                 end if;
+                              end loop;
+                           end if;
+
+                           if Atf.Has_Callgraph
+                             and then Atf.Callgraph.Exists
+                           then
+                              Copy_File
+                                (From => Atf.Callgraph,
+                                 To   => (if Proj.Kind = K_Library
+                                          then ALI_Dir
+                                          else Lib_Dir),
+                                 File => Satf.Callgraph.Simple_Name);
+                           end if;
+
+                           if Atf.Has_Coverage
+                             and then Atf.Coverage.Exists
+                           then
+                              Copy_File
+                                (From => Atf.Coverage,
+                                 To   => (if Proj.Kind = K_Library
+                                          then ALI_Dir
+                                          else Lib_Dir),
+                                 File => Satf.Coverage.Simple_Name);
+                           end if;
+                        end;
+                     end if;
+                  end if;
                end if;
             end Install_Project_Source;
 
-            Done : Boolean := True with Unreferenced;
-
          begin
-            if Project.Kind = K_Library
-              and then not Project.Interface_Sources.Is_Empty
-            then
-               --  Install all non Ada sources in the interface. The Ada
-               --  sources are installed using the link action, see below.
-
-               for C in Project.Interface_Sources.Iterate loop
-                  declare
-                     Simple_Name : constant GPR2.Simple_Name :=
-                                     GPR2.Containers
-                                       .Source_Path_To_Sloc.Key (C);
-                     Source      : constant GPR2.Build.Source.Object :=
-                                     Project.Source (Simple_Name);
-                  begin
-                     if Source.Language /= Ada_Language then
-                        Install_Project_Source (Source);
-                     end if;
-                  end;
-               end loop;
-
-            elsif Project.Kind = K_Aggregate_Library then
-               --  Install sources from all aggregated projects
-
-               for Agg of Project.Aggregated loop
-                  for Source of Agg.Sources loop
-                     Install_Project_Source (Source);
-                  end loop;
-               end loop;
-
-            elsif Project.Kind /= K_Library
-              or else Project.Interface_Units.Is_Empty
-            then
-               --  Only if Interface_Units is empty otherwise we have a
-               --  standalone library. The Ada source closure for such
-               --  projects is handled using a Link action. See below.
-
-               for Source of Project.Sources loop
-                  Install_Project_Source (Source);
-               end loop;
-            end if;
-
-            --  Now use the link action to get the full closure of the Ada
-            --  soucres in the interface.
-
-            for Action
-              of Tree.Artifacts_Database (Project).Tree_Db.All_Actions
-            loop
-               --  Handle the Ada bodies for libraries, this is done at this
-               --  time as we have access to the full closure.
-
-               if Action in GPR2.Build.Actions.Link.Object
-                 and then Action.View = Project
-                 and then Action.View.Is_Library
-               then
-                  for U of AL (Action).Interface_Units loop
-                     --  Copy spec
-
-                     if U.Has_Part (S_Spec) then
-                        declare
-                           S : constant GPR2.Build.Source.Object :=
-                                 Project.Source (U.Spec.Source.Simple_Name);
-                        begin
-                           if S.Is_Defined then
-                              Done := Copy_Ada_Source (U.Spec.View, S);
-                           end if;
-                        end;
-                     end if;
-
-                     --  Copy body/separates if needed
-
-                     if U.Has_Part (S_Body)
-                       and then
-                         (U.Is_Body_Needed_For_SAL
-                          or else
-                          (Options.All_Sources
-                           and then Body_Has_Naming_Exception (U)))
-                     then
-                        declare
-                           S : constant GPR2.Build.Source.Object :=
-                                 Project.Source
-                                   (U.Main_Body.Source.Simple_Name);
-                        begin
-                           if S.Is_Defined then
-                              Done := Copy_Ada_Source (U.Main_Body.View, S);
-                           end if;
-                        end;
-
-                        --  And possibly the separates for this body
-
-                        if U.Has_Part (S_Separate) then
-                           for T of U.Separates loop
-                              declare
-                                 S : constant GPR2.Build.Source.Object :=
-                                       Project.Source (T.Source.Simple_Name);
-                              begin
-                                 if S.Is_Defined then
-                                    Done := Copy_Ada_Source (T.View, S);
-                                 end if;
-                              end;
-                           end loop;
-                        end if;
-                     end if;
-                  end loop;
-               end if;
+            for Source of Project.Sources loop
+               Install_Project_Source (Source);
             end loop;
          end Copy_Project_Sources;
 
@@ -1568,91 +1235,185 @@ package body GPRinstall.Install is
          -----------------
 
          function Copy_Source
-           (View   : GPR2.Project.View.Object;
-            Source : Path_Name.Object) return Boolean
+           (Source : GPR2.Project.Source.Object) return Boolean
          is
-            Position : GPR2.Containers.Name_Type_Set.Cursor;
+            Position : GPR2.Project.Source.Set.Cursor;
             Inserted : Boolean := False;
          begin
-            Source_Copied.Insert
-              (Name_Type (Source.String_Value), Position, Inserted);
+            Source_Copied.Insert (Source, Position, Inserted);
 
-            if not Inserted
-              or else not Is_Install_Active (View)
-            then
+            if not Inserted or else not Is_Install_Active (Source.View) then
                return False;
 
             elsif not Copy (Process.Source) then
                return Inserted;
             end if;
 
-            Copy_File
-              (From => Source,
-               To   => Sources_Dir,
-               File => Source.Simple_Name);
-
-            --  ??? TODO preprocessed sources
-            --
-            --  declare
-            --     Art : constant GPR2.Build.Source.Artifact.Object :=
-            --             Source.Artifacts;
-            --  begin
-            --     Copy_File
-            --       (From => (if Art.Preprocessed_Source.Exists
-            --                 then Art.Preprocessed_Source
-            --                 else Source.Path_Name),
-            --        To   => Sources_Dir,
-            --        File => Source.Path_Name.Simple_Name);
-            --  end;
+            declare
+               Art : constant GPR2.Project.Source.Artifact.Object :=
+                       Source.Artifacts;
+            begin
+               Copy_File
+                 (From => (if Art.Preprocessed_Source.Exists
+                           then Art.Preprocessed_Source
+                           else Source.Path_Name),
+                  To   => Sources_Dir,
+                  File => Source.Path_Name.Simple_Name);
+            end;
 
             return True;
          end Copy_Source;
 
       begin
-         --  Initialize the actions list
-
-         if not GPR2.Build.Actions_Population.Populate_Actions
-           (Options.Tree, Options.Build_Options, Static_Actions => False)
-         then
-            raise GPRinstall_Error;
-         end if;
-
-         if Has_Sources (Project, False) then
-            --  Install project sources, the Ada sources for libraries are
-            --  handled later based on the link action. This make it possible
-            --  to check for full closure of SAL.
+         if Has_Sources (Project) then
+            --  Install the project and the extended projects if any
 
             Copy_Project_Sources (Project);
          end if;
 
-         if Project.Kind not in With_Object_Dir_Kind then
-            null;
+         --  Copy library
 
-         else
-            --  Create actions that will be used to iterate and obtain
-            --  artifacts for removal.
+         if Copy (Library) and then not Options.Sources_Only then
+            if not Project.Is_Static_Library
+              and then Project.Has_Library_Version
+              and then Project.Library_Name
+                         /= Project.Library_Version_Filename.Name
+            then
+               if Windows_Target then
+                  --  No support for version, do a simple copy
 
-            if Project.Kind = K_Aggregate_Library then
-               for Agg of Project.Aggregated loop
-                  Copy_Project_Artifacts (Agg);
-               end loop;
+                  Copy_File
+                    (From          => Project.Library_Directory,
+                     To            => Lib_Dir,
+                     File          => Project.Library_Filename.Name,
+                     Executable    => True,
+                     Extract_Debug => Side_Debug);
 
-               for Action
-                 of Tree.Artifacts_Database (Project).Tree_Db.All_Actions
-               loop
-                  --  Handle the aggregate library
+               elsif Is_Windows_Host then
+                  --  On windows host, Library_Filename is generated,
 
-                  if Action in GPR2.Build.Actions.Link.Object
-                    and then Action.View = Project
-                  then
-                     Copy_Project_Library (Project, AL (Action).Output.Path);
-                  end if;
-               end loop;
+                  Copy_File
+                    (From          => Project.Library_Filename,
+                     To            => Lib_Dir,
+                     Executable    => True,
+                     Extract_Debug => Side_Debug);
+
+               else
+                  Copy_File
+                    (From          => Project.Library_Version_Filename,
+                     To            => Lib_Dir,
+                     Executable    => True,
+                     Extract_Debug => Side_Debug);
+
+                  Copy_File
+                    (From     => Path_Name.Compose
+                       (Lib_Dir,
+                        Project.Library_Filename.Name),
+                     To       => Lib_Dir,
+                     File     => Project.Library_Version_Filename.Simple_Name,
+                     From_Ver => Path_Name.Compose
+                       (Lib_Dir,
+                        Project.Library_Major_Version_Filename.Name),
+                     Sym_Link => True);
+               end if;
 
             else
-               Copy_Project_Artifacts (Project);
+               Copy_File
+                 (From          => Project.Library_Directory,
+                  To            => Lib_Dir,
+                  File          => Project.Library_Filename.Name,
+                  Executable    => not Project.Is_Static_Library,
+                  Extract_Debug =>
+                    Side_Debug and then not Project.Is_Static_Library);
+            end if;
+
+            --  On Windows copy the shared libraries into the bin directory
+            --  for it to be found in the PATH when running executable. On non
+            --  Windows platforms add a symlink into the lib directory.
+
+            if not Project.Is_Static_Library
+              and then not Options.No_Lib_Link
+            then
+               if Windows_Target then
+                  if Lib_Dir /= Exec_Dir then
+                     Copy_File
+                       (From          => Lib_Dir,
+                        To            => Exec_Dir,
+                        File          => Project.Library_Filename.Name,
+                        Executable    => True,
+                        Extract_Debug => False);
+                  end if;
+
+               elsif Link_Lib_Dir /= Lib_Dir then
+                  pragma Warnings
+                    (Off,
+                     "this code can never be executed and has been deleted");
+                  if Is_Windows_Host then
+                     Copy_File
+                       (From       => Lib_Dir,
+                        To         => Link_Lib_Dir,
+                        File       => Project.Library_Filename.Name,
+                        Sym_Link   => False);
+                  else
+                     Copy_File
+                       (From       => Link_Lib_Dir,
+                        To         => Lib_Dir,
+                        File       => Project.Library_Filename.Name,
+                        Sym_Link   => True);
+                  end if;
+                  pragma Warnings
+                    (On,
+                     "this code can never be executed and has been deleted");
+
+                  --  Copy also the versioned library if any
+
+                  if not Is_Windows_Host and then Project.Has_Library_Version
+                    and then
+                      Project.Library_Filename.Name
+                        /= Project.Library_Version_Filename.Name
+                  then
+                     Copy_File
+                       (From       => Link_Lib_Dir,
+                        To         => Lib_Dir,
+                        File       => Project.Library_Version_Filename.Name,
+                        From_Ver   => Path_Name.Compose
+                          (Link_Lib_Dir,
+                           Project.Library_Major_Version_Filename.Name),
+                        Sym_Link   => True);
+                  end if;
+               end if;
             end if;
          end if;
+
+         --  Copy executable(s)
+
+         if Copy (Executable) and then not Options.Sources_Only then
+            for Main of Project.Executables loop
+               Copy_File
+                 (From          => Main,
+                  To            => Exec_Dir,
+                  Executable    => True,
+                  Extract_Debug => Side_Debug);
+            end loop;
+         end if;
+
+         --  Copy artifacts
+
+         for E of Artifacts loop
+            declare
+               Destination : constant Filename_Type :=
+                               Filename_Type (To_String (E.Destination));
+               Filename    : constant Filename_Type :=
+                               Filename_Type (To_String (E.Filename));
+            begin
+               Copy_Artifacts
+                 (Path_Name.Compose (Project.Dir_Name, Filename),
+                  Path_Name.Create_Directory
+                    (Destination,
+                     Filename_Optional (-Prefix_Dir.V)),
+                  E.Required);
+            end;
+         end loop;
       end Copy_Files;
 
       --------------------
@@ -1667,7 +1428,7 @@ package body GPRinstall.Install is
             Strings.Less_Case_Insensitive, Strings.Equal_Case_Insensitive);
 
          Filename : constant String :=
-                      String (Project_Dir.Dir_Name)
+                      Project_Dir.Dir_Name
                       & String (Project.Path_Name.Base_Name) & ".gpr";
 
          GPRinstall_Tag : constant String :=
@@ -1799,8 +1560,9 @@ package body GPRinstall.Install is
 
          procedure Create_Variables is
             Max_Len : Natural := 0;
-            T       : GPR2.Containers.Name_Set;
+
             --  List of output types to avoid duplicate
+            T       : GPR2.Containers.Name_Set;
 
             procedure Create_Type (Typ : GPR2.Project.Typ.Object);
             --  Output type definition if not already created
@@ -1864,8 +1626,6 @@ package body GPRinstall.Install is
 
          function Data_Attributes return String_Vector.Vector is
 
-            use type GPR2.Project.Standalone_Library_Kind;
-
             procedure Gen_Dir_Name
               (P : Param; Line : in out Unbounded_String);
             --  Generate dir name
@@ -1893,6 +1653,7 @@ package body GPRinstall.Install is
             Line       : Unbounded_String;
             Attr       : GPR2.Project.Attribute.Object;
             Standalone : GPR2.Project.Standalone_Library_Kind;
+            use type GPR2.Project.Standalone_Library_Kind;
 
          begin
             V.Append ("      when """ & (-Options.Build_Name) & """ =>");
@@ -1901,7 +1662,7 @@ package body GPRinstall.Install is
 
             Line := +"         for Source_Dirs use (""";
 
-            if Has_Sources (Project, False) then
+            if Has_Sources (Project) then
                Line := Line
                  & String (Sources_Dir (Build_Name => False).Relative_Path
                            (From => Project_Dir));
@@ -1996,12 +1757,13 @@ package body GPRinstall.Install is
                      else
                         Line := +"         for library_Interfaces use (";
 
-                        for Source
-                          of Project.Sources (Interface_Only => True)
+                        for Source of Project.Sources (Interface_Only => True)
                         loop
                            if Source.Has_Units then
                               for CU of Source.Units loop
-                                 if CU.Kind in S_Spec | S_Body then
+                                 if CU.Kind in
+                                   S_Spec | S_Spec_Only | S_Body_Only
+                                 then
                                     if not First then
                                        Append (Line, ", ");
                                     end if;
@@ -2185,10 +1947,9 @@ package body GPRinstall.Install is
                   for L of Project.Imports (Recursive => True) loop
                      if L.Kind = K_Library
                        and then L.Is_Externally_Built
-                       and then not Has_Sources (L)
+                       and then not L.Has_Sources
                      then
-                        Opts_Append
-                          ("-L" & String (L.Library_Directory.Value));
+                        Opts_Append ("-L" & L.Library_Directory.Value);
                         Opts_Append ("-l" & String (L.Library_Name));
                      end if;
                   end loop;
@@ -2296,17 +2057,16 @@ package body GPRinstall.Install is
 
                   for Att of View.Attributes (Pack          => P.Naming,
                                               With_Defaults => False,
-                                              With_Config   => False)
-                  loop
+                                              With_Config   => False) loop
                      if Att.Has_Index then
                         if (Att.Name.Id /= A.Naming.Body_N
                             or else not
                               Excluded_Naming.Contains
                                 (Name_Type (Att.Index.Text)))
                           and then
-                              ((Att.Name.Id not in A.Naming.Spec_Suffix
-                                                   | A.Naming.Body_Suffix
-                                                   | A.Naming.Separate_Suffix)
+                              ((Att.Name.Id not in A.Naming.Spec_Suffix |
+                                                   A.Naming.Body_Suffix |
+                                                   A.Naming.Separate_Suffix)
                              or else Is_Language_Active (Att.Index.Text))
                         then
                            declare
@@ -2387,7 +2147,7 @@ package body GPRinstall.Install is
          begin
             if not Options.Dry_Run then
                if not Project_Dir.Exists then
-                  Directories.Create_Path (String (Project_Dir.Value));
+                  Directories.Create_Path (Project_Dir.Value);
                end if;
 
                Create (File, Out_File, Filename);
@@ -2432,12 +2192,18 @@ package body GPRinstall.Install is
               & ", no language found, aborting";
          end if;
 
-         if Options.Dry_Run or else Options.Verbosity = Verbose then
-            Options.Tree.Reporter.Report
-              ("Project " & Filename
-               & (if Options.Dry_Run
-                 then " would be installed"
-                 else " installed"));
+         if Options.Dry_Run or else Options.Verbose then
+            New_Line;
+            Put ("Project ");
+            Put (Filename);
+
+            if Options.Dry_Run then
+               Put_Line (" would be installed");
+            else
+               Put_Line (" installed");
+            end if;
+
+            New_Line;
          end if;
 
          --  If project exists, read it and check the generated status
@@ -2470,14 +2236,13 @@ package body GPRinstall.Install is
          end if;
 
          if Project_Exists and then Generated then
-            if not Has_Sources (Project, False) then
+            if not Has_Sources (Project) then
                --  Nothing else to do in this case
                return;
             end if;
 
-            if Options.Verbosity = Verbose then
-               Options.Tree.Reporter.Report
-                 ("project file exists, merging new build");
+            if Options.Verbose then
+               Put_Line ("project file exists, merging new build");
             end if;
 
             --  Do merging for new build, we need to add an entry into the
@@ -2548,10 +2313,11 @@ package body GPRinstall.Install is
                      begin
                         --  Get default value
 
-                        L := Fixed.Index (Line, """",
-                                          Going => Strings.Backward);
-                        P := Fixed.Index (Line (Line'First .. L - 1), """",
-                                          Going => Strings.Backward);
+                        L := Fixed.Index
+                          (Line, """", Going => Strings.Backward);
+                        P := Fixed.Index
+                          (Line (Line'First .. L - 1), """",
+                           Going => Strings.Backward);
 
                         Default := +Line (P + 1 .. L - 1);
 
@@ -2711,9 +2477,7 @@ package body GPRinstall.Install is
                begin
                   for V of Project.Aggregated loop
                      for L of V.Imports (Recursive => True) loop
-                        if Has_Sources (L, False)
-                          and then L.Is_Externally_Built
-                        then
+                        if L.Has_Sources and then L.Is_Externally_Built then
                            Result.Include (L);
                         end if;
                      end loop;
@@ -2737,14 +2501,14 @@ package body GPRinstall.Install is
                begin
                   for L of Project.Imports loop
                      if Is_Install_Active (L)
-                       and then Has_Sources (L, Direct => False)
+                       and then L.Has_Sources (Recursive => True)
                      then
                         Result.Include (L);
                      end if;
                   end loop;
 
                   for L of Project.Imports (Recursive => True) loop
-                     if Has_Sources (L) and then L.Is_Externally_Built then
+                     if L.Has_Sources and then L.Is_Externally_Built then
                         Result.Include (L);
                      end if;
                   end loop;
@@ -2752,7 +2516,7 @@ package body GPRinstall.Install is
                   --  Also add with for all limited with projects
 
                   for L of Project.Limited_Imports loop
-                     if not L.Is_Runtime and then Is_Install_Active (L) then
+                     if Is_Install_Active (L) then
                         Result.Include (L);
                      end if;
                   end loop;
@@ -2771,7 +2535,7 @@ package body GPRinstall.Install is
             if Project.Is_Library then
                Line := +"library ";
             else
-               if Has_Sources (Project, False) then
+               if Has_Sources (Project) then
                   Line := +"standard ";
                else
                   Line := +"abstract ";
@@ -2783,7 +2547,7 @@ package body GPRinstall.Install is
             Line := Line & " is";
             Content.Append (-Line);
 
-            if Has_Sources (Project, False) or else Project.Is_Library then
+            if Has_Sources (Project) or else Project.Is_Library then
                --  BUILD variable
 
                Content.Append
@@ -2799,7 +2563,7 @@ package body GPRinstall.Install is
                --  Add languages, for an aggregate library we want all unique
                --  languages from all aggregated libraries.
 
-               if Has_Sources (Project, False) then
+               if Has_Sources (Project) then
                   Add_Empty_Line;
 
                   declare
@@ -2843,20 +2607,19 @@ package body GPRinstall.Install is
                   if not Project.Is_Static_Library
                     and then Project.Has_Library_Version
                     and then
-                      Project.Library_Filename (Without_Version => True).Name
+                      Project.Library_Filename.Name
                         /= Project.Library_Version_Filename.Name
                   then
                      Content.Append
                        ("   for Library_Version use """
-                        & String
-                          (Project.Library_Version_Filename.Simple_Name)
+                        & String (Project.Library_Version_Filename.Name)
                         & """;");
                   end if;
                end if;
 
                --  Packages
 
-               if Has_Sources (Project, False) then
+               if Has_Sources (Project) then
                   Add_Empty_Line;
 
                   Create_Packages;
@@ -2948,12 +2711,10 @@ package body GPRinstall.Install is
       -----------------
 
       function Has_Sources
-        (Project : GPR2.Project.View.Object;
-         Direct  : Boolean := True) return Boolean is
+        (Project : GPR2.Project.View.Object) return Boolean is
       begin
-         return not Project.Sources.Is_Empty
-           or else (not Direct
-                    and then Project.Qualifier = K_Aggregate_Library);
+         return Project.Has_Sources
+           or else Project.Qualifier = K_Aggregate_Library;
       end Has_Sources;
 
       -----------------------
@@ -2992,7 +2753,7 @@ package body GPRinstall.Install is
       ------------------
 
       function Link_Lib_Dir return Path_Name.Object is
-        (Prefix_For_Dir (-Link_Lib_Subdir.V));
+         (Prefix_For_Dir (-Link_Lib_Subdir.V));
 
       -------------------------
       -- Open_Check_Manifest --
@@ -3009,7 +2770,7 @@ package body GPRinstall.Install is
                        (Filename_Type (-Install_Name.V),
                         Filename_Optional (Dir.Value));
          Name    : constant String := String (M_File.Value);
-         Prj_Sig : constant String := Content_MD5 (Project.Path_Name);
+         Prj_Sig : constant String := Project.Path_Name.Content_MD5;
          Buf     : String (1 .. 128);
          Last    : Natural;
       begin
@@ -3038,24 +2799,19 @@ package body GPRinstall.Install is
                       and then Install_Name.Default
                       and then Install_Project
                   then
-                     Options.Tree.Reporter.Report
+                     Put_Line
                        ("Project file "
                         & String (Project.Path_Name.Simple_Name)
-                        &  " is different from the one currently installed.",
-                        Level => GPR2.Message.Important);
-                     Options.Tree.Reporter.Report
-                       ("Either:",
-                        Level => GPR2.Message.Important);
-                     Options.Tree.Reporter.Report
-                       ("   - uninstall first using --uninstall option",
-                        Level => GPR2.Message.Important);
-                     Options.Tree.Reporter.Report
-                       ("   - install under another name, use --install-name",
-                        Level => GPR2.Message.Important);
-                     Options.Tree.Reporter.Report
+                        &  " is different from the one currently installed.");
+                     Put_Line
+                       ("Either:");
+                     Put_Line
+                       ("   - uninstall first using --uninstall option");
+                     Put_Line
+                       ("   - install under another name, use --install-name");
+                     Put_Line
                        ("   - force installation under the same name, "
-                        & "use --install-name=" & (-Install_Name.V),
-                        Level => GPR2.Message.Important);
+                        & "use --install-name=" & (-Install_Name.V));
                      raise GPRinstall_Error_No_Message;
                   end if;
                end if;
@@ -3066,7 +2822,7 @@ package body GPRinstall.Install is
             end if;
 
          else
-            Directories.Create_Path (String (Dir.Value));
+            Directories.Create_Path (Dir.Value);
             Create (File, Out_File, Name);
             Current_Line := 1;
 
@@ -3190,7 +2946,7 @@ package body GPRinstall.Install is
          return Build_Subdir (Sources_Subdir, Build_Name);
       end Sources_Dir;
 
-      Is_Project_To_Install : Boolean := False;
+      Is_Project_To_Install : Boolean;
       --  Whether the project is to be installed
 
    begin
@@ -3215,9 +2971,9 @@ package body GPRinstall.Install is
       --  installed.
 
       Is_Project_To_Install := Active
-        and then (Has_Sources (Project, False)
-                  or else Project.Has_Attribute (A.Main))
-        and then not Project.Is_Externally_Built;
+        and then (Project.Has_Sources
+                  or else Project.Has_Attribute (A.Main)
+                  or else Project.Is_Externally_Built);
 
       --  If we have an aggregate project we just install separately all
       --  aggregated projects.
@@ -3245,120 +3001,105 @@ package body GPRinstall.Install is
       if not Installed.Contains (Project) then
          Installed.Insert (Project);
 
-         declare
-            Msg : Unbounded_String;
-         begin
-            if Project.Is_Externally_Built then
-               Msg := Msg & "Skip externally built project "
-                 & String (Project.Name);
+         if Options.Verbosity > Quiet then
+            if Is_Project_To_Install then
+               Put ("Install");
+            elsif Options.Verbose then
+               Put ("Skip");
+            end if;
+
+            if Is_Project_To_Install or else Options.Verbose then
+               Put (" project " & String (Project.Name));
+
+               if -Options.Build_Name /= "default" then
+                  Put (" - " & (-Options.Build_Name));
+               end if;
+            end if;
+
+            if not Is_Project_To_Install and then Options.Verbose then
+               Put (" (not active)");
+            end if;
+
+            if Is_Project_To_Install or else Options.Verbose then
+               New_Line;
+            end if;
+         end if;
+
+         --  If this is not an active project, just return now
+
+         if not Is_Project_To_Install then
+            return;
+         end if;
+
+         --  What should be copied ?
+
+         Copy :=
+           (Source     => For_Dev,
+            Object     => For_Dev
+                            and then not Project.Has_Mains
+                            and then Project.Qualifier /= K_Library
+                            and then Project.Qualifier /= K_Aggregate_Library
+                            and then Project.Kind /= K_Library,
+            Dependency => For_Dev and then not Project.Has_Mains,
+            Library    => Project.Is_Library
+                            and then
+                              (not Project.Is_Static_Library or else For_Dev),
+            Executable => Project.Has_Mains);
+
+         if Copy = (Items => False) then
+            Put_Line
+              ("Nothing to be copied in mode "
+               & (if For_Dev then "developer" else "usage")
+               & " for this project");
+         end if;
+
+         --  Copy all files from the project
+
+         Copy_Files;
+
+         --  A project file is only needed in developer mode
+
+         if For_Dev and then Install_Project then
+            Create_Project (Project);
+         end if;
+
+         --  Add manifest into the main aggregate project manifest
+
+         if Is_Open (Man) then
+            if Is_Open (Agg_Manifest) then
+               declare
+                  Man_Dir  : constant Path_Name.Object :=
+                               Path_Name.Create_Directory
+                                 ("manifests",
+                                  Filename_Type (Project_Dir.Value));
+                  Filename : constant Path_Name.Object :=
+                               Path_Name.Create_File
+                                 (Filename_Type
+                                    (Directories.Simple_Name (Name (Man))),
+                                  Filename_Type (Man_Dir.Value));
+               begin
+                  Close (Man);
+                  Add_To_Manifest (Filename, Aggregate_Only => True);
+               end;
 
             else
-               if Is_Project_To_Install then
-                  Msg := Msg & "Install";
-               elsif Options.Verbosity = Verbose then
-                  Msg := Msg & "Skip";
-               end if;
-
-               if Is_Project_To_Install
-                 or else Options.Verbosity = Verbose
-               then
-                  Msg := Msg & " project " & String (Project.Name);
-
-                  if -Options.Build_Name /= "default" then
-                     Msg := Msg & " - " & (-Options.Build_Name);
-                  end if;
-               end if;
-
-               if not Is_Project_To_Install
-                 and then Options.Verbosity = Verbose
-               then
-                  Msg := Msg & " (not active)";
-               end if;
-            end if;
-
-            if Msg /= Null_Unbounded_String then
-               Options.Tree.Reporter.Report (To_String (Msg));
-            end if;
-         end;
-      end if;
-
-      --  If this is not an active project, just return now
-
-      if not Is_Project_To_Install then
-         return;
-      end if;
-
-      --  What should be copied ?
-
-      Copy :=
-        (Source     => For_Dev,
-         Object     => For_Dev
-                       and then not Project.Has_Mains
-                       and then Project.Qualifier /= K_Library
-                       and then Project.Qualifier /= K_Aggregate_Library
-                       and then Project.Kind /= K_Library,
-         Dependency => For_Dev
-                       and then not Project.Has_Mains,
-         Library    => Project.Is_Library
-                       and then (not Project.Is_Static_Library
-                                 or else For_Dev),
-         Executable => Project.Has_Mains);
-
-      if Copy = (Items => False) then
-         Options.Tree.Reporter.Report
-           ("Nothing to be copied in mode "
-            & (if For_Dev then "developer" else "usage")
-            & " for this project");
-      end if;
-
-      --  Copy all files from the project
-
-      Copy_Files;
-
-      --  A project file is only needed in developer mode
-
-      if For_Dev and then Install_Project then
-         Create_Project (Project);
-      end if;
-
-      --  Add manifest into the main aggregate project manifest
-
-      if Is_Open (Man) then
-         if Is_Open (Agg_Manifest) then
-            declare
-               Man_Dir  : constant Path_Name.Object :=
-                            Path_Name.Create_Directory
-                              ("manifests",
-                               Filename_Type (Project_Dir.Value));
-               Filename : constant Path_Name.Object :=
-                            Path_Name.Create_File
-                              (Filename_Type
-                                 (Directories.Simple_Name (Name (Man))),
-                               Filename_Type (Man_Dir.Value));
-            begin
                Close (Man);
-               Add_To_Manifest (Filename, Aggregate_Only => True);
-            end;
-
-         else
-            Close (Man);
-         end if;
-      end if;
-
-      --  If recursive enabled process the imported projects
-
-      if Options.Recursive and then Project.Has_Imports then
-         for P of Project.Imports loop
-            Process (Tree, P, Options);
-         end loop;
-
-         --  Also install all limited with projects
-
-         for P of Project.Limited_Imports loop
-            if not P.Is_Runtime then
-               Process (Tree, P, Options);
             end if;
-         end loop;
+         end if;
+
+         --  Handle all projects recursively if needed
+
+         if Options.Recursive and then Project.Has_Imports then
+            for P of Project.Imports loop
+               Process (Tree, P, Options);
+            end loop;
+
+            --  Also install all limited with projects
+
+            for P of Project.Limited_Imports loop
+               Process (Tree, P, Options);
+            end loop;
+         end if;
       end if;
    end Process;
 
