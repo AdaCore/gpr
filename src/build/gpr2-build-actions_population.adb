@@ -1735,7 +1735,7 @@ package body GPR2.Build.Actions_Population is
                  (Cache.Element (Current.Id).Shared_Libs_Deps);
             end if;
 
-         elsif Current.Kind = K_Abstract then
+         elsif Current.Is_Abstract then
                Add_Deps (Current);
 
          elsif not Current.Is_Configuration
