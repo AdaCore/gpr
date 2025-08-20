@@ -1738,7 +1738,7 @@ package body GPR2.Build.Actions_Population is
          elsif Current.Kind = K_Abstract then
                Add_Deps (Current);
 
-         elsif Current.Kind /= K_Configuration
+         elsif not Current.Is_Configuration
            and then not Current.Is_Runtime
          then
             Closure.Include (Current);
