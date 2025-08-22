@@ -1421,6 +1421,7 @@ package body GPR2.Build.Actions.Link is
 
                Self.Executable := Artifacts.Files.Create (Exec);
             end;
+
          when Global_Archive =>
             declare
                Project_Name_Low : constant String :=
@@ -1437,6 +1438,7 @@ package body GPR2.Build.Actions.Link is
                Self.Library    := Artifacts.Library.Create
                  (Context.Object_Directory.Compose (Library_Filename));
             end;
+
          when Library =>
             Self.Ctxt       := Context;
             Self.Is_Library := True;
@@ -1445,8 +1447,7 @@ package body GPR2.Build.Actions.Link is
               Artifacts.Library.Create (Context.Library_Filename);
             Self.No_Rpath   := No_Rpath;
 
-            Attr := Context.Attribute
-              (PRA.Library_Symbol_File);
+            Attr := Context.Attribute (PRA.Library_Symbol_File);
 
             if Attr.Is_Defined then
                Self.Lib_Symbol_File :=

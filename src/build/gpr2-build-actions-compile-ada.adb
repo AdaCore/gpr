@@ -379,8 +379,8 @@ package body GPR2.Build.Actions.Compile.Ada is
    overriding function Dependencies
      (Self : Object) return Containers.Filename_Set
    is
-      Result   : GPR2.Containers.Filename_Set;
-      UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+      Result : GPR2.Containers.Filename_Set;
+      UID    : constant Actions.Action_Id'Class := Object'Class (Self).UID;
 
    begin
       if not Self.Dep_File.Path.Exists then
@@ -449,17 +449,17 @@ package body GPR2.Build.Actions.Compile.Ada is
       No_Obj  : constant Boolean :=
                   (View.Is_Library and then View.Is_Externally_Built)
                     or else View.Is_Runtime;
-      Attr     : GPR2.Project.Attribute.Object;
-      Closure  : GPR2.Project.View.Set.Object;
+      Attr    : GPR2.Project.Attribute.Object;
+      Closure : GPR2.Project.View.Set.Object;
 
    begin
       --  Ensure the object wasn't previously initialized prior to this call
       Self := Undefined;
 
-      Self.Ctxt   := Src.Owning_View;
-      Self.Src    := Src.Owning_View.Source (Src.Main_Part.Source.Simple_Name);
-      Self.Lang   := Ada_Language;
-      Self.CU     := Src;
+      Self.Ctxt := Src.Owning_View;
+      Self.Src  := Src.Owning_View.Source (Src.Main_Part.Source.Simple_Name);
+      Self.Lang := Ada_Language;
+      Self.CU   := Src;
 
       --  ??? For Standalone libraries, we should probably not lookup for
       --  previous compilation artifacts, since we need to amend the ali
@@ -495,6 +495,7 @@ package body GPR2.Build.Actions.Compile.Ada is
                     and then Local_Ali.Exists)
          then
             --  Simple case: just use the local .o and .ali
+
             if not No_Obj then
                Self.Obj_File := Artifacts.Object_File.Create (Local_O);
             end if;
@@ -688,7 +689,7 @@ package body GPR2.Build.Actions.Compile.Ada is
      (Self : Object;
       Db   : in out GPR2.Build.Tree_Db.Object) return Boolean
    is
-      UID       : constant Actions.Action_Id'Class := Object'Class (Self).UID;
+      UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
 
    begin
       if Self.Obj_File.Is_Defined then
@@ -714,8 +715,7 @@ package body GPR2.Build.Actions.Compile.Ada is
    -- Post_Command --
    ------------------
 
-   overriding
-   function Post_Command
+   overriding function Post_Command
      (Self   : in out Object;
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;
