@@ -1,0 +1,5 @@
+description:
+    check library_version with naming -<ver>.so
+driver: python_script
+output:
+  - ["test.out.win", "'windows' in env.host.platform"]
