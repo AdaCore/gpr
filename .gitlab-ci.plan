@@ -1,6 +1,10 @@
 gnat_packages = [
     "libadalang",
     "libadalang-tools",
+    "templates_parser",
+    "aws-tools",
+    "aws-lib",
+    "aws",
     "gnat",
 ]
 
