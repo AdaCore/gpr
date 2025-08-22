@@ -14,7 +14,6 @@ with GNAT.Regexp;
 
 with GNATCOLL.OS.Constants;
 with GNATCOLL.OS.Stat;
-with GNATCOLL.OS.FSUtil;
 
 package body GPR2.Path_Name is
 
@@ -447,21 +446,6 @@ package body GPR2.Path_Name is
                Dir_Name  => Ensure_Directory (Pseudo_Dir)));
       end return;
    end Create_Pseudo_File;
-
-   ---------------------
-   -- Create_Sym_Link --
-   ---------------------
-
-   procedure Create_Sym_Link (Self, To : Object) is
-
-      C_From  : constant String := String (Self.Value) & ASCII.NUL;
-      C_To    : constant String :=
-                  String (Relative_Path (To, Self)) & ASCII.NUL;
-      Success : Boolean with Unreferenced;
-
-   begin
-      Success := GNATCOLL.OS.FSUtil.Create_Symbolic_Link (C_From, C_To);
-   end Create_Sym_Link;
 
    ------------
    -- Exists --

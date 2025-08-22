@@ -30,8 +30,8 @@ package GPR2.Reporter is
   --  warnings are not displayed.
 
    procedure Report
-     (Self    : in out Object'Class;
-      Message : GPR2.Message.Object);
+     (Self     : in out Object'Class;
+      Message  : GPR2.Message.Object);
    --  Report the message based on the reporter's verbosity
 
    procedure Report

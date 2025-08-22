@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2025, AdaCore                     --
+--                     Copyright (C) 2019-2024, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -17,7 +17,6 @@
 ------------------------------------------------------------------------------
 
 with GNAT.OS_Lib;
-with GNAT.MD5;
 
 private with Ada.Strings.Unbounded;
 private with GPR2.Path_Name.Set;
@@ -39,11 +38,6 @@ private
    procedure Register_Directory (Dir : String);
    --  Register directories inside a map to be deleted by calling
    --  Delete_Registered_Directory.
-
-   function Content_MD5
-     (File : GPR2.Path_Name.Object) return GNAT.MD5.Message_Digest
-     with Pre => File.Is_Defined and then File.Exists;
-   --  Returns the MD5 signature for the given file
 
    GPRinstall_Error : exception;
    --  General GPRinstall exception that is supposed to have associated error
