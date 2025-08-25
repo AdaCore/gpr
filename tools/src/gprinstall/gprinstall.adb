@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2024, AdaCore                     --
+--                     Copyright (C) 2019-2025, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -18,6 +18,7 @@
 
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Directories;
+with Ada.Streams.Stream_IO;
 with Ada.Strings.Hash;
 
 with GNATCOLL.OS.Dir;
@@ -49,16 +50,44 @@ package body GPRinstall is
    --  Used by GNATCOLL.OS.Dir.Walk. It detects Dir contains a file and
    --  tags it not to be deleted.
 
+   -----------------
+   -- Content_MD5 --
+   -----------------
+
+   function Content_MD5
+     (File : GPR2.Path_Name.Object) return GNAT.MD5.Message_Digest
+   is
+      use Ada.Streams;
+      use GNAT.MD5;
+
+      C : Context;
+      S : Stream_IO.File_Type;
+      B : Stream_Element_Array (1 .. 100 * 1024);
+      --  Buffer to read chunk of data
+      L : Stream_Element_Offset;
+   begin
+      Stream_IO.Open (S, Stream_IO.In_File, String (File.Value));
+
+      while not Stream_IO.End_Of_File (S) loop
+         Stream_IO.Read (S, B, L);
+         Update (C, B (1 .. L));
+      end loop;
+
+      Stream_IO.Close (S);
+
+      return Digest (C);
+   end Content_MD5;
+
    ----------------------
    -- Delete_Directory --
    ----------------------
 
-   procedure Delete_Directory (Root_Dir, Dir : String)
-   is
+   procedure Delete_Directory (Root_Dir, Dir : String) is
    begin
       Delete_Dir := True;
 
       --  Walk in the directory so detect if it is empty
+
       Walk
         (Path         => Dir,
          File_Handler => Process_File'Access,
@@ -90,8 +119,7 @@ package body GPRinstall is
    -- Delete_Registered_Directory --
    ---------------------------------
 
-   procedure Delete_Registered_Directory (Root_Dir : String)
-   is
+   procedure Delete_Registered_Directory (Root_Dir : String) is
       N_Root_Dir : constant String := Normalize_Pathname (Root_Dir);
 
       procedure Delete (Position : P_Directory_Map.Cursor);

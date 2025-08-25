@@ -1,0 +1,14 @@
+|- bin
+|   |- libxyz.dll
+|- include
+|   |- xyz
+|   |   |- pck.ads
+|- lib
+|   |- xyz
+|   |   |- libxyz.dll
+|   |   |- pck.ali
+|- share
+|   |- gpr
+|   |   |- manifests
+|   |   |   |- xyz
+|   |   |- xyz.gpr

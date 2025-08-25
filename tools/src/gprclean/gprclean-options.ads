@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2024, AdaCore                     --
+--                     Copyright (C) 2019-2025, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -34,8 +34,8 @@ package GPRclean.Options is
    procedure Setup (Parser : out GPRtools.Options.Command_Line_Parser);
 
    procedure Parse_Command_Line
-     (Parser       : GPRtools.Options.Command_Line_Parser;
-      Options      : in out Object);
+     (Parser  : GPRtools.Options.Command_Line_Parser;
+      Options : in out Object);
 
    procedure Parse_Attribute_Switches
      (Parser  : GPRtools.Options.Command_Line_Parser;

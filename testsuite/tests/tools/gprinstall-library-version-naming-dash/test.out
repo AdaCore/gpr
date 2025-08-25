@@ -1,0 +1,17 @@
+|- include
+|   |- xyz
+|   |   |- pck.ads
+|- lib
+|   |- xyz
+|   |   |- libxyz-22.0.so
+|   |   |- libxyz-22.so -> libxyz-22.0.so
+|   |   |- libxyz.so -> libxyz-22.0.so
+|   |   |- pck.ali
+|   |- libxyz-22.0.so -> xyz/libxyz-22.0.so
+|   |- libxyz-22.so -> xyz/libxyz-22.so
+|   |- libxyz.so -> xyz/libxyz.so
+|- share
+|   |- gpr
+|   |   |- manifests
+|   |   |   |- xyz
+|   |   |- xyz.gpr
