@@ -1287,11 +1287,27 @@ package body GPRinstall.Install is
                elsif Is_Windows_Host then
                   --  On cross-windows, Library_Filename is generated.
 
-                  Copy_File
-                    (From          => Library_Name,
-                     To            => Lib_Dir,
-                     Executable    => True,
-                     Extract_Debug => Side_Debug);
+                  begin
+                     Copy_File
+                       (From          => Library_Name,
+                        To            => Lib_Dir,
+                        Executable    => True,
+                        Extract_Debug => Side_Debug);
+                  exception
+                     when GPRinstall_Error =>
+                        --  ??? To be removed when gpr1build is fully phased
+                        --  out.
+                        --  GPR1Build on windows ignores Library_Version for
+                        --  cross targets, so may differ from what gpr2
+                        --  expects as output for the link action. To remain
+                        --  compatible with GPR1Build we thus need to try
+                        --  copying the base library variant in case of error
+                        --  here
+                        Copy_File
+                          (From => Project.Library_Filename
+                             (Without_Version => True),
+                           To => Lib_Dir.Compose (Library_Name.Simple_Name));
+                  end;
 
                   --  And copy variants, no sym-link supported
 
@@ -1354,7 +1370,7 @@ package body GPRinstall.Install is
                      "* can never be executed and has been deleted");
                   if Is_Windows_Host then
                      Copy_File
-                       (From     => Library_Name,
+                       (From     => Lib_Dir.Compose (Library_Name.Simple_Name),
                         To       => Link_Lib_Dir,
                         Sym_Link => False);
 
