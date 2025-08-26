@@ -12,10 +12,6 @@ package body GPR2.Reporter is
      (Self : Object'Class;
       Message : GPR2.Message.Object) return Boolean;
 
-   --------------------------
-   -- Display_User_Message --
-   --------------------------
-
    function Display_User_Message
      (Self : Object'Class;
       Message : GPR2.Message.Object) return Boolean
@@ -85,19 +81,20 @@ package body GPR2.Reporter is
    end Report;
 
    procedure Report
-     (Self    : in out Object'Class;
-      Message : GPR2.Message.Object)
+     (Self      : in out Object'Class;
+      Message   : GPR2.Message.Object)
    is
 
       function Printable (Msg : GPR2.Message.Object) return Boolean;
-      --  Returns True if the reporter's verbosity is sufficient to
-      --  print a message with the specified severity.
+   --  Returns True if the reporter's verbosity is sufficient to print a
+   --  message with the specified severity.
 
       ---------------
       -- Printable --
       ---------------
 
-      function Printable (Msg : GPR2.Message.Object) return Boolean is
+      function Printable (Msg : GPR2.Message.Object) return Boolean
+      is
          use all type GPR2.Message.Level_Value;
       begin
          case Msg.Level is
@@ -112,6 +109,7 @@ package body GPR2.Reporter is
 
             when Hint | Lint =>
                return Self.Verbosity >= Verbose;
+
          end case;
       end Printable;
 

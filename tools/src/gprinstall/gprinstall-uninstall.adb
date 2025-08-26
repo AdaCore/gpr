@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2025, AdaCore                     --
+--                     Copyright (C) 2019-2024, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -24,6 +24,7 @@ with GNAT.MD5; use GNAT.MD5;
 with GNAT.OS_Lib;
 
 with GPR2.Path_Name;
+with GPRtools;
 
 package body GPRinstall.Uninstall is
 
@@ -42,6 +43,7 @@ package body GPRinstall.Uninstall is
       Options      : in out GPRinstall.Options.Object)
    is
       use GNAT;
+      use GPRtools;
 
       procedure Delete_File (Position : File_Set.Cursor);
       --  Delete file pointed to by Position, do nothing if the file is not
@@ -110,7 +112,7 @@ package body GPRinstall.Uninstall is
          raise GPRinstall_Error with "Manifest " & Name & " not found.";
       end if;
 
-      if Options.Verbose then
+      if Options.Verbosity > Quiet then
          Text_IO.Put_Line ("Uninstall project " & Install_Name);
       end if;
 
@@ -135,8 +137,8 @@ package body GPRinstall.Uninstall is
             begin
                Expected_Digest := Buffer (MD5_Range);
 
-               if Path.Exists then
-                  File_Digest := Content_MD5 (Path);
+               if Exists (Pathname) then
+                  File_Digest := Path.Content_MD5;
                   Removed := False;
                else
                   Removed := True;
@@ -171,7 +173,7 @@ package body GPRinstall.Uninstall is
       Text_IO.Close (Man);
 
       if Prefix.Is_Defined then
-         Options.Global_Prefix_Dir := (-String (Prefix.Value), False);
+         Options.Global_Prefix_Dir := (-Prefix.Value, False);
       end if;
 
       --  Delete files
@@ -186,7 +188,7 @@ package body GPRinstall.Uninstall is
            (Root_Dir => -Options.Global_Prefix_Dir.V);
 
       else
-         if Options.Verbose then
+         if Options.Verbosity > Quiet then
             Text_IO.Put_Line ("Following files have been changed:");
 
             declare
