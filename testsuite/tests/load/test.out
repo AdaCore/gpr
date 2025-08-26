@@ -1,7 +1,0 @@
-== SOURCES ==
-== SOURCES ==
- > src/pkg.adb        language: Ada   Kind: S_BODY         unit: PKG
- > src/pkg.ads        language: Ada   Kind: S_SPEC         unit: PKG
-== SOURCES ==
- > src/pkg.adb        language: Ada   Kind: S_BODY         unit: PKG
- > src/pkg.ads        language: Ada   Kind: S_SPEC         unit: PKG

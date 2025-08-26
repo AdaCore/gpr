@@ -570,6 +570,10 @@ package GPR2.Project.View is
    --  Note: if one of the above attributes is set to a non-empty list while
    --  the other is empty, then the view is not considered abstract anymore.
 
+   function Is_Configuration (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns true if the project is a configuration project
+
    function Is_Externally_Built (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns true if the project is externally built
@@ -915,6 +919,9 @@ private
 
    function Is_Abstract (Self : Object) return Boolean is
      (Self.Kind = K_Abstract);
+
+   function Is_Configuration (Self : Object) return Boolean is
+     (Self.Kind = K_Configuration);
 
    function Is_Library_Standalone (Self : Object) return Boolean is
       (Self.Library_Standalone /= No);

@@ -16,13 +16,15 @@ pragma Warnings (On);
 with GPR2.Reporter; use GPR2.Reporter;
 with GPR2.Project_Parser;
 with GPR2.Project.Attribute;
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Tree_Internal.View_Builder;
-with GPR2.Message; use GPR2.Message;
+with GPR2.Message;  use GPR2.Message;
 
 package body GPR2.Project.Tree is
 
    package PRA renames GPR2.Project.Registry.Attribute;
+   package PAI renames GPR2.Project.Attribute_Index;
 
    procedure Release is new Ada.Unchecked_Deallocation
      (Tree_Internal.Object, Tree_Internal_Access);
@@ -392,6 +394,7 @@ package body GPR2.Project.Tree is
       Config                   : GPR2.Project.Configuration.Object :=
                                    GPR2.Project.Configuration.Undefined;
       Check_Shared_Libs_Import : Boolean := False;
+      Check_Drivers            : Boolean := True;
       File_Reader              : GPR2.File_Readers.File_Reader_Reference :=
                                    GPR2.File_Readers.No_File_Reader_Reference)
       return Boolean
@@ -407,6 +410,9 @@ package body GPR2.Project.Tree is
 
       procedure Ensure_Directories (Tree : GPR2.Project.Tree.Object);
       --  Ensure obj/lib/exec dirs exist for the tree
+
+      procedure Ensure_Drivers (Tree : GPR2.Project.Tree.Object);
+      --  Ensure that all the required drivers are defined and exist
 
       function Prj_Descriptor return Tree_Internal.Project_Descriptor is
         (case Prj_Kind is
@@ -666,6 +672,37 @@ package body GPR2.Project.Tree is
          end if;
       end Ensure_Directories;
 
+      --------------------
+      -- Ensure_Drivers --
+      --------------------
+
+      procedure Ensure_Drivers (Tree : GPR2.Project.Tree.Object) is
+      begin
+         for V of Tree.Ordered_Views loop
+            if not V.Is_Extended
+              and then not V.Is_Abstract
+              and then not V.Is_Configuration
+              and then not V.Is_Externally_Built
+            then
+
+               --  Check that each language has a defined compiler driver
+
+               for Lang of V.Language_Ids loop
+                  if not V.Has_Attribute
+                           (PRA.Compiler.Driver, PAI.Create (Lang))
+                  then
+                     Self.Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level   => Message.Warning,
+                           Message =>
+                             "no compiler driver defined for language '"
+                             & GPR2.Image (Lang)
+                             & "'"));
+                  end if;
+               end loop;
+            end if;
+         end loop;
+      end Ensure_Drivers;
    begin
       GPR2.Project_Parser.Clear_Cache;
 
@@ -871,6 +908,10 @@ package body GPR2.Project.Tree is
       end if;
 
       Ensure_Directories (Self);
+
+      if Check_Drivers then
+         Ensure_Drivers (Self);
+      end if;
 
       GPR2.Project_Parser.Clear_Cache;
       Report_Logs (Self);

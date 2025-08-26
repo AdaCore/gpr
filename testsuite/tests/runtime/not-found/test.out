@@ -5,12 +5,14 @@ With_RTS : TRUE
 Target: not_a_target
 With_RTS : TRUE
 kb: info: can't find a toolchain for the following configuration: language 'Ada', target 'not_a_target', default runtime
+warning: no compiler driver defined for language 'Ada'
   Tree loaded
   Project has rts: FALSE
   Project requested rts: TRUE
 Target: not_a_target
 With_RTS : FALSE
 kb: info: can't find a toolchain for the following configuration: language 'Ada', target 'not_a_target', default runtime
+warning: no compiler driver defined for language 'Ada'
   Tree loaded
   Project has rts: FALSE
   Project requested rts: FALSE

@@ -1,3 +1,4 @@
 Restrict to existing language:
+warning: no compiler driver defined for language 'Fortran'
 Restrict to missing language:
 prj1.gpr: error: no language for the projects tree due to language restriction

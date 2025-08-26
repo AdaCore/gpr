@@ -1,0 +1,2 @@
+description: Check compiler drivers definition for each project language
+driver: python_script

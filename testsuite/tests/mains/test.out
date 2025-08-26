@@ -93,6 +93,7 @@ src/call1.adb
 list of executables:
 call_me
   src/call1.adb
+warning: no compiler driver defined for language 'Other'
 Demo17   K_STANDARD
 list of mains:
 src/call2.adb
