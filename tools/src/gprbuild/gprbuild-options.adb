@@ -446,10 +446,6 @@ package body GPRbuild.Options is
       Result : constant access Object := Object (Res.all)'Access;
       Failed : Boolean := False;
 
-      -----------------------------
-      -- Add_Ada_Compiler_Option --
-      -----------------------------
-
       procedure Add_Ada_Compiler_Option (Sw : String) is
       begin
          Result.Extra_Args.Register

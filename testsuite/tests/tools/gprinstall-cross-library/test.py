@@ -15,6 +15,6 @@ file = open(output, "r")
 lines = file.readlines()
 file.close()
 
-for line in sorted(lines):
+for line in lines:
     if line.startswith("cp ") or line.startswith('ln'):
         print(line)

@@ -1,5 +1,0 @@
-description:
-    check gprinstall and naming exception
-driver: python_script
-output:
-- ["test.out.win", "'windows' in env.host.platform"]

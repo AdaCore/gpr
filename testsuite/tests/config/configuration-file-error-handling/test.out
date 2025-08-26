@@ -2,5 +2,5 @@ no.cgpr: error: project file "/no.cgpr" not found
 gprclean: "p.gpr" processing failed
 7
 no.cgpr: error: project file "/no.cgpr" not found
-gprinstall: "p.gpr" processing failed
-7
+gprinstall: "no.cgpr" processing failed
+4
