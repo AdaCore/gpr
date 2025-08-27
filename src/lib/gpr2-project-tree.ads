@@ -576,7 +576,7 @@ private
    is (Self.Tree.Target (Canonical));
 
    function Is_Cross_Target (Self : Object) return Boolean is
-     (Self.Target /= Self.Get_KB.Normalized_Target (Target_Name));
+     (Self.Target (True) /= Self.Get_KB.Normalized_Target (Target_Name));
 
    function Has_Explicit_Target (Self : Object) return Boolean
    is (Self.Tree.Has_Explicit_Target);
