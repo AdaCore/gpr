@@ -688,16 +688,24 @@ package body GPR2.Project.Tree is
                --  Check that each language has a defined compiler driver
 
                for Lang of V.Language_Ids loop
-                  if not V.Has_Attribute
-                           (PRA.Compiler.Driver, PAI.Create (Lang))
+                  if Self.Tree.Langs_Of_Interest.Is_Empty
+                    or else Self.Tree.Langs_Of_Interest.Contains (Lang)
                   then
-                     Self.Tree.Log_Messages.Append
-                       (Message.Create
-                          (Level   => Message.Warning,
-                           Message =>
-                             "no compiler driver defined for language '"
-                             & GPR2.Image (Lang)
-                             & "'"));
+                     --  In autoconf mode, only check the languages of
+                     --  interest, since compiler drivers will be undefined
+                     --  for other languages.
+
+                     if not V.Has_Attribute
+                              (PRA.Compiler.Driver, PAI.Create (Lang))
+                     then
+                        Self.Tree.Log_Messages.Append
+                          (Message.Create
+                             (Level   => Message.Warning,
+                              Message =>
+                                "no compiler driver defined for language '"
+                                & GPR2.Image (Lang)
+                                & "'"));
+                     end if;
                   end if;
                end loop;
             end if;

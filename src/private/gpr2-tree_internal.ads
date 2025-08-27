@@ -474,6 +474,9 @@ private package GPR2.Tree_Internal is
    function Resolve_Links (Self : Object) return Boolean;
    --  Returns whether the project should be resolving links
 
+   function Langs_Of_Interest (Self : Object) return Containers.Language_Set;
+   --  Returns the set of languages that auto-configuration should be reduced
+
 private
 
    procedure Set_Environment
@@ -667,5 +670,8 @@ private
    function Languages_To_Compilers
      (Self : Object) return Containers.Lang_Value_Map is
      (Self.Lang_To_Compilers);
+
+   function Langs_Of_Interest (Self : Object) return Containers.Language_Set is
+     (Self.Langs_Of_Interest);
 
 end GPR2.Tree_Internal;
