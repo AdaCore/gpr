@@ -1,5 +1,3 @@
-cp /files/lib/libprj.so.20.0w /inst/lib/libprj.so.20.0w
-
 cp /files/lib/libprj.so.20.0w /inst/lib/prj/libprj.so.20.0w
 
 cp /files/lib/prj.ali /inst/lib/prj/prj.ali
@@ -9,6 +7,8 @@ cp /files/src/prj.ads /inst/include/prj/prj.ads
 cp /inst/lib/libprj.so.20.0w /inst/lib/libprj.so
 
 cp /inst/lib/libprj.so.20.0w /inst/lib/libprj.so.20
+
+cp /inst/lib/prj/libprj.so.20.0w /inst/lib/libprj.so.20.0w
 
 cp /inst/lib/prj/libprj.so.20.0w /inst/lib/prj/libprj.so
 
