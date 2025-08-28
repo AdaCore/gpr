@@ -1421,6 +1421,7 @@ package body GPR2.Build.Actions.Link is
 
                Self.Executable := Artifacts.Files.Create (Exec);
             end;
+
          when Global_Archive =>
             declare
                Project_Name_Low : constant String :=
@@ -1437,6 +1438,7 @@ package body GPR2.Build.Actions.Link is
                Self.Library    := Artifacts.Library.Create
                  (Context.Object_Directory.Compose (Library_Filename));
             end;
+
          when Library =>
             Self.Ctxt       := Context;
             Self.Is_Library := True;
@@ -1445,8 +1447,7 @@ package body GPR2.Build.Actions.Link is
               Artifacts.Library.Create (Context.Library_Filename);
             Self.No_Rpath   := No_Rpath;
 
-            Attr := Context.Attribute
-              (PRA.Library_Symbol_File);
+            Attr := Context.Attribute (PRA.Library_Symbol_File);
 
             if Attr.Is_Defined then
                Self.Lib_Symbol_File :=
@@ -1696,26 +1697,56 @@ package body GPR2.Build.Actions.Link is
                   pragma Annotate (Xcov, Exempt_Off);
                end if;
 
-               if not GNATCOLL.OS.FSUtil.Create_Symbolic_Link
-                 (S_Link.String_Value,
-                  String (Self.Output.Path.Simple_Name))
-               then
-                  pragma Annotate (Xcov, Exempt_On, "defensive code");
-                  Self.Tree.Reporter.Report
-                    (GPR2.Message.Create
-                       (GPR2.Message.Error,
-                        "cannot create symbolic link " & String (Variant),
-                        GPR2.Source_Reference.Create
-                          (Self.Ctxt.Path_Name.Value, 0, 0)));
+               --  No symbolic link support for now on Windows
+               if GPR2.On_Windows then
+                  pragma Warnings (Off, "*this code can never be executed*");
+                  if not GNATCOLL.OS.FSUtil.Copy_File
+                    (Src => Self.Output.Path.String_Value,
+                     Dst => S_Link.String_Value)
+                  then
+                     pragma Annotate (Xcov, Exempt_On, "defensive code");
+                     Self.Tree.Reporter.Report
+                       (GPR2.Message.Create
+                          (GPR2.Message.Error,
+                           "cannot copy library variant " & String (Variant),
+                           GPR2.Source_Reference.Create
+                             (Self.Ctxt.Path_Name.Value, 0, 0)));
 
-                  return False;
-                  pragma Annotate (Xcov, Exempt_Off);
+                     return False;
+                     pragma Annotate (Xcov, Exempt_Off);
 
-               elsif Self.Tree.Reporter.User_Verbosity >= Reporter.Verbose then
-                  Self.Tree.Reporter.Report
-                    ("cd " & Self.Ctxt.Library_Directory.String_Value &
-                       " && ln -s " & String (Self.Output.Path.Simple_Name) &
-                       " " & String (Variant));
+                  elsif Self.Tree.Reporter.User_Verbosity >= Reporter.Verbose
+                  then
+                     Self.Tree.Reporter.Report
+                       ("cd " & Self.Ctxt.Library_Directory.String_Value &
+                          " && cp " & String (Self.Output.Path.Simple_Name) &
+                          " " & String (Variant));
+                  end if;
+
+               else
+                  if not GNATCOLL.OS.FSUtil.Create_Symbolic_Link
+                    (S_Link.String_Value,
+                     String (Self.Output.Path.Simple_Name))
+                  then
+                     pragma Annotate (Xcov, Exempt_On, "defensive code");
+                     Self.Tree.Reporter.Report
+                       (GPR2.Message.Create
+                          (GPR2.Message.Error,
+                           "cannot create symbolic link " & String (Variant),
+                           GPR2.Source_Reference.Create
+                             (Self.Ctxt.Path_Name.Value, 0, 0)));
+
+                     return False;
+                     pragma Annotate (Xcov, Exempt_Off);
+
+                  elsif Self.Tree.Reporter.User_Verbosity >= Reporter.Verbose
+                  then
+                     Self.Tree.Reporter.Report
+                       ("cd " & Self.Ctxt.Library_Directory.String_Value &
+                        " && ln -s " & String (Self.Output.Path.Simple_Name) &
+                        " " & String (Variant));
+                  end if;
+                  pragma Warnings (On, "*this code can never be executed*");
                end if;
             end;
          end loop;

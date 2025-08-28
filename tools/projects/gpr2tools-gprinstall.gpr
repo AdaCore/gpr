@@ -1,3 +1,21 @@
+------------------------------------------------------------------------------
+--                                                                          --
+--                           GPR2 PROJECT MANAGER                           --
+--                                                                          --
+--                     Copyright (C) 2019-2025, AdaCore                     --
+--                                                                          --
+-- This is  free  software;  you can redistribute it and/or modify it under --
+-- terms of the  GNU  General Public License as published by the Free Soft- --
+-- ware  Foundation;  either version 3,  or (at your option) any later ver- --
+-- sion.  This software is distributed in the hope  that it will be useful, --
+-- but WITHOUT ANY WARRANTY;  without even the implied warranty of MERCHAN- --
+-- TABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public --
+-- License for more details.  You should have received  a copy of the  GNU  --
+-- General Public License distributed with GNAT; see file  COPYING. If not, --
+-- see <http://www.gnu.org/licenses/>.                                      --
+--                                                                          --
+------------------------------------------------------------------------------
+
 with "gpr2tools-common";
 
 project GPR2tools.GPRInstall extends "gpr2tools.gpr" is
@@ -7,7 +25,7 @@ project GPR2tools.GPRInstall extends "gpr2tools.gpr" is
    for Object_Dir use GPR2tools.Base_Object_Dir & "/gprinstall";
    for Exec_Dir use GPR2tools.Base_Exec_Dir;
 
-   package Builder extends GPR2tools.Builder is
+   package Builder extends GPR2_Shared.Builder is
       for Executable ("gprinstall-main.adb") use "gprinstall";
    end Builder;
 
@@ -18,7 +36,8 @@ project GPR2tools.GPRInstall extends "gpr2tools.gpr" is
    package Install is
       case Target is
          when "Windows_NT" =>
-            for Artifacts ("bin") use ("../src/gprinstall/gprinstall.exe.manifest");
+            for Artifacts ("bin")
+              use ("../src/gprinstall/gprinstall.exe.manifest");
          when "UNIX" =>
             null;
       end case;

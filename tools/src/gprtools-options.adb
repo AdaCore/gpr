@@ -475,7 +475,7 @@ package body GPRtools.Options is
       pragma Unreferenced (Parser);
       use type GPRtools.Command_Line.Switch_Type;
 
-      Result   : constant access Base_Options := Base_Options (Res.all)'Access;
+      Result : constant access Base_Options := Base_Options (Res.all)'Access;
 
    begin
       if Arg = "-P" then

@@ -1,0 +1,3 @@
+description:
+    check gprinstall and naming exception
+driver: python_script
