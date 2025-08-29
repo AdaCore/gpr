@@ -20,6 +20,7 @@ with Ada.Command_Line;
 with Ada.Exceptions;
 with Ada.Strings.Unbounded;
 
+with GPR2.Build.Actions_Population;
 with GPR2.Options;
 with GPR2.Project.Tree;
 with GPRtools.Util;
@@ -96,6 +97,17 @@ begin
       end if;
 
       Options.Tree.Update_Sources;
+
+      --  Initialize the actions list
+
+      if not GPR2.Build.Actions_Population.Populate_Actions
+        (Options.Tree,
+         Options.Build_Options,
+         Static_Actions        => True,
+         With_Externally_Built => True)
+      then
+         raise GPRinstall_Error;
+      end if;
 
       Install.Process (Options.Tree, Options);
    end if;

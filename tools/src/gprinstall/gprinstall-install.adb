@@ -33,7 +33,6 @@ with GNAT.String_Split;
 with GNATCOLL.OS.Constants;
 with GNATCOLL.OS.FSUtil;
 
-with GPR2.Build.Actions_Population;
 with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Artifacts.Files;
@@ -1639,14 +1638,6 @@ package body GPRinstall.Install is
          end Copy_Source;
 
       begin
-         --  Initialize the actions list
-
-         if not GPR2.Build.Actions_Population.Populate_Actions
-           (Options.Tree, Options.Build_Options, Static_Actions => False)
-         then
-            raise GPRinstall_Error;
-         end if;
-
          if Has_Sources (Project, False) then
             --  Install project sources, the Ada sources for libraries are
             --  handled later based on the link action. This make it possible
