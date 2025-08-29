@@ -1,0 +1,7 @@
+library project Lib1 is
+   for Languages use ("Ada");
+   for Source_Dirs use ("src1");
+   for Object_Dir use "obj1";
+   for Library_Dir use "lib1";
+   for Library_Name use "one";
+end Lib1;

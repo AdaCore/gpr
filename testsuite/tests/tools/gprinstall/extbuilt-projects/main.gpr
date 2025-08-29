@@ -1,0 +1,8 @@
+with "lib1e";
+with "lib2e";
+
+project Main is
+   for Source_Dirs use ("src");
+   for Main use ("main.adb");
+   Var := Lib1e.Var;
+end Main;
