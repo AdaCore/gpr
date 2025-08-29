@@ -1209,11 +1209,13 @@ package body GPRinstall.Install is
                      end;
 
                   elsif Action in GPR2.Build.Actions.Compile.Object'Class then
-                     Copy_File
-                       (From => OC (Action).Dependency_File.Path,
-                        To   => (if Project.Kind = K_Library
-                                 then ALI_Dir
-                                 else Lib_Dir));
+                     if OC (Action).Dependency_File.Is_Defined then
+                        Copy_File
+                          (From => OC (Action).Dependency_File.Path,
+                           To   => (if Project.Kind = K_Library
+                                    then ALI_Dir
+                                    else Lib_Dir));
+                     end if;
                   end if;
                end if;
 
@@ -3237,8 +3239,8 @@ package body GPRinstall.Install is
 
       Is_Project_To_Install := Active
         and then (Has_Sources (Project, False)
-                  or else Project.Has_Attribute (A.Main))
-        and then not Project.Is_Externally_Built;
+                  or else Project.Has_Attribute (A.Main)
+                  or else Project.Is_Externally_Built);
 
       --  If we have an aggregate project we just install separately all
       --  aggregated projects.
@@ -3269,32 +3271,26 @@ package body GPRinstall.Install is
          declare
             Msg : Unbounded_String;
          begin
-            if Project.Is_Externally_Built then
-               Msg := Msg & "Skip externally built project "
-                 & String (Project.Name);
+            if Is_Project_To_Install then
+               Msg := Msg & "Install";
+            elsif Options.Verbosity = Verbose then
+               Msg := Msg & "Skip";
+            end if;
 
-            else
-               if Is_Project_To_Install then
-                  Msg := Msg & "Install";
-               elsif Options.Verbosity = Verbose then
-                  Msg := Msg & "Skip";
+            if Is_Project_To_Install
+              or else Options.Verbosity = Verbose
+            then
+               Msg := Msg & " project " & String (Project.Name);
+
+               if -Options.Build_Name /= "default" then
+                  Msg := Msg & " - " & (-Options.Build_Name);
                end if;
+            end if;
 
-               if Is_Project_To_Install
-                 or else Options.Verbosity = Verbose
-               then
-                  Msg := Msg & " project " & String (Project.Name);
-
-                  if -Options.Build_Name /= "default" then
-                     Msg := Msg & " - " & (-Options.Build_Name);
-                  end if;
-               end if;
-
-               if not Is_Project_To_Install
-                 and then Options.Verbosity = Verbose
-               then
-                  Msg := Msg & " (not active)";
-               end if;
+            if not Is_Project_To_Install
+              and then Options.Verbosity = Verbose
+            then
+               Msg := Msg & " (not active)";
             end if;
 
             if Msg /= Null_Unbounded_String then
