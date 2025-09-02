@@ -161,11 +161,12 @@ package body GPR2.Build.Actions_Population is
    end Library_Map;
 
    function Populate_Library
-     (Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
-      View         : GPR2.Project.View.Object;
-      Options      : Build.Options.Build_Options;
-      Cache        : in out View_Id_Library_Map.Map;
-      SAL_Closure  : in out Boolean) return Boolean;
+     (Tree_Db               : GPR2.Build.Tree_Db.Object_Access;
+      View                  : GPR2.Project.View.Object;
+      Options               : Build.Options.Build_Options;
+      Cache                 : in out View_Id_Library_Map.Map;
+      SAL_Closure           : in out Boolean;
+      With_Externally_Built : Boolean) return Boolean;
    --  If previous is set, it indicates the previously withed lib for the
    --  view that populates its library dependencies. This is used to keep the
    --  proper topological order of the withed libraries (and thus proper
@@ -180,25 +181,28 @@ package body GPR2.Build.Actions_Population is
       return Compilation_Unit.Unit_Location_Vector;
 
    function Populate_All
-     (Tree_Db     : GPR2.Build.Tree_Db.Object_Access;
-      View        : GPR2.Project.View.Object;
-      Single_View : Boolean;
-      Options     : Build.Options.Build_Options) return Boolean;
+     (Tree_Db               : GPR2.Build.Tree_Db.Object_Access;
+      View                  : GPR2.Project.View.Object;
+      Single_View           : Boolean;
+      Options               : Build.Options.Build_Options;
+      With_Externally_Built : Boolean) return Boolean;
 
    function Populate_Mains
-     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      View    : GPR2.Project.View.Object;
-      Mains   : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
-      Options : Build.Options.Build_Options) return Boolean;
+     (Tree_Db               : GPR2.Build.Tree_Db.Object_Access;
+      View                  : GPR2.Project.View.Object;
+      Mains                 : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
+      Options               : Build.Options.Build_Options;
+      With_Externally_Built : Boolean) return Boolean;
 
    function Populate_Withed_Projects
-     (Tree_Db            : GPR2.Build.Tree_Db.Object_Access;
-      Options            : Build.Options.Build_Options;
-      Closure            : in out GPR2.Project.View.Set.Object;
-      Cache              : in out View_Id_Library_Map.Map;
-      Static_Lib_Closure : out View_Ids.Set.Set;
-      Shared_Lib_Closure : out View_Ids.Set.Set;
-      Has_SAL            : in out Boolean) return Boolean;
+     (Tree_Db               : GPR2.Build.Tree_Db.Object_Access;
+      Options               : Build.Options.Build_Options;
+      Closure               : in out GPR2.Project.View.Set.Object;
+      Cache                 : in out View_Id_Library_Map.Map;
+      Static_Lib_Closure    : out View_Ids.Set.Set;
+      Shared_Lib_Closure    : out View_Ids.Set.Set;
+      Has_SAL               : in out Boolean;
+      With_Externally_Built : Boolean) return Boolean;
    --  Handle the population of withed projects
    --  Closure will contain the list of withed standard views
    --  Libs is the list of withed libraries
@@ -522,9 +526,10 @@ package body GPR2.Build.Actions_Population is
    ----------------------
 
    function Populate_Actions
-     (Tree           : GPR2.Project.Tree.Object;
-      Options        : Build.Options.Build_Options;
-      Static_Actions : Boolean) return Boolean
+     (Tree                  : GPR2.Project.Tree.Object;
+      Options               : GPR2.Build.Options.Build_Options;
+      Static_Actions        : Boolean;
+      With_Externally_Built : Boolean := False) return Boolean
    is
       Tree_Db     : GPR2.Build.Tree_Db.Object_Access renames
                       Tree.Artifacts_Database;
@@ -618,15 +623,14 @@ package body GPR2.Build.Actions_Population is
                if Mains.Is_Empty then
                   --  compile all sources, recursively in case -U is set
                   if Options.Unique_Compilation then
-                     Result := Populate_All (Tree_Db, V, True, Options);
+                     Result := Populate_All
+                       (Tree_Db, V, True, Options, With_Externally_Built);
 
                   else
                      for C of V.Closure (True, False, True) loop
-                        if not C.Is_Externally_Built then
-                           Result := Populate_All
-                             (Tree_Db, C, True, Options);
-                           exit when not Result;
-                        end if;
+                        Result := Populate_All
+                          (Tree_Db, C, True, Options, With_Externally_Built);
+                        exit when not Result;
                      end loop;
                   end if;
 
@@ -676,21 +680,25 @@ package body GPR2.Build.Actions_Population is
                case V.Kind is
                   when K_Standard | K_Abstract =>
                      if V.Has_Mains or else not Mains.Is_Empty then
-                        Result := Populate_Mains (Tree_Db, V, Mains, Options);
+                        Result := Populate_Mains
+                          (Tree_Db, V, Mains, Options, With_Externally_Built);
                      else
-                        Result := Populate_All (Tree_Db, V, False, Options);
+                        Result := Populate_All
+                          (Tree_Db, V, False, Options, With_Externally_Built);
                      end if;
 
                   when K_Library | K_Aggregate_Library =>
                      Result :=
                        Populate_Library
-                         (Tree_Db, V, Options, Cache, Has_SAL);
+                         (Tree_Db, V, Options, Cache, Has_SAL,
+                          With_Externally_Built);
 
                   when others =>
                      Closure.Include (V);
                      Result := Populate_Withed_Projects
                        (Tree_Db, Options, Closure, Cache,
-                        Static_Libs, Shared_Libs, Has_SAL);
+                        Static_Libs, Shared_Libs, Has_SAL,
+                        With_Externally_Built);
                end case;
             end if;
          end if;
@@ -828,10 +836,11 @@ package body GPR2.Build.Actions_Population is
    ------------------
 
    function Populate_All
-     (Tree_Db     : GPR2.Build.Tree_Db.Object_Access;
-      View        : GPR2.Project.View.Object;
-      Single_View : Boolean;
-      Options     : Build.Options.Build_Options) return Boolean
+     (Tree_Db               : GPR2.Build.Tree_Db.Object_Access;
+      View                  : GPR2.Project.View.Object;
+      Single_View           : Boolean;
+      Options               : Build.Options.Build_Options;
+      With_Externally_Built : Boolean) return Boolean
    is
       Closure     : GPR2.Project.View.Set.Object;
       Cache       : View_Id_Library_Map.Map;
@@ -839,7 +848,7 @@ package body GPR2.Build.Actions_Population is
       Shared_Libs : View_Ids.Set.Set;
       Has_SAL     : Boolean := False;
    begin
-      if View.Is_Externally_Built then
+      if View.Is_Externally_Built and then not With_Externally_Built then
          return True;
       end if;
 
@@ -847,13 +856,14 @@ package body GPR2.Build.Actions_Population is
 
       if not Single_View
         and then not Populate_Withed_Projects
-          (Tree_Db, Options, Closure, Cache, Static_Libs, Shared_Libs, Has_SAL)
+          (Tree_Db, Options, Closure, Cache, Static_Libs, Shared_Libs, Has_SAL,
+           With_Externally_Built)
       then
          return False;
       end if;
 
       for V of Closure loop
-         if not V.Is_Externally_Built then
+         if not V.Is_Externally_Built or else With_Externally_Built then
             declare
                Comp : GPR2.Build.Actions.Compile.Ada.Object;
             begin
@@ -894,11 +904,12 @@ package body GPR2.Build.Actions_Population is
    ----------------------
 
    function Populate_Library
-     (Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
-      View         : GPR2.Project.View.Object;
-      Options      : Build.Options.Build_Options;
-      Cache        : in out View_Id_Library_Map.Map;
-      SAL_Closure  : in out Boolean) return Boolean
+     (Tree_Db               : GPR2.Build.Tree_Db.Object_Access;
+      View                  : GPR2.Project.View.Object;
+      Options               : Build.Options.Build_Options;
+      Cache                 : in out View_Id_Library_Map.Map;
+      SAL_Closure           : in out Boolean;
+      With_Externally_Built : Boolean) return Boolean
    is
       Self           : LH.Object;
       Closure        : GPR2.Project.View.Set.Object;
@@ -944,6 +955,7 @@ package body GPR2.Build.Actions_Population is
         (Kind     => Actions.Link.Library,
          Context  => View,
          No_Rpath => Options.No_Run_Path);
+
       if not Tree_Db.Add_Action (Self.Main_Link) then
          return False;
       end if;
@@ -981,7 +993,8 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       if not Populate_Withed_Projects
-        (Tree_Db, Options, Closure, Cache, Static_Libs, Shared_Libs, Has_SAL)
+        (Tree_Db, Options, Closure, Cache, Static_Libs, Shared_Libs, Has_SAL,
+         With_Externally_Built)
       then
          return False;
       end if;
@@ -1030,8 +1043,8 @@ package body GPR2.Build.Actions_Population is
       SAL_Closure :=
         SAL_Closure or else Has_SAL or else View.Is_Library_Standalone;
 
-      if View.Is_Externally_Built then
-         --  Update the Library object in Libs
+      if View.Is_Externally_Built and then not With_Externally_Built then
+         --  Update the Library object in Libs and stop the processing.
 
          Cache.Replace (View.Id, Self);
 
@@ -1107,8 +1120,12 @@ package body GPR2.Build.Actions_Population is
                         return False;
                      end if;
 
-                     Tree_Db.Add_Input
-                       (Self.Initial_Link_Action.UID, Comp.Object_File, False);
+                     if Comp.Object_File.Is_Defined then
+                        Tree_Db.Add_Input
+                          (Self.Initial_Link_Action.UID,
+                           Comp.Object_File,
+                           False);
+                     end if;
                   end;
                end loop;
             end loop;
@@ -1124,8 +1141,10 @@ package body GPR2.Build.Actions_Population is
                      return False;
                   end if;
 
-                  Tree_Db.Add_Input
-                    (Self.Initial_Link_Action.UID, Comp.Object_File, False);
+                  if Comp.Object_File.Is_Defined then
+                     Tree_Db.Add_Input
+                       (Self.Initial_Link_Action.UID, Comp.Object_File, False);
+                  end if;
                end;
             end loop;
          end if;
@@ -1149,8 +1168,10 @@ package body GPR2.Build.Actions_Population is
                      return False;
                   end if;
 
-                  Tree_Db.Add_Input
-                    (Self.Initial_Link_Action.UID, Comp.Object_File, False);
+                  if Comp.Object_File.Is_Defined then
+                     Tree_Db.Add_Input
+                       (Self.Initial_Link_Action.UID, Comp.Object_File, False);
+                  end if;
                end;
             end if;
          end loop;
@@ -1197,10 +1218,11 @@ package body GPR2.Build.Actions_Population is
    --------------------
 
    function Populate_Mains
-     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
-      View    : GPR2.Project.View.Object;
-      Mains   : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
-      Options : Build.Options.Build_Options) return Boolean
+     (Tree_Db               : GPR2.Build.Tree_Db.Object_Access;
+      View                  : GPR2.Project.View.Object;
+      Mains                 : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
+      Options               : Build.Options.Build_Options;
+      With_Externally_Built : Boolean) return Boolean
    is
       use type GPR2.Path_Name.Object;
       use type Ada.Containers.Count_Type;
@@ -1269,7 +1291,7 @@ package body GPR2.Build.Actions_Population is
 
          if not Populate_Withed_Projects
            (Tree_Db, Options, Closure, Libs_Cache,
-            Static_Libs, Shared_Libs, Has_SAL)
+            Static_Libs, Shared_Libs, Has_SAL, With_Externally_Built)
          then
             return False;
          end if;
@@ -1667,13 +1689,14 @@ package body GPR2.Build.Actions_Population is
    ------------------------------
 
    function Populate_Withed_Projects
-     (Tree_Db            : GPR2.Build.Tree_Db.Object_Access;
-      Options            : Build.Options.Build_Options;
-      Closure            : in out GPR2.Project.View.Set.Object;
-      Cache              : in out View_Id_Library_Map.Map;
-      Static_Lib_Closure : out View_Ids.Set.Set;
-      Shared_Lib_Closure : out View_Ids.Set.Set;
-      Has_SAL            : in out Boolean) return Boolean
+     (Tree_Db               : GPR2.Build.Tree_Db.Object_Access;
+      Options               : Build.Options.Build_Options;
+      Closure               : in out GPR2.Project.View.Set.Object;
+      Cache                 : in out View_Id_Library_Map.Map;
+      Static_Lib_Closure    : out View_Ids.Set.Set;
+      Shared_Lib_Closure    : out View_Ids.Set.Set;
+      Has_SAL               : in out Boolean;
+      With_Externally_Built : Boolean) return Boolean
    is
       procedure Add_Deps (V  : GPR2.Project.View.Object);
 
@@ -1717,7 +1740,8 @@ package body GPR2.Build.Actions_Population is
 
          if Current.Is_Library then
             if not Populate_Library
-              (Tree_Db, Current, Options, Cache, Has_SAL)
+              (Tree_Db, Current, Options, Cache, Has_SAL,
+               With_Externally_Built)
             then
                return False;
             end if;

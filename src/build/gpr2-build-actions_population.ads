@@ -28,9 +28,10 @@ package GPR2.Build.Actions_Population is
    --  main.
 
    function Populate_Actions
-     (Tree           : GPR2.Project.Tree.Object;
-      Options        : GPR2.Build.Options.Build_Options;
-      Static_Actions : Boolean) return Boolean;
+     (Tree                  : GPR2.Project.Tree.Object;
+      Options               : GPR2.Build.Options.Build_Options;
+      Static_Actions        : Boolean;
+      With_Externally_Built : Boolean := False) return Boolean;
    --  Populate all the actions of the tree.
    --  @param Tree
    --    the current project tree

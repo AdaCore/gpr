@@ -1,0 +1,10 @@
+$ gprbuild lib/lib1.gpr -q
+$ gprbuild lib/lib2.gpr -q
+$ gprinstall -p --prefix=/inst lib/lib1e.gpr
+Install project Lib1e
+$ gprinstall -p --prefix=/inst lib/lib2e.gpr
+Install project Lib2e
+$ gprbuild -aPinst/share/gpr -q main.gpr
+$ ./main
+This is the main :  4
+Pck2.Call
