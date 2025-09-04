@@ -1,0 +1,7 @@
+aggregate project Aggregate is
+   for Project_Files use
+     ("lib1_clash/lib1_clash.gpr",
+      "lib2_clash1/lib2_clash1.gpr",
+      "main1.gpr",
+      "main2.gpr");
+end Aggregate;

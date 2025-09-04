@@ -1,0 +1,5 @@
+with "lib2_clash2/lib2_clash2.gpr";
+
+project Main1 is
+   for Source_Dirs use (".");
+end Main1;
