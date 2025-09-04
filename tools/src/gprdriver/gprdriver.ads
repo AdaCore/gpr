@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2025, AdaCore                     --
+--                        Copyright (C) 2025, AdaCore                       --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -16,16 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-aggregate project GPR2_Tools is
+package GPRDriver with Pure is
 
-   for Project_Files use
-     ("projects/gpr2tools-gprbuild.gpr",
-      "projects/gpr2tools-gprclean.gpr",
-      "projects/gpr2tools-gprconfig.gpr",
-      "projects/gpr2tools-gprdoc.gpr",
-      "projects/gpr2tools-gprinspect.gpr",
-      "projects/gpr2tools-gprinstall.gpr",
-      "projects/gpr2tools-gprdriver.gpr",
-      "projects/gpr2tools-processes_wrapper.gpr");
-
-end GPR2_Tools;
+end GPRDriver;
