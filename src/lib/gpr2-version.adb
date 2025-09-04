@@ -35,6 +35,14 @@ package body GPR2.Version is
       Version_String : String) is
    begin
       Put_Line (Tool_Name & " " & Version_String);
+
+      if Tool_Name = "GPRBUILD"
+        or else Tool_Name = "GPRINSTALL"
+        or else Tool_Name = "GPRCLEAN"
+      then
+         Put_Line (Tool_Name & " Engine 2");
+      end if;
+
       Put_Line
         ("Copyright (C) " & Initial_Year & '-' & Current_Year & ", "
          & Copyright_Holder);
