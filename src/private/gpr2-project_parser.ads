@@ -164,10 +164,10 @@ private package GPR2.Project_Parser is
       Type_Node : Identifier_List)
     return GPR2.Project.Typ.Object
     with Pre => View.Is_Defined;
-    --  Find the type definition corresponding to the specified node,
-    --  either from View, an imported project file or a parent project file.
-    --  If the type definition is not found, GPR2.Project.Typ.Undefined is
-    --  returned.
+   --  Find the type definition corresponding to the specified node,
+   --  either from View, an imported project file or a parent project file.
+   --  If the type definition is not found, GPR2.Project.Typ.Undefined is
+   --  returned.
 
 private
 

@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2023, AdaCore
+--  Copyright (C) 2023-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -55,8 +55,8 @@ package GPR2.Project.External is
      array (Positive range <>) of Unbounded_String;
 
    function Possible_Values_Of (Ext : Object) return Unbounded_String_Array;
-      --  In case of a typed variable, return all possible values.
-      --  Otherwise, return an empty array.
+   --  In case of a typed variable, return all possible values.
+   --  Otherwise, return an empty array.
 
 private
 
