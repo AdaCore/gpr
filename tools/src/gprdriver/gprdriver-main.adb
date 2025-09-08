@@ -140,28 +140,26 @@ begin
 
    declare
       Cmd : constant String := Get_Command;
-      K   : Positive := Cmd'Last;
    begin
       --  Check for start of GPR command
 
-      for I in reverse Cmd'Range loop
-         exit when Utils.Is_Directory_Separator (Cmd (I));
-         K := I;
-      end loop;
-
-      if Cmd'Length > 3
-        and then Cmd (K .. K + 2) = "gpr"
+      if GNATCOLL.Utils.Ends_With (Cmd, ".exe")
+        or else GNATCOLL.Utils.Ends_With (Cmd, ".EXE")
       then
-         --  Change:
-         --     /some/path/gpr<name>
-         --  by:
-         --     /some/path/gpr<1|2><name>
-
          declare
-            C : constant String :=
-                  Cmd (Cmd'First .. K + 2)    --  Leading up to gpr
-                  & Get_GPR_Version           --  The version
-                  & Cmd (K + 3 .. Cmd'Last);  --  Remaining of command
+            C : constant String := Cmd (Cmd'First .. Cmd'Last - 4)
+                  & Get_GPR_Version & Cmd (Cmd'Last - 4 .. Cmd'Last);
+         begin
+            if not Directories.Exists (C) then
+               raise GPR2.Options.Usage_Error with
+               C & ": not found";
+            else
+               Command.Prepend (C);
+            end if;
+         end;
+      else
+         declare
+            C : constant String := Cmd & Get_GPR_Version;
          begin
             if not Directories.Exists (C) then
                raise GPR2.Options.Usage_Error with
@@ -170,10 +168,6 @@ begin
                Command.Prepend (C);
             end if;
          end;
-
-      else
-         raise GPR2.Options.Usage_Error with
-           Cmd & ": not a known GPRtool";
       end if;
    end;
 
@@ -183,13 +177,8 @@ begin
       Proc_Handle : constant Process_Handle := Start (Command);
       Ret         : constant Integer        := Wait (Proc_Handle);
    begin
-      if Ret /= 0 then
-         raise GPR2.Options.Usage_Error with
-           "fails to run Command";
-      end if;
+      return Command_Line.Exit_Status (Ret);
    end;
-
-   return To_Exit_Status (E_Success);
 
 exception
    when E : others =>

@@ -23,6 +23,8 @@ with Ada.Text_IO;
 with GNAT.Directory_Operations;
 with GNAT.OS_Lib;
 
+with GNATCOLL;
+with GNATCOLL.Utils;
 with GPR2.Options;
 with GPR2.Version;
 
@@ -46,9 +48,9 @@ package body GPRtools.Command_Line is
       Index          : String := "";
       In_Switch_Attr : Boolean := True);
 
-   function Get_Executable return String is
-     (GNAT.Directory_Operations.Base_Name
-        (Ada.Command_Line.Command_Name, ".exe"));
+   function Get_Executable return String;
+   --  Return the actual executable stripped from a possible executable suffix
+   --  and a integer to signify the GPR engine version.
 
    function Get_RO
      (Self  : Command_Line_Parser;
@@ -311,6 +313,31 @@ package body GPRtools.Command_Line is
 
       return Parser;
    end Create;
+
+   --------------------
+   -- Get_Executable --
+   --------------------
+
+   function Get_Executable return String is
+      Exec : constant String := (GNAT.Directory_Operations.Base_Name
+                                 (Ada.Command_Line.Command_Name, ".exe"));
+
+      Gprbuild   : constant String := "gprbuild";
+      Gprclean   : constant String := "gprclean";
+      Gprinstall : constant String := "gprinstall";
+   begin
+      if (GNATCOLL.Utils.Starts_With (Exec, Gprbuild)
+          and then Exec /= Gprbuild)
+        or else (GNATCOLL.Utils.Starts_With (Exec, Gprclean)
+                 and then Exec /= Gprclean)
+        or else (GNATCOLL.Utils.Starts_With (Exec, Gprinstall)
+                 and then Exec /= Gprinstall)
+      then
+         return Exec (Exec'First .. Exec'Last - 1);
+      else
+         return Exec;
+      end if;
+   end Get_Executable;
 
    -------------
    -- Get_Opt --
