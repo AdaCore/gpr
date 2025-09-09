@@ -1,6 +1,6 @@
 //// OS set to Linux
 Demo     K_AGGREGATE_LIBRARY
-A:   Library_Dir -> .
+A:   Library_Dir -> bsrc
 A:   Library_Name -> demo
 A:   Project_Files -> a.gpr b.gpr
 A        K_STANDARD
@@ -16,7 +16,7 @@ sources:
 //// OS set to Windows
 >>> Changed_Callback for A
 Demo     K_AGGREGATE_LIBRARY
-A:   Library_Dir -> .
+A:   Library_Dir -> bsrc
 A:   Library_Name -> demo
 A:   Project_Files -> a.gpr b.gpr
 A        K_STANDARD

@@ -2,5 +2,5 @@
 aggregate library project Demo is
    for Project_Files use ("a.gpr", "b.gpr");
    for Library_Name use "demo";
-   for Library_Dir use ".";
+   for Library_Dir use "bsrc";
 end Demo;

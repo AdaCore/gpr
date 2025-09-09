@@ -1,0 +1,6 @@
+description:
+    library dir and library ALI dir check
+    (not shared with project object dir)
+driver: build_and_run
+project_file: test
+main: main

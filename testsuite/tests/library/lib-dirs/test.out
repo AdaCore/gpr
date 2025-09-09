@@ -1,0 +1,6 @@
+testing prj.gpr
+prj.gpr: error: library directory cannot be the same as object directory
+Cannot load project
+testing prj2.gpr
+prj2.gpr: error: library ALI directory cannot be the same as object directory
+Cannot load project
