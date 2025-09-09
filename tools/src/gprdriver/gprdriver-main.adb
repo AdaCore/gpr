@@ -147,7 +147,7 @@ begin
       then
          declare
             C : constant String := Cmd (Cmd'First .. Cmd'Last - 4)
-                  & Get_GPR_Version & Cmd (Cmd'Last - 4 .. Cmd'Last);
+                  & Get_GPR_Version & Cmd (Cmd'Last - 3 .. Cmd'Last);
          begin
             if not Directories.Exists (C) then
                raise GPR2.Options.Usage_Error with
