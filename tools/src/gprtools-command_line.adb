@@ -48,10 +48,6 @@ package body GPRtools.Command_Line is
       Index          : String := "";
       In_Switch_Attr : Boolean := True);
 
-   function Get_Executable return String;
-   --  Return the actual executable stripped from a possible executable suffix
-   --  and a integer to signify the GPR engine version.
-
    function Get_RO
      (Self  : Command_Line_Parser;
       Group : Argument_Group) return Group_Maps.Constant_Reference_Type;
@@ -326,6 +322,8 @@ package body GPRtools.Command_Line is
       Gprclean   : constant String := "gprclean";
       Gprinstall : constant String := "gprinstall";
    begin
+      --  ??? : eng/gpr/gpr-issues#690 : specific code to take into account
+      --  the transitional state where we have both gprtool1/2.
       if (GNATCOLL.Utils.Starts_With (Exec, Gprbuild)
           and then Exec /= Gprbuild)
         or else (GNATCOLL.Utils.Starts_With (Exec, Gprclean)

@@ -27,6 +27,7 @@ with GNATCOLL.Utils;
 with GNATCOLL.VFS;
 
 with GPR2.Options;
+with GPRtools.Command_Line;
 with GPRtools.Util;
 with GPRtools.Program_Termination;
 
@@ -112,7 +113,7 @@ function GPRDriver.Main return Ada.Command_Line.Exit_Status is
    --  The command to be executed
 
 begin
-   GPRtools.Util.Set_Program_Name ("gprdriver");
+   GPRtools.Util.Set_Program_Name (GPRtools.Command_Line.Get_Executable);
 
    --  Append all arguments
 
