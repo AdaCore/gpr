@@ -101,8 +101,6 @@ function GPRDriver.Main return Ada.Command_Line.Exit_Status is
          return '2';
       elsif V in "legacy" | "1" then
          return '1';
-      elsif V = "" then
-         return Default_Version;
       else
          raise GPR2.Options.Usage_Error with
            "unknown value '" & V & "' for " & CTL_VAR;
