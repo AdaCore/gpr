@@ -4,7 +4,6 @@ gnat_packages = [
     "templates_parser",
     "aws-tools",
     "aws-lib",
-    "aws",
     "gnat",
 ]
 
