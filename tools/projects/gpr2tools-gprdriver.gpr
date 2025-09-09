@@ -29,4 +29,8 @@ project GPR2tools.GPRDriver extends "gpr2tools.gpr" is
       for Executable ("gprdriver-main.adb") use "gprdriver";
    end Builder;
 
+   package Install is
+      for Exec_Subdir use GPR2tools.Libexec_Install_Dir;
+   end Install;
+
 end GPR2tools.GPRDriver;
