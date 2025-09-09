@@ -28,4 +28,6 @@ begin
    Test ("libprj1_standalone_auto_init_not_supported.gpr");
    Test ("aggrprj1.gpr");
    Test ("aggrlibprj1.gpr");
+   Test ("library_name_duplicate/aggregate.gpr");
+
 end main;

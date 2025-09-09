@@ -44,3 +44,9 @@ aggrlibprj1.gpr:3:23: warning: object directory "obj" not found
 aggrlibprj1.gpr:6:39: warning: library directory "aggrlibprj1.lib" not found
 aggrlibprj1.gpr:8:50: warning: library ALI directory "aggrlibprj1.lib.ali" not found
 aggrlibprj1.gpr:16:50: warning: library src directory "aggrlibprj1.lib.src" not found
+library_name_duplicate/aggregate.gpr
+lib1.gpr:4:08: error: Library name cannot be the same as in project "Lib1_Clash"
+lib2.gpr:4:08: error: Library name cannot be the same as in project "Lib2_Clash1"
+lib2.gpr:4:08: error: Library name cannot be the same as in project "Lib2_Clash2"
+lib2.gpr:4:08: error: Library name cannot be the same as in project "Lib2_Clash3"
+lib2_clash3.gpr:6:08: error: Library name cannot be the same as in project "Lib2_Clash2"
