@@ -132,7 +132,7 @@ test_gpr2:
   extends: .gpr2_test_template
   script:
     - install_cache gnat
-    - run_testsuite gpr2 -Qlegacy test_gpr2
+    - run_testsuite gpr2 "" test_gpr2
   artifacts:
     when:
       always
