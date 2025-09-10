@@ -16,8 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with "../../gpr2";
-
 abstract project GPR2tools extends "../../gpr2_shared.gpr" is
 
    type Target_type is ("Windows_NT", "UNIX");
@@ -26,18 +24,5 @@ abstract project GPR2tools extends "../../gpr2_shared.gpr" is
    Base_Object_Dir     := GPR2_Shared.Build_Root & "/" & GPR2_Shared.Build & "/obj-tools";
    Base_Exec_Dir       := GPR2_Shared.Build_Root & "/" & GPR2_Shared.Build;
    Libexec_Install_Dir := "libexec/gprbuild";
-
-   -------------
-   -- Install --
-   -------------
-
-   package Install is
-      case Target is
-         when "Windows_NT" =>
-            for Artifacts ("bin") use ("../src/tools/gpr2install.exe.manifest");
-         when "UNIX" =>
-            null;
-      end case;
-   end Install;
 
 end GPR2Tools;

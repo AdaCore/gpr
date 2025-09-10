@@ -1,3 +1,4 @@
+with "../../gpr2";
 with "gpr2tools-common";
 
 project GPR2tools.Processes_Wrapper extends "gpr2tools.gpr" is

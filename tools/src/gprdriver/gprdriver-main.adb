@@ -21,15 +21,12 @@ with Ada.Directories;
 with Ada.Environment_Variables;
 with Ada.Exceptions;
 with Ada.Strings.Unbounded;
+with Ada.Text_IO;
 
+with GNAT.OS_Lib;
 with GNATCOLL.OS.Process;
 with GNATCOLL.Utils;
 with GNATCOLL.VFS;
-
-with GPR2.Options;
-with GPRtools.Command_Line;
-with GPRtools.Util;
-with GPRtools.Program_Termination;
 
 function GPRDriver.Main return Ada.Command_Line.Exit_Status is
 
@@ -37,11 +34,12 @@ function GPRDriver.Main return Ada.Command_Line.Exit_Status is
    use Ada.Exceptions;
    use Ada.Strings.Unbounded;
 
-   use GPRtools.Program_Termination;
    use GNATCOLL;
    use GNATCOLL.OS.Process;
 
    package CLI renames Ada.Command_Line;
+
+   Usage_Error : exception;
 
    Default_Version : constant Character := '1';
    --  Version to use if the environment variable is not set
@@ -67,6 +65,9 @@ function GPRDriver.Main return Ada.Command_Line.Exit_Status is
    --  Returns the full-pathname of the command. It is important to get the
    --  full-pathname as we want to ensure that the corresponding tool version
    --  (1 or 2) is run from the same directory where the driver has been found.
+
+   function Get_Program_Name return String;
+   --  Get the actual program name
 
    -----------------
    -- Get_Command --
@@ -102,17 +103,30 @@ function GPRDriver.Main return Ada.Command_Line.Exit_Status is
       elsif V in "legacy" | "1" then
          return '1';
       else
-         raise GPR2.Options.Usage_Error with
+         raise Usage_Error with
            "unknown value '" & V & "' for " & CTL_VAR;
       end if;
    end Get_GPR_Version;
+
+   ----------------------
+   -- Get_Program_Name --
+   ----------------------
+
+   function Get_Program_Name return String is
+      use GNATCOLL.VFS;
+   begin
+      return String
+        (Base_Name
+           (Create_From_Base
+                (Filesystem_String (Ada.Command_Line.Command_Name)),
+            Suffix =>
+              Filesystem_String (GNAT.OS_Lib.Get_Executable_Suffix.all)));
+   end Get_Program_Name;
 
    Command : Argument_List;
    --  The command to be executed
 
 begin
-   GPRtools.Util.Set_Program_Name (GPRtools.Command_Line.Get_Executable);
-
    --  Append all arguments
 
    for I in 1 .. CLI.Argument_Count loop
@@ -150,7 +164,7 @@ begin
                   & Get_GPR_Version & Cmd (Cmd'Last - 3 .. Cmd'Last);
          begin
             if not Directories.Exists (C) then
-               raise GPR2.Options.Usage_Error with
+               raise Usage_Error with
                C & ": not found";
             else
                Command.Prepend (C);
@@ -161,7 +175,7 @@ begin
             C : constant String := Cmd & Get_GPR_Version;
          begin
             if not Directories.Exists (C) then
-               raise GPR2.Options.Usage_Error with
+               raise Usage_Error with
                  C & ": not found";
             else
                Command.Prepend (C);
@@ -181,9 +195,12 @@ begin
 
 exception
    when E : others =>
-      Handle_Program_Termination
-        (Display_Command_Line_Help => False,
-         Force_Exit                => False,
-         Message                   => Exception_Message (E));
-      return To_Exit_Status (E_Fatal);
+      declare
+         P_Name : constant String := Get_Program_Name;
+         Complete_Message : constant String :=
+                              P_Name & ":" & Exception_Message (E);
+      begin
+         Ada.Text_IO.Put_Line (Text_IO.Standard_Error, Complete_Message);
+         return 1;
+      end;
 end GPRDriver.Main;

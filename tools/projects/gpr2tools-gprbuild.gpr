@@ -1,3 +1,4 @@
+with "../../gpr2";
 with "gpr2tools-common";
 
 project GPR2tools.GPRBuild extends "gpr2tools.gpr" is
