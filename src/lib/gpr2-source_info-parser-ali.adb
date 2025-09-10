@@ -1261,8 +1261,6 @@ package body GPR2.Source_Info.Parser.ALI is
          end loop;
       end Check_Separated;
 
-      use type GPR2.Unit.Library_Unit_Type;
-
    begin
       for CU of Data.CU_List loop
          LI := GPR2.Project.Source.Artifact.Dependency
