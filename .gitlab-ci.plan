@@ -9,24 +9,22 @@ gnat_packages = [
 
 
 def build():
-    anod_build("libgpr2", qualifier={"bare": True})
-    anod_build("libgpr2")
-    anod_build("gpr2")
+    anod_install("gprname")
+    anod_build("gprbuild")
 
 
 def install_gpr2():
     if env.host.platform == "x86_64-linux":
         anod_install("gpr2-doc")
     anod_install("libgpr2", qualifier={"bare": True})
+    anod_install("libgpr2")
     anod_install("gpr2")
+    anod_install("gprbuild")
 
 
 def build_gnat_bootstrap():
     install_gpr2()
-    anod_install("gpr2")
     anod_install("libgpr2")
-    anod_build("gprname")
-    anod_build("gprbuild")
     for pkg in gnat_packages:
         anod_build(pkg)
     anod_build("gnat")
@@ -40,11 +38,9 @@ def build_debug():
 
 def build_libgpr2_users():
     wave_pkg = ("spark2014", "gnatcheck", "gnatfuzz", "lkql")
-    edge_pkg = ("als", "gnatcov", "gnatdoc4", "gnatformat", "lal-refactor", "gnathub", "ada-xdiff")
+    edge_pkg = ("als", "gnatcov", "gnatdoc4", "gnatformat", "lal-refactor", "gnathub")
 
     install_gpr2()
-    anod_install("libgpr2")
-    anod_install("gprbuild")
     for pkg in gnat_packages:
         anod_install(pkg)
     for pkg in wave_pkg:
@@ -72,23 +68,22 @@ def test_gpr2_valgrind():
 
 def test_gpr2build():
     install_gpr2()
-    anod_test("gprbuild", qualifier={"gpr2build": True})
+    anod_test("gprbuild", qualifier={"gpr2build": True, "toolchain": "stable"})
 
 
 def test_gpr2build_armhf_linux():
     install_gpr2()
-    anod_test("gprbuild", qualifier={"gpr2build": True}, target="armhf-linux,,qemu")
+    anod_test("gprbuild", qualifier={"gpr2build": True, "toolchain": "stable"}, target="armhf-linux,,qemu")
 
 
 def test_gpr2build_arm_elf_zynq7k():
     install_gpr2()
     anod_test(
         "gprbuild",
-        qualifier={"gpr2build": True, "rts": "light-zynq7000", "languages": "Ada;C"},
+        qualifier={"gpr2build": True, "toolchain": "stable", "rts": "light-zynq7000", "languages": "Ada;C"},
         target="arm-elf,,qemu-zynq",
     )
 
 def test_gprconfig():
     install_gpr2()
-    anod_build("gprbuild")
     anod_test("gprconfig")
