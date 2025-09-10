@@ -30,8 +30,8 @@ procedure Test is
       File : Ada.Text_IO.File_Type;
       Content : constant String :=
                   GPR2.Path_Name.Create_Directory
-                    (Name      => "gpr_project_path_file",
-                     Directory => Root).String_Value;
+                    (Name             => "gpr_project_path_file",
+                     Parent_Directory => Root).String_Value;
    begin
       Environment.Insert ("PATH", PATH);
       Ada.Environment_Variables.Set ("PATH", "");
@@ -39,8 +39,8 @@ procedure Test is
       Environment.Insert
         ("ADA_PROJECT_PATH",
          GPR2.Path_Name.Create_Directory
-           (Name      => "ada_project_path",
-            Directory => Root).String_Value
+           (Name             => "ada_project_path",
+            Parent_Directory => Root).String_Value
          & GNAT.OS_Lib.Path_Separator
          & ADA_PROJECT_PATH);
       Ada.Environment_Variables.Set ("ADA_PROJECT_PATH", "");
@@ -48,8 +48,8 @@ procedure Test is
       Environment.Insert
         ("GPR_PROJECT_PATH",
          GPR2.Path_Name.Create_Directory
-           (Name      => "gpr_project_path",
-            Directory => Root).String_Value
+           (Name             => "gpr_project_path",
+            Parent_Directory => Root).String_Value
          & GNAT.OS_Lib.Path_Separator
          & GPR_PROJECT_PATH);
       Ada.Environment_Variables.Set ("GPR_PROJECT_PATH", "");
