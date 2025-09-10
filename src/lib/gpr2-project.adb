@@ -124,8 +124,7 @@ package body GPR2.Project is
 
       if OS_Lib.Is_Absolute_Path (String (GPR_Name)) then
          return Path_Name.Create
-           (GPR_Name,
-            Filename_Type
+           (Filename_Type
               (OS_Lib.Normalize_Pathname
                  (String (GPR_Name), Resolve_Links => False)),
            Resolve_Links => Resolve_Links);
@@ -139,8 +138,7 @@ package body GPR2.Project is
                  (Directories.Current_Directory & DS & String (GPR_Name))
             then
                return Path_Name.Create
-                 (GPR_Name,
-                  Filename_Type
+                 (Filename_Type
                     (OS_Lib.Normalize_Pathname
                        (Directories.Current_Directory & DS & String (GPR_Name),
                         Resolve_Links => False)),
@@ -155,8 +153,7 @@ package body GPR2.Project is
                begin
                   if Directories.Exists (String (F_Name)) then
                      return Path_Name.Create
-                       (GPR_Name,
-                        Filename_Type
+                       (Filename_Type
                           (OS_Lib.Normalize_Pathname
                              (String (F_Name), Resolve_Links => False)),
                         Resolve_Links => Resolve_Links);
