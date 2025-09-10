@@ -1,0 +1,32 @@
+gnat_packages = [
+    "libadalang",
+    "libadalang-tools",
+    "templates_parser",
+    "aws-tools",
+    "aws-lib",
+    "gnat",
+]
+
+
+def build():
+    anod_install("gprname")
+    anod_build("gprbuild")
+
+
+def install_gpr2():
+    if env.host.platform == "x86_64-linux":
+        anod_install("gpr2-doc")
+    anod_install("libgpr2", qualifier={"bare": True})
+    anod_install("libgpr2")
+    anod_install("gpr2")
+    anod_install("gprbuild")
+
+
+def build_debug():
+    install_gpr2()
+    anod_build("gpr2", qualifier={"legacy": "True", "dbg": "True"})
+
+
+def test_gpr2():
+    install_gpr2()
+    anod_test("gpr2")
