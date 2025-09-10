@@ -1,184 +1,79 @@
-include:
-  - project: eng/gpr/gpr-issues
-    file: /.gitlab/.gitlab-ci-shared.yml
-
 stages:
+  - check
   - build
   - test
-  - post
 
-.gpr2_test_template:
-  extends: .test_template
-  cache:
-    - key: $CI_COMMIT_REF_SLUG
-      policy: pull
-      paths:
-        - cache
+# Don't run CIs on branches without merge requests, except on important branches
+# The latter is important to get automatic comparison on failing tests
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_REF_NAME == "master" || $CI_COMMIT_REF_NAME == "main")
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: always
+    - when: never
 
-###########
-## BUILD ##
-###########
+include:
+  ###############
+  # BUILD STAGE #
+  ###############
 
-build:
-  extends: .job_template
-  stage: build
-  variables:
-    JOB_SUBPROJECTS: eng/gpr/gprbuild eng/gpr/gprconfig_kb eng/gpr/gprname
-  cache:
-    - key: $CI_COMMIT_REF_SLUG
-      fallback_keys:
-        - legacy
-      paths:
-        - cache
-  script:
-    # Tune to use our build & test plan
-    - anod tune --plan $CI_PROJECT_DIR/.ci.plan
+  # Issue check
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/check-issue@~latest
 
-    # if a cached sandbox exists, use it, except for the daily schedule
-    # where we want to start anew
-    - if [[ $CI_PIPELINE_SOURCE != "schedule" ]]; then
-        install_cache full ;
-      else
-        rm -rf $CI_PROJECT_DIR/cache ;
-      fi
+  # pre-commit: TODO come up with a proper config
+  # - component: $CI_SERVER_FQDN/eng/gitlab-templates/pre-commit@~latest
+  #   inputs:
+  #     on-diff: true
 
-    # This does a minimal build.
-    # Full gnat bootstrap is tested though, but in the testing phase
-    - anod run build
+  # regular build
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/build@~latest
+    inputs:
+      job-name: build
+      anod-args: run build
+      save-component: true
+      cpus: 16
+      disk: 80
+      windows: true
+      windows-cpus: 8
+      windows-mem: 16
+      needs: []
+      windows-needs: []
+      rules:
+        - allow_failure: false
 
-    # Save gpr builds and libadalang in cache to speed up a re-build
-    - mkdir -p $CI_PROJECT_DIR/cache
-    - rsync -a $SANDBOX/$HOST/*gpr* $CI_PROJECT_DIR/cache/
+  # debug build
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/build@~latest
+    inputs:
+      job-name: build_debug
+      anod-args: run build_debug
+      save-component: false
+      cpus: 16
+      disk: 80
+      needs: ["build:linux"]
+      rules:
+        - allow_failure: false
 
-debug_build:
-  extends: .job_template
-  stage: build
-  variables:
-    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb
-  script:
+  ##############
+  # TEST STAGE #
+  ##############
 
-    # build gpr2 in debug mode without rebuilding dependencies
-    - anod build gpr2 -Qlegacy,dbg
-
-###############################
-# CHECK WE CAN BOOTSTRAP GNAT #
-###############################
-
-test_bootstrap:
-  services:
-     - image:e3
-     - cpu:16
-  extends: .gpr2_test_template
-  allow_failure: false
-  variables:
-    JOB_SUBPROJECTS: eng/gpr/gprconfig_kb eng/gpr/gprname
-  cache:
-    - key: $CI_COMMIT_REF_SLUG
-      policy: pull
-      paths:
-        - cache
-    - key: bootstrap-$CI_COMMIT_REF_SLUG
-      fallback_keys:
-        - bootstrap-legacy
-      paths:
-        - bootstrap_cache
-  script:
-    - install_cache full
-    - if [[ $CI_PIPELINE_SOURCE != "schedule" && -d $CI_PROJECT_DIR/bootstrap_cache ]]; then
-        exec rsync -a $CI_PROJECT_DIR/bootstrap_cache/* $SANDBOX/$HOST/ ;
-      fi
-    - rm -rf $CI_PROJECT_DIR/bootstrap_cache ;
-    # JOB_SUBPROJECTS and repos identified by a "depends-on" in the MR are
-    # locally cloned and used by anod. However git don't preserve timestamps
-    # which lead to very long rebuild times (gprbuild then considers all sources
-    # as being modified), so caching the builds is highly ineffective.
-    # So in order to have a reasonable rebuild, we install a wrapper to gprbuild
-    # ensuring that -m is enforced for all packages.
-    - install_build_wrapper() {
-        bindir=$(anod info install $* --show working_dir)/install/bin ;
-        exec mv $bindir/gprbuild $bindir/gprbuild-saved ;
-        echo '#!'$SHELL > $bindir/gprbuild ;
-        echo 'gprbuild-saved -m $@' >> $bindir/gprbuild ;
-        exec cat $bindir/gprbuild ;
-        exec chmod a+x $bindir/gprbuild ;
-      }
-    - anod tune --plan $CI_PROJECT_DIR/.ci.plan
-    - result=0
-    # Install gprbuild wrappers for the gprbuild bootstrap part
-    - anod install gprbuild -Qstable
-    - install_build_wrapper gprbuild -Qstable
-    # Build gprbuild
-    - anod build gprbuild
-    # install the wrapper for the newly built gprbuild
-    - install_build_wrapper gprbuild
-    # and run the gnat bootstrap
-    - anod run bootstrap || result=$?
-    - mkdir -p $CI_PROJECT_DIR/bootstrap_cache
-    # save build for packages that take a long time to build: only a re-build
-    # will be performed on following runs, which assumably will be faster
-    # (than the time it takes to save/restore them).
-    # ??? the build space name is forged in stone here, while we know it can
-    # change anytime: maybe a hard to maintain choice
-    - for pkg in libadalang-internal laltools ; do
-        rsync -a $SANDBOX/$HOST/$pkg $CI_PROJECT_DIR/bootstrap_cache/ ;
-      done
-    - exit $result
-
-####################
-## GPR2 TESTSUITE ##
-####################
-
-test_gpr2:
-  extends: .gpr2_test_template
-  script:
-    - install_cache gnat
-    - run_testsuite gpr2 "" test_gpr2
-  artifacts:
-    when:
-      always
-    paths:
-      - testgpr2_result.xml
-    reports:
-      junit: testgpr2_result.xml
-
-########################
-## GPRBUILD TESTSUITE ##
-########################
-
-test_gprbuild:
-  extends: .gpr2_test_template
-  variables:
-    JOB_SUBPROJECTS: eng/gpr/gprbuild-internal
-  script:
-    - install_cache gnatall
-    - run_testsuite gprbuild "" test_gprbuild
-  artifacts:
-    when:
-      always
-    paths:
-      - testgprbuild_result.xml
-    reports:
-      junit: testgprbuild_result.xml
-
-####################
-## POSTPROCESSING ##
-####################
-
-post:
-  extends: .job_template
-  stage: post
-  when: always
-  script:
-    # generate badge
-    - cd $CI_PROJECT_DIR
-    - rm -f test-count.svg
-    - if ls test*_result.xml &> /dev/null; then
-        create_xunit_badge --xunit_reports test*_result.xml ;
-      else
-        anybadge -l "Tests Passing" -v "Error" -f test-count.svg -c red ;
-      fi
-  artifacts:
-    when:
-      always
-    paths:
-      - test-count.svg
+  # gpr2 testsuite
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/test@~latest
+    inputs:
+      job-name: test_gpr2
+      anod-args: run test_gpr2
+      disk: 80
+      save-anod-logs: true
+      needs: ["build:linux"]
+      windows: true
+      windows-cpus: 8
+      windows-mem: 16
+      windows-needs: ["build:windows"]
+      artifacts: ["xunit-*.xml"]
+      rules:
+        - allow_failure: true
