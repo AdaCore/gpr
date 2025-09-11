@@ -336,6 +336,18 @@ package GPRtools.Command_Line is
       In_Switch_Attr : Boolean := True)
      with Pre => not Self.Has_Argument (Name);
 
+   function Get_Executable return String;
+   --  Return the actual executable stripped from a possible executable suffix
+   --  and a integer to signify the GPR engine version.
+   --  ??? : eng/gpr/gpr-issues#690
+   --  This shouldn't be publicly available and should only return :
+   --
+   --  (GNAT.Directory_Operations.Base_Name
+   --     (Ada.Command_Line.Command_Name, ".exe"));
+   --
+   --  and not parse the actual command line driver to take into account
+   --  the gprtoolX
+
 private
 
    use Ada;
