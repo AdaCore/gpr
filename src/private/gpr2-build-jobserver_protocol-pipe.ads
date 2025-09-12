@@ -31,6 +31,7 @@ package GPR2.Build.Jobserver_Protocol.Pipe is
 private
 
    type Object is new Jobserver_Protocol.Object with record
+      Is_Named_Pipe     : Boolean := False;
       Read_FD, Write_FD : GNATCOLL.OS.FS.File_Descriptor :=
                             GNATCOLL.OS.FS.Invalid_FD;
       --  File descriptor to read from and write to
