@@ -113,13 +113,16 @@ package body GPR2.Build.Process_Manager.JSON is
 
    overriding procedure Execution_Post_Process (Self : in out Object) is
       File : GNATCOLL.OS.FS.File_Descriptor;
+      Repr : Unbounded_String;
    begin
       if not Self.JSON_File.Is_Defined then
          return;
       end if;
 
+      Repr := Write (Create (Self.JSON));
+
       File := Open (Self.JSON_File.String_Value, Write_Mode);
-      Write (File, Write (Create (Self.JSON)) & ASCII.CR & ASCII.LF);
+      Write_Unbounded (File, Repr);
       Close (File);
    end Execution_Post_Process;
 

@@ -5,8 +5,6 @@
 --
 
 with GPR2.Path_Name;
-with GPR2.Utils.Hash;
-
 
 package GPR2.Build.Artifacts.Files is
 
@@ -29,7 +27,9 @@ package GPR2.Build.Artifacts.Files is
 
    function Path (Self : Object) return GPR2.Path_Name.Object;
 
-   overriding function Checksum (Self : Object) return String;
+   overriding
+   function Checksum
+     (Self : Object; Hash : in out Utils.Hash.Object) return String;
 
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type;
 
@@ -63,8 +63,10 @@ private
    function Create (Path : Filename_Type) return Object
    is (Path => Path_Name.Create_File (Path));
 
-   overriding function Checksum (Self : Object) return String
-   is (Utils.Hash.Hash_File (Self.Path.Value));
+   overriding
+   function Checksum
+     (Self : Object; Hash : in out Utils.Hash.Object) return String
+   is (Hash.Hash_File (Self.Path.Value));
 
    function Path (Self : Object) return GPR2.Path_Name.Object is
      (Self.Path);

@@ -11,6 +11,7 @@ with Ada.Strings.Unbounded;
 with GPR2.Build.Artifacts;
 with GPR2.Path_Name;
 with GPR2.Project.View;
+with GPR2.Utils.Hash;
 
 --  The signature mechanism gather a list of input and output artifacts
 --  and checks them against their expected value.
@@ -44,6 +45,9 @@ package GPR2.Build.Signature is
    type Object is tagged private;
 
    Undefined : constant Object;
+
+   procedure Initialize
+     (Self : in out Object; Indexer : access GPR2.Utils.Hash.Object);
 
    function Was_Saved (Self : Object) return Boolean;
 
@@ -121,6 +125,7 @@ private
    type Artifacts_Type is array (IO_Type) of Artifact_Sets.Set;
 
    type Object is tagged record
+      Indexer   : access GPR2.Utils.Hash.Object;
       Checksums : Checksums_Type;
       Artifacts : Artifacts_Type;
       Stdout    : Unbounded_String;
