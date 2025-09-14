@@ -11,6 +11,7 @@ gnat_packages = [
 def build():
     anod_install("gprname")
     anod_build("gprbuild")
+    anod_build("libgpr2")
 
 
 def install_gpr2():
