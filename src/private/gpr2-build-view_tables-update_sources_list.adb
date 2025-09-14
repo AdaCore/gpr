@@ -16,7 +16,6 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.View;
 with GPR2.Source_Reference.Value;
-with GPR2.Utils;
 with GPR2.View_Internal;
 
 separate (GPR2.Build.View_Tables)

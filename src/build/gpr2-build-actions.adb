@@ -36,6 +36,7 @@ package body GPR2.Build.Actions is
    is
    begin
       Self.Tree := Db.Ref;
+      Self.Signature.Initialize (Db.File_Indexer);
    end Attach;
 
    ------------------------
