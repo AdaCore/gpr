@@ -512,7 +512,8 @@ package body GPR2.Path_Name is
    -- Get_Extension --
    -------------------
 
-   function Get_Extension (Path : Filename_Optional) return Filename_Optional
+   function Get_Extension
+     (Path : Filename_Optional) return Filename_Optional
    is
       Dir_Seps : constant Strings.Maps.Character_Set :=
                    Strings.Maps.To_Set (Constants.Dir_Seps);
@@ -586,9 +587,9 @@ package body GPR2.Path_Name is
       use Ada.Strings.Fixed;
       use GNATCOLL.Utils;
 
-      S_Int   : Object_Internal renames Get (Self);
-      P       : constant String := String (S_Int.Dir_Name);
-      T       : constant String := String (Get (From).Dir_Name);
+      S_Int : Object_Internal renames Get (Self);
+      P     : constant String := String (S_Int.Dir_Name);
+      T     : constant String := String (Get (From).Dir_Name);
 
       Pi : Positive := P'First; -- common prefix ending
       Ti : Positive := P'First;
