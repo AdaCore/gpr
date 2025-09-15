@@ -946,9 +946,10 @@ private
    is (Self.Attribute (PRA.Naming.Separate_Suffix));
 
    function Has_Spec_Suffix
-     (Self     : Object;
-      Language : Language_Id) return Boolean
-   is (Self.Has_Attribute (PRA.Naming.Spec_Suffix, PAI.Create (Language)));
+     (Self : Object; Language : Language_Id) return Boolean
+   is (Self.Has_Attribute (PRA.Naming.Spec_Suffix, PAI.Create (Language))
+       and then Self.Attribute
+        (PRA.Naming.Spec_Suffix, PAI.Create (Language)).Value.Text'Length > 0);
 
    function Has_Archive_Builder
      (Self : Object) return Boolean
@@ -963,9 +964,10 @@ private
    is (Self.Attribute (PRA.Naming.Spec_Suffix, PAI.Create (Language)));
 
    function Has_Body_Suffix
-     (Self     : Object;
-      Language : Language_Id) return Boolean
-   is (Self.Has_Attribute (PRA.Naming.Body_Suffix, PAI.Create (Language)));
+     (Self : Object; Language : Language_Id) return Boolean
+   is (Self.Has_Attribute (PRA.Naming.Body_Suffix, PAI.Create (Language))
+       and then Self.Attribute
+        (PRA.Naming.Body_Suffix, PAI.Create (Language)).Value.Text'Length > 0);
 
    function Body_Suffix
      (Self     : Object;
