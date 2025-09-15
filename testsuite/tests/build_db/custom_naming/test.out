@@ -1,0 +1,7 @@
+=========================================
+Testing tree/prj.gpr
+=========================================
+* Sources:
+src1.h - C S_BODY
+src2.cpp - C++ S_BODY
+src2.hh - C++ S_SPEC

@@ -1,0 +1,4 @@
+description:
+    Check handling of custom suffixes for languages, in particular the case
+    where a suffix is empty.
+driver: python_script
