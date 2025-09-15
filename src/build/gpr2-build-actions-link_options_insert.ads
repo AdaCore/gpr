@@ -85,7 +85,7 @@ private
 
    overriding
    function Action_Class (Self : Link_Options_Insert_Id) return Value_Type
-   is ("Add-Link-Options");
+   is ("Link-Options-Insert");
 
    overriding
    function Language (Self : Link_Options_Insert_Id) return Language_Id
