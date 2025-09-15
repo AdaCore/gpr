@@ -27,52 +27,6 @@ package body GPR2.View_Internal is
    package PRP renames Project.Registry.Pack;
    package SR  renames GPR2.Source_Reference;
 
-   ----------------------------------
-   -- Check_Aggregate_Library_Dirs --
-   ----------------------------------
-
-   procedure Check_Aggregate_Library_Dirs (Tree : Tree_Internal.Object) is
-   begin
-      for V of Tree.Ordered_Views loop
-         if V.Is_Aggregated_In_Library then
-            for View of V.Aggregate_Libraries loop
-               if V.Kind in With_Object_Dir_Kind
-                 and then View.Library_Directory = V.Object_Directory
-               then
-                  Tree.Log_Messages.Append
-                    (Message.Create
-                       (Level   => Message.Error,
-                        Sloc    => SR.Value.Create
-                          (Filename => View.Path_Name.Value,
-                           Line     => 0,
-                           Column   => 0,
-                           Text     => ""),
-                        Message =>
-                          "aggregate library directory cannot be shared "
-                        & "with object directory of aggregated project """
-                        & String (V.Path_Name.Base_Name) & """"));
-
-               elsif V.Kind in With_Object_Dir_Kind
-                 and then View.Library_Ali_Directory = V.Object_Directory
-               then
-                  Tree.Log_Messages.Append
-                    (Message.Create
-                       (Level   => Message.Error,
-                        Sloc    => SR.Value.Create
-                          (Filename => View.Path_Name.Value,
-                           Line     => 0,
-                           Column   => 0,
-                           Text     => ""),
-                        Message =>
-                          "aggregate library ALI directory cannot be shared "
-                        & "with object directory of aggregated project """
-                        & String (V.Path_Name.Base_Name) & """"));
-               end if;
-            end loop;
-         end if;
-      end loop;
-   end Check_Aggregate_Library_Dirs;
-
    --------------------------------
    -- Check_Excluded_Source_Dirs --
    --------------------------------
@@ -145,6 +99,78 @@ package body GPR2.View_Internal is
          end if;
       end loop;
    end Check_Excluded_Source_Dirs;
+
+   ------------------------
+   -- Check_Library_Dirs --
+   ------------------------
+
+   procedure Check_Library_Dirs (Tree : Tree_Internal.Object) is
+   begin
+      for V of Tree.Ordered_Views loop
+         if V.Is_Aggregated_In_Library then
+            for View of V.Aggregate_Libraries loop
+               if V.Kind in With_Object_Dir_Kind
+                 and then View.Library_Directory = V.Object_Directory
+               then
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => SR.Value.Create
+                          (Filename => View.Path_Name.Value,
+                           Line     => 0,
+                           Column   => 0,
+                           Text     => ""),
+                        Message =>
+                          "aggregate library directory cannot be shared "
+                        & "with object directory of aggregated project """
+                        & String (V.Path_Name.Base_Name) & """"));
+
+               elsif V.Kind in With_Object_Dir_Kind
+                 and then View.Library_Ali_Directory = V.Object_Directory
+               then
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => SR.Value.Create
+                          (Filename => View.Path_Name.Value,
+                           Line     => 0,
+                           Column   => 0,
+                           Text     => ""),
+                        Message =>
+                          "aggregate library ALI directory cannot be shared "
+                        & "with object directory of aggregated project """
+                        & String (V.Path_Name.Base_Name) & """"));
+               end if;
+            end loop;
+
+         elsif V.Is_Library and then V.Kind in With_Object_Dir_Kind then
+            if V.Library_Directory = V.Object_Directory then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => SR.Value.Create
+                       (Filename => V.Path_Name.Value,
+                        Line     => 0,
+                        Column   => 0,
+                        Text     => ""),
+                     Message => "library directory cannot be the same as " &
+                       "object directory"));
+            elsif V.Library_Ali_Directory = V.Object_Directory then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => SR.Value.Create
+                       (Filename => V.Path_Name.Value,
+                        Line     => 0,
+                        Column   => 0,
+                        Text     => ""),
+                     Message =>
+                       "library ALI directory cannot be the same as object "
+                     & "directory"));
+            end if;
+         end if;
+      end loop;
+   end Check_Library_Dirs;
 
    --------------------------
    -- Check_Package_Naming --

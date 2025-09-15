@@ -928,7 +928,7 @@ package body GPR2.Tree_Internal is
             --  stage, otherwise we might have errors if a project references
             --  corresponding attributes from a not yet found project and their
             --  values default to empty ones.
-            View_Internal.Check_Aggregate_Library_Dirs (Self);
+            View_Internal.Check_Library_Dirs (Self);
             View_Internal.Check_Package_Naming (Self);
             View_Internal.Check_Excluded_Source_Dirs (Self);
 

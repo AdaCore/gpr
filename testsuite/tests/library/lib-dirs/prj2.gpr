@@ -1,0 +1,5 @@
+library project Prj2 is
+   for Library_Name    use "prj2";
+   for Library_Dir     use "..";
+   for Library_ALI_Dir use ".";
+end Prj2;

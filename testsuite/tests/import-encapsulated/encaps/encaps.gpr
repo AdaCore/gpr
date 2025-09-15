@@ -3,7 +3,7 @@ library project Encaps is
 
    for Library_Standalone use "encapsulated";
    for Library_Name use "encapslib";
-   for Library_Dir use ".";
+   for Library_Dir use "../prj1";
    for Library_Interface use ("pkg");
 
 end Encaps;

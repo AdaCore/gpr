@@ -250,12 +250,14 @@ private package GPR2.View_Internal is
    --  File_CB is called for each regular file found.
    --  Source reference is used when messages added to Self.Tree's log
 
-   procedure Check_Aggregate_Library_Dirs (Tree : Tree_Internal.Object);
-   --  Report aggregate library (ALI)? directory cannot be shared with
-   --  (object|library) directory of aggregated project errors
-
    procedure Check_Excluded_Source_Dirs (Tree : Tree_Internal.Object);
    --  Check that excluded source dirs are actual directories.
+
+   procedure Check_Library_Dirs (Tree : Tree_Internal.Object);
+   --  Report aggregate library (ALI)? directory cannot be shared with
+   --  (object|library) directory of aggregated project errors
+   --  Report library (ALI)? directory cannot be shared with
+   --  object directory of the library project errors
 
    procedure Check_Package_Naming (Tree : Tree_Internal.Object);
    --  For all tree's views check Casing, Dot_Replacement, Spec_Suffix,

@@ -1,0 +1,4 @@
+library project Prj is
+   for Library_Name use "prj";
+   for Library_Dir  use ".";
+end Prj;
