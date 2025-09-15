@@ -140,6 +140,7 @@ include:
     inputs:
       job-name: test_gpr2build
       anod-args: run test_gpr2build
+      generic-anod-ci-args: --add-dep eng/gpr/gprbuild-internal
       disk: 80
       save-anod-logs: true
       needs: ["build:linux"]
@@ -153,6 +154,7 @@ include:
     inputs:
       job-name: test_gpr2build:armhf_linux
       anod-args: run test_gpr2build_armhf_linux
+      generic-anod-ci-args: --add-dep eng/gpr/gprbuild-internal
       disk: 80
       save-anod-logs: true
       needs: ["build:linux"]
@@ -164,6 +166,7 @@ include:
     inputs:
       job-name: test_gpr2build:arm_elf_zynq7k
       anod-args: run test_gpr2build_arm_elf_zynq7k
+      generic-anod-ci-args: --add-dep eng/gpr/gprbuild-internal
       disk: 80
       save-anod-logs: true
       needs: ["build:linux"]
@@ -175,6 +178,7 @@ include:
     inputs:
       job-name: test_gprconfig
       anod-args: run test_gprconfig
+      generic-anod-ci-args: --add-dep eng/gpr/gprbuild-internal
       disk: 80
       save-anod-logs: true
       needs: ["build:linux"]
