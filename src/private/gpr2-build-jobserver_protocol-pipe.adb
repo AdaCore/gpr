@@ -5,6 +5,8 @@
 --
 
 
+with Interfaces.C;
+
 with Ada.Unchecked_Conversion;
 
 with GNATCOLL.OS.FS;   use GNATCOLL.OS.FS;
@@ -21,15 +23,33 @@ package body GPR2.Build.Jobserver_Protocol.Pipe is
    procedure Check (Self : in out Object);
    procedure Writec is new Write_Bytes (T => Character);
 
+   function C_Write
+     (Fd     : GNATCOLL.OS.FS.File_Descriptor;
+      Buffer : System.Address;
+      Size   : Interfaces.C.size_t)
+         return Interfaces.C.int;
+   pragma Import (C, C_Write, "write");
+   --  ??? This is a copy/paste from GNATCOLL.OS.FS because we need to call the
+   --  low-level C function to pass it a null buffer and 0-size parameter to
+   --  check the useability of a file descriptor. None of the higher level
+   --  gnatcoll subprograms allow to do that.
+
    -----------
    -- Check --
    -----------
 
    procedure Check (Self : in out Object) is
+      function Valid_FD (Fd : GNATCOLL.OS.FS.File_Descriptor) return Boolean is
+        (Fd /= Invalid_FD and then Fd /= Null_FD);
+
+      use type Interfaces.C.int;
+
    begin
-      if Self.Read_FD = Invalid_FD or else Self.Write_FD = Invalid_FD then
+      if not Valid_FD (Self.Read_FD) or else not Valid_FD (Self.Write_FD) then
          Traces.Trace ("Pipe protocol: invalid FDs received");
-         Self := (others => <>);
+         Self.Finalize;
+
+         return;
       end if;
 
       --  Make sure we opened a pipe, not a simple file
@@ -37,9 +57,27 @@ package body GPR2.Build.Jobserver_Protocol.Pipe is
         or else Is_File (Fstat (Self.Write_FD))
       then
          Traces.Trace ("Pipe protocol: FDs are files, not pipes");
-         Close (Self.Read_FD);
-         Close (Self.Write_FD);
-         Self := (others => <>);
+
+         if Self.Is_Named_Pipe then
+            Close (Self.Read_FD);
+            Close (Self.Write_FD);
+         end if;
+
+         Self.Finalize;
+
+         return;
+      end if;
+
+      --  Check the write side of the pipe is useable: the env variable may
+      --  be set, but make may still disable it when gprbuild is not invoked
+      --  with a "+" prefix.
+
+      if C_Write (Self.Write_FD, System.Null_Address, 0) < 0 then
+         Traces.Trace
+           ("Pipe protocol: closed write fd, jobserver not available");
+         Self.Finalize;
+
+         return;
       end if;
    end Check;
 
@@ -49,15 +87,14 @@ package body GPR2.Build.Jobserver_Protocol.Pipe is
 
    overriding procedure Finalize (Self : in out Object) is
    begin
-      if Self.Read_FD /= Invalid_FD then
+      if Self.Is_Named_Pipe
+        and then Self.Read_FD /= Invalid_FD
+      then
          Close (Self.Read_FD);
-         Self.Read_FD := Invalid_FD;
+         Close (Self.Write_FD);
       end if;
 
-      if Self.Write_FD /= Invalid_FD then
-         Close (Self.Write_FD);
-         Self.Write_FD := Invalid_FD;
-      end if;
+      Self := (others => <>);
    end Finalize;
 
    ---------------
@@ -85,6 +122,7 @@ package body GPR2.Build.Jobserver_Protocol.Pipe is
       Traces.Trace ("opening a named pipe protocol for " & Param);
       Result.Read_FD  := GNATCOLL.OS.FS.Open (Param, Read_Mode);
       Result.Write_FD := GNATCOLL.OS.FS.Open (Param, Write_Mode);
+      Result.Is_Named_Pipe := True;
 
       Check (Result);
 
@@ -105,6 +143,7 @@ package body GPR2.Build.Jobserver_Protocol.Pipe is
       Traces.Trace ("opening a simple pipe protocol for" & R'Image & W'Image);
       Result.Read_FD := To_Fd (R);
       Result.Write_FD := To_Fd (W);
+      Result.Is_Named_Pipe := False;
 
       Check (Result);
 
