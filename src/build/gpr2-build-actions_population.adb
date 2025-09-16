@@ -981,11 +981,6 @@ package body GPR2.Build.Actions_Population is
            (Self.Main_Link.UID, Self.Partial_Link.Output, True);
       end if;
 
-      --  Add all object files contained in Library_Options attribute if
-      --  they actually exist.
-      Self.Initial_Link_Action.Add_Objects_From_Attribute
-        (PRA.Library_Options);
-
       --  Add the lib now to prevent infinite recursion in case of
       --  circular dependencies (e.g. A withes B that limited_withes A)
 

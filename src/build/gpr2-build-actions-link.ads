@@ -37,10 +37,6 @@ package GPR2.Build.Actions.Link is
       No_Rpath : Boolean                        := True;
       Output   : Filename_Optional              := "");
 
-   procedure Add_Objects_From_Attribute
-     (Self : Object'Class;
-      Id   : Q_Attribute_Id);
-
    overriding function View (Self : Object) return GPR2.Project.View.Object;
 
    procedure Add_Option (Self : in out Object; Option : String)
@@ -217,6 +213,13 @@ private
    procedure Add_Mapping_File_To_Cmd_Line
      (Self : Object; Cmd_Line : in out GPR2.Build.Command_Line.Object);
    --  Add the mapping file to generate to the command line
+
+   procedure Process_Library_Options
+     (Self           : Object;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean := False);
+   --  Add the library options to the command line. If Signature_Only, no
+   --  warning or error messages should be displayed.
 
    function Is_Library (Self : Object'Class) return Boolean
    is (Self.Is_Library);
