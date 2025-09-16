@@ -255,10 +255,6 @@ private
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object is
-     (if Self.In_Obj
-      then Self.Ctxt.Object_Directory
-      elsif Self.Ctxt.Is_Library
-      then Self.Ctxt.Library_Directory
-      else Self.Ctxt.Executable_Directory);
+     (Self.Ctxt.Object_Directory);
 
 end GPR2.Build.Actions.Link;

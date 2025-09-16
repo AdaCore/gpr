@@ -225,7 +225,7 @@ package body GPR2.Build.Actions.Link is
 
             declare
                From : constant Path_Name.Object :=
-                        Self.Working_Directory;
+                 Self.Output.Path.Containing_Directory;
                Rel  : constant String :=
                         String (Path.Relative_Path (From));
                Last : constant Natural :=
