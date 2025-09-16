@@ -50,14 +50,14 @@ package body GPR2.Build.Actions.Ada_Bind is
    package PAI renames GPR2.Project.Attribute_Index;
 
    function Link (Self : Object) return Actions.Link.Object'Class;
-   --  Return the link action that is a transitive successor of this
-   --  action, if one exists. Return Undefined if no such action is found.
+   --  Return the link action that is a successor of this action,
+   --  if one exists. Return Undefined if no such action is found.
 
    function Link_Opt_Insert
      (Self : Object) return Actions.Link_Options_Insert.Object;
-   --  Returns the Link_Options_Insert action that is a transitive
-   --  successor of the current action, if one exists. Returns Undefined
-   --  if no such action is found.
+   --  Returns the Link_Options_Insert action that is a successor of the
+   --  current action, if one exists. Returns Undefined if no such action
+   --  is found.
 
    function On_Ada_Dependencies
      (Self     : in out Object;
