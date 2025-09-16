@@ -1296,7 +1296,6 @@ package body GPR2.Build.Actions_Population is
          Tree          : constant GPR2.Project.Tree.Object := View.Tree;
          Bind          : Bind_Array (1 .. Natural (Actual_Mains.Length));
          Link          : Link_Array (1 .. Natural (Actual_Mains.Length));
-         Attr          : GPR2.Project.Attribute.Object;
          Closure       : GPR2.Project.View.Set.Object;
          Libs_Cache    : View_Id_Library_Map.Map;
          Sorted_Libs   : Library_Vector.Vector;
@@ -1396,18 +1395,13 @@ package body GPR2.Build.Actions_Population is
                Output   => -Options.Output_File);
 
             if Options.Create_Map_File then
-               Attr := Main.View.Attribute (PRA.Linker.Map_File_Option);
-
-               --  ??? TODO: Add a primitive to the link object to move the
-               --  below processing there.
-
                if Length (Options.Mapping_File_Name) > 0 then
-                  Link (Idx).Add_Option
-                    (Attr.Value.Text & To_String (Options.Mapping_File_Name));
+                  Link (Idx).Set_Mapping_File
+                    (Filename_Type (To_String (Options.Mapping_File_Name)));
                else
-                  Link (Idx).Add_Option
-                    (Attr.Value.Text &
-                       String (Link (Idx).Output.Path.Base_Name) & ".map");
+                  Link (Idx).Set_Mapping_File
+                    (Filename_Type (String (Link (Idx).Output.Path.Base_Name))
+                     & ".map");
                end if;
             end if;
 

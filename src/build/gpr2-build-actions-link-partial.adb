@@ -117,6 +117,10 @@ package body GPR2.Build.Actions.Link.Partial is
               (Cmd_Line, Signature_Only, No_Warning => True);
          end if;
       end if;
+
+      if Self.Mapping_File /= Null_Unbounded_String then
+         Self.Add_Mapping_File_To_Cmd_Line (Cmd_Line);
+      end if;
    end Compute_Command;
 
    -----------------------

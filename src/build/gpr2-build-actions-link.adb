@@ -45,6 +45,19 @@ package body GPR2.Build.Actions.Link is
    --  by the shared library.
    --  If not supported or an issue occured, Filename_Optional will be empty.
 
+   ----------------------------------
+   -- Add_Mapping_File_To_Cmd_Line --
+   ----------------------------------
+
+   procedure Add_Mapping_File_To_Cmd_Line
+     (Self : Object; Cmd_Line : in out GPR2.Build.Command_Line.Object)
+   is
+      Attr : constant Project.Attribute.Object :=
+        Self.View.Attribute (PRA.Linker.Map_File_Option);
+   begin
+      Cmd_Line.Add_Argument (Attr.Value.Text & To_String (Self.Mapping_File));
+   end Add_Mapping_File_To_Cmd_Line;
+
    ----------------
    -- Add_Option --
    ----------------
@@ -703,7 +716,9 @@ package body GPR2.Build.Actions.Link is
          end;
       end if;
 
-      --  Add options provided by the binder if needed
+      if Self.Mapping_File /= Null_Unbounded_String then
+         Self.Add_Mapping_File_To_Cmd_Line (Cmd_Line);
+      end if;
 
       if not Self.View.Is_Library
         or else Self.View.Is_Shared_Library
@@ -2181,6 +2196,16 @@ package body GPR2.Build.Actions.Link is
    begin
       Self.Lib_Dep_Circle := State;
    end Set_Has_Library_Dependency_Circle;
+
+   ----------------------
+   -- Set_Mapping_File --
+   ----------------------
+
+   procedure Set_Mapping_File
+     (Self : in out Object; Mapping_File : Filename_Type) is
+   begin
+      Self.Mapping_File := To_Unbounded_String (String (Mapping_File));
+   end Set_Mapping_File;
 
    ---------
    -- UID --

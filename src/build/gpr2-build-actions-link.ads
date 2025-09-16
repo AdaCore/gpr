@@ -51,6 +51,10 @@ package GPR2.Build.Actions.Link is
      (Self : in out Object;
       Bind : Actions.Ada_Bind.Object);
 
+   procedure Set_Mapping_File
+     (Self : in out Object; Mapping_File : Filename_Type);
+   --  Set the name of the map file to generate
+
    procedure Set_Has_Library_Dependency_Circle
      (Self  : in out Object;
       State : Boolean);
@@ -170,7 +174,11 @@ private
                          Containers.Empty_Value_List;
       --  Command line options added manually with the Add_Option procedure
 
-      Bind            : Actions.Ada_Bind.Object;
+      Mapping_File : Ada.Strings.Unbounded.Unbounded_String :=
+        Null_Unbounded_String;
+      --  Name of the map file to be generated
+
+      Bind : Actions.Ada_Bind.Object;
       --  The bind action generating the initialisation of the linked library
 
       No_Rpath        : Boolean := False;
@@ -206,8 +214,12 @@ private
    function Check_Linker_Driver (Self : Object) return Boolean;
    --  True if the linker driver is found
 
-   function Is_Library (Self : Object'Class) return Boolean is
-     (Self.Is_Library);
+   procedure Add_Mapping_File_To_Cmd_Line
+     (Self : Object; Cmd_Line : in out GPR2.Build.Command_Line.Object);
+   --  Add the mapping file to generate to the command line
+
+   function Is_Library (Self : Object'Class) return Boolean
+   is (Self.Is_Library);
 
    function Is_Static_Library (Self : Object) return Boolean is
      (Self.Is_Library and then Self.Is_Static);
