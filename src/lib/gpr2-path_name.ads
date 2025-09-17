@@ -59,8 +59,9 @@ package GPR2.Path_Name is
    --  Returns True if Self is a virtual file
 
    function Create_File
-     (Name      : Filename_Type;
-      Directory : Filename_Optional := Resolve_On_Current) return Object
+     (Name          : Filename_Type;
+      Directory     : Filename_Optional := Resolve_On_Current;
+      Resolve_Links : Boolean := False) return Object
      with Post => Create_File'Result.Is_Defined
                   and then not Create_File'Result.Is_Directory;
    --  Creates a Path_Name.Object for a file.
@@ -89,13 +90,6 @@ package GPR2.Path_Name is
    --  memory during autoconfiguration step.
    --  All possible path information is ignored, and resulting object gets
    --  a pseudo-path /<ram>/Base_Name (Name).
-
-   function Create
-     (Path_Name     : Filename_Type;
-      Resolve_Links : Boolean := False) return Object
-     with Post => Create'Result.Is_Defined;
-   --  Creates a path-name object. If Resolve_Links is set the returned
-   --  path-name object will be fully resolved to point to the actual file.
 
    subtype Full_Name is Filename_Type
      with Dynamic_Predicate => (for some C of Full_Name => C in '/' | '\');
@@ -338,7 +332,7 @@ private
       then
         (if GNATCOLL.Utils.Is_Directory_Separator (Filename (Filename'Last))
          then Create_Directory (Filename_Type (Filename))
-         else Create (Filename_Type (Filename)))
+         else Create_File (Filename_Type (Filename)))
       else Undefined);
 
    function Create (File : VFS.Virtual_File) return Object
@@ -350,7 +344,7 @@ private
                    (File.Full_Name (File.Full_Name.all'Last))
          then Create_Directory
                 (Filename_Type (File.Display_Full_Name))
-         else Create
+         else Create_File
                 (Filename_Type (File.Display_Full_Name)))
       else Undefined);
 

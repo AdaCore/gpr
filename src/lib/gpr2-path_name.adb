@@ -328,32 +328,6 @@ package body GPR2.Path_Name is
       return To_OS_Case (Root) = To_OS_Case (Target (Root'First .. Root'Last));
    end Contains;
 
-   ------------
-   -- Create --
-   ------------
-
-   function Create
-     (Path_Name     : Filename_Type;
-      Resolve_Links : Boolean := False) return Object
-   is
-      NN : constant Filename_Type :=
-               (if Resolve_Links
-                then Make_Absolute (Path_Name, Resolve_Links => True)
-                else Path_Name);
-   begin
-      return Result : Object do
-         Result.Set
-           (Create_Internal
-              (Is_Dir      => False,
-               In_Memory   => False,
-               Simple_Name => Simple_Name (Path_Name),
-               Value       => NN,
-               Comparing   => To_OS_Case (NN),
-               Base_Name   => Base_Name (NN),
-               Dir_Name    => Ensure_Directory (Containing_Directory (NN))));
-      end return;
-   end Create;
-
    ----------------------
    -- Create_Directory --
    ----------------------
@@ -385,8 +359,9 @@ package body GPR2.Path_Name is
    -----------------
 
    function Create_File
-     (Name      : Filename_Type;
-      Directory : Filename_Optional := Resolve_On_Current) return Object is
+     (Name          : Filename_Type;
+      Directory     : Filename_Optional := Resolve_On_Current;
+      Resolve_Links : Boolean := False) return Object is
    begin
       if Directory = No_Resolution
         and then not OS_Lib.Is_Absolute_Path (String (Name))
@@ -405,7 +380,8 @@ package body GPR2.Path_Name is
 
       else
          declare
-            NN : constant Filename_Type := Make_Absolute (Name, Directory);
+            NN : constant Filename_Type :=
+                   Make_Absolute (Name, Directory, Resolve_Links);
          begin
             return Result : Object do
                Result.Set
