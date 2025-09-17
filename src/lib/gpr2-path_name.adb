@@ -60,27 +60,27 @@ package body GPR2.Path_Name is
    --  valid path name check removed to allow '*' chars.
 
    function Create_Internal
-     (Is_Dir      : Boolean := False;
-      In_Memory   : Boolean := False;
-      Simple_Name : Filename_Optional;
-      Value       : Filename_Optional;
+     (Is_Dir    : Boolean := False;
+      In_Memory : Boolean := False;
+      As_Is     : Filename_Optional;
+      Value     : Filename_Optional;
       --  the normalized path-name
-      Comparing   : String;
+      Comparing : String;
       --  normalized path-name for comparison
-      Base_Name   : Filename_Optional;
-      Dir_Name    : Filename_Optional) return Object_Internal
-   is (Simple_Name_Len => Simple_Name'Length,
-       Value_Len       => Value'Length,
-       Comparing_Len   => Comparing'Length,
-       Base_Name_Len   => Base_Name'Length,
-       Dir_Name_Len    => Dir_Name'Length,
-       Is_Dir          => Is_Dir,
-       In_Memory       => In_Memory,
-       Simple_Name     => Simple_Name,
-       Value           => Value,
-       Comparing       => Comparing,
-       Base_Name       => Base_Name,
-       Dir_Name        => Dir_Name);
+      Base_Name : Filename_Optional;
+      Dir_Name  : Filename_Optional) return Object_Internal
+   is (As_Is_Len     => As_Is'Length,
+       Value_Len     => Value'Length,
+       Comparing_Len => Comparing'Length,
+       Base_Name_Len => Base_Name'Length,
+       Dir_Name_Len  => Dir_Name'Length,
+       Is_Dir        => Is_Dir,
+       In_Memory     => In_Memory,
+       As_Is         => As_Is,
+       Value         => Value,
+       Comparing     => Comparing,
+       Base_Name     => Base_Name,
+       Dir_Name      => Dir_Name);
 
    function Unchecked_Value (Self : Object) return String;
 
@@ -176,15 +176,15 @@ package body GPR2.Path_Name is
 
       Result.Set
         (Data => Create_Internal
-           (Is_Dir      => Internal.Is_Dir,
-            In_Memory   => Internal.In_Memory,
-            Simple_Name => Replace_Extension (Internal.Simple_Name, New_Ext),
-            Value       => Replace_Extension (Internal.Value, New_Ext),
-            Comparing   => String (Replace_Extension
-                             (Filename_Type (Internal.Comparing),
-                              Filename_Optional (To_OS_Case (New_Ext)))),
-            Base_Name   => Internal.Base_Name,
-            Dir_Name    => Internal.Dir_Name));
+           (Is_Dir    => Internal.Is_Dir,
+            In_Memory => Internal.In_Memory,
+            As_Is     => Replace_Extension (Internal.As_Is, New_Ext),
+            Value     => Replace_Extension (Internal.Value, New_Ext),
+            Comparing => String (Replace_Extension
+                           (Filename_Type (Internal.Comparing),
+                            Filename_Optional (To_OS_Case (New_Ext)))),
+            Base_Name => Internal.Base_Name,
+            Dir_Name  => Internal.Dir_Name));
 
       return Result;
    end Change_Extension;
@@ -333,24 +333,25 @@ package body GPR2.Path_Name is
    ------------
 
    function Create
-     (Path_Name     : Filename_Type;
+     (Name          : Filename_Type;
+      Path_Name     : Filename_Type;
       Resolve_Links : Boolean := False) return Object
    is
       NN : constant Filename_Type :=
                (if Resolve_Links
-                then Make_Absolute (Path_Name, Resolve_Links => True)
+                then Make_Absolute (Path_Name, Resolve_Links => Resolve_Links)
                 else Path_Name);
    begin
       return Result : Object do
          Result.Set
            (Create_Internal
-              (Is_Dir      => False,
-               In_Memory   => False,
-               Simple_Name => Simple_Name (Path_Name),
-               Value       => NN,
-               Comparing   => To_OS_Case (NN),
-               Base_Name   => Base_Name (NN),
-               Dir_Name    => Ensure_Directory (Containing_Directory (NN))));
+              (Is_Dir    => False,
+               In_Memory => False,
+               As_Is     => Name,
+               Value     => NN,
+               Comparing => To_OS_Case (NN),
+               Base_Name => Base_Name (NN),
+               Dir_Name  => Ensure_Directory (Containing_Directory (NN))));
       end return;
    end Create;
 
@@ -359,24 +360,23 @@ package body GPR2.Path_Name is
    ----------------------
 
    function Create_Directory
-     (Name             : Filename_Type;
-      Parent_Directory : Filename_Optional := "";
-      Resolve_Links    : Boolean := False) return Object
+     (Name          : Filename_Type;
+      Directory     : Filename_Optional := "";
+      Resolve_Links : Boolean := False) return Object
    is
       NN : constant Filename_Type :=
-             Ensure_Directory
-               (Make_Absolute (Name, Parent_Directory, Resolve_Links));
+             Ensure_Directory (Make_Absolute (Name, Directory, Resolve_Links));
    begin
       return Result : Object do
          Result.Set
            (Create_Internal
-              (Is_Dir      => True,
-               In_Memory   => False,
-               Simple_Name => Name,
-               Value       => NN,
-               Comparing   => To_OS_Case (NN),
-               Base_Name   => "",
-               Dir_Name    => NN));
+              (Is_Dir    => True,
+               In_Memory => False,
+               As_Is     => Name,
+               Value     => NN,
+               Comparing => To_OS_Case (NN),
+               Base_Name => "",
+               Dir_Name  => NN));
       end return;
    end Create_Directory;
 
@@ -394,13 +394,13 @@ package body GPR2.Path_Name is
          return Result : Object do
             Result.Set
               (Create_Internal
-                 (Is_Dir      => False,
-                  In_Memory   => False,
-                  Simple_Name => Name,
-                  Value       => "",
-                  Comparing   => To_OS_Case (Name),
-                  Base_Name   => Base_Name (Name),
-                  Dir_Name    => ""));
+                 (Is_Dir    => False,
+                  In_Memory => False,
+                  As_Is     => Name,
+                  Value     => "",
+                  Comparing => To_OS_Case (Name),
+                  Base_Name => Base_Name (Name),
+                  Dir_Name  => ""));
          end return;
 
       else
@@ -410,13 +410,13 @@ package body GPR2.Path_Name is
             return Result : Object do
                Result.Set
                  (Create_Internal
-                    (Is_Dir      => False,
-                     In_Memory   => False,
-                     Simple_Name => Name,
-                     Value       => NN,
-                     Comparing   => To_OS_Case (NN),
-                     Base_Name   => Base_Name (NN),
-                     Dir_Name    => Ensure_Directory
+                    (Is_Dir    => False,
+                     In_Memory => False,
+                     As_Is     => Name,
+                     Value     => NN,
+                     Comparing => To_OS_Case (NN),
+                     Base_Name => Base_Name (NN),
+                     Dir_Name  => Ensure_Directory
                        (Containing_Directory (NN))));
             end return;
          end;
@@ -438,13 +438,13 @@ package body GPR2.Path_Name is
       return Result : Object do
          Result.Set
            (Create_Internal
-              (Is_Dir      => False,
-               In_Memory   => True,
-               Simple_Name => Name,
-               Value       => Pseudo_Full,
-               Comparing   => To_OS_Case (Pseudo_Full),
-               Base_Name   => Base_Name (Name),
-               Dir_Name    => Ensure_Directory (Pseudo_Dir)));
+              (Is_Dir    => False,
+               In_Memory => True,
+               As_Is     => Name,
+               Value     => Pseudo_Full,
+               Comparing => To_OS_Case (Pseudo_Full),
+               Base_Name => Base_Name (Name),
+               Dir_Name  => Ensure_Directory (Pseudo_Dir)));
       end return;
    end Create_Pseudo_File;
 
@@ -548,13 +548,12 @@ package body GPR2.Path_Name is
       Extension : Boolean := True) return Filename_Type
    is
       Int  : Object_Internal renames Get (Self);
-      Name : constant String := String (Int.Simple_Name);
+      Name : constant String := String (Int.As_Is);
       Ext  : Natural;
       Sep  : Natural;
    begin
       if Extension or else Int.Is_Dir then
          return Filename_Type (Name);
-
       else
          Sep := Strings.Fixed.Index (Name, Dir_Seps,
                                      Going => Strings.Backward);
@@ -644,7 +643,7 @@ package body GPR2.Path_Name is
       --  Ada.Directories.Simple_Name cannot be used here as
       --  Path can contain '*' character that will be rejected on windows
       --  by Ada.Directories.Validity.Is_Valid_Path_Name check.
-      return Simple_Name (Get (Self).Simple_Name);
+      return Simple_Name (Get (Self).As_Is);
    end Simple_Name;
 
    function Simple_Name (Path : Filename_Optional) return GPR2.Simple_Name is
