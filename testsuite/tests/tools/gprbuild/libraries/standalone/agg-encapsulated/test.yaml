@@ -1,0 +1,2 @@
+description: verify that the Ada runtime is not exported for encapsulated libraries
+driver: python_script

@@ -1,0 +1,12 @@
+aggregate library project AggLib is
+
+   for Object_Dir use "obj";
+   for Project_Files use
+     ("prj1.gpr");
+   for Library_Dir use "lib";
+   for Library_Name use "lib";
+   for Library_Interface use ("Pkg");
+   for Library_Standalone use "encapsulated";
+   for Library_Kind use "dynamic";
+
+end AggLib;
