@@ -1165,7 +1165,9 @@ package body GPR2.Build.View_Tables is
 
             for U of Src_Info.Units loop
                for Root of Src.View.Namespace_Roots loop
-                  if Root.Kind in With_View_Db then
+                  if Root.Kind in With_View_Db
+                    and then U.Kind /= S_No_Body
+                  then
                      Remove_Unit_Part
                        (Get_Data (Data.Tree_Db, Root),
                         CU       => U.Name,
