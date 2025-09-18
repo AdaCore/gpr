@@ -595,7 +595,11 @@ Project Level Attributes
 
   * **Library_Options**: list value, configuration concatenable, not inherited from extended project
 
-    Value is a list of options that are to be used when linking a shared library.
+    This attribute may be used to specify additional switches ("last switches")
+    when linking a shared library or a static standalone library. In the case of a
+    simple static library, or if partial linking is disabled, the values for this
+    attribute are restricted to paths to object files. Those paths may be absolute
+    or relative to the object directory.
 
   .. index:: Attributes - Project Level Attributes; Library_Reference_Symbol_File
 

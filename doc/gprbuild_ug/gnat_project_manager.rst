@@ -1808,9 +1808,9 @@ Other library-related attributes can be used to change the defaults:
 
   This attribute may be used to specify additional switches ("last switches")
   when linking a shared library or a static standalone library.
-  In the case of a simple static library, the values for this attribute are
-  restricted to paths to object files. Those paths may be absolute or relative
-  to the object directory.
+  In the case of a simple static library, or if partial linking is disabled,
+  the values for this attribute are restricted to paths to object files. Those
+  paths may be absolute or relative to the object directory.
 
 .. index:: Attributes - Project Level Attributes; Leading_Library_Options
 

@@ -305,8 +305,12 @@ begin
    Set_Attribute_Description
      (Key          => PRA.Library_Options,
       Description  =>
-        "Value is a list of options that are to be used when linking a "
-      & "shared library.");
+        "This attribute may be used to specify additional switches"
+      & " (""last switches"") when linking a shared library or a static"
+      & " standalone library. In the case of a simple static library, or if"
+      & " partial linking is disabled, the values for this attribute are"
+      & " restricted to paths to object files. Those paths may be absolute"
+      & " or relative to the object directory.");
 
    --  Library_Rpath_Options
    Set_Attribute_Description
