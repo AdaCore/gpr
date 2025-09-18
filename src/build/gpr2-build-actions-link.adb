@@ -70,14 +70,14 @@ package body GPR2.Build.Actions.Link is
       Cmd_Line.Add_Argument (Attr.Value.Text & To_String (Self.Mapping_File));
    end Add_Mapping_File_To_Cmd_Line;
 
-   ----------------
-   -- Add_Option --
-   ----------------
+   ----------------------------
+   -- Add_Option_From_Binder --
+   ----------------------------
 
-   procedure Add_Option (Self : in out Object; Option : String) is
+   procedure Add_Option_From_Binder (Self : in out Object; Option : String) is
    begin
-      Self.Static_Options.Append (Option);
-   end Add_Option;
+      Self.Options_From_Binder.Append (Option);
+   end Add_Option_From_Binder;
 
    ---------------------
    -- Compute_Command --
@@ -325,12 +325,12 @@ package body GPR2.Build.Actions.Link is
               and then Link.View.Is_Static_Library
               and then Link.View.Is_Library_Standalone
             then
-               for Opt of Link.Options loop
+               for Opt of Link.Options_From_Binder loop
                   Traces.Trace
                     ("Adding the link option """ & Opt & """ to " &
                      Self.UID.Image & " coming from the static standalone " &
                      " library " & String (Link.View.Library_Name));
-                  Self.Add_Option (Opt);
+                  Self.Add_Option_From_Binder (Opt);
                end loop;
             end if;
          end;
@@ -626,7 +626,7 @@ package body GPR2.Build.Actions.Link is
       if not Self.View.Is_Library
         or else Self.View.Is_Shared_Library
       then
-         for Option of Self.Static_Options loop
+         for Option of Self.Options_From_Binder loop
             --  ??? Weird bug on windows happening when a backslash is ending
             --  the argument, and the arg contains a space, then ld reacts just
             --  as if there was some hidden \" ending the argument and thus
