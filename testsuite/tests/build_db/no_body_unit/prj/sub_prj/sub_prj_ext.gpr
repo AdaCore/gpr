@@ -1,0 +1,4 @@
+project Sub_Prj_Ext extends "sub_prj.gpr" is
+   for Source_Dirs  use ("private_ext");
+   for Source_Files use ("pkg.adb", "pkg-toto.adb");
+end Sub_Prj_Ext;

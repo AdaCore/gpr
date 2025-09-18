@@ -1,0 +1,5 @@
+description:
+    Test no body unit removal from the build_db
+driver: build_and_run
+project_file: repro
+main: main
