@@ -1460,7 +1460,7 @@ package body GPR2.Build.Actions.Ada_Bind is
             Traces.Trace ("* '" & Opt & "'");
             GPR2.Build.Actions.Link.Object'Class
               (Self.Tree.Action_Id_To_Reference (Link.UID).Element.all)
-              .Add_Option (Opt);
+              .Add_Option_From_Binder (Opt);
          end loop;
 
          if Link_Opt_Insert.Is_Defined then

@@ -181,7 +181,7 @@ package body GPR2.Build.Actions.Link_Options_Insert is
             for Opt of Self.Options loop
                Traces.Trace
                  ("Adding option """ & Opt & """ to " & Act.UID.Image);
-               Link.Object'Class (Act).Add_Option (Opt);
+               Link.Object'Class (Act).Add_Option_From_Binder (Opt);
             end loop;
          end if;
       end loop;

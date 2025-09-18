@@ -39,9 +39,11 @@ package GPR2.Build.Actions.Link is
 
    overriding function View (Self : Object) return GPR2.Project.View.Object;
 
-   procedure Add_Option (Self : in out Object; Option : String)
+   procedure Add_Option_From_Binder (Self : in out Object; Option : String)
      with Pre => Self.Is_Defined;
    --  Add an option to the linking command line
+
+   function Options_From_Binder (Self : Object) return Containers.Value_List;
 
    procedure Set_Bind_Action
      (Self : in out Object;
@@ -56,9 +58,6 @@ package GPR2.Build.Actions.Link is
       State : Boolean);
    --  Mark the action as having a library dependency circle requiring the use
    --  of --start-group --end-group as linker option
-
-   function Options (Self : Object'Class) return Containers.Value_List;
-   --  Return the options added with the Add_Option procedure
 
    function Is_Library (Self : Object'Class) return Boolean;
 
@@ -166,13 +165,13 @@ private
       Ctxt           : GPR2.Project.View.Object;
       --  The view defining the Main, or the library
 
-      Static_Options : Containers.Value_List :=
-                         Containers.Empty_Value_List;
-      --  Command line options added manually with the Add_Option procedure
-
       Mapping_File : Ada.Strings.Unbounded.Unbounded_String :=
         Null_Unbounded_String;
       --  Name of the map file to be generated
+
+      Options_From_Binder : Containers.Value_List :=
+                              Containers.Empty_Value_List;
+      --  Command line options coming from the binder
 
       Bind : Actions.Ada_Bind.Object;
       --  The bind action generating the initialisation of the linked library
@@ -230,8 +229,8 @@ private
    function Output (Self : Object) return Artifacts.Files.Object'Class is
      (if Self.Is_Library then Self.Library else Self.Executable);
 
-   function Options (Self : Object'Class) return Containers.Value_List is
-     (Self.Static_Options);
+   function Options_From_Binder (Self : Object) return Containers.Value_List
+   is (Self.Options_From_Binder);
 
    overriding function View (Self : Object) return GPR2.Project.View.Object is
      (Self.Ctxt);
