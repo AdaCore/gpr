@@ -1,0 +1,2 @@
+$ gprbuild -q -Ptree/agglib.gpr
+Ada.Strings.Unbounded not exported, good!

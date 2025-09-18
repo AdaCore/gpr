@@ -986,6 +986,13 @@ package body GPR2.Build.Actions.Ada_Bind is
 
                Add_Intf := CU.Is_Defined;
 
+               --  Do not add Ada runtime to the interface in case of
+               --  encapsulated library.
+
+               if Add_Intf and then CU.Owning_View.Is_Runtime then
+                  Add_Intf := False;
+               end if;
+
                if Add_Intf
                  --  Ignore external units
                  and then CU.Owning_View /= Self.View
