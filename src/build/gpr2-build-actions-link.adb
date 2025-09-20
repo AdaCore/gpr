@@ -20,6 +20,7 @@ with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.ALI_Parser;
 with GPR2.Build.External_Options;
 with GPR2.Build.Source;
+with GPR2.Build.View_Db;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
@@ -673,8 +674,8 @@ package body GPR2.Build.Actions.Link is
       --  needed on Windows.
 
       if Self.View.Tree.Has_Runtime_Project
-        and then Self.View.Tree.Is_Windows_Target
         and then Self.View.Is_Library
+        and then not Self.Tree.View_Database (Self.View).Is_Ada_Runtime
         and then not Self.View.Is_Library_Standalone
         and then Self.View.Is_Shared_Library
       then
@@ -697,8 +698,7 @@ package body GPR2.Build.Actions.Link is
 
                Cmd_Line.Add_Argument
                  (Self.Tree.Linker_Lib_Dir_Option &
-                    Self.View.Tree.Runtime_Project.Object_Directory.
-                      String_Value);
+                 Self.View.Tree.Runtime_Project.Object_Directory.String_Value);
             end if;
          end;
       end if;
