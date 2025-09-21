@@ -6,6 +6,7 @@
 
 with Ada.Containers.Hashed_Sets;
 
+with GPR2.Build.ALI_Parser;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Containers;
@@ -66,6 +67,13 @@ package GPR2.Build.Actions.Compile.Ada is
       Stdout : Unbounded_String := Null_Unbounded_String;
       Stderr : Unbounded_String := Null_Unbounded_String) return Boolean;
 
+   function ALI (Self : Object) return GPR2.Build.ALI_Parser.Object
+   with Inline;
+   --  ALI_Parser object containing the necessary parsed information about
+   --  the ali produced by this action.
+
+   procedure Parse_Ali (Self : in out Object);
+
    overriding function Dependencies
      (Self : Object) return GPR2.Containers.Filename_Set;
    --  Fetch dependencies from a .ali dependency file with an ALI parser
@@ -112,6 +120,9 @@ private
       --  case the view is a library, else it is identical to the dependency
       --  file.
 
+      ALI_Object            : GPR2.Build.ALI_Parser.Object;
+      --  The parsed information about the ALI file
+
       In_Library            : GPR2.Project.View.Object;
       --  The library, if any, that will contain the result of the compilation
 
@@ -125,10 +136,6 @@ private
       Global_Config_Pragmas : Path_Name.Object;
       --  The global configuration pragma file specified by the root project
       --  Global_Configuration_Pragmas attribute
-
-      Withed_From_Spec      : Containers.Name_Set;
-      Withed_From_Body      : Containers.Name_Set;
-      Needs_Body            : Boolean := False;
    end record;
 
    overriding function Src_Index (Self : Object) return Unit_Index is
@@ -159,16 +166,20 @@ private
    overriding function UID (Self : Object) return Actions.Action_Id'Class is
      (Create (Src => Self.CU));
 
-   function Withed_Units (Self : Object) return Containers.Name_Set is
-     (Self.Withed_From_Spec.Union (Self.Withed_From_Body));
+   function ALI (Self : Object) return GPR2.Build.ALI_Parser.Object
+   is (Self.ALI_Object);
+
+   function Withed_Units (Self : Object) return Containers.Name_Set
+   is (Self.ALI_Object.Withed_From_Spec.Union
+         (Self.ALI_Object.Withed_From_Body));
 
    function Withed_Units_From_Spec (Self : Object) return Containers.Name_Set
-   is (Self.Withed_From_Spec);
+   is (Self.ALI_Object.Withed_From_Spec);
 
    function Withed_Units_From_Body (Self : Object) return Containers.Name_Set
-   is (Self.Withed_From_Body);
+   is (Self.ALI_Object.Withed_From_Body);
 
    function Spec_Needs_Body (Self : Object) return Boolean is
-     (Self.Needs_Body);
+     (Self.ALI_Object.Spec_Needs_Body);
 
 end GPR2.Build.Actions.Compile.Ada;
