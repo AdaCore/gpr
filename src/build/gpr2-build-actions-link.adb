@@ -279,8 +279,8 @@ package body GPR2.Build.Actions.Link is
                              (Self.Tree.Predecessor (Obj));
                   Deps : Containers.Filename_Set;
                begin
-                  if ALI_Parser.Dependencies (Comp.Local_Ali_File.Path, Deps)
-                    and then Deps.Contains ("s-osinte.ads")
+                  if Comp.ALI.Is_Parsed
+                    and then Comp.ALI.Dependencies.Contains ("s-osinte.ads")
                   then
                      Libgnarl := True;
 

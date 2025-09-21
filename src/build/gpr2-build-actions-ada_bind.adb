@@ -786,7 +786,6 @@ package body GPR2.Build.Actions.Ada_Bind is
          Part       : Unit_Kind := S_Spec;
          S_Deps     : Containers.Name_Set;
          B_Deps     : Containers.Name_Set;
-         Ign        : Boolean;
 
          use GPR2.Project;
          use type GPR2.Project.View.Object;
@@ -825,6 +824,14 @@ package body GPR2.Build.Actions.Ada_Bind is
          begin
             if not Self.Tree.Has_Action (Comp_Id) then
                Comp.Initialize (CU);
+
+               if CU.Owning_View.Is_Externally_Built then
+                  --  Ensure the ALI is parsed: as the project is
+                  --  externally built, the signature won't be checked and
+                  --  the ali is normally loaded during this phase.
+
+                  Comp.Parse_Ali;
+               end if;
 
                if not Self.Tree.Add_Action (Comp) then
                   return False;
@@ -874,21 +881,20 @@ package body GPR2.Build.Actions.Ada_Bind is
             --  signature has been checked). We can thus rely on its ALI file
             --  to give us accurate dependencies, so add it in the Todo list.
 
-            if not GPR2.Build.ALI_Parser.Imports
-              (Comp.Dependency_File.Path, S_Deps, B_Deps, Ign)
-            then
+            if not Comp.ALI.Is_Parsed then
                Self.Tree.Reporter.Report
                  (Message.Create
                     (Message.Error,
-                     "Incorrectly formatted ali file """ &
-                       Comp.Dependency_File.Path.String_Value & '"',
+                     "Incorrectly formatted ali file """
+                     & Comp.Dependency_File.Path.String_Value
+                     & '"',
                      Source_Reference.Create
                        (Comp.Dependency_File.Path.Value, 0, 0)));
                return False;
             end if;
 
-            To_Analyze_From_Ali.Union (S_Deps);
-            To_Analyze_From_Ali.Union (B_Deps);
+            To_Analyze_From_Ali.Union (Comp.ALI.Withed_From_Spec);
+            To_Analyze_From_Ali.Union (Comp.ALI.Withed_From_Body);
             To_Analyze_From_Ali.Difference (Self.Analyzed);
 
          elsif not From_ALI then
@@ -1124,14 +1130,20 @@ package body GPR2.Build.Actions.Ada_Bind is
             Ada_Comp : Actions.Compile.Ada.Object;
             Link     : constant Actions.Link.Object'Class := Self.Link;
          begin
-            Ada_Comp.Initialize (CU);
+            if not Self.Tree.Has_Action (Compile.Ada.Create (CU)) then
+               Ada_Comp.Initialize (CU);
 
-            if not Self.Tree.Add_Action (Ada_Comp) then
-               return False;
+               if not Self.Tree.Add_Action (Ada_Comp) then
+                  return False;
+               end if;
+
+            else
+               Ada_Comp :=
+                 Actions.Compile.Ada.Object
+                   (Self.Tree.Action (Compile.Ada.Create (CU)));
             end if;
 
-            if Self.Ctxt /= CU.Owning_View
-              and then CU.Owning_View.Is_Library
+            if Self.Ctxt /= CU.Owning_View and then CU.Owning_View.Is_Library
             then
                Self.Tree.Add_Input (Self.UID, Ada_Comp.Intf_Ali_File, True);
             else
