@@ -749,6 +749,13 @@ package body GPR2.Build.Actions.Compile.Ada is
                   Self.Obj_File := Local_O;
                   Self.Dep_File := Local_Ali;
                   Self.Inh_From := GPR2.Project.View.Undefined;
+
+                  --  At this point make sure Self is updated in the tree
+                  --  so that any use of it reference the proper .o and .ali.
+                  --  In particular during the call to On_Ready_State below
+
+                  Self.Tree.Action_Id_To_Reference (Self.UID) :=
+                    Actions.Object'Class (Self);
                end if;
             end;
          end if;
