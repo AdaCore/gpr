@@ -1,4 +1,3 @@
-using project file /test.gpr
 === Parsing file gnatcoll-memory.ali
 Needs body: TRUE
 Withed by the spec:
