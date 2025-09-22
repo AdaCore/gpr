@@ -48,6 +48,9 @@ package GPR2.Build.ALI_Parser is
    function Spec_Needs_Body (Self : Object) return Boolean
    with Pre => Self.Is_Parsed;
 
+   function Linker_Options (Self : Object) return GPR2.Containers.Value_List
+   with Pre => Self.Is_Parsed;
+
    function Version (Self : Object) return String
    with Pre => Self.Is_Parsed;
    --  Parse the ALI file to obtain the version, and return the
@@ -61,19 +64,19 @@ package GPR2.Build.ALI_Parser is
 private
 
    type Object is tagged record
-      Path          : GPR2.Path_Name.Object;
-      Is_Parsed     : Boolean := False;
-      Dependencies  : GPR2.Containers.Filename_Set;
+      Path           : GPR2.Path_Name.Object;
+      Is_Parsed      : Boolean := False;
+      Dependencies   : GPR2.Containers.Filename_Set;
       --  The list of sources this unit depends on
-      Spec_Imports  : GPR2.Containers.Name_Set;
+      Spec_Imports   : GPR2.Containers.Name_Set;
       --  The list of units imported by the spec
-      Body_Imports  : GPR2.Containers.Name_Set;
+      Body_Imports   : GPR2.Containers.Name_Set;
       --  The list of units imported by the body
-      Needs_Body    : Boolean := False;
+      Needs_Body     : Boolean := False;
       --  Whether importing the specs requires a visible body
-      Version       : Unbounded_String;
+      Version        : Unbounded_String;
       --  Version of the toolchain that produced the .ALI
-      Linker_Option : GPR2.Containers.Value_List;
+      Linker_Options : GPR2.Containers.Value_List;
       --  Contains the list of pragma Linker_Option present in the source, if
       --  any.
    end record;
@@ -100,6 +103,9 @@ private
 
    function Spec_Needs_Body (Self : Object) return Boolean
    is (Self.Needs_Body);
+
+   function Linker_Options (Self : Object) return GPR2.Containers.Value_List
+   is (Self.Linker_Options);
 
    function Version (Self : Object) return String
    is (-Self.Version);

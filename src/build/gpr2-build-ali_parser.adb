@@ -417,6 +417,13 @@ package body GPR2.Build.ALI_Parser is
             when 'D' =>
                Parse_Dep (Reader);
 
+            when 'L' =>
+               declare
+                  Value : constant String := IO.Get_Token (Reader, EOL);
+               begin
+                  Self.Linker_Options.Append (Value);
+               end;
+
             when 'U' =>
                Flags := Parse_Flags (Reader, EOL);
                Cur_SB := Flags.SB;
