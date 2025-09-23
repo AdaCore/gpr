@@ -10,6 +10,7 @@ with GNATCOLL.Traces;
 
 with GPR2.Build.Actions.Ada_Bind;
 with GPR2.Build.Artifacts.Key_Value;
+with GPR2.Build.Artifacts.Source_Files;
 with GPR2.Build.Tree_Db;
 with GPR2.Message;
 with GPR2.Project.Attribute;
@@ -236,9 +237,42 @@ package body GPR2.Build.Actions.Compile.Ada is
      (Self            : in out Object;
       Check_Checksums : Boolean)
    is
-      Version : Artifacts.Key_Value.Object;
+      Stop : Boolean := False;
 
+      procedure Add_To_Signature
+        (Kind     : Unit_Kind;
+         View     : GPR2.Project.View.Object;
+         Path     : Path_Name.Object;
+         Index    : Unit_Index;
+         Sep_Name : Optional_Name_Type);
+      --  Add the file artifact found at the given path to the signature
+
+      procedure Add_To_Signature
+        (Kind     : Unit_Kind;
+         View     : GPR2.Project.View.Object;
+         Path     : Path_Name.Object;
+         Index    : Unit_Index;
+         Sep_Name : Optional_Name_Type)
+      is
+         pragma Unreferenced (Kind, View, Index, Sep_Name);
+      begin
+         if not Self.Signature.Add_Input
+           (Artifacts.Source_Files.Create (Path), Check_Checksums)
+         then
+            Stop := True;
+         end if;
+      end Add_To_Signature;
+
+      Version : Artifacts.Key_Value.Object;
    begin
+
+      GPR2.Build.Compilation_Unit.For_All_Part
+        (Self.CU, Add_To_Signature'Access);
+
+      if Stop then
+         return;
+      end if;
+
       --  The list of dependencies is only accurate if the Ali file is
       --  accurate, so check it first: if it changed there's no need to
       --  go further.
@@ -681,7 +715,28 @@ package body GPR2.Build.Actions.Compile.Ada is
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
 
+      procedure Add_Input_For
+        (Kind     : Unit_Kind;
+         View     : GPR2.Project.View.Object;
+         Path     : Path_Name.Object;
+         Index    : Unit_Index;
+         Sep_Name : Optional_Name_Type);
+      --  Add the provided input source file as an input to the current action
+
+      procedure Add_Input_For
+        (Kind     : Unit_Kind;
+         View     : GPR2.Project.View.Object;
+         Path     : Path_Name.Object;
+         Index    : Unit_Index;
+         Sep_Name : Optional_Name_Type)
+      is
+         pragma Unreferenced (Kind, View, Index, Sep_Name);
+      begin
+         Db.Add_Input (UID, Artifacts.Source_Files.Create (Path), True);
+      end Add_Input_For;
    begin
+      GPR2.Build.Compilation_Unit.For_All_Part (Self.CU, Add_Input_For'Access);
+
       if Self.Obj_File.Is_Defined then
          if not Db.Add_Output (UID, Self.Obj_File) then
             return False;

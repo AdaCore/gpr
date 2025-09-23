@@ -1212,6 +1212,10 @@ package body GPR2.Build.Actions.Compile is
    is
       UID      : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
+      Db.Add_Input
+        (UID,
+         GPR2.Build.Artifacts.Source_Files.Create (Self.Src.Path_Name), True);
+
       if Self.Obj_File.Is_Defined
         and then not Db.Add_Output (UID, Self.Obj_File)
       then
