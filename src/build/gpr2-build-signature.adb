@@ -407,4 +407,17 @@ package body GPR2.Build.Signature is
                   or else not Self.Artifacts (Output).Is_Empty);
    end Valid;
 
+   function Valid (Self : Object; Art : Artifacts.Object'Class) return Boolean
+   is
+   begin
+      if Self = Undefined or else Self.Is_Empty then
+         return False;
+      end if;
+
+      return (Self.Checksums (Input).Contains (Art)
+        and then Self.Checksums (Input).Element (Art) = Art.Checksum) or else
+        (Self.Checksums (Output).Contains (Art)
+         and then Self.Checksums (Output).Element (Art) = Art.Checksum);
+   end Valid;
+
 end GPR2.Build.Signature;

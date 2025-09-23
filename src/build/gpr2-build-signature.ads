@@ -88,6 +88,10 @@ package GPR2.Build.Signature is
 
    function Valid (Self : Object) return Boolean;
 
+   function Valid (Self : Object; Art : Artifacts.Object'Class) return Boolean;
+   --  Check if the artifact checksum is the same as the one stored in the
+   --  signature.
+
    function Is_Empty (Self : Object) return Boolean;
    --  True if no input or output is in the signature
 
