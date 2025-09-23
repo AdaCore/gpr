@@ -36,6 +36,10 @@ package GPR2.Build.Tree_Db is
 
    Undefined : constant Object;
 
+   package Action_Sets is new Ada.Containers.Indefinite_Ordered_Sets
+     (GPR2.Build.Actions.Action_Id'Class,
+      GPR2.Build.Actions."<", GPR2.Build.Actions."=");
+
    package DG renames GNATCOLL.Directed_Graph;
 
    function Is_Defined (Self : Object) return Boolean;
@@ -311,10 +315,6 @@ private
 
    package Action_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (GPR2.Build.Actions.Action_Id'Class, GPR2.Build.Actions.Object'Class,
-      GPR2.Build.Actions."<", GPR2.Build.Actions."=");
-
-   package Action_Sets is new Ada.Containers.Indefinite_Ordered_Sets
-     (GPR2.Build.Actions.Action_Id'Class,
       GPR2.Build.Actions."<", GPR2.Build.Actions."=");
 
    package Action_Artifacts_Maps is new Ada.Containers.Indefinite_Ordered_Maps
