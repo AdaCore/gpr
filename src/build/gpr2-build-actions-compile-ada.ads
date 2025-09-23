@@ -142,8 +142,8 @@ private
      (Self.CU.Main_Part.Index);
 
    overriding procedure Compute_Signature
-     (Self      : in out Object;
-      Load_Mode : Boolean);
+     (Self            : in out Object;
+      Check_Checksums : Boolean);
 
    overriding function On_Ready_State
      (Self : in out Object) return Boolean;

@@ -48,10 +48,13 @@ package GPR2.Build.Signature is
    function Was_Saved (Self : Object) return Boolean;
 
    function Add_Output
-     (Self : in out Object;
-      Art  : Artifacts.Object'Class) return Boolean;
+     (Self           : in out Object;
+      Art            : Artifacts.Object'Class;
+      Checksum_Check : Boolean := True) return Boolean;
    --  Add a new output artifact to the signature. Returns the current
    --  valid status of the signature after addition of the artifact.
+   --  If Checksum_Check is not set, then the checksum of the artifact is
+   --  not saved or verified.
 
    function Add_Input
      (Self           : in out Object;

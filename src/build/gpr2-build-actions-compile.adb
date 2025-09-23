@@ -875,9 +875,9 @@ package body GPR2.Build.Actions.Compile is
    -- Compute_Signature --
    -----------------------
 
-   overriding procedure Compute_Signature
-     (Self      : in out Object;
-      Load_Mode : Boolean)
+   overriding
+   procedure Compute_Signature
+     (Self : in out Object; Check_Checksums : Boolean)
    is
       use GPR2.Build.Signature;
    begin
@@ -886,7 +886,7 @@ package body GPR2.Build.Actions.Compile is
             Deps : constant GPR2.Containers.Filename_Set := Self.Dependencies;
          begin
             if Deps.Is_Empty then
-               if Load_Mode then
+               if Check_Checksums then
                   Self.Tree.Reporter.Report
                     ("file """ & Self.Dep_File.Path.String_Value &
                        """ is missing or is wrongly formatted",
@@ -898,7 +898,7 @@ package body GPR2.Build.Actions.Compile is
                --  source as an input.
                if not Self.Signature.Add_Input
                  (Artifacts.Files.Create (Self.Src.Path_Name))
-                 and then Load_Mode
+                 and then Check_Checksums
                then
                   return;
                end if;
@@ -943,14 +943,13 @@ package body GPR2.Build.Actions.Compile is
                        ("Compute_Signature: cannot find dependency " &
                           String (Dep));
 
-                     if Load_Mode then
+                     if Check_Checksums then
                         Self.Signature.Clear;
                         return;
                      end if;
 
                   elsif not Self.Signature.Add_Input
-                              (Artifacts.Files.Create (Path))
-                    and then Load_Mode
+                              (Artifacts.Files.Create (Path), Check_Checksums)
                   then
                      return;
                   end if;
@@ -961,8 +960,8 @@ package body GPR2.Build.Actions.Compile is
       else
          --  No dependency file, so just add the input source
          if not Self.Signature.Add_Input
-                  (Artifacts.Files.Create (Self.Src.Path_Name))
-           and then Load_Mode
+                  (Artifacts.Files.Create (Self.Src.Path_Name),
+                   Check_Checksums)
          then
             return;
          end if;
@@ -970,19 +969,17 @@ package body GPR2.Build.Actions.Compile is
 
       if Self.Obj_File.Is_Defined then
          if Self.Dep_File.Is_Defined
-           and then not Self.Signature.Add_Output (Self.Dep_File)
-           and then Load_Mode
+           and then not Self.Signature.Add_Output
+                          (Self.Dep_File, Check_Checksums)
          then
             return;
          end if;
 
-         if not Self.Signature.Add_Output (Self.Obj_File)
-           and then Load_Mode
-         then
+         if not Self.Signature.Add_Output (Self.Obj_File, Check_Checksums) then
             return;
          end if;
 
-      elsif Load_Mode then
+      elsif Check_Checksums then
          --  if no object is produced, then force the re-generation of the
          --  compilation each time the action is called by clearing the
          --  checksums of the signature.
@@ -993,16 +990,16 @@ package body GPR2.Build.Actions.Compile is
 
       if Self.Global_Config_File.Is_Defined
         and then not Self.Signature.Add_Input
-                       (Artifacts.Files.Create (Self.Global_Config_File))
-        and then Load_Mode
+                       (Artifacts.Files.Create (Self.Global_Config_File),
+                        Check_Checksums)
       then
          return;
       end if;
 
       if Self.Local_Config_File.Is_Defined
         and then not Self.Signature.Add_Input
-                       (Artifacts.Files.Create (Self.Local_Config_File))
-        and then Load_Mode
+                       (Artifacts.Files.Create (Self.Local_Config_File),
+                        Check_Checksums)
       then
          return;
       end if;

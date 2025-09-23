@@ -112,10 +112,11 @@ package body GPR2.Build.Signature is
    ----------------
 
    function Add_Output
-     (Self : in out Object;
-      Art  : Artifacts.Object'Class) return Boolean is
+     (Self           : in out Object;
+      Art            : Artifacts.Object'Class;
+      Checksum_Check : Boolean := True) return Boolean is
    begin
-      return Add_Internal (Self, Art, Output);
+      return Add_Internal (Self, Art, Output, Checksum_Check);
    end Add_Output;
 
    -----------

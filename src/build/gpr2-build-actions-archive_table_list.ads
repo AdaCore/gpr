@@ -97,7 +97,8 @@ private
    end record;
 
    overriding
-   procedure Compute_Signature (Self : in out Object; Load_Mode : Boolean);
+   procedure Compute_Signature
+     (Self : in out Object; Check_Checksums : Boolean);
 
    overriding
    function Working_Directory (Self : Object) return Path_Name.Object
