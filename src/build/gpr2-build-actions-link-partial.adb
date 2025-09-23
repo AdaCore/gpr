@@ -123,13 +123,12 @@ package body GPR2.Build.Actions.Link.Partial is
    -- Compute_Signature --
    -----------------------
 
-   overriding procedure Compute_Signature
-     (Self      : in out Object;
-      Load_Mode : Boolean)
-   is
+   overriding
+   procedure Compute_Signature
+     (Self : in out Object; Check_Checksums : Boolean) is
    begin
       for Obj of Self.Embedded_Objects loop
-         if not Self.Signature.Add_Input (Obj) and then Load_Mode then
+         if not Self.Signature.Add_Input (Obj, Check_Checksums) then
             return;
          end if;
       end loop;
@@ -137,17 +136,17 @@ package body GPR2.Build.Actions.Link.Partial is
       for Lib of Self.Library_Dependencies loop
          declare
             Link : constant Actions.Link.Object'Class :=
-                     Actions.Link.Object'Class (Self.Tree.Action (Lib));
+              Actions.Link.Object'Class (Self.Tree.Action (Lib));
          begin
-            if not Self.Signature.Add_Input (Link.Output)
-              and then Load_Mode
+            if not Self.Signature.Add_Input (Link.Output, Check_Checksums)
             then
                return;
             end if;
          end;
       end loop;
 
-      if not Self.Signature.Add_Output (Self.Output) and then Load_Mode then
+      if not Self.Signature.Add_Output (Self.Output, Check_Checksums)
+      then
          return;
       end if;
    end Compute_Signature;

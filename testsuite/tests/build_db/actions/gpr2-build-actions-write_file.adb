@@ -34,18 +34,18 @@ package body GPR2.Build.Actions.Write_File is
 
    procedure Compute_Signature
      (Self      : in out Object;
-      Load_Mode : Boolean)
+      Check_Checksums : Boolean)
    is
       use GPR2.Build.Signature;
    begin
       for Art of Self.Tree.Inputs (Self.UID) loop
-         if not Self.Signature.Add_Input (Art) and then Load_Mode then
+         if not Self.Signature.Add_Input (Art, Check_Checksums) then
             return;
          end if;
       end loop;
 
-      if not Self.Signature.Add_Output (Output_File (Self.Index))
-        and then Load_Mode
+      if not Self.Signature.Add_Output
+        (Output_File (Self.Index), Check_Checksums)
       then
          return;
       end if;
