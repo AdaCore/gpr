@@ -9,6 +9,7 @@ with Ada.Characters.Handling;
 with GNATCOLL.OS.FS;
 with GNATCOLL.Traces;
 
+with GPR2.Build.Artifacts.Source_Files;
 with GPR2.Build.Makefile_Parser;
 pragma Warnings (Off, ".* is not referenced");
 with GPR2.Build.Source.Sets;
@@ -897,7 +898,7 @@ package body GPR2.Build.Actions.Compile is
                --  Dependency file parsing went wrong, at least put the direct
                --  source as an input.
                if not Self.Signature.Add_Input
-                 (Artifacts.Files.Create (Self.Src.Path_Name))
+                 (Artifacts.Source_Files.Create (Self.Src.Path_Name))
                  and then Check_Checksums
                then
                   return;
@@ -960,7 +961,7 @@ package body GPR2.Build.Actions.Compile is
       else
          --  No dependency file, so just add the input source
          if not Self.Signature.Add_Input
-                  (Artifacts.Files.Create (Self.Src.Path_Name),
+                  (Artifacts.Source_Files.Create (Self.Src.Path_Name),
                    Check_Checksums)
          then
             return;
