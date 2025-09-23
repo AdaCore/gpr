@@ -529,7 +529,9 @@ package body GPR2.Build.Actions_Population is
      (Tree                  : GPR2.Project.Tree.Object;
       Options               : GPR2.Build.Options.Build_Options;
       Static_Actions        : Boolean;
-      With_Externally_Built : Boolean := False) return Boolean
+      With_Externally_Built : Boolean := False;
+      Populate_Mains_Only   : Boolean := False) return Boolean
+
    is
       Tree_Db     : GPR2.Build.Tree_Db.Object_Access renames
                       Tree.Artifacts_Database;
@@ -621,21 +623,20 @@ package body GPR2.Build.Actions_Population is
                -----------------------
 
                if Mains.Is_Empty then
+                  if not Populate_Mains_Only then
                   --  compile all sources, recursively in case -U is set
-                  if Options.Unique_Compilation then
-                     Result := Populate_All
-                       (Tree_Db, V, True, Options, With_Externally_Built);
-
-                  else
-                     for C of V.Closure (True, False, True) loop
+                     if Options.Unique_Compilation then
                         Result := Populate_All
-                          (Tree_Db, C, True, Options, With_Externally_Built);
-                        exit when not Result;
-                     end loop;
+                        (Tree_Db, V, True, Options, With_Externally_Built);
+
+                     else
+                        for C of V.Closure (True, False, True) loop
+                           Result := Populate_All
+                           (Tree_Db, C, True, Options, With_Externally_Built);
+                           exit when not Result;
+                        end loop;
+                     end if;
                   end if;
-
-                  return Result;
-
                else
                   --  Only compile the given sources
 
@@ -682,23 +683,28 @@ package body GPR2.Build.Actions_Population is
                      if V.Has_Mains or else not Mains.Is_Empty then
                         Result := Populate_Mains
                           (Tree_Db, V, Mains, Options, With_Externally_Built);
-                     else
+                     elsif not Populate_Mains_Only then
                         Result := Populate_All
                           (Tree_Db, V, False, Options, With_Externally_Built);
                      end if;
 
                   when K_Library | K_Aggregate_Library =>
-                     Result :=
-                       Populate_Library
-                         (Tree_Db, V, Options, Cache, Has_SAL,
-                          With_Externally_Built);
+                     if not Populate_Mains_Only then
+                        Result :=
+                          Populate_Library
+                            (Tree_Db, V, Options, Cache, Has_SAL,
+                             With_Externally_Built);
+                     end if;
 
                   when others =>
-                     Closure.Include (V);
-                     Result := Populate_Withed_Projects
-                       (Tree_Db, Options, Closure, Cache,
-                        Static_Libs, Shared_Libs, Has_SAL,
-                        With_Externally_Built);
+                     if not Populate_Mains_Only then
+
+                        Closure.Include (V);
+                        Result := Populate_Withed_Projects
+                        (Tree_Db, Options, Closure, Cache,
+                           Static_Libs, Shared_Libs, Has_SAL,
+                           With_Externally_Built);
+                     end if;
                end case;
             end if;
          end if;

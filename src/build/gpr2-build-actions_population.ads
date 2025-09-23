@@ -31,7 +31,8 @@ package GPR2.Build.Actions_Population is
      (Tree                  : GPR2.Project.Tree.Object;
       Options               : GPR2.Build.Options.Build_Options;
       Static_Actions        : Boolean;
-      With_Externally_Built : Boolean := False) return Boolean;
+      With_Externally_Built : Boolean := False;
+      Populate_Mains_Only   : Boolean := False) return Boolean;
    --  Populate all the actions of the tree.
    --  @param Tree
    --    the current project tree
@@ -42,5 +43,8 @@ package GPR2.Build.Actions_Population is
    --    else the population is performed so that all validated actions have
    --    their proper pre and post commands executed (and thus have all the
    --    output analysis performed) when their signature is valid.
+   --  @Param Populate_Mains_Only
+   --    if set, then only the actions required to build the mains specified in
+   --    Options are populated.
 
 end GPR2.Build.Actions_Population;
