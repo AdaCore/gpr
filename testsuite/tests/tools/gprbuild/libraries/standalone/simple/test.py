@@ -87,9 +87,9 @@ def test(test_dir):
                         "ERROR: mult.ali should not be in gnatbind command as it is not part of the interface"
                     )
                     print(job["command"])
-                if "foo.ali" in job["command"]:
+                if "foo.ali" not in job["command"]:
                     print(
-                        "ERROR: foo.ali should not be in gnatbind command as it is not part of the interface"
+                        "ERROR: missing foo.ali, not in interface but should be given to gnatbind"
                     )
                     print(job["command"])
             elif "ar csr" in job["command"]:
