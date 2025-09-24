@@ -839,10 +839,27 @@ package body GPR2.Build.Actions.Ada_Bind is
             --  If same scope just add the dependencies
             --  on the output of the compile action.
 
-            Self.Tree.Add_Input
-              (Self.UID,
-               Comp.Local_Ali_File,
-               Self.Ctxt.Is_Library and then Self.Ctxt.Is_Library_Standalone);
+            --  Be careful though with units from src-subdirs: in this case
+            --  they are allowed to be used outside of the standalone interface
+            --  for automatic instrumentation reasons, but then as they're
+            --  not part of the interface they should not be bound with the
+            --  interface
+
+            declare
+               In_Bind : Boolean :=
+                 Self.Ctxt.Is_Library and then Self.Ctxt.Is_Library_Standalone;
+            begin
+               if In_Bind then
+                  if Self.Ctxt.Visible_Source
+                       (Comp.Input_Unit.Main_Part.Source)
+                       .From_Src_Subdirs
+                  then
+                     In_Bind := False;
+                  end if;
+               end if;
+
+               Self.Tree.Add_Input (Self.UID, Comp.Local_Ali_File, In_Bind);
+            end;
 
             if Link.Is_Defined then
                Self.Tree.Add_Input (Link.UID, Comp.Object_File, False);
