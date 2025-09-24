@@ -1849,7 +1849,7 @@ package body GPR2.Project.View is
             for C in Self.Interface_Units.Iterate loop
                declare
                   U_Name : constant Name_Type :=
-                            Containers.Unit_Name_To_Sloc.Key (C);
+                    Containers.Unit_Name_To_Sloc.Key (C);
                begin
                   if Self.Kind = K_Aggregate_Library then
                      for V of Self.Aggregated loop
@@ -1868,16 +1868,42 @@ package body GPR2.Project.View is
                   Result.Insert (U_Name, CU);
                end;
             end loop;
+
+            --  For standalone libraries, we add automatically the units in
+            --  the source subdirectory in the interface, so that instrumented
+            --  apps can use instrumented libraries without having to change
+            --  the project file.
+
+            declare
+               Closure : GPR2.Project.View.Set.Object;
+            begin
+               if Self.Kind /= K_Aggregate_Library then
+                  Closure.Insert (Self);
+               else
+                  Closure := Self.Aggregate_Libraries;
+               end if;
+
+               for V of Closure loop
+                  for S of V.Sources loop
+                     if S.From_Src_Subdirs and then S.Has_Units then
+                        for U of S.Units loop
+                           CU := Self.Own_Unit (U.Name);
+                           Result.Include (U.Name, CU);
+                        end loop;
+                     end if;
+                  end loop;
+               end loop;
+            end;
          end if;
 
          for C in Self.Interface_Sources.Iterate loop
             declare
-               BN     : constant Filename_Type :=
-                          Containers.Source_Path_To_Sloc.Key (C);
-               Src    : constant GPR2.Build.Source.Object :=
-                          (if Self.Kind = K_Aggregate_Library
-                           then Self.Visible_Source (BN)
-                           else Self.Source (BN));
+               BN  : constant Filename_Type :=
+                 Containers.Source_Path_To_Sloc.Key (C);
+               Src : constant GPR2.Build.Source.Object :=
+                 (if Self.Kind = K_Aggregate_Library
+                  then Self.Visible_Source (BN)
+                  else Self.Source (BN));
 
             begin
                if Src.Has_Units then
