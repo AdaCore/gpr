@@ -225,6 +225,12 @@ build_gpr2_users:linux:
 test_gpr2_valgrind:linux:
   when: manual
 
+# gprconfig testsuite on windows is not much different than on linux, so let's
+# skip it by default
+
+test_gprconfig:windows:
+  when: manual
+
 # Cross-testing is not ready yet for gpr2. Working on it, in the mean time the
 # result shows errors.
 
