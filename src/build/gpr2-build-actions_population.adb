@@ -1716,13 +1716,31 @@ package body GPR2.Build.Actions_Population is
          end loop;
 
          if V.Is_Extending then
-            for Ext of V.Extended loop
-               for Imp of Ext.Imports.Union (Ext.Limited_Imports) loop
-                  if not Seen.Contains (Imp) and then not Imp.Is_Extended then
-                     Todo.Append (Imp);
+            declare
+               Extending_Views : GPR2.Project.View.Set.Object := V.Extended;
+               --  Contains the extended views. This list allows to process
+               --  transitively the extended views.
+               Ext             : GPR2.Project.View.Object;
+               --  Current processed extended view
+            begin
+               while not Extending_Views.Is_Empty loop
+                  Ext := Extending_Views.First_Element;
+                  Extending_Views.Delete_First;
+
+                  for Imp of Ext.Imports.Union (Ext.Limited_Imports) loop
+                     if not Seen.Contains (Imp) and then not Imp.Is_Extended
+                     then
+                        Todo.Append (Imp);
+                     end if;
+                  end loop;
+
+                  if Ext.Is_Extending then
+
+                     --  Process transitively the extended views
+                     Extending_Views.Union (Ext.Extended);
                   end if;
                end loop;
-            end loop;
+            end;
          end if;
       end Add_Deps;
 
