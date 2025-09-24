@@ -1,0 +1,10 @@
+with "lib";
+
+project App_C is
+   for Languages use ("C");
+   for Source_Dirs use ("srcapp");
+   for Object_Dir use "obj/c";
+   for Exec_Dir use ".";
+
+   for Main use ("main.c");
+end App_C;
