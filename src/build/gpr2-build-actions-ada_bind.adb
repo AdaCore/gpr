@@ -319,7 +319,7 @@ package body GPR2.Build.Actions.Ada_Bind is
       --  Binder.Prefix can be removed it only serves as renaming the bexch
       --  which does not exist anymore.
 
-      if not Self.Has_Main then
+      if not Self.Main_Unit.Is_Defined then
          Cmd_Line.Add_Argument ("-n");
       end if;
 
@@ -446,7 +446,20 @@ package body GPR2.Build.Actions.Ada_Bind is
       --  should be in the knowledge base instead of being hardcoded depending
       --  on the GNAT version.
       Add_Attr (PRA.Binder.Required_Switches, Lang_Ada_Idx, True, True);
-      Add_Attr (PRA.Binder.Switches, Lang_Ada_Idx, True, True);
+
+      if Self.Main_Unit.Is_Defined then
+         declare
+            Main_Source_Idx : constant PAI.Object :=
+              PAI.Create_Source (Self.Main_Unit.Main_Part.Source.Simple_Name);
+         begin
+            --  If the source index does not exist, then the Ada language index
+            --  will be used instead.
+
+            Add_Attr (PRA.Binder.Switches, Main_Source_Idx, True, True);
+         end;
+      else
+         Add_Attr (PRA.Binder.Switches, Lang_Ada_Idx, True, True);
+      end if;
 
       --  Add -bargs and -bargs:Ada
 
@@ -620,7 +633,7 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       Self.Ctxt        := Context;
       Self.Basename    := +Basename;
-      Self.Has_Main    := Main_Unit.Is_Defined;
+      Self.Main_Unit   := Main_Unit;
       Self.SAL_Closure := SAL_In_Closure;
       Self.Output_Spec :=
         Artifacts.Files.Create

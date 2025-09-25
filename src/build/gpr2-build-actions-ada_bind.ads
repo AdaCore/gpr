@@ -123,8 +123,6 @@ private
       --  The generated body, as artifact
       Ctxt        : GPR2.Project.View.Object;
       --  View referenced by the generated compilation unit
-      Has_Main    : Boolean := True;
-      --  Whether the binder generates a main entry point
       SAL_Closure : Boolean := False;
       --  Whether the main depends on standalone libraries, in which case the
       --  binder needs to handle potentially duplicated elaboration
@@ -139,10 +137,12 @@ private
       --  algorithm cost
       Itf_Analyzed : GPR2.Containers.Name_Set;
       --  Same as Analyzed but filled when checking for interface extension.
-      Roots       : GPR2.Build.Compilation_Unit.Maps.Map;
+      Roots        : GPR2.Build.Compilation_Unit.Maps.Map;
       --  The root units as explicit inputs to the binder
-      Extra_Intf  : Extended_Interface_Map.Map;
-      Skip        : Boolean := False;
+      Extra_Intf   : Extended_Interface_Map.Map;
+      Skip         : Boolean := False;
+      Main_Unit    : GPR2.Build.Compilation_Unit.Object;
+      --  Defined if the binder generates a main entry point
    end record;
 
    overriding function Valid_Signature (Self : Object) return Boolean is
