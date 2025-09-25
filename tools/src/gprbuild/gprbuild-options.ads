@@ -28,25 +28,24 @@ with GPRtools.Options;
 package GPRbuild.Options is
 
    type Object is new GPRtools.Options.Base_Options with record
-      Single_Build_Per_Obj_Dir : Boolean := False;
-      No_Object_Check          : Boolean := False;
-      No_Split_Units           : Boolean := False;
+      No_Object_Check         : Boolean := False;
+      No_Split_Units          : Boolean := False;
 
-      Build_If_Switch_Changes  : Boolean := False;
-      Create_Missing_Dirs      : Boolean := False;
-      Force_Recursive_Build    : Boolean := False;
+      Build_If_Switch_Changes : Boolean := False;
+      Create_Missing_Dirs     : Boolean := False;
+      Force_Recursive_Build   : Boolean := False;
 
-      Json_Summary             : Boolean := False;
+      Json_Summary            : Boolean := False;
 
-      Extra_Args               : GPR2.Build.External_Options.Object;
-      Config_Args              : GPR2.Containers.Value_List;
-      PM_Options               : GPR2.Build.Process_Manager.PM_Options;
+      Extra_Args              : GPR2.Build.External_Options.Object;
+      Config_Args             : GPR2.Containers.Value_List;
+      PM_Options              : GPR2.Build.Process_Manager.PM_Options;
 
-      Dash_A_Option            : Boolean := False;
+      Dash_A_Option           : Boolean := False;
       --  Ignored but reporting has to be done after the options are parsed
       --  to prevent multiple messages if the switch appears several times.
 
-      Compiler_Substitution    : GPR2.Containers.Value_List;
+      Compiler_Substitution   : GPR2.Containers.Value_List;
    end record;
    --  Options for gprbuild
 
