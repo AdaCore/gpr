@@ -1,0 +1,9 @@
+project Lib is
+   for Source_Dirs use ("srclib");
+   for Object_Dir   use "obj/lib";
+
+   for Library_Name use "a";
+   for Library_Dir  use "lib";
+   for Library_Kind use "relocatable";
+   for Library_Interface use ("interf");
+end Lib;

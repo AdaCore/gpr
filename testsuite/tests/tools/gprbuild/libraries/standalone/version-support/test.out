@@ -1,0 +1,8 @@
+$ gprbuild -q -Papp_c -p
+$ ./main
+impl version: 0fcb9044
+
+$ gprbuild -q -Papp_ada -p
+$ ./main
+impl version: 0fcb9044
+

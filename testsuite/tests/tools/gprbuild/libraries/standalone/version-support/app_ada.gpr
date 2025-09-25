@@ -1,0 +1,10 @@
+with "lib";
+
+project App_Ada is
+   for Languages use ("Ada");
+   for Source_Dirs use ("srcapp");
+   for Object_Dir use "obj/ada";
+   for Exec_Dir use ".";
+
+   for Main use ("main.adb");
+end App_Ada;

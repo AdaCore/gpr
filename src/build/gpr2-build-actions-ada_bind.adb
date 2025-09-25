@@ -378,10 +378,10 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       for Unit of Self.Roots loop
          declare
-            UID : constant Actions.Compile.Ada.Ada_Compile_Id :=
-                    Actions.Compile.Ada.Create (Unit);
+            UID  : constant Actions.Compile.Ada.Ada_Compile_Id :=
+              Actions.Compile.Ada.Create (Unit);
             Comp : constant Actions.Compile.Ada.Object :=
-                     Actions.Compile.Ada.Object (Self.Tree.Action (UID));
+              Actions.Compile.Ada.Object (Self.Tree.Action (UID));
 
             use type Project.View.Object;
          begin
@@ -397,6 +397,25 @@ package body GPR2.Build.Actions.Ada_Bind is
                end if;
             end if;
          end;
+      end loop;
+
+      --  For standalone libraries, we need to give the full list of ALIs that
+      --  are part of the library
+
+      for Art of Self.Tree.Inputs (Self.UID, Explicit_Only => True) loop
+         if Self.Tree.Has_Predecessor (Art)
+           and then Self.Tree.Predecessor (Art) in Compile.Ada.Object'Class
+         then
+            declare
+               Comp : constant Actions.Compile.Ada.Object :=
+                 Compile.Ada.Object (Self.Tree.Predecessor (Art));
+            begin
+               if not Self.Roots.Contains (Comp.Input_Unit.Name) then
+                  Cmd_Line.Add_Argument
+                    (Comp.Local_Ali_File.Path, Build.Command_Line.Simple);
+               end if;
+            end;
+         end if;
       end loop;
 
       for View of Self.Ctxt.Closure (True, True, True) loop
@@ -820,12 +839,18 @@ package body GPR2.Build.Actions.Ada_Bind is
             --  If same scope just add the dependencies
             --  on the output of the compile action.
 
+            --  All units that are in a SAL and are in the closure of its
+            --  interface need to be listed explicitly during the bind
+            --  operation. We do that by marking them as explicit inputs
+            --  of the action.
+
             Self.Tree.Add_Input
-              (Self.UID, Comp.Local_Ali_File, False);
+              (Self.UID,
+               Comp.Local_Ali_File,
+               Self.Ctxt.Is_Library and then Self.Ctxt.Is_Library_Standalone);
 
             if Link.Is_Defined then
-               Self.Tree.Add_Input
-                 (Link.UID, Comp.Object_File, False);
+               Self.Tree.Add_Input (Link.UID, Comp.Object_File, False);
             end if;
 
          elsif Self.Ctxt.Is_Library
@@ -1090,6 +1115,7 @@ package body GPR2.Build.Actions.Ada_Bind is
      (Self : in out Object) return Boolean
    is
       use type GPR2.Project.View.Object;
+      Deps : Containers.Name_Set;
    begin
       --  Now add our explicit inputs
 
@@ -1122,18 +1148,17 @@ package body GPR2.Build.Actions.Ada_Bind is
          if Self.Tree.Has_Predecessor (Ali) then
             declare
                A_Comp : constant Actions.Compile.Ada.Object :=
-                          Actions.Compile.Ada.Object
-                            (Self.Tree.Predecessor (Ali));
-               Deps   : Containers.Name_Set;
+                 Actions.Compile.Ada.Object (Self.Tree.Predecessor (Ali));
             begin
-               Deps := A_Comp.Input_Unit.Known_Dependencies;
-
-               if not Self.On_Ada_Dependencies (Deps, False) then
-                  return False;
-               end if;
+               Deps.Union (A_Comp.Input_Unit.Known_Dependencies);
             end;
          end if;
       end loop;
+
+      if not Deps.Is_Empty and then not Self.On_Ada_Dependencies (Deps, False)
+      then
+         return False;
+      end if;
 
       return True;
    end On_Tree_Propagation;

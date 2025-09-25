@@ -98,37 +98,22 @@ package body GPR2.Build.Actions.Compile.Ada is
       use GPR2.Project.View;
 
       CU_View : constant GPR2.Project.View.Object := CU.Owning_View;
-      Allowed : Boolean := True;
-      Src     : GPR2.Build.Source.Object;
 
    begin
       --  There is no restriction of units visibility inside the same view
 
       if Self.View /= CU_View then
+         --  Two cases here:
+         --  * The view is a standalone library: if the unit is not
+         --    listed by the Library_Interface, or its source by the
+         --    Interfaces attribute, then it can not be imported.Allowed
+         --  * The view is not a standalone library: if the unit source
+         --    is not listed by the Interfaces attribute, then it can
+         --   not be imported.
+
          if CU_View.Has_Any_Interfaces
            and then not CU_View.Interface_Closure.Contains (CU.Name)
          then
-            --  Two cases here:
-            --  * The view is a standalone library: if the unit is not
-            --    listed by the Library_Interface, or its source by the
-            --    Interfaces attribute, then it can not be imported.Allowed
-            --  * The view is not a standalone library: if the unit source
-            --    is not listed by the Interfaces attribute, then it can
-            --   not be imported.
-
-            --  There's an exception for sources coming from --src-subdirs:
-            --  since this is for instrumented code, we need to loosen the
-            --  rule here and allow any source from this subdir.
-            Src := CU_View.Visible_Source (CU.Main_Part.Source);
-
-            if Src.From_Src_Subdirs then
-               return True;
-            end if;
-
-            Allowed := False;
-         end if;
-
-         if not Allowed then
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
                  (GPR2.Message.Error,
@@ -136,37 +121,42 @@ package body GPR2.Build.Actions.Compile.Ada is
                   & String (Self.CU.Name)
                   & """ can not import unit """
                   & String (CU.Name)
-                  & """:" & ASCII.LF
+                  & """:"
+                  & ASCII.LF
                   & " it is not part of the interfaces of the project "
                   & String (CU_View.Name),
                   GPR2.Source_Reference.Object
                     (GPR2.Source_Reference.Create
-                         (Self.Ctxt.Path_Name.Value, 0, 0))));
-         end if;
+                       (Self.Ctxt.Path_Name.Value, 0, 0))));
 
-         if Allowed
-           and then Self.Tree.Build_Options.No_Indirect_Imports
+            return False;
+
+         elsif Self.Tree.Build_Options.No_Indirect_Imports
            and then not Self.View.Imports.Contains (CU_View)
            and then not Self.View.Limited_Imports.Contains (CU_View)
          then
-            Allowed := False;
-
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
                  (GPR2.Message.Error,
-                  "unit """ & String (Self.CU.Name) &
-                    """ cannot import unit """ &
-                    String (CU.Name) & ":" &
-                    ASCII.LF &
-                    " """ & String (Self.View.Name) &
-                    """ does not directly import project """ &
-                    String (CU_View.Name) & """",
+                  "unit """
+                  & String (Self.CU.Name)
+                  & """ cannot import unit """
+                  & String (CU.Name)
+                  & ":"
+                  & ASCII.LF
+                  & " """
+                  & String (Self.View.Name)
+                  & """ does not directly import project """
+                  & String (CU_View.Name)
+                  & """",
                   GPR2.Source_Reference.Create
                     (Self.Src.Path_Name.Value, 0, 0)));
+
+            return False;
          end if;
       end if;
 
-      return Allowed;
+      return True;
    end Can_Unit_Be_Imported;
 
    --------------------------
