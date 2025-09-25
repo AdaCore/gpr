@@ -5,4 +5,5 @@ aggregate library project Demo is
    for Object_Dir use "agg-obj";
    for Library_Dir use "agg-lib";
    for Library_Ali_Dir use "agg-ali-lib";
+   for Library_Kind use "relocatable";
 end Demo;
