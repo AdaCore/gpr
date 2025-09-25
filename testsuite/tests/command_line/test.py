@@ -1,10 +1,10 @@
 from testsuite_support.builder_and_runner import BuilderAndRunner
-from testsuite_support.tools import GPRLS, GPRCLEAN, GPRINSTALL
+from testsuite_support.tools import GPRBUILD, GPRCLEAN, GPRINSTALL, GPRLS, GPRINSPECT
 
 
 bnr = BuilderAndRunner()
 
-all_tools = [GPRLS, GPRCLEAN, GPRINSTALL]
+all_tools = [GPRBUILD, GPRCLEAN, GPRINSTALL, GPRINSPECT]
 
 
 def execute(cmd, check=False):
@@ -47,30 +47,30 @@ for t in all_tools:
 
 # check implicit project
 
-execute([GPRLS, "-s"], True)
+execute([GPRBUILD, "-j1"], True)
 
 # check project without -P, and non-positional + positional arguments
 
-execute([GPRLS, "demo.gpr", "pkg.ads", "-s"], True)
+execute([GPRCLEAN, "demo.gpr", "pkg.ads", "-n"], True)
 
 # check several projects defined
 
-execute([GPRLS, "-P", "demo.gpr", "demo2.gpr"])
-execute([GPRLS, "demo.gpr", "demo2.gpr"])
+execute([GPRCLEAN, "-P", "demo.gpr", "demo2.gpr"])
+execute([GPRCLEAN, "demo.gpr", "demo2.gpr"])
 
 # check optional space
 
-execute([GPRLS, "-Pdemo", "-s"], True)
+execute([GPRCLEAN, "-Pdemo", "-n"], True)
 
 # check index
 
-execute([GPRLS, "--RTS:ada", "default", "-s", "demo.gpr"])
+execute([GPRCLEAN, "--RTS:ada", "default", "-n", "demo.gpr"])
 
 # check index + equal delimiter
 
-execute([GPRLS, "--RTS:ada=default", "-s", "demo.gpr"])
+execute([GPRCLEAN, "--RTS:ada=default", "-n", "demo.gpr"])
 
 # check optional index
 
-execute([GPRLS, "--RTS", "default", "-s", "demo.gpr"])
-execute([GPRLS, "--RTS=default", "-s", "demo.gpr"])
+execute([GPRCLEAN, "--RTS", "default", "-n", "demo.gpr"])
+execute([GPRCLEAN, "--RTS=default", "-n", "demo.gpr"])
