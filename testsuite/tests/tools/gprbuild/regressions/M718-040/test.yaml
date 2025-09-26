@@ -1,0 +1,3 @@
+description: Regression test for M718-040
+driver: python_script
+timeout: 800
