@@ -31,7 +31,7 @@ abstract project GPR2_Shared is
    --------------
 
    Common_Options :=
-     ("-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx");
+     ("-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx", "-g");
    --  Common options used for the Debug and Release modes
 
    case Profiler is
@@ -47,7 +47,7 @@ abstract project GPR2_Shared is
    --  modes
 
    Debug_Options :=
-     ("-g", "-gnatQ", "-gnatwe");
+     ("-gnatQ", "-gnatwe");
 
    Release_Options :=
      ("-O2", "-gnatn");
