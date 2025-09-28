@@ -724,9 +724,47 @@ package body GPR2.Build.Actions.Link is
          end loop;
       end if;
 
-      if Self.View.Is_Library
-        and then not Self.Is_Static
-      then
+      if Self.View.Is_Library and then not Self.Is_Static then
+         if not Self.View.Is_Library_Standalone then
+            --  In case of a shared non-standalone library, there's no binding
+            --  phase so the potential pragma Linker_Options present in its
+            --  closure are not parsed. So we need to walk through the Ali
+            --  files to pick them up here.
+
+            for Obj of Objects loop
+               if Self.Tree.Has_Predecessor (Obj)
+                 and then Self.Tree.Predecessor (Obj)
+                          in Compile.Ada.Object'Class
+               then
+                  for Opt of
+                    Compile.Ada.Object (Self.Tree.Predecessor (Obj))
+                      .ALI.Linker_Options
+                  loop
+                     declare
+                        First : Natural := Opt'First;
+                        Idx   : Natural := Opt'First;
+                     begin
+                        while Idx < Opt'Last loop
+                           if Opt'Last - Idx > 3
+                             and then Opt (Idx .. Idx + 3) = "{00}"
+                           then
+                              Cmd_Line.Add_Argument (Opt (First .. Idx - 1));
+                              Idx := Idx + 4;
+                              First := Idx;
+                           else
+                              Idx := Idx + 1;
+                           end if;
+                        end loop;
+
+                        Cmd_Line.Add_Argument (Opt (First .. Opt'Last));
+                     end;
+                  end loop;
+               end if;
+            end loop;
+         end if;
+
+         --  Add the project's library_options
+
          Ign := Add_Attr (PRA.Library_Options, PAI.Undefined, True, True);
       end if;
 
