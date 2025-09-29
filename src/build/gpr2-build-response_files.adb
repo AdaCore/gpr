@@ -318,8 +318,10 @@ package body GPR2.Build.Response_Files is
       Vector : in out Unbounded_String;
       Buffer : String) is
    begin
-      GOF.Write (FD, Buffer);
-      Append (Vector, Buffer);
+      if Buffer'Length > 0 then
+         GOF.Write (FD, Buffer);
+         Append (Vector, Buffer);
+      end if;
    end Write;
 
 
