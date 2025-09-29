@@ -939,6 +939,10 @@ package body GPR2.Build.Actions_Population is
                            and then (for some Agg of View.Aggregated =>
                                        Agg.Language_Ids.Contains
                                          (Ada_Language))));
+
+      Sorted_Libs : Library_Vector.Vector;
+      Has_Cycle   : Boolean;
+
       use GPR2.Project;
 
    begin
@@ -1177,9 +1181,17 @@ package body GPR2.Build.Actions_Population is
          end loop;
       end loop;
 
-      for Id of Self.Static_Libs_Deps.Union (Self.Shared_Libs_Deps) loop
+      Sorted_Libs :=
+        Library_Map.Order_Libs
+          (Self.Static_Libs_Deps.Union (Self.Shared_Libs_Deps),
+           Cache,
+           Has_Cycle);
+
+      Self.Main_Link.Set_Has_Library_Dependency_Circle (Has_Cycle);
+
+      for Lib of Sorted_Libs loop
          declare
-            Sublib : constant LH.Object := Cache.Element (Id);
+            Sublib : constant LH.Object := Cache.Element (Lib.View.Id);
             Encaps : constant Boolean :=
                        Self.View.Library_Standalone = Encapsulated;
          begin
