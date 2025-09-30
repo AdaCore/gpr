@@ -1,6 +1,4 @@
 TEST1
-/files/objlib/debug/o__lib1.o
-/files/objlib/debug/.add-link-options_o__lib1.o.json
 /files/objlib/debug/b__lib1.ads
 /files/objlib/debug/b__lib1.adb
 /files/objlib/debug/.ada_bind_lib1.json
@@ -22,8 +20,6 @@ TEST1
 /files/obj/debug/.ada_post-bind_b__main.adb.json
 
 TEST2
-/files/objlib/o__lib2.o
-/files/objlib/.add-link-options_o__lib2.o.json
 /files/objlib/b__lib2.ads
 /files/objlib/b__lib2.adb
 /files/objlib/.ada_bind_lib2.json

@@ -1086,23 +1086,28 @@ package body GPR2.Build.Actions_Population is
          --  gpr-specific text section so that they can be retrieved later on
          --  by the final link, when such linker option has been removed from
          --  the project file (such as after an installation).
+         --  Note that this action is only added for static libraries, because
+         --  object file insertion is not easily supported on Windows for
+         --  DLLs, and because shared libraries are already linked
+         --  with the correct options, unlike static libs.
 
-         Self.Link_Options_Insert.Initialize
-           (Object_File => Self.Bind.Post_Bind.Object_File,
-            View        => View);
+         if View.Is_Static_Library then
+            Self.Link_Options_Insert.Initialize
+              (Object_File => Self.Bind.Post_Bind.Object_File, View => View);
 
-         if not Tree_Db.Add_Action (Self.Link_Options_Insert) then
-            return False;
+            if not Tree_Db.Add_Action (Self.Link_Options_Insert) then
+               return False;
+            end if;
+
+            --  The linker options object is added directly to the last link
+            --  phase so is skipped by the partial link that may not pick it up
+            --  since it is not referenced.
+
+            Tree_Db.Add_Input
+            (Self.Final_Link_Action.UID,
+               Self.Link_Options_Insert.Output_Object_File,
+               True);
          end if;
-
-         --  The linker options object is added directly to the last link
-         --  phase so is skipped by the partial link that may not pick it up
-         --  since it is not referenced.
-
-         Tree_Db.Add_Input
-           (Self.Final_Link_Action.UID,
-            Self.Link_Options_Insert.Output_Object_File,
-            True);
 
          Tree_Db.Add_Input
            (Self.Initial_Link_Action.UID,
