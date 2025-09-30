@@ -66,18 +66,26 @@ package body GPR2.Build.Signature is
       C     : Artifact_Sets.Cursor;
    begin
       Self.Artifacts (IO).Insert (Art, C, Added);
-
-      Traces.Trace (Art.Serialize);
+      if IO = Input then
+         Traces.Trace ("Adding input artifact " & Art.Serialize);
+      else
+         Traces.Trace ("Adding output artifact " & Art.Serialize);
+      end if;
 
       if not Checksum_Check then
+         Traces.Trace ("Not checking checksum");
          return True;
 
       elsif not Added then
+         Traces.Trace ("Signature has already been invalidated");
+
          --  Already there, so return False if the signature is already
          --  invalidated.
          return not Self.Checksums (IO).Is_Empty;
 
       elsif Self.Checksums (IO).Is_Empty then
+         Traces.Trace ("Signature has already been invalidated");
+
          --  Nothing more to do, the signature is already invalidated
          return False;
       end if;
@@ -90,11 +98,18 @@ package body GPR2.Build.Signature is
          if not Checksum_Maps.Has_Element (CC)
            or else Checksum_Maps.Element (CC) /= Chk
          then
-            Traces.Trace
-              ((if Checksum_Maps.Has_Element (CC)
-               then "   - " & Checksum_Maps.Element (CC)
-               else "   - No checksum found"));
-            Traces.Trace ("   - " & Chk);
+            if Checksum_Maps.Has_Element (CC) then
+               Traces.Trace
+                 ("Invalidating the signature because checksums do " &
+                  "not match:");
+               Traces.Trace ("  Current checksum: " & Chk);
+               Traces.Trace
+                 ("  Saved checksum  : " & Checksum_Maps.Element (CC));
+            else
+               Traces.Trace
+                 ("Invalidating the signature because no saved checksum " &
+                  "has been found.");
+            end if;
 
             --  Invalidate the saved checksums
             Self.Checksums (Input).Clear;
@@ -103,6 +118,8 @@ package body GPR2.Build.Signature is
             return False;
          end if;
       end;
+
+      Traces.Trace ("Checksums matched");
 
       return True;
    end Add_Internal;
