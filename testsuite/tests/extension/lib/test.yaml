@@ -3,5 +3,3 @@ description:
 driver: build_and_run
 project_file: extlib
 main: main
-control:
-- [XFAIL, "True", "libgpr2-next: requires Source.Artifacts"]

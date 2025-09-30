@@ -476,7 +476,7 @@ exception
       Handle_Program_Termination
         (Display_Command_Line_Help => True,
          Force_Exit                => False,
-         Exit_Code                 => E_General,
+         Exit_Code                 => E_Fatal,
          Message                   => Exception_Message (E));
 
    when E_Program_Termination =>

@@ -1,32 +1,67 @@
 -------------------------
-gprls -h
+gprbuild -h
 -------------------------
 Usage:
-  gprls [-P<proj>|<proj.gpr>] [opts] [object files]
+  gprbuild [-P<proj>|<proj.gpr>] [opts] [source]
+     [-cargs[:lang] opts] [-largs opts] [-kargs opts] [-gargs opts]
 
  -h, --help
            Display usage and exit
  --version
            Display version and exit
+ -bargs[:<lang>] opts
+           options to be passed to the binder
+ -cargs[:<lang>] opts
+           options to be passed to the compiler
+ -gargs opts, -margs opts
+           options interpreted by gprbuild
+ -kargs opts
+           options to be passed to gprconfig
+ -largs opts
+           options to be passed to the linker
 
-list switches:
-   gprls specific switches.
-
- -a[0]     Include predefined units. Use -a0 to hide predefined sources
-           directory
- -d        Print source dependencies with status
- -files=<file>
-           File to list are contained in <file>
- -o        Print object files
- -s        Print sources
- -U        Browse the entire project tree
- -u        Print unit names
- -vP<level>
-           Use <level> verbosity (0 .. 2) for the project parsing
- --closure
-           Closure mode
- --source-parser
-           Use gprls's Ada source parser to retrieve the dependencies
+Build control switches:
+ -b        Bind only
+ -c        Compile only
+ -d        Display compilation progress
+ -eI<nn>   Index of main unit in multi-unit source file
+ -f        Force recompilation
+ -j<nn>    Use <nn> processes to compile, bind and link. If 0, use the number
+           of CPUs on the host.
+ -k        Keep going after compilation errors
+ -l        Link only
+ -o name   Choose an alternate executable name
+ -p        Create missing obj/lib/exec directories
+ -R        Do not use run path option
+ -r        Recursive (default except when using -u)
+ -U        Unique compilation for all sources of all projects
+ -u        Unique compilation, only compile the given files
+ -z        No main subprogram (zero main)
+ --build-script=script_file
+           Create a build script script_file
+ --compiler-subst=lang,tool
+           Use tool for compiling files in language lang, instead of the normal
+           compiler
+ --create-map-file[=file.map]
+           Have the linker generate the map file
+ --indirect-imports
+           Sources can import from directly and indirectly imported projects
+ --keep-temp-files
+           Do not delete temporary files
+ --no-indirect-imports
+           Sources can import only from directly imported projects
+ --no-object-check
+           Do not check object files
+ --no-sal-binding
+           Reuse binder files when linking SALs
+ --no-split-units
+           Check that compilation unit parts are from the same view
+ --restricted-to-languages=<lang1>,<lang2>,...
+           Restrict the languages of the sources
+ --temp-dir=[os|obj]
+           Determinte where temporary files should be located. Either in the
+           object directory of the owning project or the default system
+           temporary directory
 
 Project switches:
    Project file handling switches
@@ -38,6 +73,8 @@ Project switches:
            Set the project external reference "NAME" to "Value"
  --implicit-with=proj.gpr
            Add the given  project as a dependency of all loaded projects
+ --no-project
+           Do not use project file
  --relocate-build-tree[=dir]
            Root obj/lib/exec dirs are current directory or "dir"
  --root-dir=dir
@@ -52,6 +89,8 @@ Project switches:
 Project configuration switches:
    Switches used to set or modify the way the project configuration is done
 
+ --autoconf=file.cgpr
+           Specify/create the main config project file name
  --config=file.cgpr
            Specify the main config project file name
  --db dir  Parse "dir" as an additional knowledge base
@@ -63,8 +102,19 @@ Project configuration switches:
 
 Verbosity switches:
  -F        Full project path name in brief error messages
+ -q        Be quiet/terse
  -v        Verbose output
+ -we       Treat warnings as errors
+ -wn       Treat warnings as warnings
  -ws       Suppress all warnings
+
+For compatibility with gnatmake, these switches are passed to the Ada compiler:
+ -fno-inline
+ -fstack-check
+ -g[<debug_opt>]
+ -nostdinc
+ -nostdlib
+ -O<level>
 
 -------------------------
 gprclean -h
@@ -108,8 +158,6 @@ Project switches:
            Prepend <obj>/dir to the list of source dirs for each project
  --subdirs=dir
            Use "dir" as suffix to obj/lib/exec directories
- --unchecked-shared-lib-imports
-           Shared lib projects may import any project
 
 Project configuration switches:
    Switches used to set or modify the way the project configuration is done
@@ -123,20 +171,12 @@ Project configuration switches:
  --target=targetname
            Specify a target for cross platforms
 
-Distributed build switches:
-   Distributed compilation mode switches.
-
- --distributed[=node1[,node2]]
-           Activate the remote mode on specified node(s), or automatically.
- --hash=<string>
-           Set a hash string to identified environment
- --slave-env[=node]
-           Use a specific slave's environment
-
 Verbosity switches:
  -F        Full project path name in brief error messages
  -q        Be quiet/terse
  -v        Verbose output
+ -we       Treat warnings as errors
+ -wn       Treat warnings as warnings
  -ws       Suppress all warnings
 
 -------------------------
@@ -219,8 +259,6 @@ Project switches:
            Prepend <obj>/dir to the list of source dirs for each project
  --subdirs=dir
            Use "dir" as suffix to obj/lib/exec directories
- --unchecked-shared-lib-imports
-           Shared lib projects may import any project
 
 Project configuration switches:
    Switches used to set or modify the way the project configuration is done
@@ -238,37 +276,39 @@ Verbosity switches:
  -F        Full project path name in brief error messages
  -q        Be quiet/terse
  -v        Verbose output
+ -we       Treat warnings as errors
+ -wn       Treat warnings as warnings
  -ws       Suppress all warnings
 
 -------------------------
-gprls --help
+gprinspect -h
 -------------------------
 Usage:
-  gprls [-P<proj>|<proj.gpr>] [opts] [object files]
 
  -h, --help
            Display usage and exit
  --version
            Display version and exit
 
-list switches:
-   gprls specific switches.
-
- -a[0]     Include predefined units. Use -a0 to hide predefined sources
-           directory
- -d        Print source dependencies with status
- -files=<file>
-           File to list are contained in <file>
- -o        Print object files
- -s        Print sources
- -U        Browse the entire project tree
- -u        Print unit names
- -vP<level>
-           Use <level> verbosity (0 .. 2) for the project parsing
- --closure
-           Closure mode
- --source-parser
-           Use gprls's Ada source parser to retrieve the dependencies
+gprinspect switches:
+ -c, --from-config
+           Display attributes inherited from configuration
+ -r, --recursive
+           All none external projects recursively
+ --all     Display everything
+ --attributes
+           Display attributes
+ --display[=json|json-compact|textual]
+           output formatting
+ --gpr-registry-file=<file>
+           Recognize additional attributes defined in <file>
+ --packages
+           Display packages
+ --variables
+           Display variables & types
+ --views=view1[,view2]
+           Select the view to display. Only available when using
+           [--display=textual].
 
 Project switches:
    Project file handling switches
@@ -288,8 +328,6 @@ Project switches:
            Prepend <obj>/dir to the list of source dirs for each project
  --subdirs=dir
            Use "dir" as suffix to obj/lib/exec directories
- --unchecked-shared-lib-imports
-           Shared lib projects may import any project
 
 Project configuration switches:
    Switches used to set or modify the way the project configuration is done
@@ -306,7 +344,127 @@ Project configuration switches:
 Verbosity switches:
  -F        Full project path name in brief error messages
  -v        Verbose output
+ -we       Treat warnings as errors
+ -wn       Treat warnings as warnings
  -ws       Suppress all warnings
+
+-------------------------
+gprbuild --help
+-------------------------
+Usage:
+  gprbuild [-P<proj>|<proj.gpr>] [opts] [source]
+     [-cargs[:lang] opts] [-largs opts] [-kargs opts] [-gargs opts]
+
+ -h, --help
+           Display usage and exit
+ --version
+           Display version and exit
+ -bargs[:<lang>] opts
+           options to be passed to the binder
+ -cargs[:<lang>] opts
+           options to be passed to the compiler
+ -gargs opts, -margs opts
+           options interpreted by gprbuild
+ -kargs opts
+           options to be passed to gprconfig
+ -largs opts
+           options to be passed to the linker
+
+Build control switches:
+ -b        Bind only
+ -c        Compile only
+ -d        Display compilation progress
+ -eI<nn>   Index of main unit in multi-unit source file
+ -f        Force recompilation
+ -j<nn>    Use <nn> processes to compile, bind and link. If 0, use the number
+           of CPUs on the host.
+ -k        Keep going after compilation errors
+ -l        Link only
+ -o name   Choose an alternate executable name
+ -p        Create missing obj/lib/exec directories
+ -R        Do not use run path option
+ -r        Recursive (default except when using -u)
+ -U        Unique compilation for all sources of all projects
+ -u        Unique compilation, only compile the given files
+ -z        No main subprogram (zero main)
+ --build-script=script_file
+           Create a build script script_file
+ --compiler-subst=lang,tool
+           Use tool for compiling files in language lang, instead of the normal
+           compiler
+ --create-map-file[=file.map]
+           Have the linker generate the map file
+ --indirect-imports
+           Sources can import from directly and indirectly imported projects
+ --keep-temp-files
+           Do not delete temporary files
+ --no-indirect-imports
+           Sources can import only from directly imported projects
+ --no-object-check
+           Do not check object files
+ --no-sal-binding
+           Reuse binder files when linking SALs
+ --no-split-units
+           Check that compilation unit parts are from the same view
+ --restricted-to-languages=<lang1>,<lang2>,...
+           Restrict the languages of the sources
+ --temp-dir=[os|obj]
+           Determinte where temporary files should be located. Either in the
+           object directory of the owning project or the default system
+           temporary directory
+
+Project switches:
+   Project file handling switches
+
+ -aP dir   Add directory "dir" to project search path
+ -P proj.gpr
+           Use project file "proj.gpr"
+ -X NAME=Value
+           Set the project external reference "NAME" to "Value"
+ --implicit-with=proj.gpr
+           Add the given  project as a dependency of all loaded projects
+ --no-project
+           Do not use project file
+ --relocate-build-tree[=dir]
+           Root obj/lib/exec dirs are current directory or "dir"
+ --root-dir=dir
+           Root directory of obj/lib/exec to relocate
+ --src-subdirs=dir
+           Prepend <obj>/dir to the list of source dirs for each project
+ --subdirs=dir
+           Use "dir" as suffix to obj/lib/exec directories
+ --unchecked-shared-lib-imports
+           Shared lib projects may import any project
+
+Project configuration switches:
+   Switches used to set or modify the way the project configuration is done
+
+ --autoconf=file.cgpr
+           Specify/create the main config project file name
+ --config=file.cgpr
+           Specify the main config project file name
+ --db dir  Parse "dir" as an additional knowledge base
+ --db-     Do not load the standard knowledge base
+ --RTS[:<lang>]=runtime
+           Specify a runtime for <lang> or Ada (default)
+ --target=targetname
+           Specify a target for cross platforms
+
+Verbosity switches:
+ -F        Full project path name in brief error messages
+ -q        Be quiet/terse
+ -v        Verbose output
+ -we       Treat warnings as errors
+ -wn       Treat warnings as warnings
+ -ws       Suppress all warnings
+
+For compatibility with gnatmake, these switches are passed to the Ada compiler:
+ -fno-inline
+ -fstack-check
+ -g[<debug_opt>]
+ -nostdinc
+ -nostdlib
+ -O<level>
 
 -------------------------
 gprclean --help
@@ -350,8 +508,6 @@ Project switches:
            Prepend <obj>/dir to the list of source dirs for each project
  --subdirs=dir
            Use "dir" as suffix to obj/lib/exec directories
- --unchecked-shared-lib-imports
-           Shared lib projects may import any project
 
 Project configuration switches:
    Switches used to set or modify the way the project configuration is done
@@ -365,20 +521,12 @@ Project configuration switches:
  --target=targetname
            Specify a target for cross platforms
 
-Distributed build switches:
-   Distributed compilation mode switches.
-
- --distributed[=node1[,node2]]
-           Activate the remote mode on specified node(s), or automatically.
- --hash=<string>
-           Set a hash string to identified environment
- --slave-env[=node]
-           Use a specific slave's environment
-
 Verbosity switches:
  -F        Full project path name in brief error messages
  -q        Be quiet/terse
  -v        Verbose output
+ -we       Treat warnings as errors
+ -wn       Treat warnings as warnings
  -ws       Suppress all warnings
 
 -------------------------
@@ -461,8 +609,6 @@ Project switches:
            Prepend <obj>/dir to the list of source dirs for each project
  --subdirs=dir
            Use "dir" as suffix to obj/lib/exec directories
- --unchecked-shared-lib-imports
-           Shared lib projects may import any project
 
 Project configuration switches:
    Switches used to set or modify the way the project configuration is done
@@ -480,128 +626,238 @@ Verbosity switches:
  -F        Full project path name in brief error messages
  -q        Be quiet/terse
  -v        Verbose output
+ -we       Treat warnings as errors
+ -wn       Treat warnings as warnings
  -ws       Suppress all warnings
 
 -------------------------
-gprls --no-such-switch
+gprinspect --help
 -------------------------
-gprls: unrecognized option '--no-such-switch'
-try "gprls --help" for more information.
-STATUS: 4
+Usage:
+
+ -h, --help
+           Display usage and exit
+ --version
+           Display version and exit
+
+gprinspect switches:
+ -c, --from-config
+           Display attributes inherited from configuration
+ -r, --recursive
+           All none external projects recursively
+ --all     Display everything
+ --attributes
+           Display attributes
+ --display[=json|json-compact|textual]
+           output formatting
+ --gpr-registry-file=<file>
+           Recognize additional attributes defined in <file>
+ --packages
+           Display packages
+ --variables
+           Display variables & types
+ --views=view1[,view2]
+           Select the view to display. Only available when using
+           [--display=textual].
+
+Project switches:
+   Project file handling switches
+
+ -aP dir   Add directory "dir" to project search path
+ -P proj.gpr
+           Use project file "proj.gpr"
+ -X NAME=Value
+           Set the project external reference "NAME" to "Value"
+ --implicit-with=proj.gpr
+           Add the given  project as a dependency of all loaded projects
+ --relocate-build-tree[=dir]
+           Root obj/lib/exec dirs are current directory or "dir"
+ --root-dir=dir
+           Root directory of obj/lib/exec to relocate
+ --src-subdirs=dir
+           Prepend <obj>/dir to the list of source dirs for each project
+ --subdirs=dir
+           Use "dir" as suffix to obj/lib/exec directories
+
+Project configuration switches:
+   Switches used to set or modify the way the project configuration is done
+
+ --config=file.cgpr
+           Specify the main config project file name
+ --db dir  Parse "dir" as an additional knowledge base
+ --db-     Do not load the standard knowledge base
+ --RTS[:<lang>]=runtime
+           Specify a runtime for <lang> or Ada (default)
+ --target=targetname
+           Specify a target for cross platforms
+
+Verbosity switches:
+ -F        Full project path name in brief error messages
+ -v        Verbose output
+ -we       Treat warnings as errors
+ -wn       Treat warnings as warnings
+ -ws       Suppress all warnings
+
+-------------------------
+gprbuild --no-such-switch
+-------------------------
+gprbuild: unrecognized option '--no-such-switch'
+try "gprbuild --help" for more information.
+STATUS: 7
 
 -------------------------
 gprclean --no-such-switch
 -------------------------
 gprclean: unrecognized option '--no-such-switch'
 try "gprclean --help" for more information.
-STATUS: 4
+STATUS: 7
 
 -------------------------
 gprinstall --no-such-switch
 -------------------------
 gprinstall: unrecognized option '--no-such-switch'
 try "gprinstall --help" for more information.
-STATUS: 4
+STATUS: 7
 
 -------------------------
-gprls --config:conf.cgpr
+gprinspect --no-such-switch
 -------------------------
-gprls: unexpected index for '--config:conf.cgpr'
-try "gprls --help" for more information.
-STATUS: 4
+gprinspect: unrecognized option '--no-such-switch'
+try "gprinspect --help" for more information.
+STATUS: 7
+
+-------------------------
+gprbuild --config:conf.cgpr
+-------------------------
+gprbuild: unexpected index for '--config:conf.cgpr'
+try "gprbuild --help" for more information.
+STATUS: 7
 
 -------------------------
 gprclean --config:conf.cgpr
 -------------------------
 gprclean: unexpected index for '--config:conf.cgpr'
 try "gprclean --help" for more information.
-STATUS: 4
+STATUS: 7
 
 -------------------------
 gprinstall --config:conf.cgpr
 -------------------------
 gprinstall: unexpected index for '--config:conf.cgpr'
 try "gprinstall --help" for more information.
-STATUS: 4
+STATUS: 7
 
 -------------------------
-gprls -P
+gprinspect --config:conf.cgpr
 -------------------------
-gprls: parameter expected for argument '-P'
-try "gprls --help" for more information.
-STATUS: 4
+gprinspect: unexpected index for '--config:conf.cgpr'
+try "gprinspect --help" for more information.
+STATUS: 7
+
+-------------------------
+gprbuild -P
+-------------------------
+gprbuild: parameter expected for argument '-P'
+try "gprbuild --help" for more information.
+STATUS: 7
 
 -------------------------
 gprclean -P
 -------------------------
 gprclean: parameter expected for argument '-P'
 try "gprclean --help" for more information.
-STATUS: 4
+STATUS: 7
 
 -------------------------
 gprinstall -P
 -------------------------
 gprinstall: parameter expected for argument '-P'
 try "gprinstall --help" for more information.
-STATUS: 4
+STATUS: 7
 
 -------------------------
-gprls -s
+gprinspect -P
+-------------------------
+gprinspect: parameter expected for argument '-P'
+try "gprinspect --help" for more information.
+STATUS: 7
+
+-------------------------
+gprbuild -j1
 -------------------------
 using project file /demo.gpr
-/src/pkg2.adb
-/src/pkg.ads
+"obj" created
+[Ada Compile]     pkg.ads
+[Ada Compile]     pkg2.adb
 
 -------------------------
-gprls demo.gpr pkg.ads -s
+gprclean demo.gpr pkg.ads -n
 -------------------------
-/src/pkg.ads
+/obj/pkg.o
+/obj/pkg.ali
+/obj/.ada_compile_pkg.ads.json
 
 -------------------------
-gprls -P demo.gpr demo2.gpr
+gprclean -P demo.gpr demo2.gpr
 -------------------------
-gprls: cannot have -P<prj> and <prj> on the same command line
-try "gprls --help" for more information.
-STATUS: 4
+gprclean: cannot have -P<prj> and <prj> on the same command line
+try "gprclean --help" for more information.
+STATUS: 7
 
 -------------------------
-gprls demo.gpr demo2.gpr
+gprclean demo.gpr demo2.gpr
 -------------------------
-gprls: cannot have multiple <proj> on the same command line
-try "gprls --help" for more information.
-STATUS: 4
+gprclean: cannot have multiple <proj> on the same command line
+try "gprclean --help" for more information.
+STATUS: 7
 
 -------------------------
-gprls -Pdemo -s
+gprclean -Pdemo -n
 -------------------------
-/src/pkg2.adb
-/src/pkg.ads
+/obj/pkg.o
+/obj/pkg.ali
+/obj/.ada_compile_pkg.ads.json
+/obj/pkg2.o
+/obj/pkg2.ali
+/obj/.ada_compile_pkg2.adb.json
 
 -------------------------
-gprls --RTS:ada default -s demo.gpr
+gprclean --RTS:ada default -n demo.gpr
 -------------------------
-demo.gpr:4:31: warning: object directory "default" not found
-/src/pkg2.adb
-/src/pkg.ads
+/obj/pkg.o
+/obj/pkg.ali
+/obj/.ada_compile_pkg.ads.json
+/obj/pkg2.o
+/obj/pkg2.ali
+/obj/.ada_compile_pkg2.adb.json
 
 -------------------------
-gprls --RTS:ada=default -s demo.gpr
+gprclean --RTS:ada=default -n demo.gpr
 -------------------------
-demo.gpr:4:31: warning: object directory "default" not found
-/src/pkg2.adb
-/src/pkg.ads
+/obj/pkg.o
+/obj/pkg.ali
+/obj/.ada_compile_pkg.ads.json
+/obj/pkg2.o
+/obj/pkg2.ali
+/obj/.ada_compile_pkg2.adb.json
 
 -------------------------
-gprls --RTS default -s demo.gpr
+gprclean --RTS default -n demo.gpr
 -------------------------
-demo.gpr:4:31: warning: object directory "default" not found
-/src/pkg2.adb
-/src/pkg.ads
+/obj/pkg.o
+/obj/pkg.ali
+/obj/.ada_compile_pkg.ads.json
+/obj/pkg2.o
+/obj/pkg2.ali
+/obj/.ada_compile_pkg2.adb.json
 
 -------------------------
-gprls --RTS=default -s demo.gpr
+gprclean --RTS=default -n demo.gpr
 -------------------------
-demo.gpr:4:31: warning: object directory "default" not found
-/src/pkg2.adb
-/src/pkg.ads
+/obj/pkg.o
+/obj/pkg.ali
+/obj/.ada_compile_pkg.ads.json
+/obj/pkg2.o
+/obj/pkg2.ali
+/obj/.ada_compile_pkg2.adb.json
 

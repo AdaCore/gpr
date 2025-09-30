@@ -1084,9 +1084,12 @@ exception
         (Text_IO.Standard_Error,
          "Could not create the file " & To_String (Output_File));
 
-   when Invalid_Switch | Exit_From_Command_Line =>
+   when Exit_From_Command_Line =>
       GNAT.Command_Line.Free (Config => Cmd_Config);
-      GNAT.OS_Lib.OS_Exit (1);
+
+   when Invalid_Switch =>
+      GNAT.Command_Line.Free (Config => Cmd_Config);
+      GNAT.OS_Lib.OS_Exit (7);
 
    when Invalid_Parameter =>
       GNAT.Command_Line.Free (Config => Cmd_Config);
@@ -1096,6 +1099,7 @@ exception
       Text_IO.Put_Line
         (Text_IO.Standard_Error,
          "try ""gprconfig --help"" for more information.");
+      GNAT.OS_Lib.OS_Exit (7);
 
    when E : others =>
       Text_IO.Put_Line
