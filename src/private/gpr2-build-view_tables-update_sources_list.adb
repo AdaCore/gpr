@@ -782,11 +782,32 @@ package body Update_Sources_List is
                               then S_Spec
                               else S_Body);
 
-                     Units.Insert
-                       (Unit_Info.Create
-                          (Unit_Name      => Name_Type (Exc.Index.Text),
-                           Index          => Index,
-                           Kind           => Kind));
+                     declare
+                        Unit : constant GPR2.Build.Unit_Info.Object :=
+                          (Unit_Info.Create
+                             (Unit_Name => Name_Type (Exc.Index.Text),
+                              Index     => Index,
+                              Kind      => Kind));
+                     begin
+                        if Units.Contains (Unit.Index) then
+                           Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 "file "
+                                 & String (Full_Name (File.Path))
+                                 & " contains duplicated units """
+                                 & String (Unit.Name)
+                                 & " and """
+                                 & String (Units.Element (Unit.Index).Name)
+                                 & """ at index"
+                                 & Unit.Index'Image
+                                 & "",
+                                 SR.Create (Data.View.Path_Name.Value, 0, 0)));
+                        else
+                           Units.Insert (Unit);
+                        end if;
+                     end;
+
                   end loop;
                end if;
 
