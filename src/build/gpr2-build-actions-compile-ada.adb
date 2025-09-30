@@ -9,7 +9,6 @@ with Ada.Characters.Handling; use Ada.Characters.Handling;
 with GNATCOLL.Traces;
 
 with GPR2.Build.Actions.Ada_Bind;
-with GPR2.Build.ALI_Parser;
 with GPR2.Build.Artifacts.Key_Value;
 with GPR2.Build.Tree_Db;
 with GPR2.Message;
@@ -244,10 +243,13 @@ package body GPR2.Build.Actions.Compile.Ada is
       --  accurate, so check it first: if it changed there's no need to
       --  go further.
 
-      if not Self.Signature.Add_Output (Self.Dep_File)
-        and then Load_Mode
-      then
+      if not Self.Signature.Add_Output (Self.Dep_File) and then Load_Mode then
          return;
+      end if;
+
+      if Load_Mode then
+         --  ALI file is correct, so let's parse it
+         Self.ALI_Object.Parse;
       end if;
 
       if Self.Ctxt.Tree.Has_Ada_Compiler_Version then
@@ -369,7 +371,6 @@ package body GPR2.Build.Actions.Compile.Ada is
    overriding function Dependencies
      (Self : Object) return Containers.Filename_Set
    is
-      Result : GPR2.Containers.Filename_Set;
       UID    : constant Actions.Action_Id'Class := Object'Class (Self).UID;
 
    begin
@@ -380,8 +381,7 @@ package body GPR2.Build.Actions.Compile.Ada is
          return Containers.Empty_Filename_Set;
       end if;
 
-      if not GPR2.Build.ALI_Parser.Dependencies (Self.Dep_File.Path, Result)
-      then
+      if not Self.ALI_Object.Is_Parsed then
          Traces.Trace
            ("Failed to parse dependencies from the ALI file " &
               Self.Dep_File.Path.String_Value);
@@ -389,7 +389,7 @@ package body GPR2.Build.Actions.Compile.Ada is
          return Containers.Empty_Filename_Set;
       end if;
 
-      return Result;
+      return Self.ALI_Object.Dependencies;
    end Dependencies;
 
    --------------
@@ -535,6 +535,9 @@ package body GPR2.Build.Actions.Compile.Ada is
                Self.Inh_From := Candidate;
             end if;
          end if;
+
+         Self.ALI_Object :=
+           GPR2.Build.ALI_Parser.Create (Self.Dep_File.Path, False);
       end;
 
       --  Identify the copies of the ali file in libraries
@@ -626,19 +629,16 @@ package body GPR2.Build.Actions.Compile.Ada is
       --  Now that we know the ALI file is correct, let the bind action know
       --  the actual list of imported units from this dependency file.
 
-      if not GPR2.Build.ALI_Parser.Imports
-        (Self.Dep_File.Path,
-         Self.Withed_From_Spec,
-         Self.Withed_From_Body,
-         Self.Needs_Body)
-      then
+      Self.ALI_Object.Parse;
+
+      if not Self.ALI_Object.Is_Parsed then
          Self.Tree.Reporter.Report
            (GPR2.Message.Create
               (GPR2.Message.Error,
                "failure to analyze the produced ali file",
                GPR2.Source_Reference.Object
                  (GPR2.Source_Reference.Create
-                      (Self.Dep_File.Path.Value, 0, 0))));
+                    (Self.Dep_File.Path.Value, 0, 0))));
          return False;
       end if;
 
@@ -701,6 +701,15 @@ package body GPR2.Build.Actions.Compile.Ada is
       return True;
    end On_Tree_Insertion;
 
+   ---------------
+   -- Parse_Ali --
+   ---------------
+
+   procedure Parse_Ali (Self : in out Object) is
+   begin
+      Self.ALI_Object.Parse;
+   end Parse_Ali;
+
    ------------------
    -- Post_Command --
    ------------------
@@ -749,6 +758,9 @@ package body GPR2.Build.Actions.Compile.Ada is
                   Self.Obj_File := Local_O;
                   Self.Dep_File := Local_Ali;
                   Self.Inh_From := GPR2.Project.View.Undefined;
+
+                  Self.ALI_Object :=
+                    GPR2.Build.ALI_Parser.Create (Self.Dep_File.Path, False);
 
                   --  At this point make sure Self is updated in the tree
                   --  so that any use of it reference the proper .o and .ali.

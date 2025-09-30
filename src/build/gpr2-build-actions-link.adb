@@ -20,6 +20,7 @@ with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.ALI_Parser;
 with GPR2.Build.External_Options;
 with GPR2.Build.Source;
+with GPR2.Build.View_Db;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
@@ -279,8 +280,8 @@ package body GPR2.Build.Actions.Link is
                              (Self.Tree.Predecessor (Obj));
                   Deps : Containers.Filename_Set;
                begin
-                  if ALI_Parser.Dependencies (Comp.Local_Ali_File.Path, Deps)
-                    and then Deps.Contains ("s-osinte.ads")
+                  if Comp.ALI.Is_Parsed
+                    and then Comp.ALI.Dependencies.Contains ("s-osinte.ads")
                   then
                      Libgnarl := True;
 
@@ -673,8 +674,8 @@ package body GPR2.Build.Actions.Link is
       --  needed on Windows.
 
       if Self.View.Tree.Has_Runtime_Project
-        and then Self.View.Tree.Is_Windows_Target
         and then Self.View.Is_Library
+        and then not Self.Tree.View_Database (Self.View).Is_Ada_Runtime
         and then not Self.View.Is_Library_Standalone
         and then Self.View.Is_Shared_Library
       then
@@ -697,8 +698,7 @@ package body GPR2.Build.Actions.Link is
 
                Cmd_Line.Add_Argument
                  (Self.Tree.Linker_Lib_Dir_Option &
-                    Self.View.Tree.Runtime_Project.Object_Directory.
-                      String_Value);
+                 Self.View.Tree.Runtime_Project.Object_Directory.String_Value);
             end if;
          end;
       end if;
@@ -724,9 +724,47 @@ package body GPR2.Build.Actions.Link is
          end loop;
       end if;
 
-      if Self.View.Is_Library
-        and then not Self.Is_Static
-      then
+      if Self.View.Is_Library and then not Self.Is_Static then
+         if not Self.View.Is_Library_Standalone then
+            --  In case of a shared non-standalone library, there's no binding
+            --  phase so the potential pragma Linker_Options present in its
+            --  closure are not parsed. So we need to walk through the Ali
+            --  files to pick them up here.
+
+            for Obj of Objects loop
+               if Self.Tree.Has_Predecessor (Obj)
+                 and then Self.Tree.Predecessor (Obj)
+                          in Compile.Ada.Object'Class
+               then
+                  for Opt of
+                    Compile.Ada.Object (Self.Tree.Predecessor (Obj))
+                      .ALI.Linker_Options
+                  loop
+                     declare
+                        First : Natural := Opt'First;
+                        Idx   : Natural := Opt'First;
+                     begin
+                        while Idx < Opt'Last loop
+                           if Opt'Last - Idx > 3
+                             and then Opt (Idx .. Idx + 3) = "{00}"
+                           then
+                              Cmd_Line.Add_Argument (Opt (First .. Idx - 1));
+                              Idx := Idx + 4;
+                              First := Idx;
+                           else
+                              Idx := Idx + 1;
+                           end if;
+                        end loop;
+
+                        Cmd_Line.Add_Argument (Opt (First .. Opt'Last));
+                     end;
+                  end loop;
+               end if;
+            end loop;
+         end if;
+
+         --  Add the project's library_options
+
          Ign := Add_Attr (PRA.Library_Options, PAI.Undefined, True, True);
       end if;
 
