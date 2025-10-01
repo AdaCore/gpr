@@ -82,7 +82,7 @@ include:
       save-component: false
       cpus: 16
       disk: 80
-      needs: ["build_gnat_bootstrap:linux"]
+      needs: []
       rules:
         - allow_failure: true
 
