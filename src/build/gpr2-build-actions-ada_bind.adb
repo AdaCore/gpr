@@ -1008,7 +1008,6 @@ package body GPR2.Build.Actions.Ada_Bind is
                Inserted : Boolean;
                Add_Intf : Boolean := True;
 
-               use GPR2.Project;
                use type GPR2.Project.View.Object;
 
             begin
@@ -1027,8 +1026,6 @@ package body GPR2.Build.Actions.Ada_Bind is
                if Add_Intf
                  --  Ignore external units
                  and then CU.Owning_View /= Self.View
-                 --  except for encapsulated libraries
-                 and then Self.Ctxt.Library_Standalone /= Encapsulated
                  --  except for aggregated projects
                  and then
                    (Self.Ctxt.Kind /= K_Aggregate_Library
