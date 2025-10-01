@@ -60,6 +60,42 @@ In such situations, `GPRbuild` can still
 be used to manage the appropriate part of the build. For
 instance it can be called from within a Makefile.
 
+.. _Introducting_Our_New_Builder:
+
+Introducing our new Builder
+---------------------------
+
+For the GNAT 26 release, we are introducing our new builder in `GPRbuild2`.
+
+Currently, our legacy builder remains the default for the 26 release. We 
+encourage you to give `GPRbuild2` a try by setting the dedicated environment
+variable :envvar:`GNAT_GPR_ENGINE`:
+
+.. code-block::
+
+  GNAT_GPR_ENGINE=2
+
+To reset to GPRbuild, simply set the environment variable to:
+
+.. code-block::
+
+  GNAT_GPR_ENGINE=1
+
+If you want a swifter approach, you can add 
+:samp:`gprbuild -P my_proj.gpr --gpr=2` to use the new builder and 
+:samp:`gprbuild -P my_proj.gpr --gpr=1` to use the default builder if there
+are no environment variable to contradict this behavior.
+
+If no :samp:`--gpr={GNAT_GPR_ENGINE}` switch is on gprbuild command line the 
+default legacy builder will be used.
+
+The benefits of our new builder are:
+
+* Better and more reliably report sources clashes
+* Better and more reliably report generated artifacts clashes
+* Generic system to identify build trigger conditions
+* Future-proof design
+
 .. _Command_Line:
 
 Command Line
@@ -723,6 +759,12 @@ package Builder of the main project (attribute Switches):
   If :samp:`-j{num}` is set alongside :samp:`--autodetect-jobserver`
   the former will be ignored.
 
+  .. warning::
+
+      `GPRBuild2` is automatically detecting if a jobserver is available or not
+      :samp:`--autodetect-jobserver` is no longer necessary and :samp:`-j{num}`
+      will be ignored if a jobserver is available.
+
 * :samp:`--no-indirect-imports`
 
   This indicates that sources of a project should import only sources or
@@ -788,6 +830,12 @@ package Builder of the main project (attribute Switches):
 
   Note: if :samp:`--autodetect-jobserver` is set and GNU make jobserver is detected,
   then :samp:`-j{num}` will simply be ignored.
+
+  .. warning::
+
+      `GPRBuild2` is automatically detecting if a jobserver is available or not
+      :samp:`--autodetect-jobserver` is no longer necessary and :samp:`-j{num}`
+      will be ignored if a jobserver is available.
 
 * :samp:`-k` (Keep going after compilation errors)
 
@@ -1182,6 +1230,12 @@ two remaining and available slots for both GPRbuild compilation phase.
 
 Note: if :samp:`--autodetect-jobserver` is set and GNU make jobserver is detected,
 then any :samp:`-j{num}` will simply be ignored by GPRbuild and a warning will be issued.
+
+.. warning::
+
+   `GPRBuild2` is automatically detecting if a jobserver is available or not
+   :samp:`--autodetect-jobserver` is no longer necessary and :samp:`-j{num}`
+   will be ignored if a jobserver is available.
 
 .. _Post-Compilation_Phase:
 
