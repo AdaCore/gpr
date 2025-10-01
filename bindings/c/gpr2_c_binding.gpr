@@ -1,7 +1,10 @@
+--  This project is used to build C-binding library and force use of
+--  `static-pic` libraries.
+
 aggregate project GPR2_C_Binding is
 
    for Project_Path use (".");
    for Project_Files use ("gpr2-c.gpr");
-   for External ("LIBRARY_TYPE") use "static";
+   for External ("LIBRARY_TYPE") use "static-pic";
 
 end GPR2_C_Binding;
