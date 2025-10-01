@@ -66,18 +66,26 @@ package body GPR2.Build.Signature is
       C     : Artifact_Sets.Cursor;
    begin
       Self.Artifacts (IO).Insert (Art, C, Added);
-
-      Traces.Trace (Art.Serialize);
+      if IO = Input then
+         Traces.Trace ("Adding input artifact " & Art.Serialize);
+      else
+         Traces.Trace ("Adding output artifact " & Art.Serialize);
+      end if;
 
       if not Checksum_Check then
+         Traces.Trace ("Not checking checksum");
          return True;
 
       elsif not Added then
+         Traces.Trace ("Signature has already been invalidated");
+
          --  Already there, so return False if the signature is already
          --  invalidated.
          return not Self.Checksums (IO).Is_Empty;
 
       elsif Self.Checksums (IO).Is_Empty then
+         Traces.Trace ("Signature has already been invalidated");
+
          --  Nothing more to do, the signature is already invalidated
          return False;
       end if;
@@ -90,11 +98,18 @@ package body GPR2.Build.Signature is
          if not Checksum_Maps.Has_Element (CC)
            or else Checksum_Maps.Element (CC) /= Chk
          then
-            Traces.Trace
-              ((if Checksum_Maps.Has_Element (CC)
-               then "   - " & Checksum_Maps.Element (CC)
-               else "   - No checksum found"));
-            Traces.Trace ("   - " & Chk);
+            if Checksum_Maps.Has_Element (CC) then
+               Traces.Trace
+                 ("Invalidating the signature because checksums do " &
+                  "not match:");
+               Traces.Trace ("  Current checksum: " & Chk);
+               Traces.Trace
+                 ("  Saved checksum  : " & Checksum_Maps.Element (CC));
+            else
+               Traces.Trace
+                 ("Invalidating the signature because no saved checksum " &
+                  "has been found.");
+            end if;
 
             --  Invalidate the saved checksums
             Self.Checksums (Input).Clear;
@@ -104,6 +119,8 @@ package body GPR2.Build.Signature is
          end if;
       end;
 
+      Traces.Trace ("Checksums matched");
+
       return True;
    end Add_Internal;
 
@@ -112,10 +129,11 @@ package body GPR2.Build.Signature is
    ----------------
 
    function Add_Output
-     (Self : in out Object;
-      Art  : Artifacts.Object'Class) return Boolean is
+     (Self           : in out Object;
+      Art            : Artifacts.Object'Class;
+      Checksum_Check : Boolean := True) return Boolean is
    begin
-      return Add_Internal (Self, Art, Output);
+      return Add_Internal (Self, Art, Output, Checksum_Check);
    end Add_Output;
 
    -----------
@@ -387,6 +405,19 @@ package body GPR2.Build.Signature is
         and then Self.Artifacts (Input).Length = Self.Checksums (Input).Length
         and then (not Self.Artifacts (Input).Is_Empty
                   or else not Self.Artifacts (Output).Is_Empty);
+   end Valid;
+
+   function Valid (Self : Object; Art : Artifacts.Object'Class) return Boolean
+   is
+   begin
+      if Self = Undefined or else Self.Is_Empty then
+         return False;
+      end if;
+
+      return (Self.Checksums (Input).Contains (Art)
+        and then Self.Checksums (Input).Element (Art) = Art.Checksum) or else
+        (Self.Checksums (Output).Contains (Art)
+         and then Self.Checksums (Output).Element (Art) = Art.Checksum);
    end Valid;
 
 end GPR2.Build.Signature;

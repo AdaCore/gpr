@@ -223,8 +223,8 @@ package body GPR2.Build.Actions.Ada_Bind is
                                   Actions.Compile.Ada.Object
                                     (Self.Tree.Predecessor (Input));
                      Key      : constant String :=
-                                  To_Lower (String (Comp.Input_Unit.Name)) &
-                                  (if Comp.Input_Unit.Main_Part = S_Spec
+                                  To_Lower (String (Comp.Unit.Name)) &
+                                  (if Comp.Unit.Main_Part = S_Spec
                                    then S_Suffix else B_Suffix);
 
                   begin
@@ -410,7 +410,7 @@ package body GPR2.Build.Actions.Ada_Bind is
                Comp : constant Actions.Compile.Ada.Object :=
                  Compile.Ada.Object (Self.Tree.Predecessor (Art));
             begin
-               if not Self.Roots.Contains (Comp.Input_Unit.Name) then
+               if not Self.Roots.Contains (Comp.Unit.Name) then
                   Cmd_Line.Add_Argument
                     (Comp.Local_Ali_File.Path, Build.Command_Line.Simple);
                end if;
@@ -513,25 +513,23 @@ package body GPR2.Build.Actions.Ada_Bind is
    -----------------------
 
    overriding procedure Compute_Signature
-     (Self      : in out Object;
-      Load_Mode : Boolean)
+     (Self            : in out Object;
+      Check_Checksums : Boolean)
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      if not Self.Signature.Add_Output (Self.Generated_Spec)
-        and then Load_Mode
+      if not Self.Signature.Add_Output (Self.Generated_Spec, Check_Checksums)
       then
          return;
       end if;
 
-      if not Self.Signature.Add_Output (Self.Generated_Body)
-        and then Load_Mode
+      if not Self.Signature.Add_Output (Self.Generated_Body, Check_Checksums)
       then
          return;
       end if;
 
       for Pred of Self.Tree.Inputs (UID) loop
-         if not Self.Signature.Add_Input (Pred) and then Load_Mode then
+         if not Self.Signature.Add_Input (Pred, Check_Checksums) then
             return;
          end if;
       end loop;
@@ -978,8 +976,8 @@ package body GPR2.Build.Actions.Ada_Bind is
       if Self.Ctxt.Is_Library
         and then Self.Ctxt.Has_Any_Interfaces
         and then
-          (Self.Roots.Contains (Comp.Input_Unit.Name)
-           or else Self.Extra_Intf.Contains (Comp.Input_Unit))
+          (Self.Roots.Contains (Comp.Unit.Name)
+           or else Self.Extra_Intf.Contains (Comp.Unit))
       then
          if Comp.Spec_Needs_Body then
             Scope := Comp.Withed_Units;
@@ -991,7 +989,7 @@ package body GPR2.Build.Actions.Ada_Bind is
             if not Self.Itf_Analyzed.Contains (U) then
                To_Analyze.Include
                  (Self.Ctxt.Namespace_Roots.First_Element.Unit (U),
-                  Comp.Input_Unit.Name);
+                  Comp.Unit.Name);
             end if;
          end loop;
 
@@ -1159,7 +1157,7 @@ package body GPR2.Build.Actions.Ada_Bind is
                A_Comp : constant Actions.Compile.Ada.Object :=
                  Actions.Compile.Ada.Object (Self.Tree.Predecessor (Ali));
             begin
-               Deps.Union (A_Comp.Input_Unit.Known_Dependencies);
+               Deps.Union (A_Comp.Unit.Known_Dependencies);
             end;
          end if;
       end loop;

@@ -47,9 +47,9 @@ package GPR2.Build.Actions.Compile is
      (Self : Object;
       Db   : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
-   overriding procedure Compute_Signature
-     (Self      : in out Object;
-      Load_Mode : Boolean);
+   overriding
+   procedure Compute_Signature
+     (Self : in out Object; Check_Checksums : Boolean);
 
    overriding procedure Compute_Command
      (Self           : in out Object;

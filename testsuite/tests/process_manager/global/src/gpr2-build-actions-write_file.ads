@@ -47,7 +47,7 @@ package GPR2.Build.Actions.Write_File is
 
    overriding procedure Compute_Signature
      (Self      : in out Object;
-      Load_Mode : Boolean);
+      Check_Checksums : Boolean);
 
    overriding procedure Compute_Command
      (Self           : in out Object;

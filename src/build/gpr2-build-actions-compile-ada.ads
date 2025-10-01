@@ -33,9 +33,9 @@ package GPR2.Build.Actions.Compile.Ada is
      (Self : in out Object; Src : GPR2.Build.Compilation_Unit.Object);
    --  Initialize all object fields according to Src
 
-   function Input_Unit
+   function Unit
      (Self : Object) return GPR2.Build.Compilation_Unit.Object;
-   --  Return the name of the compiled unit
+   --  Return the compilation unit contained in the source file
 
    function Intf_Ali_File (Self : Object) return Artifacts.Files.Object;
    --  Return the path of the generated ALI file. If the corresponding view
@@ -142,15 +142,15 @@ private
      (Self.CU.Main_Part.Index);
 
    overriding procedure Compute_Signature
-     (Self      : in out Object;
-      Load_Mode : Boolean);
+     (Self            : in out Object;
+      Check_Checksums : Boolean);
 
    overriding function On_Ready_State
      (Self : in out Object) return Boolean;
 
    Undefined : constant Object := (others => <>);
 
-   function Input_Unit
+   function Unit
      (Self : Object) return GPR2.Build.Compilation_Unit.Object
    is (Self.CU);
 

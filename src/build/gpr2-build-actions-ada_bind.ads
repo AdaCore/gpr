@@ -148,9 +148,9 @@ private
    overriding function Valid_Signature (Self : Object) return Boolean is
      (Self.Skip or else GPR2.Build.Actions.Object (Self).Valid_Signature);
 
-   overriding procedure Compute_Signature
-     (Self      : in out Object;
-      Load_Mode : Boolean);
+   overriding
+   procedure Compute_Signature
+     (Self : in out Object; Check_Checksums : Boolean);
 
    overriding function Post_Command
      (Self   : in out Object;

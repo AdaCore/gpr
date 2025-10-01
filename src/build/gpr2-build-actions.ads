@@ -175,8 +175,8 @@ package GPR2.Build.Actions is
    --  is valid.
 
    procedure Compute_Signature
-     (Self      : in out Object;
-      Load_Mode : Boolean) is abstract;
+     (Self : in out Object; Check_Checksums : Boolean)
+   is abstract;
    --  This populates the artifacts in the signature.
    --  In load_mode, this should stop as soon as the signature don't match
    --  the saved timestamps
@@ -220,8 +220,16 @@ package GPR2.Build.Actions is
    --  Used to store the signature of the action after it has been executed.
    --  Returns false in case an expected artifact is missing.
 
-   procedure Load_Signature (Self : in out Object'Class);
-   --  Compare the current action signature to the loaded signature
+   procedure Load_Signature
+     (Self : in out Object'Class; Check_Checksums : Boolean := True);
+   --  Load the signature checksums from the build DB. The obtained signature
+   --  is saved in the action. If Check_Checksums is True, compare the current
+   --  action signature to the loaded one, and invalidate it as soon as a
+   --  mismatch is found. Invalidating a signature means clearing all its
+   --  checksums.
+
+   function Signature (Self : Object) return GPR2.Build.Signature.Object;
+   --  Returns the signature of the action.
 
    function Saved_Stdout (Self : Object'Class) return Unbounded_String;
    function Saved_Stderr (Self : Object'Class) return Unbounded_String;
@@ -348,5 +356,8 @@ private
      return GPR2.Build.Artifacts.Key_Value.Object is
        (GPR2.Build.Artifacts.Key_Value.Create
           (Key => "UID_Artifact", Value => Self.UID.Serialize));
+
+   function Signature (Self : Object) return GPR2.Build.Signature.Object
+   is (Self.Signature);
 
 end GPR2.Build.Actions;

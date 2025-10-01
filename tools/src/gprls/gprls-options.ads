@@ -30,8 +30,15 @@ package GPRls.Options is
    type Object is new GPRtools.Options.Base_Options with private;
    --  Options for gprls
 
-   function Build_From_Command_Line (Self : in out Object) return Boolean;
-   --  Fill out a gprls options object from the command line
+   overriding procedure Append_Argument
+     (Result : in out GPRls.Options.Object; Value : GPR2.Value_Type);
+
+   Empty_Options : constant Object;
+
+   procedure Setup (Parser : out GPRtools.Options.Command_Line_Parser);
+
+   procedure Parse_Command_Line
+     (Parser : GPRtools.Options.Command_Line_Parser; Options : in out Object);
 
    function Files (Self : Object) return Containers.Value_Set;
 
@@ -63,6 +70,8 @@ package GPRls.Options is
 
    function Gnatdist (Self : Object) return Boolean;
 
+   function Hide_Status (Self : Object) return Boolean;
+
    procedure Print (Self : Object);
 
 private
@@ -84,6 +93,9 @@ private
       Only_Display_Paths    : Boolean := False;
       Source_Parser         : Boolean := False;
       Gnatdist              : Boolean := False;
+      Project_Parsing_Verbosity  : Integer := -1;
+      Hide_Status        : Boolean := False;
+      Args                  : GPR2.Containers.Value_Set;
    end record;
 
    function Files (Self : Object) return GPR2.Containers.Value_Set is
@@ -133,5 +145,11 @@ private
 
    function Gnatdist (Self : Object) return Boolean is
      (Self.Gnatdist);
+
+   function Hide_Status (Self : Object) return Boolean is
+     (Self.Hide_Status);
+
+   Empty_Options : constant Object :=
+                     (GPRtools.Options.Empty_Options with others => <>);
 
 end GPRls.Options;

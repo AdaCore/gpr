@@ -193,9 +193,9 @@ private
    --  This can have no effects if symbols cannot be filtered or if the
    --  library symbol policy is unrestricted.
 
-   overriding procedure Compute_Signature
-     (Self      : in out Object;
-      Load_Mode : Boolean);
+   overriding
+   procedure Compute_Signature
+     (Self : in out Object; Check_Checksums : Boolean);
 
    overriding function Extended (Self : Object) return Object is
      (raise Internal_Error with "This action is not extending");

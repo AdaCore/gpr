@@ -384,7 +384,7 @@ begin
                               declare
                                  CU : constant Compilation_Unit.Object :=
                                         Actions.Compile.Ada.Object'Class
-                                          (Action).Input_Unit;
+                                          (Action).Unit;
 
                                  procedure For_Part
                                    (Kind     : Unit_Kind;
