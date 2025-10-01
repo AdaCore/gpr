@@ -25,14 +25,12 @@ def install_gpr2():
 
 def build_gnat_bootstrap():
     install_gpr2()
-    anod_install("libgpr2")
     for pkg in gnat_packages:
         anod_build(pkg)
     anod_build("gnat")
 
 
 def build_debug():
-    install_gpr2()
     anod_build("libgpr2", qualifier={"bare": True, "dbg": True})
     anod_build("gpr2", qualifier={"dbg": "True"})
 
@@ -42,8 +40,6 @@ def build_libgpr2_users():
     edge_pkg = ("als", "gnatcov", "gnatdoc4", "gnatformat", "lal-refactor", "gnathub")
 
     install_gpr2()
-    for pkg in gnat_packages:
-        anod_install(pkg)
     for pkg in wave_pkg:
         anod_build(pkg)
     for pkg in edge_pkg:
@@ -74,16 +70,26 @@ def test_gpr2build():
 
 def test_gpr2build_armhf_linux():
     install_gpr2()
-    anod_test("gprbuild", qualifier={"gpr2build": True, "toolchain": "stable"}, target="armhf-linux,,qemu")
+    anod_test(
+        "gprbuild",
+        qualifier={"gpr2build": True, "toolchain": "stable"},
+        target="armhf-linux,,qemu",
+    )
 
 
 def test_gpr2build_arm_elf_zynq7k():
     install_gpr2()
     anod_test(
         "gprbuild",
-        qualifier={"gpr2build": True, "toolchain": "stable", "rts": "light-zynq7000", "languages": "Ada;C"},
+        qualifier={
+            "gpr2build": True,
+            "toolchain": "stable",
+            "rts": "light-zynq7000",
+            "languages": "Ada;C",
+        },
         target="arm-elf,,qemu-zynq",
     )
+
 
 def test_gprconfig():
     install_gpr2()
