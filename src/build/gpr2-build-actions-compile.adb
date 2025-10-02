@@ -950,7 +950,8 @@ package body GPR2.Build.Actions.Compile is
                      end if;
 
                   elsif not Self.Signature.Add_Input
-                              (Artifacts.Files.Create (Path), Check_Checksums)
+                    (Artifacts.Source_Files.Create (Path),
+                     Check_Checksums)
                   then
                      return;
                   end if;
