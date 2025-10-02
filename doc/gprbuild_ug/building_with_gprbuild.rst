@@ -800,6 +800,12 @@ package Builder of the main project (attribute Switches):
   If :samp:`-j{num}` is set alongside :samp:`--autodetect-jobserver`
   the former will be ignored.
 
+  .. warning::
+
+      `GPRBuild2` is automatically detecting if a jobserver is available or not
+      :samp:`--autodetect-jobserver` is no longer necessary and :samp:`-j{num}`
+      will be ignored if a jobserver is available.
+
 * :samp:`--no-indirect-imports`
 
   This indicates that sources of a project should import only sources or
@@ -865,6 +871,12 @@ package Builder of the main project (attribute Switches):
 
   Note: if :samp:`--autodetect-jobserver` is set and GNU make jobserver is detected,
   then :samp:`-j{num}` will simply be ignored.
+
+  .. warning::
+
+      `GPRBuild2` is automatically detecting if a jobserver is available or not
+      :samp:`--autodetect-jobserver` is no longer necessary and :samp:`-j{num}`
+      will be ignored if a jobserver is available.
 
 * :samp:`-k` (Keep going after compilation errors)
 
@@ -1259,6 +1271,12 @@ two remaining and available slots for both GPRbuild compilation phase.
 
 Note: if :samp:`--autodetect-jobserver` is set and GNU make jobserver is detected,
 then any :samp:`-j{num}` will simply be ignored by GPRbuild and a warning will be issued.
+
+.. warning::
+
+   `GPRBuild2` is automatically detecting if a jobserver is available or not
+   :samp:`--autodetect-jobserver` is no longer necessary and :samp:`-j{num}`
+   will be ignored if a jobserver is available.
 
 .. _Post-Compilation_Phase:
 
