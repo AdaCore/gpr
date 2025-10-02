@@ -67,6 +67,11 @@ Introducing our new Builder
 
 For the GNAT 26 release, we are introducing our new builder in `GPRbuild2`.
 
+.. _How_To_Use_Our_New_Builder:
+
+How to use our new Builder
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Currently, our legacy builder remains the default for the 26 release. We 
 encourage you to give `GPRbuild2` a try by setting the dedicated environment
 variable :envvar:`GNAT_GPR_ENGINE`:
@@ -95,6 +100,41 @@ The benefits of our new builder are:
 * Better and more reliably report generated artifacts clashes
 * Generic system to identify build trigger conditions
 * Future-proof design
+
+.. _Known_Limitations:
+
+Known limitations
+^^^^^^^^^^^^^^^^^
+
+While we considered `GPRbuild2` to be mature enough, there are still known
+limitations:
+
+* Various switches are not supported yet:
+   * :samp:`-x`
+   * :samp:`--source-info`
+   * :samp:`--no-object-check`
+   * :samp:`--no-exit-message`
+   * :samp:`--no-complete-output`
+   * :samp:`--create-missing-dirs`
+   * :samp:`--lto`
+   * :samp:`--lfto`
+* The :samp:`-gnatdXX` and :samp:`-dXX` switches are not supported yet
+* :samp:`-O` is not supported yet, use :samp:`-O1` instead
+* Various attributes are not supported yet:
+   * :samp:`Compiler’Dependency_Driver`
+   * :samp:`Compiler’Config_File_Dependency_Support`
+   * :samp:`Object_Linked`,
+   * :samp:`Only_Dirs_With_Sources`
+* :envvar:`GPR_VERBOSITY` not supported
+* Various missing checks in project files
+* Missing support for pre-processed sources
+* Missing support for special characters handling in our GPR and Ada parser
+* Missing support for C binding phase
+
+Some areas are still being worked on:
+
+* Aggregated libraries
+* Projects relocation
 
 .. _Command_Line:
 
