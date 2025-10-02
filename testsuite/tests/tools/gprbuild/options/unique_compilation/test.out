@@ -38,3 +38,39 @@ I'm main
 I'm Pkg
 I'm Pkg2
 
+$ gprbuild -P demo.gpr -p -j1 main.adb -b
+Action [Ada Compile] main.adb (demo.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
+   * [Ada Bind] main (demo.gpr)
+Action [Ada Compile] pkg.ads (lib1.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
+   * [Ada Bind] main (demo.gpr)
+   * [Archive] liblib1.a (lib1.gpr)
+Action [Ada Compile] pkg2.ads (lib2.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
+   * [Ada Bind] main (demo.gpr)
+   * [Archive] liblib2.a (lib2.gpr)
+Action [C Compile] hello.c (lib2.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
+   * [Archive] liblib2.a (lib2.gpr)
+$ gprbuild -P demo.gpr -p -j1 main.adb -l
+Action [Ada Compile] main.adb (demo.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
+   * [Link] main (demo.gpr)
+Action [Ada Compile] pkg.ads (lib1.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
+   * [Link] main (demo.gpr)
+Action [Ada Compile] pkg2.ads (lib2.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
+   * [Link] main (demo.gpr)
+Action [C Compile] hello.c (lib2.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
+   * [Link] main (demo.gpr)
+$ gprbuild -P demo.gpr -p -j1 main.adb -c
+[Ada Compile]     main.adb
+[Ada Compile]     pkg.ads
+[Ada Compile]     pkg2.ads
+[C Compile]       hello.c
+$ gprbuild -P demo.gpr -p -j1 main.adb -l
+Action [Archive] liblib1.a (lib1.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
+   * [Link] main (demo.gpr)
+Action [Archive] liblib2.a (lib2.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
+   * [Link] main (demo.gpr)
+$ gprbuild -P demo.gpr -p -j1 main.adb -b
+[Archive]         liblib1.a
+[Archive]         liblib2.a
+[Ada Bind]        main
+$ gprbuild -P demo.gpr -p -j1 main.adb -l
+[Link]            main
