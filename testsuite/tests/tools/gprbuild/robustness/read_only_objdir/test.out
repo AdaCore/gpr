@@ -22,7 +22,7 @@ $ gprbuild -Plib -XPRJ_RO=True -p -j1 --temp-dir=obj
 [Ada Compile]     pkg2.ads
 [Ada Bind]        lib
 [Ada Post-Bind]   b__lib.adb
-[Add-Link-Options] o__lib.o
+[Link-Options-Insert] o__lib.o
 [Partial Link]    p__lib.o
 [Archive]         liblib.a
 - with regular dependency
@@ -37,7 +37,7 @@ $ gprbuild -Plib -j1 --temp-dir=obj
 [Ada Compile]     pkg.ads
 [Ada Bind]        lib
 [Ada Post-Bind]   b__lib.adb
-[Add-Link-Options] o__lib.o
+[Link-Options-Insert] o__lib.o
 [Partial Link]    p__lib.o
 lib.gpr: error: could not create the ali file "pkg2.ali"
 Command '[Archive] liblib.a (lib.gpr)' failed.
@@ -49,7 +49,7 @@ $ gprbuild -Plib -f -j1 --temp-dir=obj
 [Ada Compile]     pkg.ads
 [Ada Bind]        lib
 [Ada Post-Bind]   b__lib.adb
-[Add-Link-Options] o__lib.o
+[Link-Options-Insert] o__lib.o
 [Partial Link]    p__lib.o
 lib.gpr: error: cannot remove the old archive liblib.a
 Command '[Archive] liblib.a (lib.gpr)' failed.
