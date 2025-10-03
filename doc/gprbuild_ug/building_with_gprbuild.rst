@@ -65,16 +65,14 @@ instance it can be called from within a Makefile.
 Introducing our new Builder
 ---------------------------
 
-For the GNAT 26 release, we are introducing our new builder in `GPRbuild2`.
-
 .. _How_To_Use_Our_New_Builder:
 
 How to use our new Builder
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Currently, our legacy builder remains the default for the 26 release. We 
-encourage you to give `GPRbuild2` a try by setting the dedicated environment
-variable :envvar:`GNAT_GPR_ENGINE`:
+We are introducing our new builder in `GPRbuild2`, our legacy builder remains 
+the default for now. We encourage you to give `GPRbuild2` a try by 
+setting the dedicated environment variable :envvar:`GNAT_GPR_ENGINE`:
 
 .. code-block::
 
