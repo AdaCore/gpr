@@ -232,7 +232,8 @@ begin
             begin
                for Main of Mains loop
                   Src :=
-                    Opt.Tree.Root_Project.Source (Main.Source.Simple_Name);
+                    Opt.Tree.Root_Project.Visible_Source
+                      (Main.Source.Simple_Name);
 
                   if Src.Is_Defined then
                      if Lang = No_Language then
@@ -244,10 +245,6 @@ begin
 
                         exit;
                      end if;
-                  else
-                     Lang := No_Language;
-
-                     exit;
                   end if;
                end loop;
 
