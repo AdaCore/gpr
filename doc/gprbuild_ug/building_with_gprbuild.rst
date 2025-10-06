@@ -60,6 +60,83 @@ In such situations, `GPRbuild` can still
 be used to manage the appropriate part of the build. For
 instance it can be called from within a Makefile.
 
+.. _Introducting_Our_New_Builder:
+
+Introducing our new Builder
+---------------------------
+
+.. _How_To_Use_Our_New_Builder:
+
+How to use our new Builder
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We are introducing our new builder, which we will be referring to as
+`GPRbuild2`. Our legacy builder remains the default for now. We
+encourage you to give `GPRbuild2` a try by 
+setting the dedicated environment variable :envvar:`GNAT_GPR_ENGINE`:
+
+.. code-block::
+
+  GNAT_GPR_ENGINE=2
+
+To switch back to legacy builder, simply set the environment variable to:
+
+.. code-block::
+
+  GNAT_GPR_ENGINE=1
+
+If you want a swifter approach, you can add 
+:samp:`gprbuild -P my_proj.gpr --gpr=2` to use the new builder and 
+:samp:`gprbuild -P my_proj.gpr --gpr=1` to use the default builder if there
+are no environment variable to contradict this behavior.
+
+If no :samp:`--gpr={GNAT_GPR_ENGINE}` switch is on gprbuild command line the 
+default legacy builder will be used.
+
+The benefits of our new builder are:
+
+* Build decisions based on checksums rather than timestamps
+* Persistent build database
+* Generic system to identify build trigger conditions
+* Future-proof design
+* Better and more reliable reporting of sources clashes
+* Better and more reliable reporting of generated artifacts clashes
+
+.. _Known_Limitations:
+
+Known limitations
+^^^^^^^^^^^^^^^^^
+
+While we consider `GPRbuild2` to be mature enough, there are still known
+limitations:
+
+* Various switches are not supported yet:
+   * :samp:`-x`
+   * :samp:`--source-info`
+   * :samp:`--no-object-check`
+   * :samp:`--no-exit-message`
+   * :samp:`--no-complete-output`
+   * :samp:`--create-missing-dirs`
+   * :samp:`--lto`
+   * :samp:`--lfto`
+* The :samp:`-gnatdXX` and :samp:`-dXX` switches are not supported yet
+* :samp:`-O` is not supported yet, use :samp:`-O1` instead
+* Various attributes are not supported yet:
+   * :samp:`Compiler'Dependency_Driver`
+   * :samp:`Compiler'Config_File_Dependency_Support`
+   * :samp:`Object_Linked`,
+   * :samp:`Only_Dirs_With_Sources`
+* :envvar:`GPR_VERBOSITY` not supported
+* Various missing checks in project files
+* Missing support for pre-processed sources
+* Missing support for special characters handling in our GPR and Ada parser
+* Missing support for C binding phase
+
+Some areas are still being worked on:
+
+* Aggregated libraries
+* Projects relocation
+
 .. _Command_Line:
 
 Command Line
@@ -723,6 +800,12 @@ package Builder of the main project (attribute Switches):
   If :samp:`-j{num}` is set alongside :samp:`--autodetect-jobserver`
   the former will be ignored.
 
+  .. warning::
+
+      `GPRBuild2` is automatically detecting if a jobserver is available or not
+      :samp:`--autodetect-jobserver` is no longer necessary and :samp:`-j{num}`
+      will be ignored if a jobserver is available.
+
 * :samp:`--no-indirect-imports`
 
   This indicates that sources of a project should import only sources or
@@ -788,6 +871,12 @@ package Builder of the main project (attribute Switches):
 
   Note: if :samp:`--autodetect-jobserver` is set and GNU make jobserver is detected,
   then :samp:`-j{num}` will simply be ignored.
+
+  .. warning::
+
+      `GPRBuild2` is automatically detecting if a jobserver is available or not
+      :samp:`--autodetect-jobserver` is no longer necessary and :samp:`-j{num}`
+      will be ignored if a jobserver is available.
 
 * :samp:`-k` (Keep going after compilation errors)
 
@@ -1182,6 +1271,12 @@ two remaining and available slots for both GPRbuild compilation phase.
 
 Note: if :samp:`--autodetect-jobserver` is set and GNU make jobserver is detected,
 then any :samp:`-j{num}` will simply be ignored by GPRbuild and a warning will be issued.
+
+.. warning::
+
+   `GPRBuild2` is automatically detecting if a jobserver is available or not
+   :samp:`--autodetect-jobserver` is no longer necessary and :samp:`-j{num}`
+   will be ignored if a jobserver is available.
 
 .. _Post-Compilation_Phase:
 
