@@ -70,15 +70,16 @@ Introducing our new Builder
 How to use our new Builder
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We are introducing our new builder in `GPRbuild2`, our legacy builder remains 
-the default for now. We encourage you to give `GPRbuild2` a try by 
+We are introducing our new builder, which we will be referring to as
+`GPRbuild2`. Our legacy builder remains the default for now. We
+encourage you to give `GPRbuild2` a try by 
 setting the dedicated environment variable :envvar:`GNAT_GPR_ENGINE`:
 
 .. code-block::
 
   GNAT_GPR_ENGINE=2
 
-To reset to GPRbuild, simply set the environment variable to:
+To switch back to legacy builder, simply set the environment variable to:
 
 .. code-block::
 
@@ -94,17 +95,19 @@ default legacy builder will be used.
 
 The benefits of our new builder are:
 
-* Better and more reliably report sources clashes
-* Better and more reliably report generated artifacts clashes
+* Build decisions based on checksums rather than timestamps
+* Persistent build database
 * Generic system to identify build trigger conditions
 * Future-proof design
+* Better and more reliable reporting of sources clashes
+* Better and more reliable reporting of generated artifacts clashes
 
 .. _Known_Limitations:
 
 Known limitations
 ^^^^^^^^^^^^^^^^^
 
-While we considered `GPRbuild2` to be mature enough, there are still known
+While we consider `GPRbuild2` to be mature enough, there are still known
 limitations:
 
 * Various switches are not supported yet:
@@ -119,8 +122,8 @@ limitations:
 * The :samp:`-gnatdXX` and :samp:`-dXX` switches are not supported yet
 * :samp:`-O` is not supported yet, use :samp:`-O1` instead
 * Various attributes are not supported yet:
-   * :samp:`Compiler’Dependency_Driver`
-   * :samp:`Compiler’Config_File_Dependency_Support`
+   * :samp:`Compiler'Dependency_Driver`
+   * :samp:`Compiler'Config_File_Dependency_Support`
    * :samp:`Object_Linked`,
    * :samp:`Only_Dirs_With_Sources`
 * :envvar:`GPR_VERBOSITY` not supported
