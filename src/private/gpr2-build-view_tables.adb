@@ -1402,9 +1402,11 @@ package body GPR2.Build.View_Tables is
                Messages.Append
                  (Message.Create
                     (Message.Error,
-                     '"' & String (Basename) & '"' &
-                       " is found multiple times for the same source" &
-                       " directory",
+                     "The source with basename "
+                     & '"'
+                     & String (Basename)
+                     & '"'
+                     & " appears multiple times",
                      Data.View.Attribute
                        (Project.Registry.Attribute.Source_Dirs)));
             end loop;

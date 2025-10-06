@@ -1,0 +1,1 @@
+prj.gpr:3:08: error: The source with basename "foo.adb" appears multiple times

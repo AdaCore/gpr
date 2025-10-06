@@ -1,7 +1,7 @@
 regular update:
-prj.gpr:3:08: error: "pkg.ads" is found multiple times for the same source directory
+prj.gpr:3:08: error: The source with basename "pkg.ads" appears multiple times
   issue correctly detected.
 
 no_error option is now set:
-prj.gpr:3:08: warning: "pkg.ads" is found multiple times for the same source directory
+prj.gpr:3:08: warning: The source with basename "pkg.ads" appears multiple times
   no issue detected.
