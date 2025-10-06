@@ -114,7 +114,7 @@ For compatibility with gnatmake, these switches are passed to the Ada compiler:
  -g[<debug_opt>]
  -nostdinc
  -nostdlib
- -O<level>
+ -O[<level>]
 
 -------------------------
 gprclean -h
@@ -464,7 +464,7 @@ For compatibility with gnatmake, these switches are passed to the Ada compiler:
  -g[<debug_opt>]
  -nostdinc
  -nostdlib
- -O<level>
+ -O[<level>]
 
 -------------------------
 gprclean --help
