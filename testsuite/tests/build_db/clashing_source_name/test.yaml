@@ -1,0 +1,4 @@
+description: Test that two source files with the same name are detected as clashing when they appear at the same index in source_files, but not when they are at different indexes.
+driver: build_and_run
+project_file: prj
+main: main
