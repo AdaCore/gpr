@@ -791,6 +791,13 @@ using project file /demo.gpr
 [Ada Compile]     pkg2.adb
 
 -------------------------
+gprbuild -P -q
+-------------------------
+gprbuild: project file name missing after -P
+try "gprbuild --help" for more information.
+STATUS: 7
+
+-------------------------
 gprclean demo.gpr pkg.ads -n
 -------------------------
 /obj/pkg.o
