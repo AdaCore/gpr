@@ -49,6 +49,10 @@ for t in all_tools:
 
 execute([GPRBUILD, "-j1"], True)
 
+# test -P <missing_project> -q
+
+execute([GPRBUILD, "-P", "-q"])
+
 # check project without -P, and non-positional + positional arguments
 
 execute([GPRCLEAN, "demo.gpr", "pkg.ads", "-n"], True)
