@@ -299,9 +299,11 @@ package body GPRbuild.Options is
         (Compiler_Group,
          Create
            ("-O",
-            Help   => "",
+            Help      => "",
             Delimiter => None,
-            Parameter => "<level>"));
+            Parameter => "<level>",
+            Default   => "1"));
+      --  if -O is passed, it will default correctly to -O1
 
       --  Switches there only for compatibility reason but without any
       --  effect
