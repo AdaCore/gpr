@@ -27,4 +27,5 @@ begin
    Load ("demo3.gpr");
    Load ("demo4.gpr");
    Load ("demo5.gpr");
+   Load ("missing/path.gpr");
 end Main;

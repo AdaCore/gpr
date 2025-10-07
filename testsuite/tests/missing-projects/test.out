@@ -1,5 +1,85 @@
+without
+--- Without all environment variables set ---
 demo.gpr:2:06: error: imported project file "imp_missing.gpr" not found
+The following directories have been searched:
+* Current directory: 
+* GPR_PROJECT_PATH environment variable:
+* Configuration file:
+
 demo.gpr:2:06: error: imported project file "imp_missing.gpr" not found
+The following directories have been searched:
+* Current directory: 
+* GPR_PROJECT_PATH environment variable:
+* Configuration file:
+
 demo.gpr:2:06: error: imported project file "imp_missing.gpr" not found
+The following directories have been searched:
+* Current directory: 
+* GPR_PROJECT_PATH environment variable:
+* Configuration file:
+
 demo4.gpr:2:15: error: extended project file "ext_undef.gpr" not found
+The following directories have been searched:
+* Current directory: 
+* GPR_PROJECT_PATH environment variable:
+* Configuration file:
+
 demo.gpr:2:06: error: imported project file "imp_missing.gpr" not found
+The following directories have been searched:
+* Current directory: 
+* GPR_PROJECT_PATH environment variable:
+* Configuration file:
+
+error: project file "missing/path.gpr" not found
+The following directories have been searched:
+* Project file path.gpr directory: /missing
+* Current directory: 
+* GPR_PROJECT_PATH environment variable:
+* Configuration file:
+
+
+--- With all environment variables set ---
+demo.gpr:2:06: error: imported project file "imp_missing.gpr" not found
+The following directories have been searched:
+* Current directory: 
+* GPR_PROJECT_PATH environment variable:
+* ADA_PROJECT_PATH environment variable:
+* Configuration file:
+
+demo.gpr:2:06: error: imported project file "imp_missing.gpr" not found
+The following directories have been searched:
+* Current directory: 
+* GPR_PROJECT_PATH environment variable:
+* ADA_PROJECT_PATH environment variable:
+* Configuration file:
+
+demo.gpr:2:06: error: imported project file "imp_missing.gpr" not found
+The following directories have been searched:
+* Current directory: 
+* GPR_PROJECT_PATH environment variable:
+* ADA_PROJECT_PATH environment variable:
+* Configuration file:
+
+demo4.gpr:2:15: error: extended project file "ext_undef.gpr" not found
+The following directories have been searched:
+* Current directory: 
+* GPR_PROJECT_PATH environment variable:
+* ADA_PROJECT_PATH environment variable:
+* Configuration file:
+
+demo.gpr:2:06: error: imported project file "imp_missing.gpr" not found
+The following directories have been searched:
+* Current directory: 
+* GPR_PROJECT_PATH environment variable:
+* ADA_PROJECT_PATH environment variable:
+* Configuration file:
+
+error: project file "missing/path.gpr" not found
+The following directories have been searched:
+* Project file path.gpr directory: /missing
+* Current directory: 
+* GPR_PROJECT_PATH environment variable:
+* ADA_PROJECT_PATH environment variable:
+* Configuration file:
+
+

@@ -16,94 +16,6 @@ package body GPR2.Project is
 
    use GNAT;
 
-   ---------------------------------
-   -- Append_Default_Search_Paths --
-   ---------------------------------
-
-   procedure Append_Default_Search_Paths
-     (Paths       : in out Path_Name.Set.Object;
-      Environment : GPR2.Environment.Object :=
-                       GPR2.Environment.Process_Environment)
-   is
-
-      procedure Append (Value : String)
-        with Post => (if Value'Length = 0
-                      then Paths'Old.Length = Paths.Length
-                          else Paths'Old.Length <= Paths.Length);
-      --  Append Value into Paths is it is not empty and does not exists in
-      --  Paths.
-
-      procedure Add_List (Values : String)
-        with Post => Paths'Old.Length <= Paths.Length;
-      --  Add list Values (which has OS-dependent path separator) into
-      --  Paths.
-
-      --------------
-      -- Add_List --
-      --------------
-
-      procedure Add_List (Values : String) is
-         V : String_Split.Slice_Set;
-      begin
-         String_Split.Create
-           (V, Values, String'(1 => OS_Lib.Path_Separator));
-
-         for K in 1 .. String_Split.Slice_Count (V) loop
-            Append (String_Split.Slice (V, K));
-         end loop;
-      end Add_List;
-
-      ------------
-      -- Append --
-      ------------
-
-      procedure Append (Value : String) is
-      begin
-         if Value /= "" then
-            declare
-               Path : constant Path_Name.Object :=
-                        Path_Name.Create_Directory (Filename_Type (Value));
-            begin
-               if not Paths.Contains (Path) then
-                  Paths.Append (Path);
-               end if;
-            end;
-         end if;
-      end Append;
-
-   begin
-      --  Then in GPR_PROJECT_PATH_FILE, one path per line
-
-      if Environment.Exists ("GPR_PROJECT_PATH_FILE") then
-         declare
-            Filename : constant String :=
-                         Environment.Value
-                           ("GPR_PROJECT_PATH_FILE");
-            File     : Text_IO.File_Type;
-         begin
-            if Filename'Length > 0 and then Directories.Exists (Filename) then
-               Text_IO.Open (File, Text_IO.In_File, Filename);
-
-               while not Text_IO.End_Of_File (File) loop
-                  Append (Text_IO.Get_Line (File));
-               end loop;
-
-               Text_IO.Close (File);
-            end if;
-         end;
-      end if;
-
-      --  Then in GPR_PROJECT_PATH and ADA_PROJECT_PATH
-
-      if Environment.Exists ("GPR_PROJECT_PATH") then
-         Add_List (Environment.Value ("GPR_PROJECT_PATH"));
-      end if;
-
-      if Environment.Exists ("ADA_PROJECT_PATH") then
-         Add_List (Environment.Value ("ADA_PROJECT_PATH"));
-      end if;
-   end Append_Default_Search_Paths;
-
    ------------
    -- Create --
    ------------
@@ -168,20 +80,100 @@ package body GPR2.Project is
    --------------------------
 
    function Default_Search_Paths
-     (Current_Directory : Boolean;
-      Environment       : GPR2.Environment.Object :=
-                            GPR2.Environment.Process_Environment)
-      return Path_Name.Set.Object
+     (Environment : GPR2.Environment.Object :=
+        GPR2.Environment.Process_Environment)
+      return GPR2.Project.Env_Search_Paths
    is
-      Result : Path_Name.Set.Object;
+      Result : GPR2.Project.Env_Search_Paths;
+
+      procedure Append (Paths : in out Path_Name.Set.Object; Value : String)
+      with
+        Post =>
+          (if Value'Length = 0
+           then Paths'Old.Length = Paths.Length
+           else Paths'Old.Length <= Paths.Length);
+      --  Append Value into Paths is it is not empty and does not exists in
+      --  Paths.
+
+      procedure Add_List (Paths : in out Path_Name.Set.Object; Values : String)
+      with Post => Paths'Old.Length <= Paths.Length;
+      --  Add list Values (which has OS-dependent path separator) into
+      --  Paths.
+
+      --------------
+      -- Add_List --
+      --------------
+
+      procedure Add_List (Paths : in out Path_Name.Set.Object; Values : String)
+      is
+         V : String_Split.Slice_Set;
+      begin
+         String_Split.Create (V, Values, String'(1 => OS_Lib.Path_Separator));
+
+         for K in 1 .. String_Split.Slice_Count (V) loop
+            Append (Paths, String_Split.Slice (V, K));
+         end loop;
+      end Add_List;
+
+      ------------
+      -- Append --
+      ------------
+
+      procedure Append (Paths : in out Path_Name.Set.Object; Value : String) is
+      begin
+         if Value /= "" then
+            declare
+               Path : constant Path_Name.Object :=
+                 Path_Name.Create_Directory (Filename_Type (Value));
+            begin
+               if not Paths.Contains (Path) then
+                  Paths.Append (Path);
+               end if;
+            end;
+         end if;
+      end Append;
+
    begin
-      if Current_Directory then
-         Result.Append
-           (Path_Name.Create_Directory
-              (Filename_Type (Directories.Current_Directory)));
+
+      Result.Current_Directory :=
+        Path_Name.Create_Directory
+          (Filename_Type (Directories.Current_Directory));
+
+      --  Then in GPR_PROJECT_PATH_FILE, one path per line
+
+      if Environment.Exists ("GPR_PROJECT_PATH_FILE") then
+         declare
+            Filename : constant String :=
+              Environment.Value ("GPR_PROJECT_PATH_FILE");
+            File     : Text_IO.File_Type;
+         begin
+            if Filename'Length > 0 and then Directories.Exists (Filename) then
+               Text_IO.Open (File, Text_IO.In_File, Filename);
+
+               while not Text_IO.End_Of_File (File) loop
+                  Append
+                    (Result.From_Gpr_Project_File_Path,
+                     Text_IO.Get_Line (File));
+               end loop;
+
+               Text_IO.Close (File);
+            end if;
+         end;
       end if;
 
-      Append_Default_Search_Paths (Result, Environment);
+      --  Then in GPR_PROJECT_PATH and ADA_PROJECT_PATH
+
+      if Environment.Exists ("GPR_PROJECT_PATH") then
+         Add_List
+           (Result.From_Gpr_Project_Path,
+            Environment.Value ("GPR_PROJECT_PATH"));
+      end if;
+
+      if Environment.Exists ("ADA_PROJECT_PATH") then
+         Add_List
+           (Result.From_Ada_Project_Path,
+            Environment.Value ("ADA_PROJECT_PATH"));
+      end if;
 
       return Result;
    end Default_Search_Paths;
@@ -191,14 +183,14 @@ package body GPR2.Project is
    ----------------------
 
    function Ensure_Extension
-     (Name        : Filename_Type;
-      Config_File : Boolean := False) return Filename_Type
+     (Name : Filename_Type; Config_File : Boolean := False)
+      return Filename_Type
    is
       use Ada.Characters.Handling;
    begin
-      if To_Lower (Directories.Extension (String (Name))) in
-           String (Project_File_Extension_No_Dot)
-           | String (Config_File_Extension_No_Dot)
+      if To_Lower (Directories.Extension (String (Name)))
+         in String (Project_File_Extension_No_Dot)
+          | String (Config_File_Extension_No_Dot)
       then
          return Name;
       elsif Config_File then
@@ -232,5 +224,28 @@ package body GPR2.Project is
               (Filename_Type (Root_Project.Dir_Name)));
       end return;
    end Search_Paths;
+
+   ----------------------
+   -- To_Path_Name_Set --
+   ----------------------
+
+   function To_Path_Name_Set
+     (Search_Paths : Env_Search_Paths) return Path_Name.Set.Object
+   is
+      Result : Path_Name.Set.Object := Path_Name.Set.Empty_Set;
+   begin
+      Result.Append (Search_Paths.Current_Directory);
+      for P of Search_Paths.From_Gpr_Project_File_Path loop
+         Result.Append (P);
+      end loop;
+      for P of Search_Paths.From_Gpr_Project_Path loop
+         Result.Append (P);
+      end loop;
+      for P of Search_Paths.From_Ada_Project_Path loop
+         Result.Append (P);
+      end loop;
+
+      return Result;
+   end To_Path_Name_Set;
 
 end GPR2.Project;
