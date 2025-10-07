@@ -1,5 +1,2 @@
-description:
-    Check for project paths setting
-driver: build_and_run
-project_file: project_paths
-main: main
+description: Check for project paths setting
+driver: python_script
