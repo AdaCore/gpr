@@ -4,6 +4,7 @@
 #  SPDX-License-Identifier: Apache-2.0
 #
 
+from __future__ import annotations
 from gpr2.capi import LibGPR2
 from gpr2.view import ProjectView
 from gpr2.message import Message
@@ -44,6 +45,17 @@ class ProjectTree:
 
     def __del__(self):
         LibGPR2.tree_destructor(request={"tree_id": self.id})
+
+    def __enter__(self) -> ProjectTree:
+        return self
+
+    def __exit__(
+        self,
+        _type: Optional[Type[BaseException]],
+        _val: Optional[BaseException],
+        _tb: Optional[TracebackType],
+    ) -> None:
+        pass
 
     @property
     def artifacts_directory(self) -> str | None:
