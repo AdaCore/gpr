@@ -1895,10 +1895,6 @@ package body GPR2.Tree_Internal is
       View : Project.View.Object;
 
    begin
-      --  Is the Id actually needed here?
-
-      Def.Id := Natural (Def.Tree.Views_Set.Length) + 1;
-
       --  Populate the view with its View_Internals
       View_Internal.Set (View, Def);
 
