@@ -223,6 +223,11 @@ package GPR2.Path_Name is
    --  If filenames is case insensitive converts path name to lowercase,
    --  returns the same value otherwise.
 
+   function Ends_With
+     (Filename : Filename_Optional; Suffix : String) return Boolean;
+   --  Returns True if Filename ends with Suffix. Takes into account the
+   --  OS case.
+
    function Change_Extension
      (Self : Object; Extension : Filename_Optional) return Object
      with Pre => Self.Is_Defined and then not Self.Is_Directory;
@@ -355,5 +360,11 @@ private
 
    function Hash (Self : Object) return Ada.Containers.Hash_Type is
      (Ada.Strings.Hash (Get (Self).Comparing));
+
+   function Ends_With
+     (Filename : Filename_Optional; Suffix : String) return Boolean
+   is (GNATCOLL.Utils.Ends_With
+         (GPR2.Path_Name.To_OS_Case (Filename),
+          GPR2.Path_Name.To_OS_Case (Filename_Optional (Suffix))));
 
 end GPR2.Path_Name;

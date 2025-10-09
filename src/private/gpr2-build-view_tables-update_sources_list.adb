@@ -16,6 +16,7 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.View;
 with GPR2.Source_Reference.Value;
+with GPR2.Utils;
 with GPR2.View_Internal;
 
 separate (GPR2.Build.View_Tables)
@@ -840,8 +841,6 @@ package body Update_Sources_List is
                --  If no naming exception matched, try with naming schema
 
                declare
-                  use GNATCOLL.Utils;
-
                   NS               : Naming_Schema renames
                                        Naming_Schema_Map.Element (Language);
                   Matches_Spec     : Boolean;
@@ -849,14 +848,20 @@ package body Update_Sources_List is
                   Matches_Separate : Boolean;
 
                begin
-                  Matches_Spec := NS.Has_Spec_Suffix
-                    and then Ends_With (String (Basename), NS.Spec_Suffix);
+                  Matches_Spec :=
+                    NS.Has_Spec_Suffix
+                    and then GPR2.Path_Name.Ends_With
+                               (Basename, NS.Spec_Suffix);
 
-                  Matches_Body := NS.Has_Body_Suffix
-                    and then Ends_With (String (Basename), NS.Body_Suffix);
+                  Matches_Body :=
+                    NS.Has_Body_Suffix
+                    and then GPR2.Path_Name.Ends_With
+                               (Basename, NS.Body_Suffix);
 
-                  Matches_Separate := NS.Has_Separate_Suffix
-                    and then Ends_With (String (Basename), NS.Sep_Suffix);
+                  Matches_Separate :=
+                    NS.Has_Separate_Suffix
+                    and then GPR2.Path_Name.Ends_With
+                               (Basename, NS.Sep_Suffix);
 
                   --  See GA05-012: if there's ambiguity with suffixes (e.g.
                   --  one of the suffixes if a suffix of another) we use
