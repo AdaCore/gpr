@@ -1,0 +1,5 @@
+project C is
+
+   for Source_Dirs use ("srcc");
+
+end C;
