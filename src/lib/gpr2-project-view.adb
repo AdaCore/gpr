@@ -28,7 +28,6 @@ with GPR2.View_Internal;
 package body GPR2.Project.View is
 
    use GNAT;
-   use type GPR2.View_Ids.View_Id;
 
    package Regexp_List is new Ada.Containers.Indefinite_Vectors
      (Positive, GNAT.Regexp.Regexp, "=" => GNAT.Regexp."=");
