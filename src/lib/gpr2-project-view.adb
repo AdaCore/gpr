@@ -1183,7 +1183,9 @@ package body GPR2.Project.View is
          V := Todo.First_Element;
          Todo.Delete_First;
 
-         if Include_Extended or else not V.Is_Extended then
+         if (Include_Extended or else not V.Is_Extended)
+           and then (Include_Aggregated or else not V.Is_Aggregated_In_Library)
+         then
             Closure_Views.Append (V);
          end if;
 
@@ -1204,7 +1206,7 @@ package body GPR2.Project.View is
             end loop;
          end if;
 
-         if Include_Aggregated and then V.Kind = K_Aggregate_Library then
+         if V.Kind = K_Aggregate_Library then
             for Agg of V.Aggregated loop
                Add (Agg);
             end loop;
