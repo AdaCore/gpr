@@ -877,6 +877,7 @@ package GPR2.Project.View is
 private
 
    use View_Base_Internal;
+   use type GPR2.View_Ids.View_Id;
 
    type Object is new Definition_References.Ref with
      null record;
@@ -893,7 +894,7 @@ private
      (Self /= Undefined);
 
    function "<" (Left, Right : Object) return Boolean is
-     (Left.Get.Id < Right.Get.Id);
+     (Left.Id < Right.Id);
 
    function Is_Library (Self : Object) return Boolean is
      (Self.Kind in GPR2.Library_Kind
