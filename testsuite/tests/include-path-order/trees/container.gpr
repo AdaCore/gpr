@@ -1,0 +1,9 @@
+with "b";
+--  ensure "b.gpr" is loaded before "base" and check this doesn't
+--  influence the order of the reported imported views for it, and
+--  so doesn't change the order of its include path
+with "base";
+
+project Container is
+   for Source_Dirs use ("srccontainer");
+end Container;
