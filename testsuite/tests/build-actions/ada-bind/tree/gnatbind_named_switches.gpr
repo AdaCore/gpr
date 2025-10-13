@@ -1,0 +1,6 @@
+project Gnatbind_Named_Switches extends "main.gpr" is
+	package Binder is
+		for Switches ("Ada") use ("-general-ada-bind-switch");
+		for Switches ("main.adb") use ("-custom-main-switch");
+	end Binder;
+end Gnatbind_Named_Switches;
