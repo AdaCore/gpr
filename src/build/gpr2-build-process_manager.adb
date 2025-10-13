@@ -647,7 +647,7 @@ package body GPR2.Build.Process_Manager is
                           then Proc_Handler_L.Error_Message
                           else
                             (if Options.No_Warnings_Replay
-                             then Empty_Stderr
+                             then Null_Unbounded_String
                              else Act.Saved_Stderr)));
 
                   Self.Tree_Db.Action_Id_To_Reference (UID) := Act;

@@ -164,11 +164,9 @@ private
       Total_Jobs      : Natural := 0;
    end record;
 
-   Empty_Stats  : constant Process_Manager_Stats :=
-                    (Max_Active_Jobs => 0,
-                     Total_Jobs      => 0);
-
-   Empty_Stderr : constant Unbounded_String := To_Unbounded_String ("");
+   Empty_Stats : constant Process_Manager_Stats :=
+                   (Max_Active_Jobs => 0,
+                    Total_Jobs      => 0);
 
    type Object is tagged limited record
       Stats   : Process_Manager_Stats := Empty_Stats;

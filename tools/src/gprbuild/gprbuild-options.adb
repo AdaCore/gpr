@@ -327,8 +327,9 @@ package body GPRbuild.Options is
       Parser.Add_Argument
         (Build_Group,
          Create
-           (Name   => "--no-warnings-replay",
-            Help   => "Do not display warnings if no other action was taken"));
+           (Name     => "--no-warnings-replay",
+            Alt_Name => "-n",
+            Help     => "Do not replay the warnings of skipped actions"));
       --  Do not replay warnings if there are nothing to do for an action
 
       Parser.Add_Argument
@@ -625,7 +626,7 @@ package body GPRbuild.Options is
          --  gprbuild mode (spawn as many process as the -jX option allows)
          Result.PM_Options.Force_Jobserver := True;
 
-      elsif Arg = "--no-warnings-replay" then
+      elsif Arg = "--no-warnings-replay" or else Arg = "-n" then
          Result.PM_Options.No_Warnings_Replay := True;
 
       elsif Arg = "--temp-dir" then
