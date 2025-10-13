@@ -34,6 +34,7 @@ class ProjectTree:
     ) -> None:
         """Load a project tree."""
 
+        self._id = ""
         self._project_data = LibGPR2.tree_load(
             request={
                 "options": options._options,
@@ -41,10 +42,10 @@ class ProjectTree:
             }
         )
 
-        self.id = self._project_data["tree_id"]
+        self._id = self._project_data["tree_id"]
 
     def __del__(self):
-        LibGPR2.tree_destructor(request={"tree_id": self.id})
+        LibGPR2.tree_destructor(request={"tree_id": self._id})
 
     def __enter__(self) -> ProjectTree:
         return self
@@ -68,13 +69,13 @@ class ProjectTree:
         object dirs are required to have read/write access. So this function
         needs to be used with care.
         """
-        answer = LibGPR2.tree_artifacts_directory(request={"tree_id": self.id})
+        answer = LibGPR2.tree_artifacts_directory(request={"tree_id": self._id})
         return answer["artifacts_directory"]
 
     @property
     def context(self):
         """Returns the Context for the given project tree"""
-        answer = LibGPR2.tree_context(request={"tree_id": self.id})
+        answer = LibGPR2.tree_context(request={"tree_id": self._id})
         return answer["context"]
 
     @property
@@ -82,7 +83,7 @@ class ProjectTree:
         """Returns the Logs, this contains information, warning and error
         messages found while handling the project.
         """
-        answer = LibGPR2.tree_log_messages(request={"tree_id": self.id})
+        answer = LibGPR2.tree_log_messages(request={"tree_id": self._id})
         return [Message.from_dict(msg) for msg in answer["messages"]]
 
     def set_context(self, context):
@@ -96,14 +97,14 @@ class ProjectTree:
         project tree.
         """
         answer = LibGPR2.tree_set_context(
-            request={"tree_id": self.id, "context": context}
+            request={"tree_id": self._id, "context": context}
         )
         return answer["success"]
 
     @property
     def target(self):
         """Returns the target for the project tree"""
-        answer = LibGPR2.tree_target(request={"tree_id": self.id})
+        answer = LibGPR2.tree_target(request={"tree_id": self._id})
         return answer["target"]
 
     def update_sources(self) -> None:
@@ -118,7 +119,7 @@ class ProjectTree:
         to fetch sources.
         """
         # Invalidate all sources before recomputing (GPR2 bug?)
-        answer = LibGPR2.tree_update_sources(request={"tree_id": self.id})
+        answer = LibGPR2.tree_update_sources(request={"tree_id": self._id})
 
     @property
     def root_project(self) -> ProjectView:
@@ -126,12 +127,12 @@ class ProjectTree:
 
         :return: the root project view
         """
-        answer = LibGPR2.tree_root_project(request={"tree_id": self.id})
+        answer = LibGPR2.tree_root_project(request={"tree_id": self._id})
         return ProjectView(tree=self, id=answer["view_id"])
 
     @property
     def runtime_project(self) -> ProjectView | None:
         """Returns the runtime project for the given tree"""
-        answer = LibGPR2.tree_runtime_project(request={"tree_id": self.id})
+        answer = LibGPR2.tree_runtime_project(request={"tree_id": self._id})
         view_id = answer["view_id"]
         return None if view_id is None else ProjectView(tree=self, id=view_id)
