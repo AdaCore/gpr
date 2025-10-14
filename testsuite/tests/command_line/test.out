@@ -56,8 +56,8 @@ Build control switches:
            Reuse binder files when linking SALs
  --no-split-units
            Check that compilation unit parts are from the same view
- --no-warnings-replay
-           Do not display warnings if no other action was taken
+ --no-warnings-replay, -n
+           Do not replay the warnings of skipped actions
  --restricted-to-languages=<lang1>,<lang2>,...
            Restrict the languages of the sources
  --temp-dir=[os|obj]
@@ -408,8 +408,8 @@ Build control switches:
            Reuse binder files when linking SALs
  --no-split-units
            Check that compilation unit parts are from the same view
- --no-warnings-replay
-           Do not display warnings if no other action was taken
+ --no-warnings-replay, -n
+           Do not replay the warnings of skipped actions
  --restricted-to-languages=<lang1>,<lang2>,...
            Restrict the languages of the sources
  --temp-dir=[os|obj]
