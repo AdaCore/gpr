@@ -23,6 +23,7 @@ with GPR2.Project.View.Vector;
 with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Pack;
 with GPR2.Tree_Internal;
+with GPR2.Utils;
 with GPR2.View_Internal;
 
 package body GPR2.Project.View is
@@ -1228,8 +1229,10 @@ package body GPR2.Project.View is
    function Compiler_Prefix (Self : Object) return String is
    begin
       for Driver of Self.Attributes (Name => PRA.Compiler.Driver) loop
-         if GNATCOLL.Utils.Ends_With (Driver.Value.Text, "gcc.exe")
-           or else GNATCOLL.Utils.Ends_With (Driver.Value.Text, "gcc")
+         if GPR2.Path_Name.Ends_With
+              (Filename_Optional (Driver.Value.Text), "gcc.exe")
+           or else GPR2.Path_Name.Ends_With
+                     (Filename_Optional (Driver.Value.Text), "gcc")
          then
             declare
                Basename : constant String :=
@@ -1288,10 +1291,11 @@ package body GPR2.Project.View is
         (Base_Name : Value_Not_Empty) return GPR2.Path_Name.Object
       is
          Suffix : constant Value_Type :=
-                    (if GNATCOLL.Utils.Ends_With
-                       (Base_Name, String (Self.Executable_Suffix))
-                     then ""
-                     else Value_Type (Self.Executable_Suffix));
+           (if GPR2.Path_Name.Ends_With
+                 (Filename_Optional (Base_Name),
+                  String (Self.Executable_Suffix))
+            then ""
+            else Value_Type (Self.Executable_Suffix));
       begin
          return Self.Executable_Directory.Compose
                   (Filename_Type (Base_Name & Suffix));
@@ -2251,7 +2255,8 @@ package body GPR2.Project.View is
                   Name : constant String :=
                            String (Version (Version'First .. K - 1));
                begin
-                  if GNATCOLL.Utils.Ends_With (Name, Shared_Ext)
+                  if GPR2.Path_Name.Ends_With
+                       (Filename_Optional (Name), Shared_Ext)
                     or else Strings.Fixed.Index (Name, Shared_Ext & '.') /= 0
                   then
                      Result.Include (Simple_Name (Name));
@@ -3130,8 +3135,6 @@ package body GPR2.Project.View is
       Name : String;
       Lang : Language_Id := Ada_Language) return Simple_Name
    is
-      use GNATCOLL.Utils;
-
       Default_Ada_MU_BS : constant String := ".ada";
       Index             : constant Attribute_Index.Object :=
                             Attribute_Index.Create (Lang);
@@ -3153,10 +3156,13 @@ package body GPR2.Project.View is
          Spec_Attr : constant Project.Attribute.Object :=
                        Self.Attribute (PRA.Naming.Spec_Suffix, Index);
       begin
-         return (Body_Attr.Is_Defined
-                 and then Ends_With (Name, Body_Attr.Value.Text))
+         return
+           (Body_Attr.Is_Defined
+            and then GPR2.Path_Name.Ends_With
+              (Filename_Optional (Name), Body_Attr.Value.Text))
            or else (Spec_Attr.Is_Defined
-                    and then Ends_With (Name, Spec_Attr.Value.Text));
+                    and then GPR2.Path_Name.Ends_With
+                      (Filename_Optional (Name), Spec_Attr.Value.Text));
       end Ends_With_One_Language;
 
       ---------------------
@@ -3214,7 +3220,8 @@ package body GPR2.Project.View is
    begin
       if Is_An_Exception (Name)
         or else Ends_With_One_Language (Name)
-        or else Ends_With (Name, Default_Ada_MU_BS)
+        or else GPR2.Path_Name.Ends_With
+                  (Filename_Optional (Name), Default_Ada_MU_BS)
       then
          return Simple_Name (Name);
       else
