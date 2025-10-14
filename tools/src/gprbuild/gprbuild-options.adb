@@ -323,6 +323,15 @@ package body GPRbuild.Options is
       --  complete-output (e.g. replaying warnings upon successive compilations
       --  even when no action is performed) is now the default, so this
       --  switch is ignored
+
+      Parser.Add_Argument
+        (Build_Group,
+         Create
+           (Name     => "--no-warnings-replay",
+            Alt_Name => "-n",
+            Help     => "Do not replay the warnings of skipped actions"));
+      --  Do not replay warnings if there are nothing to do for an action
+
       Parser.Add_Argument
         (Build_Group,
          Create (Name   => "-eS",
@@ -616,6 +625,9 @@ package body GPRbuild.Options is
          --  is on the command line. Otherwise we can fallback to the normal
          --  gprbuild mode (spawn as many process as the -jX option allows)
          Result.PM_Options.Force_Jobserver := True;
+
+      elsif Arg = "--no-warnings-replay" or else Arg = "-n" then
+         Result.PM_Options.No_Warnings_Replay := True;
 
       elsif Arg = "--temp-dir" then
          if Param = "obj" then
