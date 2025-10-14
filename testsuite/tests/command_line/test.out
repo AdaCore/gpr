@@ -114,7 +114,7 @@ For compatibility with gnatmake, these switches are passed to the Ada compiler:
  -g[<debug_opt>]
  -nostdinc
  -nostdlib
- -O<level>
+ -O[<level>]
 
 -------------------------
 gprclean -h
@@ -464,7 +464,7 @@ For compatibility with gnatmake, these switches are passed to the Ada compiler:
  -g[<debug_opt>]
  -nostdinc
  -nostdlib
- -O<level>
+ -O[<level>]
 
 -------------------------
 gprclean --help
@@ -789,6 +789,13 @@ using project file /demo.gpr
 "obj" created
 [Ada Compile]     pkg.ads
 [Ada Compile]     pkg2.adb
+
+-------------------------
+gprbuild -P -q
+-------------------------
+gprbuild: project file name missing after -P
+try "gprbuild --help" for more information.
+STATUS: 7
 
 -------------------------
 gprclean demo.gpr pkg.ads -n
