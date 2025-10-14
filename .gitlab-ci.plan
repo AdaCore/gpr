@@ -8,68 +8,120 @@ gnat_packages = [
 ]
 
 
+def test_install():
+    """
+    Minimal installation that tests should perform to not have to rebuild things
+    we've already built from the build stage. Induced by the fact that test
+    stages have a custom gpr2 repo defined as external vcs.
+    """
+    if env.host.os.name == "linux":
+        anod_install("gpr2-doc")
+    anod_install("gpr2")
+    anod_install("libgpr2", qualifier={"bare": True})
+
+
 def build():
+    "Basic build operation of the gprbuild package"
+    # This is a fast build to allow starting the testing fast. To build fast
+    # it installs gprname instead of building it: gprname depends on libadalang
+    # that depends on libgpr2, so all of those should be rebuilt. But builds of
+    # lal take long. So installing gprname and thus removing lal from the loop
+    # brings a very significant speed-up. Lal builds are handled in the gnat
+    # bootstrap build phase, less critical for the rest of the testing.
+    # Important note: none of our tests depend on a lal being built with the
+    # current libgpr2, so taking this shortcut is fine.
     anod_install("gprname")
     anod_build("gprbuild")
     anod_build("libgpr2")
 
 
-def install_gpr2():
-    if env.host.platform == "x86_64-linux":
-        anod_install("gpr2-doc")
-    anod_install("libgpr2", qualifier={"bare": True})
-    anod_install("libgpr2")
+def build_debug():
+    "Build gpr2 in debug mode, to detect warnings as errors"
+    # force install of gpr2 dependencies, else they're rebuilt since we have
+    # the gpr2 repo as external vcs
     anod_install("gpr2")
+    anod_install("libgpr2", qualifier={"bare": True})
+    anod_install("gpr2-doc")
+    anod_build("gpr2", qualifier={"dbg": True})
+
+
+# Below is the checking of builds that depend on us: we have two tests for that
+# * build_gnat_bootstrap, the check that with current modifications gnat still
+#   builds. On linux this check is activated by default, but not on windows as
+#   this takes a bit of time to run.
+# * build_libgpr2_users, checking packages outside of gnat that depend on
+#   libgpr2. In the end, when gprbuild2 will be the default builder this test
+#   will probably be unsunstainable, but it's optional anyway, and only
+#   available on Linux (already unsustainable on Windows).
+# The packages that need to be installed by both are listed here. Together
+# with the packages that need to be build by the first test and used as-is by
+# the second.
+
+
+def setup_gpr2_install():
+    anod_install("gpr2")
+    anod_install("libgpr2", qualifier={"bare": True})
     anod_install("gprbuild")
 
 
 def build_gnat_bootstrap():
-    install_gpr2()
-    for pkg in gnat_packages:
-        anod_build(pkg)
-    anod_build("gnat")
-
-
-def build_debug():
-    anod_build("libgpr2", qualifier={"bare": True, "dbg": True})
-    anod_build("gpr2", qualifier={"dbg": "True"})
+    "Build gnat with the changes to ensure we don't cause QA incidents"
+    setup_gpr2_install()
+    # Handles the list of packages that, within gnat, depend on us so need to
+    # be either built or installed.
+    # ??? this has to be done manually waiting for
+    # eng/gitlab-templates/issues#18
+    gnat_pkgs = [
+        "libadalang",
+        "recompilablerts",
+        "templates_parser",
+        "aws-lib",
+        "aws-tools",
+        "aunit",
+        "gnatformat",
+        "libadalang-tools",
+        "gnat",
+    ]
+    for pkg in gnat_pkgs:
+        qual = {"edge": True} if pkg == "gnatformat" else None
+        anod_build(pkg, qualifier=qual)
 
 
 def build_libgpr2_users():
-    wave_pkg = ("spark2014", "gnatcheck", "gnatfuzz", "lkql")
-    edge_pkg = ("als", "gnatcov", "gnatdoc4", "gnatformat", "lal-refactor", "gnathub")
+    "Build packages depending on libgpr2 in case of API changes"
+    wave_pkg = ("spark2014", "gnatcheck", "gnatfuzz", "lkql", "stable_sloc")
 
-    install_gpr2()
+    # Note: we don't test edge packages anymore as this blows in timeout.
+    # Moreover, the edge branch is there just for that: leave room to fix
+    # things without impacting the main branch.
+
+    setup_gpr2_install()
     for pkg in wave_pkg:
         anod_build(pkg)
-    for pkg in edge_pkg:
-        anod_build(pkg, qualifier={"edge": True})
 
 
 def test_gpr2():
-    install_gpr2()
+    test_install()
     anod_test("gpr2")
 
 
 def test_gpr2_cov():
-    install_gpr2()
     anod_build("gpr2", qualifier={"coverage": True})
     anod_test("gpr2", qualifier={"coverage": True})
 
 
 def test_gpr2_valgrind():
-    install_gpr2()
+    test_install()
     anod_build("gpr2", qualifier={"valgrind": True})
-    anod_test("gpr2", qualifier={"valgrind": True})
 
 
 def test_gpr2build():
-    install_gpr2()
+    test_install()
     anod_test("gprbuild", qualifier={"gpr2build": True, "toolchain": "stable"})
 
 
 def test_gpr2build_armhf_linux():
-    install_gpr2()
+    test_install()
     anod_test(
         "gprbuild",
         qualifier={"gpr2build": True, "toolchain": "stable"},
@@ -78,7 +130,7 @@ def test_gpr2build_armhf_linux():
 
 
 def test_gpr2build_arm_elf_zynq7k():
-    install_gpr2()
+    test_install()
     anod_test(
         "gprbuild",
         qualifier={
@@ -92,5 +144,5 @@ def test_gpr2build_arm_elf_zynq7k():
 
 
 def test_gprconfig():
-    install_gpr2()
+    test_install()
     anod_test("gprconfig")
