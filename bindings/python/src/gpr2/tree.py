@@ -44,6 +44,7 @@ class ProjectTree:
         )
 
         self._id = self._project_data["tree_id"]
+        self.is_loaded = self._project_data["is_loaded"]
 
     def __del__(self):
         LibGPR2.tree_destructor(request={"tree_id": self._id})
