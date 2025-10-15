@@ -10,6 +10,11 @@ package GPR2.C.View is
 
    pragma Elaborate_Body;
 
+   procedure Constructor
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object);
+   --  Implements VIEW_DESTRUCTOR
+
    procedure Destructor
      (Request : GPR2.C.JSON.Objects.JSON_Object;
       Result  : out GPR2.C.JSON.Objects.JSON_Object);
