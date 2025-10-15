@@ -100,6 +100,11 @@ def build_libgpr2_users():
         anod_build(pkg)
 
 
+def build_libgpr2_bindings():
+    setup_gpr2_install()
+    anod_build("libgpr2-bindings-py")
+
+
 def test_gpr2():
     test_install()
     anod_test("gpr2")
@@ -146,3 +151,9 @@ def test_gpr2build_arm_elf_zynq7k():
 def test_gprconfig():
     test_install()
     anod_test("gprconfig")
+
+
+def test_libgpr2_bindings():
+    test_install()
+    anod_install("libgpr2-bindings-py")
+    anod_test("libgpr2-bindings-py")
