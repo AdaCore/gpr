@@ -86,6 +86,19 @@ include:
       rules:
         - allow_failure: true
 
+  # libgpr2-bindings build
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/build@~latest
+    inputs:
+      job-name: build_libgpr2_bindings
+      anod-args: run build_libgpr2_bindings
+      save-component: true
+      cpus: 16
+      disk: 80
+      windows: false
+      needs: ["build:linux"]
+      rules:
+        - allow_failure: true
+
   ##############
   # TEST STAGE #
   ##############
@@ -171,6 +184,20 @@ include:
       artifacts: ["xunit-*.xml"]
       rules:
         - allow_failure: true
+
+  # libgpr2-bindings test
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/test@~latest
+    inputs:
+      job-name: test_libgpr2_bindings
+      anod-args: run test_libgpr2_bindings
+      disk: 80
+      save-anod-logs: true
+      windows: false
+      needs: ["build_libgpr2_bindings:linux"]
+      artifacts: ["xunit-*.xml"]
+      rules:
+        - allow_failure: true
+
 
 # Make some jobs optional
 
