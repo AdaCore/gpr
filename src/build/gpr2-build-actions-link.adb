@@ -17,6 +17,7 @@ with GNATCOLL.Utils;
 
 with GPR2.Build.Actions.Post_Bind;
 with GPR2.Build.Actions.Compile.Ada;
+with GPR2.Build.Actions.Link.Partial;
 with GPR2.Build.ALI_Parser;
 with GPR2.Build.External_Options;
 with GPR2.Build.Source;
@@ -45,46 +46,38 @@ package body GPR2.Build.Actions.Link is
    --  by the shared library.
    --  If not supported or an issue occured, Filename_Optional will be empty.
 
-   ----------------
-   -- Add_Option --
-   ----------------
+   function Object_Already_In_Cmd_Line
+     (Self     : Object;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object;
+      Object   : String) return Boolean;
+   --  Returns true if the given object file is already present in the
+   --  command line. The object will be first search as-is, then
+   --  relative to the object object directory if the path is not absolute.
 
-   procedure Add_Objects_From_Attribute
-     (Self : Object'Class;
-      Id   : Q_Attribute_Id)
+   function Depends_On_Partial_Link (Self : Object) return Boolean;
+   --  Returns true if a partial linking output is used by this link action
+
+   ----------------------------------
+   -- Add_Mapping_File_To_Cmd_Line --
+   ----------------------------------
+
+   procedure Add_Mapping_File_To_Cmd_Line
+     (Self : Object; Cmd_Line : in out GPR2.Build.Command_Line.Object)
    is
-      Attr : constant GPR2.Project.Attribute.Object :=
-               Self.View.Attribute (Id);
+      Attr : constant Project.Attribute.Object :=
+        Self.View.Attribute (PRA.Linker.Map_File_Option);
    begin
-      if Self.View.Is_Library then
-         if Attr.Is_Defined then
-            for Val of Attr.Values loop
-               declare
-                  Path : constant Path_Name.Object :=
-                           Path_Name.Create_File
-                             (Filename_Type (Val.Text),
-                              Self.View.Object_Directory.Value);
-               begin
-                  if Path.Exists then
-                     Self.Tree.Add_Input
-                       (Self.UID,
-                        Artifacts.Files.Create (Path),
-                        False);
-                  end if;
-               end;
-            end loop;
-         end if;
-      end if;
-   end Add_Objects_From_Attribute;
+      Cmd_Line.Add_Argument (Attr.Value.Text & To_String (Self.Mapping_File));
+   end Add_Mapping_File_To_Cmd_Line;
 
-   ----------------
-   -- Add_Option --
-   ----------------
+   ----------------------------
+   -- Add_Option_From_Binder --
+   ----------------------------
 
-   procedure Add_Option (Self : in out Object; Option : String) is
+   procedure Add_Option_From_Binder (Self : in out Object; Option : String) is
    begin
-      Self.Static_Options.Append (Option);
-   end Add_Option;
+      Self.Options_From_Binder.Append (Option);
+   end Add_Option_From_Binder;
 
    ---------------------
    -- Compute_Command --
@@ -115,13 +108,6 @@ package body GPR2.Build.Actions.Link is
       --  detect if libgnat/libgnarl is needed or not. This uses the ali files
       --  for this end.
 
-      function Is_Partially_Linked
-        (View : GPR2.Project.View.Object) return Boolean;
-      --  Return true if the Library_Partial_Linker is set with a
-      --  non-empty value.
-      --  ??? Because we do not support partial links for now, this function
-      --  always return False. To be updated once the support has been
-      --  implemented.
 
       Objects      : Tree_Db.Artifact_Sets.Set;
       Rpath        : Unbounded_String;
@@ -239,7 +225,7 @@ package body GPR2.Build.Actions.Link is
 
             declare
                From : constant Path_Name.Object :=
-                        Self.Working_Directory;
+                 Self.Output.Path.Containing_Directory;
                Rel  : constant String :=
                         String (Path.Relative_Path (From));
                Last : constant Natural :=
@@ -292,20 +278,6 @@ package body GPR2.Build.Actions.Link is
          end loop;
       end Check_Ada_Runtime_Needed;
 
-      -------------------------
-      -- Is_Partially_Linked --
-      -------------------------
-
-      function Is_Partially_Linked
-        (View : GPR2.Project.View.Object) return Boolean
-      is
-      begin
-         --  ??? We do not support partial linking for now. To be updated
-         --  once this is the case.
-
-         return False;
-      end Is_Partially_Linked;
-
       Status       : Boolean;
       Src_Idx      : constant PAI.Object :=
                        (if not Self.Is_Library
@@ -353,12 +325,12 @@ package body GPR2.Build.Actions.Link is
               and then Link.View.Is_Static_Library
               and then Link.View.Is_Library_Standalone
             then
-               for Opt of Link.Options loop
+               for Opt of Link.Options_From_Binder loop
                   Traces.Trace
                     ("Adding the link option """ & Opt & """ to " &
                      Self.UID.Image & " coming from the static standalone " &
                      " library " & String (Link.View.Library_Name));
-                  Self.Add_Option (Opt);
+                  Self.Add_Option_From_Binder (Opt);
                end loop;
             end if;
          end;
@@ -502,62 +474,6 @@ package body GPR2.Build.Actions.Link is
                           String (BN (BN'First + Prefix'Length .. BN'Last)));
                   end;
                end if;
-
-               --  Check Library_Options if any
-               declare
-                  Attr : constant GPR2.Project.Attribute.Object :=
-                           Link.View.Attribute (PRA.Library_Options);
-                  Path : Path_Name.Object;
-               begin
-                  if Attr.Is_Defined then
-                     for Val of Attr.Values loop
-                        declare
-                           Path : constant Path_Name.Object :=
-                                    Path_Name.Create_File
-                                      (Filename_Type (Val.Text),
-                                       Link.View.Dir_Name.Value);
-                        begin
-                           if not Path.Exists then
-                              if not Link.Is_Static then
-                                 if not Self.No_Rpath
-                                   and then Starts_With (Val.Text, Lib_Dir_Opt)
-                                 then
-                                    --  Amend the RPATH with the directory
-                                    --  value
-                                    Append_Rpath
-                                      (Path_Name.Create_Directory
-                                         (Filename_Optional
-                                              (Val.Text
-                                                   (Val.Text'First +
-                                                          Lib_Dir_Opt'Length ..
-                                                            Val.Text'Last)),
-                                          Link.Working_Directory.Value));
-                                 end if;
-
-                                 if Starts_With (Val.Text, "-l") then
-                                    Dash_l_Opts.Append (Val.Text);
-
-                                 else
-                                    Cmd_Line.Add_Argument (Val.Text);
-                                 end if;
-
-                              else
-                                 if not Signature_Only then
-                                    Self.Tree.Reporter.Report
-                                      (GPR2.Message.Create
-                                         (GPR2.Message.Error,
-                                          "unknown object file """ &
-                                            Val.Text & '"',
-                                          Val));
-                                 end if;
-
-                                 raise Action_Error;
-                              end if;
-                           end if;
-                        end;
-                     end loop;
-                  end if;
-               end;
             end;
          end loop;
 
@@ -703,12 +619,14 @@ package body GPR2.Build.Actions.Link is
          end;
       end if;
 
-      --  Add options provided by the binder if needed
+      if Self.Mapping_File /= Null_Unbounded_String then
+         Self.Add_Mapping_File_To_Cmd_Line (Cmd_Line);
+      end if;
 
       if not Self.View.Is_Library
         or else Self.View.Is_Shared_Library
       then
-         for Option of Self.Static_Options loop
+         for Option of Self.Options_From_Binder loop
             --  ??? Weird bug on windows happening when a backslash is ending
             --  the argument, and the arg contains a space, then ld reacts just
             --  as if there was some hidden \" ending the argument and thus
@@ -762,10 +680,13 @@ package body GPR2.Build.Actions.Link is
                end if;
             end loop;
          end if;
+      end if;
 
-         --  Add the project's library_options
+      if Self.View.Is_Library and then not Self.Depends_On_Partial_Link then
+         --  Linker options should be handled by the partial link actions,
+         --  if present, or otherwise by this action.
 
-         Ign := Add_Attr (PRA.Library_Options, PAI.Undefined, True, True);
+         Self.Process_Library_Options (Cmd_Line, Signature_Only);
       end if;
 
       --  For shared libs, use an export symbol file when possible
@@ -953,6 +874,24 @@ package body GPR2.Build.Actions.Link is
          return;
       end if;
    end Compute_Signature;
+
+   -----------------------------
+   -- Depends_On_Partial_Link --
+   -----------------------------
+
+   function Depends_On_Partial_Link (Self : Object) return Boolean is
+   begin
+      for Input of Self.Tree.Inputs (Self.UID) loop
+         if Self.Tree.Has_Predecessor (Input)
+            and then Self.Tree.Predecessor (Input)
+                     in GPR2.Build.Actions.Link.Partial.Object'Class
+         then
+            return True;
+         end if;
+      end loop;
+
+      return False;
+   end Depends_On_Partial_Link;
 
    ----------------------
    -- Embedded_Objects --
@@ -1540,6 +1479,42 @@ package body GPR2.Build.Actions.Link is
          end loop;
       end return;
    end Library_Dependencies;
+
+   --------------------------------
+   -- Object_Already_In_Cmd_Line --
+   --------------------------------
+
+   function Object_Already_In_Cmd_Line
+     (Self     : Object;
+      Cmd_Line : in out GPR2.Build.Command_Line.Object;
+      Object   : String) return Boolean is
+   begin
+      if Cmd_Line.Argument_List.Contains (Object) then
+         return True;
+      end if;
+
+      declare
+         Object_Path : constant GPR2.Path_Name.Object :=
+           Path_Name.Create_File
+             (Filename_Type (Object), Self.View.Object_Directory.Value);
+      begin
+         for Arg of Cmd_Line.Argument_List loop
+            declare
+               use type GPR2.Path_Name.Object;
+
+               Arg_Path : constant Path_Name.Object :=
+                 Path_Name.Create_File
+                   (Filename_Type (Arg), Self.View.Object_Directory.Value);
+            begin
+               if Arg_Path = Object_Path then
+                  return True;
+               end if;
+            end;
+         end loop;
+      end;
+
+      return False;
+   end Object_Already_In_Cmd_Line;
 
    --------------------
    -- On_Ready_State --
@@ -2160,6 +2135,68 @@ package body GPR2.Build.Actions.Link is
       return True;
    end Pre_Command;
 
+   -----------------------------
+   -- Process_Library_Options --
+   -----------------------------
+
+   procedure Process_Library_Options
+     (Self           : Object;
+      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
+      Signature_Only : Boolean := False)
+   is
+      Attr             : constant GPR2.Project.Attribute.Object :=
+        Self.View.Attribute (PRA.Library_Options);
+      Add_Objects_Only : constant Boolean :=
+        Self.View.Is_Library
+        and then Self.View.Is_Static_Library
+        and then (not Self.View.Is_Library_Standalone
+                  or else not Self.Depends_On_Partial_Link);
+      --  If true, ignore switches and only add object files
+      --  to the link options. This is to avoid passing invalid switches
+      --  to the archive builder when building a static library.
+      --  We can have the case of a standalone library that does not
+      --  have any partial link, if the attribute Library_Partial_Linker is
+      --  set to "".
+
+   begin
+      if Attr.Is_Defined then
+         for Val of Attr.Values loop
+            declare
+               Path : constant Path_Name.Object :=
+                 Path_Name.Create_File
+                   (Filename_Type (Val.Text),
+                    Self.View.Object_Directory.Value);
+            begin
+               if Path.Exists then
+                  --  Library_Options does only accept object files
+                  --  and switches. So, if the path exists, it must be
+                  --  an object file.
+                  --  Also, because Library_Options is added as last
+                  --  arguments to the command line, we must ensure
+                  --  that there is no duplication of object files
+                  --  between the options already added.
+
+                  if not Self.Object_Already_In_Cmd_Line (Cmd_Line, Val.Text)
+                  then
+                     Cmd_Line.Add_Argument (Val.Text);
+                  end if;
+               else
+                  if not Add_Objects_Only then
+                     Cmd_Line.Add_Argument (Val.Text);
+                  elsif not Signature_Only then
+                     Self.Tree.Reporter.Report
+                       (GPR2.Message.Create
+                          (GPR2.Message.Error,
+                           "unknown object file """ & Val.Text & '"',
+                           Val));
+                     raise Action_Error;
+                  end if;
+               end if;
+            end;
+         end loop;
+      end if;
+   end Process_Library_Options;
+
    ---------------------
    -- Set_Bind_Action --
    ---------------------
@@ -2181,6 +2218,16 @@ package body GPR2.Build.Actions.Link is
    begin
       Self.Lib_Dep_Circle := State;
    end Set_Has_Library_Dependency_Circle;
+
+   ----------------------
+   -- Set_Mapping_File --
+   ----------------------
+
+   procedure Set_Mapping_File
+     (Self : in out Object; Mapping_File : Filename_Type) is
+   begin
+      Self.Mapping_File := To_Unbounded_String (String (Mapping_File));
+   end Set_Mapping_File;
 
    ---------
    -- UID --

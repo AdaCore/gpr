@@ -230,7 +230,7 @@ package body GPR2.Build.Actions.Link_Options_Extract is
                      Link.Object'Class
                        (Self.Tree.Action_Id_To_Reference (Linker_UID)
                           .Element.all)
-                       .Add_Option (Opt);
+                       .Add_Option_From_Binder (Opt);
                      Traces.Trace
                        ("Options "
                         & Opt

@@ -15,14 +15,15 @@ package body GPR2.Build.Actions.Link.Partial is
    -- Add_Option --
    ----------------
 
-   overriding procedure Add_Option (Self : in out Object; Option : String) is
+   overriding
+   procedure Add_Option_From_Binder (Self : in out Object; Option : String) is
    begin
       if Self.Is_Encapsulated
         and then GNAT.OS_Lib.Is_Regular_File (Option)
       then
-         Self.Static_Options.Append (Option);
+         Self.Options_From_Binder.Append (Option);
       end if;
-   end Add_Option;
+   end Add_Option_From_Binder;
 
    ---------------------
    -- Compute_Command --
@@ -104,7 +105,7 @@ package body GPR2.Build.Actions.Link.Partial is
          end loop;
 
          --  Add all static options given by the binder (libgnat / libgnarl)
-         for Opt of Self.Static_Options loop
+         for Opt of Self.Options_From_Binder loop
             Cmd_Line.Add_Argument (Opt);
          end loop;
       end if;
@@ -117,6 +118,12 @@ package body GPR2.Build.Actions.Link.Partial is
               (Cmd_Line, Signature_Only, No_Warning => True);
          end if;
       end if;
+
+      if Self.Mapping_File /= Null_Unbounded_String then
+         Self.Add_Mapping_File_To_Cmd_Line (Cmd_Line);
+      end if;
+
+      Self.Process_Library_Options (Cmd_Line, Signature_Only);
    end Compute_Command;
 
    -----------------------

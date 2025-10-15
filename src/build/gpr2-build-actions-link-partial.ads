@@ -30,7 +30,8 @@ package GPR2.Build.Actions.Link.Partial is
      (Self : Object;
       Db   : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
-   overriding procedure Add_Option (Self : in out Object; Option : String);
+   overriding
+   procedure Add_Option_From_Binder (Self : in out Object; Option : String);
 
    overriding function Output
      (Self : Object) return Artifacts.Files.Object'Class;
