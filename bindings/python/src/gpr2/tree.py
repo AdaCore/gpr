@@ -18,10 +18,11 @@ if TYPE_CHECKING:
 
 class Options:
 
-    def __init__(self, project_file=None, context=None):
+    def __init__(self, project_file=None, context=None, target=None):
         self._options = {}
         self._options["P"] = project_file
         self._options["context"] = context
+        self._options["target"] = target
 
 
 class ProjectTree:
