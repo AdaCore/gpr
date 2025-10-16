@@ -504,7 +504,11 @@ package body GPR2.Build.Actions.Link is
                         Arg  : constant Value_Type := Val.Text;
                         Path : Path_Name.Object;
                      begin
-                        if Arg'Length >= Lib_Opt'Length
+                        if Arg'Length = 0 then
+                           --  Ignore
+                           null;
+
+                        elsif Arg'Length >= Lib_Opt'Length
                           and then Starts_With (Arg, Lib_Opt)
                         then
                            --  Need to check that any -L<path> option has an
@@ -2161,38 +2165,41 @@ package body GPR2.Build.Actions.Link is
    begin
       if Attr.Is_Defined then
          for Val of Attr.Values loop
-            declare
-               Path : constant Path_Name.Object :=
-                 Path_Name.Create_File
-                   (Filename_Type (Val.Text),
-                    Self.View.Object_Directory.Value);
-            begin
-               if Path.Exists then
-                  --  Library_Options does only accept object files
-                  --  and switches. So, if the path exists, it must be
-                  --  an object file.
-                  --  Also, because Library_Options is added as last
-                  --  arguments to the command line, we must ensure
-                  --  that there is no duplication of object files
-                  --  between the options already added.
+            if Val.Text'Length > 0 then
+               declare
+                  Path : constant Path_Name.Object :=
+                           Path_Name.Create_File
+                             (Filename_Type (Val.Text),
+                              Self.View.Object_Directory.Value);
+               begin
+                  if Path.Exists then
+                     --  Library_Options does only accept object files
+                     --  and switches. So, if the path exists, it must be
+                     --  an object file.
+                     --  Also, because Library_Options is added as last
+                     --  arguments to the command line, we must ensure
+                     --  that there is no duplication of object files
+                     --  between the options already added.
 
-                  if not Self.Object_Already_In_Cmd_Line (Cmd_Line, Val.Text)
-                  then
-                     Cmd_Line.Add_Argument (Val.Text);
+                     if not Self.Object_Already_In_Cmd_Line
+                       (Cmd_Line, Val.Text)
+                     then
+                        Cmd_Line.Add_Argument (Val.Text);
+                     end if;
+                  else
+                     if not Add_Objects_Only then
+                        Cmd_Line.Add_Argument (Val.Text);
+                     elsif not Signature_Only then
+                        Self.Tree.Reporter.Report
+                          (GPR2.Message.Create
+                             (GPR2.Message.Error,
+                              "unknown object file """ & Val.Text & '"',
+                              Val));
+                        raise Action_Error;
+                     end if;
                   end if;
-               else
-                  if not Add_Objects_Only then
-                     Cmd_Line.Add_Argument (Val.Text);
-                  elsif not Signature_Only then
-                     Self.Tree.Reporter.Report
-                       (GPR2.Message.Create
-                          (GPR2.Message.Error,
-                           "unknown object file """ & Val.Text & '"',
-                           Val));
-                     raise Action_Error;
-                  end if;
-               end if;
-            end;
+               end;
+            end if;
          end loop;
       end if;
    end Process_Library_Options;
