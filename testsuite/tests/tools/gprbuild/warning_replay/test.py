@@ -3,12 +3,17 @@ from testsuite_support.tools import GPRBUILD, GPRCLEAN
 
 bnr = BuilderAndRunner()
 
-def execute(cmd):
+def execute(cmd, direct=True):
     print("-------------------------")
     print(" ".join(cmd))
     print("-------------------------")
-    bnr.check_call(cmd)
+    if direct:
+        bnr.direct_call(cmd)
+    else:
+        bnr.check_call(cmd)
     print("")
+
+
 
 # Build -> warning
 
@@ -20,7 +25,7 @@ execute([GPRBUILD, "prj.gpr"])
 
 # Re-build with --no-warnings-replay -> no warning
 
-execute([GPRBUILD, "prj.gpr", "--no-warnings-replay"])
+execute([GPRBUILD, "prj.gpr", "--no-warnings-replay"], direct=False)
 
 # Reset
 
@@ -52,7 +57,7 @@ execute([GPRBUILD, "prj.gpr"])
 
 # Re-build with --no-warnings-replay -> no warning
 
-execute([GPRBUILD, "prj.gpr", "-n"])
+execute([GPRBUILD, "prj.gpr", "-n"], direct=False)
 
 # Reset
 
