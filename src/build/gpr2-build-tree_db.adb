@@ -67,6 +67,17 @@ package body GPR2.Build.Tree_Db is
      (Iter : Action_Internal_Iterator;
       Position : Action_Cursor) return Action_Cursor;
 
+   function File_Index_Base_Name (Self : Object) return Filename_Type is
+     (".gpr-file-index-" & Self.Tree.Root_Project.Path_Name.Base_Filename
+      & ".json");
+
+   function File_Index_Save_Path (Self : Object) return Path_Name.Object is
+     (if Self.Tree.Root_Project.Kind in With_Object_Dir_Kind
+      then Self.Tree.Root_Project.Object_Directory.Compose
+        (Self.File_Index_Base_Name)
+      else Self.Tree.Root_Project.Dir_Name.Compose
+        (Self.File_Index_Base_Name));
+
    --------------------
    -- Action_Iterate --
    --------------------
@@ -386,6 +397,11 @@ package body GPR2.Build.Tree_Db is
       end if;
 
       Self.Create_View_Dbs;
+
+      --  Load the file index if possible
+
+      Self.File_Index :=
+        GPR2.Utils.Hash.Load (Self.File_Index_Save_Path);
    end Create;
 
    ---------------------
@@ -528,6 +544,17 @@ package body GPR2.Build.Tree_Db is
          Self.Exec_Ctxt.Actions.Clear;
          Self.Exec_Ctxt.Nodes.Clear;
       end if;
+
+      --  Save the file index of the involved artifacts
+      begin
+         Self.File_Index.Save (Self.File_Index_Save_Path);
+      exception
+         when others =>
+            --  Ignore issues when saving the index: this is optimisation
+            --  and not being able to save the index don't impact the
+            --  functionality of libgpr2.
+            null;
+      end;
 
       return Self.Exec_Ctxt.Status;
    end Execute;
