@@ -300,6 +300,9 @@ package GPR2.Build.Tree_Db is
 
    function File_Indexer (Self : Object) return access GPR2.Utils.Hash.Object;
 
+   function File_Index_Save_Path (Self : Object) return Path_Name.Object
+     with Pre => Self.Is_Defined;
+
    --------------------------------------
    -- Helper functions for the Actions --
    --------------------------------------

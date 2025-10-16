@@ -448,6 +448,16 @@ begin
       Delete_File (Opt.Config_Project.String_Value, Opt);
    end if;
 
+   --  Cleanup the file index
+   declare
+      File_Index_Save : constant Path_Name.Object :=
+                          Opt.Tree.Artifacts_Database.File_Index_Save_Path;
+   begin
+      if File_Index_Save.Exists then
+         Delete_File (File_Index_Save.String_Value, Opt);
+      end if;
+   end;
+
    declare
       Views       : GPR2.Project.View.Vector.Object;
       Obj_Attr    : constant GPR2.Project.Attribute.Object :=
