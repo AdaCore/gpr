@@ -807,6 +807,7 @@ gprclean demo.gpr pkg.ads -n
 /obj/pkg.o
 /obj/pkg.ali
 /obj/.ada_compile_pkg.ads.json
+/obj/.gpr-file-index-demo.json
 
 -------------------------
 gprclean -P demo.gpr demo2.gpr
@@ -831,6 +832,7 @@ gprclean -Pdemo -n
 /obj/pkg2.o
 /obj/pkg2.ali
 /obj/.ada_compile_pkg2.adb.json
+/obj/.gpr-file-index-demo.json
 
 -------------------------
 gprclean --RTS:ada default -n demo.gpr
@@ -841,6 +843,7 @@ gprclean --RTS:ada default -n demo.gpr
 /obj/pkg2.o
 /obj/pkg2.ali
 /obj/.ada_compile_pkg2.adb.json
+/obj/.gpr-file-index-demo.json
 
 -------------------------
 gprclean --RTS:ada=default -n demo.gpr
@@ -851,6 +854,7 @@ gprclean --RTS:ada=default -n demo.gpr
 /obj/pkg2.o
 /obj/pkg2.ali
 /obj/.ada_compile_pkg2.adb.json
+/obj/.gpr-file-index-demo.json
 
 -------------------------
 gprclean --RTS default -n demo.gpr
@@ -861,6 +865,7 @@ gprclean --RTS default -n demo.gpr
 /obj/pkg2.o
 /obj/pkg2.ali
 /obj/.ada_compile_pkg2.adb.json
+/obj/.gpr-file-index-demo.json
 
 -------------------------
 gprclean --RTS=default -n demo.gpr
@@ -871,4 +876,5 @@ gprclean --RTS=default -n demo.gpr
 /obj/pkg2.o
 /obj/pkg2.ali
 /obj/.ada_compile_pkg2.adb.json
+/obj/.gpr-file-index-demo.json
 
