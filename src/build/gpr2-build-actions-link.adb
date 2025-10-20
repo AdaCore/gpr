@@ -98,6 +98,10 @@ package body GPR2.Build.Actions.Link is
          In_Signature : Boolean;
          Param        : String := "") return Boolean;
 
+      procedure Append_Rpath_For_Each_Library_Search_Path;
+      --  Add a rpath option for each library search path found in the
+      --  command line.
+
       procedure Append_Rpath
         (Path : Path_Name.Object);
 
@@ -241,6 +245,30 @@ package body GPR2.Build.Actions.Link is
             Append (Rpath, String (Path.Dir_Name));
          end if;
       end Append_Rpath;
+
+      --------------------------------------------
+      -- Add_Rpath_For_Each_Library_Search_Path --
+      --------------------------------------------
+
+      procedure Append_Rpath_For_Each_Library_Search_Path is
+         Lib_Opt : constant Value_Type := Self.Tree.Linker_Lib_Dir_Option;
+      begin
+         for Arg of Cmd_Line.Argument_List loop
+            if Arg'Length > Lib_Opt'Length
+              and then GNATCOLL.Utils.Starts_With (Arg, Lib_Opt)
+            then
+               declare
+                  Path : constant Path_Name.Object :=
+                    Path_Name.Create_Directory
+                      (Filename_Type
+                         (Arg (Arg'First + Lib_Opt'Length .. Arg'Last)),
+                       Self.Ctxt.Dir_Name.Value);
+               begin
+                  Append_Rpath (Path);
+               end;
+            end if;
+         end loop;
+      end Append_Rpath_For_Each_Library_Search_Path;
 
       ------------------------------
       -- Check_Ada_Runtime_Needed --
@@ -476,18 +504,6 @@ package body GPR2.Build.Actions.Link is
                end if;
             end;
          end loop;
-
-         --  Ignore: no presence of Run_Path_Option is expected if
-         --  Run_Path_Option is not available, like with windows dlls.
-
-         if not Self.No_Rpath and then Length (Rpath) > 0 then
-            Ign := Add_Attr
-              (PRA.Run_Path_Option,
-               PAI.Undefined,
-               True,
-               True,
-               -Rpath);
-         end if;
 
          for C of Self.View.Closure (True) loop
             declare
@@ -742,6 +758,25 @@ package body GPR2.Build.Actions.Link is
             end if;
          end loop;
       end;
+
+      if not Self.Is_Static_Library then
+         if Link_Exec then
+            Append_Rpath_For_Each_Library_Search_Path;
+         end if;
+
+         --  Ignore: no presence of Run_Path_Option is expected if
+         --  Run_Path_Option is not available, like with windows dlls.
+
+         if not Self.No_Rpath and then Length (Rpath) > 0 then
+            Ign := Add_Attr
+              (PRA.Run_Path_Option,
+               PAI.Undefined,
+               True,
+               True,
+               -Rpath);
+         end if;
+      end if;
+
 
       --  Finally remove any duplicated --specs switch as this may cause
       --  trouble by introducing duplicated symbols in the result.
