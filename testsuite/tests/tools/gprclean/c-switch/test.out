@@ -18,6 +18,7 @@ TEST1
 /files/obj/debug/b__main.o
 /files/obj/debug/b__main.ali
 /files/obj/debug/.ada_post-bind_b__main.adb.json
+/files/obj/debug/.gpr-file-index-test1.json
 
 TEST2
 /files/objlib/b__lib2.ads
@@ -39,4 +40,5 @@ TEST2
 /files/obj/b__main.o
 /files/obj/b__main.ali
 /files/obj/.ada_post-bind_b__main.adb.json
+/files/obj/.gpr-file-index-test2.json
 

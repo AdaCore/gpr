@@ -22,6 +22,7 @@ with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.Reporter;
 with GPR2.Reporter.Holders;
+with GPR2.Utils.Hash;
 with GPR2.View_Ids;
 
 private with Ada.Containers.Hashed_Maps;
@@ -291,8 +292,16 @@ package GPR2.Build.Tree_Db is
      (Self : Object) return GPR2.Build.Options.Build_Options;
 
    procedure Set_Build_Options
-     (Self    : in out Object;
-      Options : GPR2.Build.Options.Build_Options);
+     (Self : in out Object; Options : GPR2.Build.Options.Build_Options);
+
+   ------------------------------
+   -- Support for file indexer --
+   ------------------------------
+
+   function File_Indexer (Self : Object) return access GPR2.Utils.Hash.Object;
+
+   function File_Index_Save_Path (Self : Object) return Path_Name.Object
+     with Pre => Self.Is_Defined;
 
    --------------------------------------
    -- Helper functions for the Actions --
@@ -361,6 +370,8 @@ private
       Executing        : Boolean := False;
       Exec_Ctxt        : aliased Process_Manager.Process_Execution_Context;
 
+      File_Index       : aliased GPR2.Utils.Hash.Object;
+
       Linker_Lib_Dir_Opt : Unbounded_String;
    end record;
 
@@ -415,6 +426,9 @@ private
 
    function Is_Executing (Self : Object) return Boolean is
      (Self.Executing);
+
+   function File_Indexer (Self : Object) return access GPR2.Utils.Hash.Object
+   is (Self.Self.File_Index'Unrestricted_Access);
 
    type Artifact_List_Kind is (Explicit_Inputs,
                                Implicit_Inputs,

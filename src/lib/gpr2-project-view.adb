@@ -23,7 +23,6 @@ with GPR2.Project.View.Vector;
 with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Pack;
 with GPR2.Tree_Internal;
-with GPR2.Utils;
 with GPR2.View_Internal;
 
 package body GPR2.Project.View is

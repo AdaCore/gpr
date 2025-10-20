@@ -926,6 +926,12 @@ package body GPR2.Build.Actions.Ada_Bind is
    begin
       if From_ALI then
          To_Analyze_From_Ali := Imports;
+
+         --  Consider the units already discovered at Ada source parsing time
+         --  as analyzed (so that they're not added twice, duplicating the
+         --  processing time).
+
+         Self.Analyzed := Self.Pre_Analyzed;
       else
          To_Analyze_From_Ada := Imports;
       end if;
