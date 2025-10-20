@@ -1,0 +1,4 @@
+description: Test that rpath is automatically set when linking a main program
+driver: python_script
+control:
+- [ SKIP, "'windows' in env.host.platform", "DEAD on windows. Rpath do exist only on ELF files" ]
