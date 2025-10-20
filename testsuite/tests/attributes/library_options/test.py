@@ -27,10 +27,25 @@ def grep_file_for_g3(path):
         return False
 
 
-def run_test(bnr, project_file, env, test_name, check_g3_path=None):
+def run_test(
+    bnr,
+    project_file,
+    env,
+    test_name,
+    run_with_coverage_and_valgrind_wrapper,
+    check_g3_path=None,
+):
     """Run a single test case with gprbuild and optional -g3 check."""
     print(f"=== {test_name} ===")
-    p = bnr.run([GPRBUILD, f"-P{project_file}", "-p", "-q", "--json-summary"], env=env)
+    if run_with_coverage_and_valgrind_wrapper:
+        p = bnr.run(
+            [GPRBUILD, f"-P{project_file}", "-p", "-q", "--json-summary"],
+            env=env,
+        )
+    else:
+        p = bnr.simple_run(
+            [GPRBUILD, f"-P{project_file}", "-p", "-q", "--json-summary"], env=env
+        )
     if p.status == 0:
         print("OK")
     else:
@@ -40,18 +55,23 @@ def run_test(bnr, project_file, env, test_name, check_g3_path=None):
             print("Found '-g3' in the link command")
         else:
             print("ERROR: did not find '-g3' in the link command")
-    bnr.run([GPRCLEAN, f"-P{project_file}", "-r"], env=env)
+    if run_with_coverage_and_valgrind_wrapper:
+        bnr.run([GPRCLEAN, f"-P{project_file}", "-r"], env=env)
+    else:
+        bnr.simple_run([GPRCLEAN, f"-P{project_file}", "-r"], env=env)
     print("")
 
 
 bnr = BuilderAndRunner()
 
 # Compile foo.o which is imported by the libs
-bnr.call([GPRBUILD, "-q", "-Ptree/foo/foo.gpr"])
+bnr.simple_run([GPRBUILD, "-q", "-Ptree/foo/foo.gpr"])
 
 library_kinds = ["relocatable_standalone", "relocatable", "static_standalone", "static"]
 
 # Test libraries importing other libraries that contain library_options
+
+run_with_coverage_and_valgrind_wrapper = True
 
 for kind_with_library_options in library_kinds:
     for importing_library_kind in library_kinds:
@@ -80,7 +100,15 @@ for kind_with_library_options in library_kinds:
         else:
             check_g3_path = f"tree/importing-lib/{importing_library_kind}/jobs.json"
 
-        run_test(bnr, project_file, env, test_name, check_g3_path)
+        run_test(
+            bnr,
+            project_file,
+            env,
+            test_name,
+            run_with_coverage_and_valgrind_wrapper,
+            check_g3_path,
+        )
+        run_with_coverage_and_valgrind_wrapper = False
 
         if kind_with_library_options == "static":
             # Also test the faulty variant which adds -g3 to library options
@@ -88,8 +116,12 @@ for kind_with_library_options in library_kinds:
                 f"tree/importing-lib/{importing_library_kind}/faulty_importing_lib.gpr"
             )
             faulty_test_name = f"[LIB] faulty {importing_library_kind} importing {kind_with_library_options}"
-            run_test(bnr, faulty_project_file, env, faulty_test_name, check_g3_path)
+            run_test(
+                bnr, faulty_project_file, env, faulty_test_name, True, check_g3_path
+            )
 
+
+run_with_coverage_and_valgrind_wrapper = True
 
 # Finally test the main program importing a library with library_options
 for kind_with_library_options in library_kinds:
@@ -106,11 +138,19 @@ for kind_with_library_options in library_kinds:
     else:
         check_g3_path = f"tree/importing-main/jobs.json"
 
-    run_test(bnr, project_file, env, test_name, check_g3_path)
+    run_test(
+        bnr,
+        project_file,
+        env,
+        test_name,
+        run_with_coverage_and_valgrind_wrapper,
+        check_g3_path,
+    )
+    run_with_coverage_and_valgrind_wrapper = False
 
     if kind_with_library_options == "static":
         # Also test the faulty variant which adds -g3 to library options
         # despite only object files can be specified.
         faulty_project_file = "tree/importing-main/faulty_prj.gpr"
         faulty_test_name = f"[MAIN] Faulty importing {kind_with_library_options}"
-        run_test(bnr, faulty_project_file, env, faulty_test_name)
+        run_test(bnr, faulty_project_file, env, faulty_test_name, True)
