@@ -550,7 +550,7 @@ package body GPR2.Build.Tree_Db is
          Self.File_Index.Save (Self.File_Index_Save_Path);
       exception
          when others =>
-            --  Ignore issues when saving the index: this is optimisation
+            --  Ignore issues when saving the index: this is optimization
             --  and not being able to save the index don't impact the
             --  functionality of libgpr2.
             null;
