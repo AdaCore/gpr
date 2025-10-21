@@ -1,0 +1,9 @@
+library project MyLib is
+   for Source_Dirs use (".");
+   for Object_Dir use "obj";
+   for Library_Dir use "lib";
+   for Library_Kind use "dynamic";
+   for Library_Name use "mylib";
+   for Library_Standalone use "encapsulated";
+   for Library_Interface use ("Foo");
+end MyLib;
