@@ -171,8 +171,9 @@ package GPR2.Build.Tree_Db is
      (List : Artifacts_List) return Artifact_Iterators.Forward_Iterator'Class;
 
    type Constant_Artifact_Reference_Type
-     (Element : not null access constant Artifacts.Object'Class) is private
-     with Implicit_Dereference => Element;
+     (Element : not null access constant Artifacts.Object'Class) is
+     limited private
+       with Implicit_Dereference => Element;
 
    function Constant_Artifact_Reference
      (Iterator : aliased Artifacts_List;
@@ -204,8 +205,8 @@ package GPR2.Build.Tree_Db is
      (List : Actions_List) return Action_Iterators.Forward_Iterator'Class;
 
    type Action_Reference_Type
-     (Element : not null access Actions.Object'Class) is private
-     with Implicit_Dereference => Element;
+     (Element : not null access Actions.Object'Class) is limited private
+       with Implicit_Dereference => Element;
 
    function Action_Id_To_Reference
      (Self : in out Object;
@@ -217,8 +218,9 @@ package GPR2.Build.Tree_Db is
       Pos      : Action_Cursor) return Action_Reference_Type;
 
    type Constant_Action_Reference_Type
-     (Element : not null access constant Actions.Object'Class) is private
-     with Implicit_Dereference => Element;
+     (Element : not null access constant Actions.Object'Class) is
+     limited private
+       with Implicit_Dereference => Element;
 
    function Constant_Action_Reference
      (Iterator : aliased Actions_List;
@@ -452,7 +454,7 @@ private
 
    type Constant_Artifact_Reference_Type
      (Element : not null access constant Artifacts.Object'Class)
-   is record
+   is limited record
       Ref : Artifact_Vectors.Constant_Reference_Type (Element);
    end record;
 
@@ -477,13 +479,13 @@ private
 
    type Action_Reference_Type
      (Element : not null access Actions.Object'Class)
-   is record
+   is limited record
       Ref : Action_Maps.Reference_Type (Element);
    end record;
 
    type Constant_Action_Reference_Type
      (Element : not null access constant Actions.Object'Class)
-   is record
+   is limited record
       Ref : Action_Maps.Constant_Reference_Type (Element);
    end record;
 
