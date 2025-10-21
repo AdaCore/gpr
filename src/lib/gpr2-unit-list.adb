@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2021-2024, AdaCore
+--  Copyright (C) 2021-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -49,7 +49,8 @@ package body GPR2.Unit.List is
       Ref : constant Unit_Vectors.Constant_Reference_Type :=
               Self.List.Constant_Reference (Position.Current);
    begin
-      return (Unit => Ref.Element.all'Unchecked_Access, Ref => Ref);
+      return (Unit => Ref.Element.all'Unchecked_Access,
+              Ref  => Self.List.Constant_Reference (Position.Current));
    end Constant_Reference;
 
    -------------
@@ -258,7 +259,8 @@ package body GPR2.Unit.List is
       Ref : constant Unit_Vectors.Reference_Type :=
               Self.List.Reference (Position.Current);
    begin
-      return (Unit => Ref.Element.all'Unchecked_Access, Ref => Ref);
+      return (Unit => Ref.Element.all'Unchecked_Access,
+              Ref  => Self.List.Reference (Position.Current));
    end Reference;
 
    ------------------

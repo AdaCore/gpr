@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2024, AdaCore
+--  Copyright (C) 2019-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -338,7 +338,7 @@ package body GPR2.Project.Tree is
       --  element contained in the Views set at the current location.
       return Constant_Reference_Type'
         (View => Ref.Element.all'Unrestricted_Access,
-         Ref  => Ref);
+         Ref  => Self.Views_Set.Constant_Reference (Views_Curs));
    end Constant_Reference;
 
    -------------

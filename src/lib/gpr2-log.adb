@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2024, AdaCore
+--  Copyright (C) 2019-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -90,7 +90,7 @@ package body GPR2.Log is
    begin
       return Constant_Reference_Type'
         (Message => Ref.Element.all'Unrestricted_Access,
-         Ref     => Ref);
+         Ref     => Message_Set.Constant_Reference (Self.Store, Position.P));
    end Constant_Reference;
 
    -----------
@@ -262,7 +262,7 @@ package body GPR2.Log is
    begin
       return Reference_Type'
         (Message => Ref.Element.all'Unrestricted_Access,
-         Ref     => Ref);
+         Ref     => Message_Set.Reference (Self.Store, Position.P));
    end Reference;
 
    --------------

@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2024, AdaCore
+--  Copyright (C) 2019-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -38,7 +38,8 @@ package body GPR2.Project.Import.Set is
    begin
       return Constant_Reference_Type'
         (Import => Ref.Element.all'Unrestricted_Access,
-         Ref    => Ref);
+         Ref    => Base_Name_Set.Constant_Reference
+                     (Self.Set, Position.Current));
    end Constant_Reference;
 
    --------------
