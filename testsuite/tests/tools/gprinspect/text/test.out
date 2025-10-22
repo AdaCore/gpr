@@ -310,46 +310,9 @@
     {
       "attributes": [
         {
-          "kind": "list",
-          "name": "Archive_Builder",
-          "values": [
-            "ar",
-            "cr"
-          ]
-        },
-        {
-          "kind": "list",
-          "name": "Archive_Builder_Append_Option",
-          "values": [
-            "q"
-          ]
-        },
-        {
-          "kind": "list",
-          "name": "Archive_Indexer",
-          "values": [
-            "ranlib"
-          ]
-        },
-        {
           "kind": "single",
           "name": "Archive_Prefix",
           "value": "lib"
-        },
-        {
-          "kind": "single",
-          "name": "Archive_Suffix",
-          "value": ".a"
-        },
-        {
-          "kind": "single",
-          "name": "Canonical_Target",
-          "value": "(host)"
-        },
-        {
-          "kind": "single",
-          "name": "Default_Language",
-          "value": "Ada"
         },
         {
           "kind": "single",
@@ -370,57 +333,6 @@
         },
         {
           "kind": "single",
-          "name": "Library_Auto_Init_Supported",
-          "value": "true"
-        },
-        {
-          "kind": "single",
-          "name": "Library_Builder",
-          "value": "/home/jicquel/sandboxes/gpr2/(host)/gprbuild/install/libexec/gprbuild/gprlib"
-        },
-        {
-          "kind": "list",
-          "name": "Library_Encapsulated_Options",
-          "values": [
-            "-shared",
-            "-static-libgcc"
-          ]
-        },
-        {
-          "kind": "single",
-          "name": "Library_Encapsulated_Supported",
-          "value": "true"
-        },
-        {
-          "kind": "single",
-          "name": "Library_Major_Minor_Id_Supported",
-          "value": "true"
-        },
-        {
-          "kind": "list",
-          "name": "Library_Partial_Linker",
-          "values": [
-            "/home/jicquel/sandboxes/gpr2/(host)/gnat/install/bin/gcc",
-            "-nostdlib",
-            "-no-pie",
-            "-Wl,-r",
-            "-o"
-          ]
-        },
-        {
-          "kind": "single",
-          "name": "Library_Support",
-          "value": "full"
-        },
-        {
-          "kind": "list",
-          "name": "Library_Version_Switches",
-          "values": [
-            "-Wl,-soname,"
-          ]
-        },
-        {
-          "kind": "single",
           "name": "Name",
           "value": "prj"
         },
@@ -430,51 +342,9 @@
           "value": "obj2"
         },
         {
-          "kind": "list",
-          "name": "Object_Lister",
-          "values": [
-            "nm",
-            "-g"
-          ]
-        },
-        {
-          "kind": "single",
-          "name": "Object_Lister_Matcher",
-          "value": " [TDRB] (.*)"
-        },
-        {
           "kind": "single",
           "name": "Project_Dir",
           "value": "<cwd>/"
-        },
-        {
-          "kind": "list",
-          "name": "Run_Path_Option",
-          "values": [
-            "-Wl,-z,origin,-rpath,"
-          ]
-        },
-        {
-          "kind": "single",
-          "name": "Run_Path_Origin",
-          "value": "$ORIGIN"
-        },
-        {
-          "kind": "list",
-          "name": "Shared_Library_Minimum_Switches",
-          "values": [
-            "-shared"
-          ]
-        },
-        {
-          "kind": "single",
-          "name": "Shared_Library_Prefix",
-          "value": "lib"
-        },
-        {
-          "kind": "single",
-          "name": "Shared_Library_Suffix",
-          "value": ".so"
         },
         {
           "kind": "list",
@@ -482,16 +352,6 @@
           "values": [
             "src2"
           ]
-        },
-        {
-          "kind": "single",
-          "name": "Symbolic_Link_Supported",
-          "value": "true"
-        },
-        {
-          "kind": "single",
-          "name": "Target",
-          "value": "(host)"
         }
       ],
       "extended": [
@@ -506,282 +366,6 @@
         {
           "attributes": [
             {
-              "index": "-shared",
-              "kind": "list",
-              "name": "Bindfile_Option_Substitution",
-              "values": [
-                "-shared-libgcc"
-              ]
-            },
-            {
-              "index": "-static",
-              "kind": "list",
-              "name": "Bindfile_Option_Substitution",
-              "values": [
-                "-static-libgcc"
-              ]
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Driver",
-              "value": "<root>/gprbuild/gprbind/"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Objects_Path_File",
-              "value": "ADA_PRJ_OBJECTS_FILE"
-            },
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Required_Switches",
-              "values": [
-                "gnatbind_prefix="
-              ]
-            }
-          ],
-          "name": "Binder"
-        },
-        {
-          "attributes": [
-            {
-              "kind": "list",
-              "name": "Artifacts_In_Object_Dir",
-              "values": [
-                "gnatinspect.*"
-              ]
-            },
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Object_Artifact_Extensions",
-              "values": [
-                ".s",
-                ".ci",
-                ".gcno",
-                ".su",
-                ".sid"
-              ]
-            },
-            {
-              "index": "C",
-              "kind": "list",
-              "name": "Object_Artifact_Extensions",
-              "values": [
-                ".s",
-                ".ci",
-                ".gcno",
-                ".su"
-              ]
-            },
-            {
-              "index": "C++",
-              "kind": "list",
-              "name": "Object_Artifact_Extensions",
-              "values": [
-                ".s",
-                ".ci",
-                ".gcno",
-                ".su"
-              ]
-            },
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Source_Artifact_Extensions",
-              "values": [
-                ".dg",
-                ".rep"
-              ]
-            },
-            {
-              "index": "C",
-              "kind": "list",
-              "name": "Source_Artifact_Extensions",
-              "values": [
-                ".gli"
-              ]
-            },
-            {
-              "index": "C++",
-              "kind": "list",
-              "name": "Source_Artifact_Extensions",
-              "values": [
-                ".gli"
-              ]
-            }
-          ],
-          "name": "Clean"
-        },
-        {
-          "attributes": [
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Driver",
-              "value": "<root>/bin/gcc/"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Config_Body_File_Name",
-              "value": "pragma Source_File_Name_Project (%u, Body_File_Name => /"%f/");"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Config_Body_File_Name_Index",
-              "value": "pragma Source_File_Name_Project (%u, Body_File_Name => /"%f/", Index => %i);"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Config_Body_File_Name_Pattern",
-              "value": "pragma Source_File_Name_Project   (Body_File_Name  => /"*%b/",   Casing          => %c,   Dot_Replacement => /"%d/");"
-            },
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Config_File_Switches",
-              "values": [
-                "-gnatec="
-              ]
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Config_File_Unique",
-              "value": "False"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Config_Spec_File_Name",
-              "value": "pragma Source_File_Name_Project (%u, Spec_File_Name => /"%f/");"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Config_Spec_File_Name_Index",
-              "value": "pragma Source_File_Name_Project (%u, Spec_File_Name => /"%f/", Index => %i);"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Config_Spec_File_Name_Pattern",
-              "value": "pragma Source_File_Name_Project   (Spec_File_Name  => /"*%s/",   Casing          => %c,   Dot_Replacement => /"%d/");"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Dependency_Kind",
-              "value": "ALI_File"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Include_Path_File",
-              "value": "ADA_PRJ_INCLUDE_FILE"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Language_Kind",
-              "value": "unit_based"
-            },
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Leading_Required_Switches",
-              "values": [
-                "-c",
-                "-x",
-                "ada",
-                "-gnatA"
-              ]
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Mapping_Body_Suffix",
-              "value": "%b"
-            },
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Mapping_File_Switches",
-              "values": [
-                "-gnatem="
-              ]
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Mapping_Spec_Suffix",
-              "value": "%s"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Multi_Unit_Object_Separator",
-              "value": "~"
-            },
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Multi_Unit_Switches",
-              "values": [
-                "-gnateI"
-              ]
-            },
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Pic_Option",
-              "values": [
-                "-fPIC"
-              ]
-            }
-          ],
-          "name": "Compiler"
-        },
-        {
-          "attributes": [
-            {
-              "kind": "single",
-              "name": "Driver",
-              "value": "<root>/bin/gcc/"
-            },
-            {
-              "kind": "list",
-              "name": "Required_Switches",
-              "values": [
-                "<gnat rts>/adalib"
-              ]
-            },
-            {
-              "kind": "single",
-              "name": "Max_Command_Line_Length",
-              "value": "8192"
-            },
-            {
-              "kind": "single",
-              "name": "Response_File_Format",
-              "value": "GCC_GNU"
-            },
-            {
-              "kind": "single",
-              "name": "Export_File_Format",
-              "value": "GNU"
-            },
-            {
-              "kind": "single",
-              "name": "Export_File_Switch",
-              "value": "-Wl,--version-script="
-            },
-            {
               "kind": "single",
               "name": "Group_End_Switch",
               "value": "-Wl,--end-group"
@@ -790,11 +374,6 @@
               "kind": "single",
               "name": "Group_Start_Switch",
               "value": "-Wl,--start-group"
-            },
-            {
-              "kind": "single",
-              "name": "Map_File_Option",
-              "value": "-Wl,-Map,"
             }
           ],
           "name": "Linker"
@@ -802,57 +381,16 @@
         {
           "attributes": [
             {
-              "index": "Ada",
+              "index": "ada",
               "kind": "single",
               "name": "Body_Suffix",
               "value": ".adb"
             },
             {
-              "index": "Asm",
-              "kind": "single",
-              "name": "Body_Suffix",
-              "value": ".s"
-            },
-            {
-              "index": "Asm2",
-              "kind": "single",
-              "name": "Body_Suffix",
-              "value": ".asm"
-            },
-            {
-              "index": "Asm_Cpp",
-              "kind": "single",
-              "name": "Body_Suffix",
-              "value": ".S"
-            },
-            {
-              "index": "C",
+              "index": "c",
               "kind": "single",
               "name": "Body_Suffix",
               "value": ".c"
-            },
-            {
-              "index": "C++",
-              "kind": "single",
-              "name": "Body_Suffix",
-              "value": ".cpp"
-            },
-            {
-              "index": "Fortran",
-              "kind": "single",
-              "name": "Body_Suffix",
-              "value": ".f"
-            },
-            {
-              "index": "Rust",
-              "kind": "single",
-              "name": "Body_Suffix",
-              "value": ".rs"
-            },
-            {
-              "kind": "single",
-              "name": "Casing",
-              "value": "lowercase"
             },
             {
               "kind": "single",
@@ -860,27 +398,40 @@
               "value": "~"
             },
             {
+              "index": "ada",
               "kind": "single",
-              "name": "Separate_Suffix",
+              "name": "Implementation_Suffix",
               "value": ".adb"
             },
             {
-              "index": "Ada",
+              "index": "c",
+              "kind": "single",
+              "name": "Implementation_Suffix",
+              "value": ".c"
+            },
+            {
+              "index": "ada",
               "kind": "single",
               "name": "Spec_Suffix",
               "value": ".ads"
             },
             {
-              "index": "C",
+              "index": "c",
               "kind": "single",
               "name": "Spec_Suffix",
               "value": ".h"
             },
             {
-              "index": "C++",
+              "index": "ada",
               "kind": "single",
-              "name": "Spec_Suffix",
-              "value": ".hh"
+              "name": "Specification_Suffix",
+              "value": ".ads"
+            },
+            {
+              "index": "c",
+              "kind": "single",
+              "name": "Specification_Suffix",
+              "value": ".h"
             }
           ],
           "name": "Naming"
@@ -906,102 +457,14 @@
       ],
       "attributes": [
         {
-          "kind": "list",
-          "name": "Archive_Builder",
-          "values": [
-            "ar",
-            "cr"
-          ]
-        },
-        {
-          "kind": "list",
-          "name": "Archive_Builder_Append_Option",
-          "values": [
-            "q"
-          ]
-        },
-        {
-          "kind": "list",
-          "name": "Archive_Indexer",
-          "values": [
-            "ranlib"
-          ]
-        },
-        {
           "kind": "single",
           "name": "Archive_Prefix",
           "value": "lib"
         },
         {
           "kind": "single",
-          "name": "Archive_Suffix",
-          "value": ".a"
-        },
-        {
-          "kind": "single",
-          "name": "Canonical_Target",
-          "value": "(host)"
-        },
-        {
-          "kind": "single",
-          "name": "Default_Language",
-          "value": "Ada"
-        },
-        {
-          "kind": "single",
           "name": "Externally_Built",
           "value": "false"
-        },
-        {
-          "kind": "single",
-          "name": "Library_Auto_Init_Supported",
-          "value": "true"
-        },
-        {
-          "kind": "single",
-          "name": "Library_Builder",
-          "value": "/home/jicquel/sandboxes/gpr2/(host)/gprbuild/install/libexec/gprbuild/gprlib"
-        },
-        {
-          "kind": "list",
-          "name": "Library_Encapsulated_Options",
-          "values": [
-            "-shared",
-            "-static-libgcc"
-          ]
-        },
-        {
-          "kind": "single",
-          "name": "Library_Encapsulated_Supported",
-          "value": "true"
-        },
-        {
-          "kind": "single",
-          "name": "Library_Major_Minor_Id_Supported",
-          "value": "true"
-        },
-        {
-          "kind": "list",
-          "name": "Library_Partial_Linker",
-          "values": [
-            "/home/jicquel/sandboxes/gpr2/(host)/gnat/install/bin/gcc",
-            "-nostdlib",
-            "-no-pie",
-            "-Wl,-r",
-            "-o"
-          ]
-        },
-        {
-          "kind": "single",
-          "name": "Library_Support",
-          "value": "full"
-        },
-        {
-          "kind": "list",
-          "name": "Library_Version_Switches",
-          "values": [
-            "-Wl,-soname,"
-          ]
         },
         {
           "kind": "single",
@@ -1014,19 +477,6 @@
           "value": "."
         },
         {
-          "kind": "list",
-          "name": "Object_Lister",
-          "values": [
-            "nm",
-            "-g"
-          ]
-        },
-        {
-          "kind": "single",
-          "name": "Object_Lister_Matcher",
-          "value": " [TDRB] (.*)"
-        },
-        {
           "kind": "single",
           "name": "Project_Dir",
           "value": "<cwd>/"
@@ -1037,45 +487,6 @@
           "values": [
             "prj.gpr"
           ]
-        },
-        {
-          "kind": "list",
-          "name": "Run_Path_Option",
-          "values": [
-            "-Wl,-z,origin,-rpath,"
-          ]
-        },
-        {
-          "kind": "single",
-          "name": "Run_Path_Origin",
-          "value": "$ORIGIN"
-        },
-        {
-          "kind": "list",
-          "name": "Shared_Library_Minimum_Switches",
-          "values": [
-            "-shared"
-          ]
-        },
-        {
-          "kind": "single",
-          "name": "Shared_Library_Prefix",
-          "value": "lib"
-        },
-        {
-          "kind": "single",
-          "name": "Shared_Library_Suffix",
-          "value": ".so"
-        },
-        {
-          "kind": "single",
-          "name": "Symbolic_Link_Supported",
-          "value": "true"
-        },
-        {
-          "kind": "single",
-          "name": "Target",
-          "value": "(host)"
         }
       ],
       "imported-by": [
@@ -1119,102 +530,14 @@
       ],
       "attributes": [
         {
-          "kind": "list",
-          "name": "Archive_Builder",
-          "values": [
-            "ar",
-            "cr"
-          ]
-        },
-        {
-          "kind": "list",
-          "name": "Archive_Builder_Append_Option",
-          "values": [
-            "q"
-          ]
-        },
-        {
-          "kind": "list",
-          "name": "Archive_Indexer",
-          "values": [
-            "ranlib"
-          ]
-        },
-        {
           "kind": "single",
           "name": "Archive_Prefix",
           "value": "lib"
         },
         {
           "kind": "single",
-          "name": "Archive_Suffix",
-          "value": ".a"
-        },
-        {
-          "kind": "single",
-          "name": "Canonical_Target",
-          "value": "(host)"
-        },
-        {
-          "kind": "single",
-          "name": "Default_Language",
-          "value": "Ada"
-        },
-        {
-          "kind": "single",
           "name": "Externally_Built",
           "value": "false"
-        },
-        {
-          "kind": "single",
-          "name": "Library_Auto_Init_Supported",
-          "value": "true"
-        },
-        {
-          "kind": "single",
-          "name": "Library_Builder",
-          "value": "/home/jicquel/sandboxes/gpr2/(host)/gprbuild/install/libexec/gprbuild/gprlib"
-        },
-        {
-          "kind": "list",
-          "name": "Library_Encapsulated_Options",
-          "values": [
-            "-shared",
-            "-static-libgcc"
-          ]
-        },
-        {
-          "kind": "single",
-          "name": "Library_Encapsulated_Supported",
-          "value": "true"
-        },
-        {
-          "kind": "single",
-          "name": "Library_Major_Minor_Id_Supported",
-          "value": "true"
-        },
-        {
-          "kind": "list",
-          "name": "Library_Partial_Linker",
-          "values": [
-            "/home/jicquel/sandboxes/gpr2/(host)/gnat/install/bin/gcc",
-            "-nostdlib",
-            "-no-pie",
-            "-Wl,-r",
-            "-o"
-          ]
-        },
-        {
-          "kind": "single",
-          "name": "Library_Support",
-          "value": "full"
-        },
-        {
-          "kind": "list",
-          "name": "Library_Version_Switches",
-          "values": [
-            "-Wl,-soname,"
-          ]
         },
         {
           "kind": "single",
@@ -1227,19 +550,6 @@
           "value": "."
         },
         {
-          "kind": "list",
-          "name": "Object_Lister",
-          "values": [
-            "nm",
-            "-g"
-          ]
-        },
-        {
-          "kind": "single",
-          "name": "Object_Lister_Matcher",
-          "value": " [TDRB] (.*)"
-        },
-        {
           "kind": "single",
           "name": "Project_Dir",
           "value": "<cwd>/"
@@ -1250,45 +560,6 @@
           "values": [
             "agg.gpr"
           ]
-        },
-        {
-          "kind": "list",
-          "name": "Run_Path_Option",
-          "values": [
-            "-Wl,-z,origin,-rpath,"
-          ]
-        },
-        {
-          "kind": "single",
-          "name": "Run_Path_Origin",
-          "value": "$ORIGIN"
-        },
-        {
-          "kind": "list",
-          "name": "Shared_Library_Minimum_Switches",
-          "values": [
-            "-shared"
-          ]
-        },
-        {
-          "kind": "single",
-          "name": "Shared_Library_Prefix",
-          "value": "lib"
-        },
-        {
-          "kind": "single",
-          "name": "Shared_Library_Suffix",
-          "value": ".so"
-        },
-        {
-          "kind": "single",
-          "name": "Symbolic_Link_Supported",
-          "value": "true"
-        },
-        {
-          "kind": "single",
-          "name": "Target",
-          "value": "(host)"
         }
       ],
       "project": {
