@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2024, AdaCore
+--  Copyright (C) 2019-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -111,7 +111,8 @@ package GPR2.Project.Source.Set is
      new Ada.Iterator_Interfaces (Cursor, Has_Element);
 
    type Constant_Reference_Type
-     (Source : not null access constant Project.Source.Object) is private
+     (Source : not null access constant Project.Source.Object)
+   is limited private
      with Implicit_Dereference => Source;
 
    function Constant_Reference
@@ -136,7 +137,8 @@ private
    No_Element : constant Cursor := (Current => Set.No_Element);
 
    type Constant_Reference_Type
-     (Source : not null access constant Project.Source.Object) is record
+     (Source : not null access constant Project.Source.Object)
+   is limited record
       Ref : Set.Constant_Reference_Type (Source);
    end record;
       --  We keep the ref in the object as well to keep the busy state of

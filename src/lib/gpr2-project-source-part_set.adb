@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2021-2024, AdaCore
+--  Copyright (C) 2021-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -34,7 +34,7 @@ package body GPR2.Project.Source.Part_Set is
          begin
             return (Part   => Ref.Element.all'Unrestricted_Access,
                     Sorted => True,
-                    SRef   => Ref);
+                    SRef   => Self.SS.Constant_Reference (Position.SC));
          end;
 
       else
@@ -44,7 +44,7 @@ package body GPR2.Project.Source.Part_Set is
          begin
             return (Part   => Ref.Element.all'Unrestricted_Access,
                     Sorted => False,
-                    HRef   => Ref);
+                    HRef   => Self.HS.Constant_Reference (Position.HC));
          end;
       end if;
    end Constant_Reference;

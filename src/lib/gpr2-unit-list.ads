@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2024, AdaCore
+--  Copyright (C) 2019-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -77,12 +77,13 @@ package GPR2.Unit.List is
    function Has_Element (Position : Cursor) return Boolean
      with Inline;
 
-   type Reference_Type (Unit : not null access GPR2.Unit.Object) is private
-   with
-      Implicit_Dereference => Unit;
+   type Reference_Type (Unit : not null access GPR2.Unit.Object)
+   is limited private
+     with Implicit_Dereference => Unit;
 
    type Constant_Reference_Type
-     (Unit : not null access constant GPR2.Unit.Object) is private
+     (Unit : not null access constant GPR2.Unit.Object)
+   is limited private
      with Implicit_Dereference => Unit;
 
    function Constant_Reference
@@ -127,12 +128,14 @@ private
    end record;
 
    type Constant_Reference_Type
-     (Unit : not null access constant GPR2.Unit.Object) is record
+     (Unit : not null access constant GPR2.Unit.Object)
+   is limited record
       Ref : Unit_Vectors.Constant_Reference_Type (Unit);
    end record;
 
    type Reference_Type
-     (Unit : not null access GPR2.Unit.Object) is record
+     (Unit : not null access GPR2.Unit.Object)
+   is limited record
       Ref : Unit_Vectors.Reference_Type (Unit);
    end record;
 

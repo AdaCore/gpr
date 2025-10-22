@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2024, AdaCore
+--  Copyright (C) 2019-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -81,7 +81,8 @@ package GPR2.Log is
    package Log_Iterator is new Ada.Iterator_Interfaces (Cursor, Has_Element);
 
    type Constant_Reference_Type
-     (Message : not null access constant GPR2.Message.Object) is private
+     (Message : not null access constant GPR2.Message.Object)
+   is limited private
      with Implicit_Dereference => Message;
 
    function Constant_Reference
@@ -89,7 +90,8 @@ package GPR2.Log is
       Position : Cursor) return Constant_Reference_Type;
 
    type Reference_Type
-     (Message : not null access GPR2.Message.Object) is private
+     (Message : not null access GPR2.Message.Object)
+   is limited private
      with Implicit_Dereference => Message;
 
    function Reference
@@ -141,7 +143,8 @@ private
    end record;
 
    type Constant_Reference_Type
-     (Message : not null access constant GPR2.Message.Object) is record
+     (Message : not null access constant GPR2.Message.Object)
+   is limited record
       --  We need to keep the underlying reference so that it is not cleared
       --  upon return of the getter, and so that the container has the proper
       --  busy state
@@ -149,7 +152,8 @@ private
    end record;
 
    type Reference_Type
-     (Message : not null access GPR2.Message.Object) is record
+     (Message : not null access GPR2.Message.Object)
+   is limited record
       --  We need to keep the underlying reference so that it is not cleared
       --  upon return of the getter, and so that the container has the proper
       --  busy state

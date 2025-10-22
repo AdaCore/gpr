@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2024, AdaCore
+--  Copyright (C) 2019-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -89,12 +89,14 @@ package GPR2.Project.Attribute.Set is
      new Ada.Iterator_Interfaces (Cursor, Has_Element);
 
    type Constant_Reference_Type
-     (Attribute : not null access constant Project.Attribute.Object) is private
+     (Attribute : not null access constant Project.Attribute.Object)
+   is limited private
      with Implicit_Dereference => Attribute;
 
    type Reference_Type
-     (Attribute : not null access Project.Attribute.Object) is private
-   with Implicit_Dereference => Attribute;
+     (Attribute : not null access Project.Attribute.Object)
+   is limited private
+     with Implicit_Dereference => Attribute;
 
    function Constant_Reference
      (Self     : aliased Object;
@@ -157,7 +159,7 @@ private
 
    type Constant_Reference_Type
      (Attribute : not null access constant Project.Attribute.Object)
-   is record
+   is limited record
       --  We need to keep the underlying reference so that it is not cleared
       --  upon return of the getter, and so that the container has the proper
       --  busy state
@@ -166,7 +168,7 @@ private
 
    type Reference_Type
      (Attribute : not null access Project.Attribute.Object)
-   is record
+   is limited record
       --  We need to keep the underlying reference so that it is not cleared
       --  upon return of the getter, and so that the container has the proper
       --  busy state

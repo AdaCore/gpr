@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2021-2024, AdaCore
+--  Copyright (C) 2021-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -27,7 +27,8 @@ package GPR2.Project.Source.Part_Set is
 
    type Constant_Reference_Type
      (Part   : not null access constant Source_Part;
-      Sorted : Boolean) is private
+      Sorted : Boolean)
+   is limited private
      with Implicit_Dereference => Part;
 
    function Constant_Reference
@@ -114,7 +115,7 @@ private
    type Constant_Reference_Type
      (Part   : not null access constant Source_Part;
       Sorted : Boolean)
-   is record
+   is limited record
       case Sorted is
          when True =>
             SRef : Source_Part_Ordered_Sets.Constant_Reference_Type (Part);

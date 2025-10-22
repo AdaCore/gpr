@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2024, AdaCore
+--  Copyright (C) 2019-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -291,7 +291,8 @@ package GPR2.Project.Tree is
    --  Returns True if the cursor is pointing to the root project
 
    type Constant_Reference_Type
-     (View : not null access constant Project.View.Object) is private
+     (View : not null access constant Project.View.Object)
+   is limited private
      with Implicit_Dereference => View;
 
    function Constant_Reference
@@ -699,7 +700,8 @@ private
                    Tree    => null);
 
    type Constant_Reference_Type
-     (View : not null access constant Project.View.Object) is record
+     (View : not null access constant Project.View.Object)
+   is limited record
       --  We need to keep the underlying reference so that it is not cleared
       --  upon return of the getter, and so that the container has the proper
       --  busy state
