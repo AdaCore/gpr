@@ -29,7 +29,8 @@ package body GPR2.Build.Unit_Info.List is
               Self.Units.Constant_Reference (Unit_Map.Cursor (Position));
    begin
       return (Element => Ref.Element.all'Unchecked_Access,
-              Ref     => Ref);
+              Ref     => Self.Units.Constant_Reference
+                           (Unit_Map.Cursor (Position)));
    end Constant_Reference;
 
    function Constant_Reference
@@ -140,7 +141,7 @@ package body GPR2.Build.Unit_Info.List is
               Self.Units.Reference (Unit_Map.Cursor (Position));
    begin
       return (Element => Ref.Element.all'Unchecked_Access,
-              Ref     => Ref);
+              Ref     => Self.Units.Reference (Unit_Map.Cursor (Position)));
    end Reference;
 
 end GPR2.Build.Unit_Info.List;

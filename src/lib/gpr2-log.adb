@@ -93,7 +93,7 @@ package body GPR2.Log is
    begin
       return Constant_Reference_Type'
         (Message => Ref.Element.all'Unrestricted_Access,
-         Ref     => Ref);
+         Ref     => Message_Set.Constant_Reference (Self.Store, Position.P));
    end Constant_Reference;
 
    -----------
@@ -256,7 +256,7 @@ package body GPR2.Log is
    begin
       return Reference_Type'
         (Message => Ref.Element.all'Unrestricted_Access,
-         Ref     => Ref);
+         Ref     => Message_Set.Reference (Self.Store, Position.P));
    end Reference;
 
    --------------

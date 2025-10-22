@@ -101,7 +101,8 @@ package body GPR2.Build.Tree_Db is
    is
       Ref : constant Action_Maps.Reference_Type := Self.Actions.Reference (Id);
    begin
-      return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
+      return (Element => Ref.Element.all'Unchecked_Access,
+              Ref     => Self.Actions.Reference (Id));
    end Action_Id_To_Reference;
 
    ----------------------
@@ -115,7 +116,8 @@ package body GPR2.Build.Tree_Db is
       Ref : constant Action_Maps.Reference_Type :=
               Iterator.Db.Actions.Reference (Pos.Pos);
    begin
-      return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
+      return (Element => Ref.Element.all'Unchecked_Access,
+              Ref     => Iterator.Db.Actions.Reference (Pos.Pos));
    end Action_Reference;
 
    ----------------
@@ -354,7 +356,8 @@ package body GPR2.Build.Tree_Db is
       Ref : constant Action_Maps.Constant_Reference_Type :=
               Iterator.Db.Actions.Constant_Reference (Pos.Pos);
    begin
-      return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
+      return (Element => Ref.Element.all'Unchecked_Access,
+              Ref     => Iterator.Db.Actions.Constant_Reference (Pos.Pos));
    end Constant_Action_Reference;
 
    ---------------------------------
@@ -379,7 +382,20 @@ package body GPR2.Build.Tree_Db is
                when others          =>
                   raise Internal_Error with "Wrong kind of cursor");
    begin
-      return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
+      return (Element => Ref.Element.all'Unchecked_Access,
+              Ref     =>
+                (case Pos.Current is
+                 when Implicit_Inputs =>
+                    Iterator.Db.Implicit_Inputs.Constant_Reference
+                      (Pos.Map_Pos).Constant_Reference (Pos.Pos),
+                 when Explicit_Inputs =>
+                    Iterator.Db.Inputs.Constant_Reference
+                      (Pos.Map_Pos).Constant_Reference (Pos.Pos),
+                 when Outputs         =>
+                    Iterator.Db.Outputs.Constant_Reference
+                      (Pos.Map_Pos).Constant_Reference (Pos.Pos),
+                 when others          =>
+                    raise Internal_Error with "Wrong kind of cursor"));
    end Constant_Artifact_Reference;
 
    ------------
