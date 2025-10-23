@@ -10,6 +10,7 @@ with GNATCOLL.OS.FS;
 with GNATCOLL.Traces;
 
 with GPR2.Build.Actions;
+with GPR2.Build.Artifacts.Files;
 with GPR2.Project.Tree;
 
 package body GPR2.Build.Signature is
@@ -371,7 +372,20 @@ package body GPR2.Build.Signature is
             Self.Checksums (IO).Clear;
 
             for A of Self.Artifacts (IO) loop
-               Self.Checksums (IO).Include (A, A.Checksum (Self.Indexer.all));
+               if IO = Output
+                 and then A in GPR2.Build.Artifacts.Files.Object'Class
+               then
+                  declare
+                     Chk : GPR2.Utils.Hash.Hash_Digest;
+                  begin
+                     Chk := Artifacts.Files.Object'Class (A).Checksum
+                       (Self.Indexer.all, Mark_Trusted => True);
+                     Self.Checksums (IO).Include (A, Chk);
+                  end;
+               else
+                  Self.Checksums (IO).Include
+                    (A, A.Checksum (Self.Indexer.all));
+               end if;
             end loop;
          end if;
       end loop;
