@@ -31,6 +31,11 @@ package GPR2.Build.Artifacts.Files is
    function Checksum
      (Self : Object; Hash : in out Utils.Hash.Object) return String;
 
+   function Checksum
+     (Self         : Object;
+      Hash         : in out Utils.Hash.Object;
+      Mark_Trusted : Boolean) return Utils.Hash.Hash_Digest;
+
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type;
 
    overriding function Image (Self : Object) return String;
@@ -66,7 +71,13 @@ private
    overriding
    function Checksum
      (Self : Object; Hash : in out Utils.Hash.Object) return String
-   is (Hash.Hash_File (Self.Path.Value));
+   is (Hash.Hash_File (Self.Path.Value, False));
+
+   function Checksum
+     (Self         : Object;
+      Hash         : in out Utils.Hash.Object;
+      Mark_Trusted : Boolean) return Utils.Hash.Hash_Digest
+   is (Hash.Hash_File (Self.Path.Value, Mark_Trusted));
 
    function Path (Self : Object) return GPR2.Path_Name.Object is
      (Self.Path);
