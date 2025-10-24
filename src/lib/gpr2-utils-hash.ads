@@ -16,17 +16,15 @@ package GPR2.Utils.Hash is
    No_Digest : constant Hash_Digest;
 
    function Hash_File
-     (Self         : in out Object;
-      Path         : Filename_Type;
-      Mark_Trusted : Boolean) return Hash_Digest;
+     (Self        : in out Object;
+      Path        : Filename_Type;
+      Force_Cache : Boolean) return Hash_Digest;
    --  Return the hash digest for the file located at Path.
-   --  If Mark_Trusted is set, and the hash is actually performed, then
-   --  the result is marked as trusted in the file index, and won't
-   --  recomputed unless the file attributes change.
-   --  A file index is not trusted when its modification time is less than
-   --  a second in the past: due to some filesystem limitation the timestamp
-   --  is less than a second, so the file may be modified between two calls
-   --  without its attributes being changed.
+   --  If Force_Cache is set, forces the hash re-computation in the file index.
+   --  This allow to ensure an artifact is always updated in the file index
+   --  (since it has been re-generated) independently of if the stat of the
+   --  artifact file is the same of the stored one and whether we trust what is
+   --  inside the cache or not.
 
    function Hash_Content (Cnt : String) return Hash_Digest;
 
@@ -44,10 +42,10 @@ private
    No_Digest : constant Hash_Digest := (others => ' ');
 
    function Hash_File
-     (Self         : in out Object;
-      Path         : Filename_Type;
-      Mark_Trusted : Boolean) return Hash_Digest
+     (Self        : in out Object;
+      Path        : Filename_Type;
+      Force_Cache : Boolean) return Hash_Digest
    is (GNATCOLL.File_Indexes.Hash
-       (Self.File_Index, String (Path), Trust_Cache => Mark_Trusted));
+       (Self.File_Index, String (Path), Force_Cache => Force_Cache));
 
 end GPR2.Utils.Hash;
