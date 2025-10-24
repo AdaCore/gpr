@@ -379,7 +379,7 @@ package body GPR2.Build.Signature is
                      Chk : GPR2.Utils.Hash.Hash_Digest;
                   begin
                      Chk := Artifacts.Files.Object'Class (A).Checksum
-                       (Self.Indexer.all, Mark_Trusted => True);
+                       (Self.Indexer.all, Force_Cache => True);
                      Self.Checksums (IO).Include (A, Chk);
                   end;
                else
