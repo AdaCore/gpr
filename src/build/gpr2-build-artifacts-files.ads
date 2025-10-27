@@ -32,9 +32,9 @@ package GPR2.Build.Artifacts.Files is
      (Self : Object; Hash : in out Utils.Hash.Object) return String;
 
    function Checksum
-     (Self         : Object;
-      Hash         : in out Utils.Hash.Object;
-      Mark_Trusted : Boolean) return Utils.Hash.Hash_Digest;
+     (Self        : Object;
+      Hash        : in out Utils.Hash.Object;
+      Force_Cache : Boolean) return Utils.Hash.Hash_Digest;
 
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type;
 
@@ -74,10 +74,10 @@ private
    is (Hash.Hash_File (Self.Path.Value, False));
 
    function Checksum
-     (Self         : Object;
-      Hash         : in out Utils.Hash.Object;
-      Mark_Trusted : Boolean) return Utils.Hash.Hash_Digest
-   is (Hash.Hash_File (Self.Path.Value, Mark_Trusted));
+     (Self        : Object;
+      Hash        : in out Utils.Hash.Object;
+      Force_Cache : Boolean) return Utils.Hash.Hash_Digest
+   is (Hash.Hash_File (Self.Path.Value, Force_Cache));
 
    function Path (Self : Object) return GPR2.Path_Name.Object is
      (Self.Path);
