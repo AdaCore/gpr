@@ -145,10 +145,6 @@ package GPR2.Build.Process_Manager is
       Context         : access Process_Execution_Context;
       Options         : PM_Options);
 
-   procedure Execution_Post_Process (Self : in out Object) is null;
-   --  ??? Did not manage to have this subprogram in the private part
-   --  and to be overrided by childs
-
    ----------------------------------------
    -- Process scheduler data information --
    ----------------------------------------

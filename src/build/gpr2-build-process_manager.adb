@@ -778,8 +778,6 @@ package body GPR2.Build.Process_Manager is
             Free (State.Stderr_Listener);
          end if;
       end loop;
-
-      Execution_Post_Process (Object'Class (Self));
    end Execute;
 
    -----------
