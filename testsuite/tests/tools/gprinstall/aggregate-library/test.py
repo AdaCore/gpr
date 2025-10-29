@@ -1,6 +1,7 @@
 import os
 
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRINSTALL
 
 BuilderAndRunner().run([GPRINSTALL, '-p',
                         '--prefix=' + os.path.join(os.getcwd(), 'inst'),
