@@ -4,7 +4,7 @@ import re
 from e3.os.process import PIPE, Run, STDOUT
 from random import getrandbits
 from e3.testsuite.driver.classic import TestAbortWithFailure
-from testsuite_support.tools import GPRBUILD, GPRINSTALL, GPRCONFIG
+from testsuite_support.tools import GPRBUILD, GPRCONFIG
 
 # environment variables definition
 
