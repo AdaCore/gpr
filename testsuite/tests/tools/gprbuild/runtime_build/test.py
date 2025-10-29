@@ -105,7 +105,7 @@ for lib in "libgnat", "libgnarl":
     # ... except on x86-windows where the dlls always hold a ref to themselves
     # for some reason
 
-    if env.host.platform != "x86-windows":
+    if bnr.host_platform != "x86-windows":
         lib_ext = ".dll" if env.host.os.name == "windows" else ".so"
 
         result = bnr.simple_run(
