@@ -32,7 +32,9 @@ for kind in "static", "relocatable":
     with open("jobs.json") as fp:
         cnt = json.load(fp)
     for job in cnt:
-        if "[Link]" in job["uid"] and "-o main" in job["command"]:
+        if "[Link]" in job["uid"] and (
+            "-o ../main" in job["command"] or "-o ..\\main" in job["command"]
+        ):
             if "libdemo.a" in job["command"]:
                 print("Ok: linking with libdemo.a")
             if "-ldemo" in job["command"]:
