@@ -1,9 +1,10 @@
 import os
 import shlex
+import re
 from e3.os.process import PIPE, Run, STDOUT
 from random import getrandbits
 from e3.testsuite.driver.classic import TestAbortWithFailure
-from testsuite_support.tools import GPRBUILD, GPRINSTALL, GPRLS
+from testsuite_support.tools import GPRBUILD, GPRCONFIG
 
 # environment variables definition
 
@@ -198,3 +199,16 @@ class BuilderAndRunner(object):
             env[USE_GNATCOV] = "true"
             env[COV_TRACES_DIR] = self.traces_dir
             env[COV_LEVEL] = self.level
+
+    def host_platform(self):
+        """Return the host platform as known by gprconfig.
+        It may be different from the host platform contained in env; for
+        instance, env.host.platform would be x86_64-windows while gprconfig
+        could return x86-windows.
+        """
+        text = self.simple_run([GPRCONFIG, "--help"]).out
+
+        match = re.search(r"\(([^()\s]+)\s+by\s+default\)", text)
+        if match:
+            return match.group(1)
+        return ""
