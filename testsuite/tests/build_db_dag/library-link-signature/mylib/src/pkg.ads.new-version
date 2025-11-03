@@ -1,0 +1,6 @@
+package Pkg is
+
+   procedure P;
+   procedure F;
+
+end Pkg;

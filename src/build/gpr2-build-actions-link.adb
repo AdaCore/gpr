@@ -886,6 +886,31 @@ package body GPR2.Build.Actions.Link is
          end if;
       end loop;
 
+      if Self.View.Is_Library then
+         for U of Self.Interface_Units loop
+            declare
+               Obj_Dir_Ali : constant Artifacts.Files.Object :=
+                 Actions.Compile.Object
+                   (Self.Tree.Action (Actions.Compile.Ada.Create (U)))
+                   .Dependency_File;
+               Lib_Dir_Ali : constant Artifacts.Files.Object :=
+                 Artifacts.Files.Create
+                   (Self.Ctxt.Library_Ali_Directory.Compose
+                      (Obj_Dir_Ali.Path.Simple_Name));
+            begin
+               if not Self.Signature.Add_Input (Obj_Dir_Ali, Check_Checksums)
+               then
+                  return;
+               end if;
+
+               if not Self.Signature.Add_Input (Lib_Dir_Ali, Check_Checksums)
+               then
+                  return;
+               end if;
+            end;
+         end loop;
+      end if;
+
       for Lib of Self.Library_Dependencies loop
          declare
             Link : constant Object'Class :=
