@@ -119,8 +119,9 @@ package body GPR2.Project.External is
          --  know which type cause the ambiguity.
 
          Ext.Types_Assignments.Append
-           ((Typ             => Type_Def,
-             Assignment_Sloc => Assignment_Sloc));
+           (Type_Assignment'
+              (Typ             => Type_Def,
+               Assignment_Sloc => Assignment_Sloc));
       end Assign_Type_To_External;
 
       ----------------------------------
@@ -426,12 +427,13 @@ package body GPR2.Project.External is
 
                      begin
                         Ext.Types_Assignments.Append
-                          ((Typ              => Type_Def,
-                            Assignment_Sloc  => Source_Reference.Object
-                              (Source_Reference.Create
-                                (Parser.Path_Name.Value,
-                                 Positive (Slr.Start_Line),
-                                 Positive (Slr.Start_Column)))));
+                          (Type_Assignment'
+                             (Typ              => Type_Def,
+                              Assignment_Sloc  => Source_Reference.Object
+                                (Source_Reference.Create
+                                     (Parser.Path_Name.Value,
+                                      Positive (Slr.Start_Line),
+                                      Positive (Slr.Start_Column)))));
                      end;
                   end;
 
