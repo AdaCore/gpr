@@ -1,0 +1,22 @@
+First compilation:
+"mylib/obj" created
+"mylib/lib" created
+"importinglib/obj" created
+"importinglib/lib" created
+"obj" created
+[Ada Compile]     main.adb
+[Ada Compile]     foo.adb
+[Ada Compile]     pkg.adb
+[Archive]         libimporting_lib.a
+[Archive]         libmylib.a
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+
+Second compilation:
+[Ada Compile]     foo.adb
+[Ada Compile]     pkg.adb
+[Archive]         libimporting_lib.a
+[Archive]         libmylib.a
+[Ada Bind]        main
+[Link]            main
