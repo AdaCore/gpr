@@ -107,12 +107,4 @@ abstract project GPR2_Shared is
       end case;
    end Linker;
 
-   --------------
-   -- Coverage --
-   --------------
-
-   package Coverage is
-      for Excluded_Units use ("gpr_parser*");
-   end Coverage;
-
 end GPR2_Shared;
