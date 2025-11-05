@@ -2,11 +2,11 @@ from testsuite_support.builder_and_runner import BuilderAndRunner
 from testsuite_support.tools import GPRBUILD
 import os
 import shutil
+import json
 
 bnr = BuilderAndRunner()
 
-print("First compilation:")
-bnr.call([GPRBUILD, "-Papp.gpr"])
+bnr.call([GPRBUILD, "-Papp.gpr"], quiet=True)
 
 # Modify the mylib signature by adding a new procedure in mylib's pkg.ads.
 # This change will not modify the produced .o used by importinglib library,
@@ -23,6 +23,17 @@ shutil.copy(
     os.path.join("mylib", "src", "pkg.ads.new-version"),
     os.path.join("mylib", "src", "pkg.ads"),
 )
-print("")
-print("Second compilation:")
-bnr.call([GPRBUILD, "-Papp.gpr"])
+
+p = bnr.call([GPRBUILD, "-Papp.gpr", "--json-summary"], quiet=True)
+json_file = open("jobs.json")
+jobs = json.load(json_file)
+
+for job in jobs:
+    if (
+        "[Archive] libimporting_lib.a (importinglib.gpr)" in job["uid"]
+        and job["status"] == "0"
+    ):
+        print("OK")
+        exit()
+
+print("KO")
