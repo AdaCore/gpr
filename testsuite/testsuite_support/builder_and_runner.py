@@ -200,6 +200,7 @@ class BuilderAndRunner(object):
             env[COV_TRACES_DIR] = self.traces_dir
             env[COV_LEVEL] = self.level
 
+    @property
     def host_platform(self):
         """Return the host platform as known by gprconfig.
         It may be different from the host platform contained in env; for
