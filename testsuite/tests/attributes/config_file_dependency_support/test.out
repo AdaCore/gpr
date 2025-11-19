@@ -1,0 +1,5 @@
+"obj" created
+[Ada Compile]     main.adb
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
