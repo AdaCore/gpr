@@ -25,9 +25,6 @@ with GPR2.Build.View_Db;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
-pragma Warnings (Off, "*is not referenced");
-with GPR2.Project.View.Vector;
-pragma Warnings (On);
 with GPR2.Reporter;
 with GPR2.Source_Reference;
 with GPR2.Source_Reference.Value;
@@ -292,7 +289,6 @@ package body GPR2.Build.Actions.Link is
                   Comp : constant Actions.Compile.Ada.Object'Class :=
                            Actions.Compile.Ada.Object'Class
                              (Self.Tree.Predecessor (Obj));
-                  Deps : Containers.Filename_Set;
                begin
                   if Comp.ALI.Is_Parsed
                     and then Comp.ALI.Dependencies.Contains ("s-osinte.ads")
@@ -1047,7 +1043,7 @@ package body GPR2.Build.Actions.Link is
                Status => Status);
 
          exception
-            when Ex : GNATCOLL.OS.OS_Error =>
+            when GNATCOLL.OS.OS_Error =>
                Status := -1;
          end;
 
@@ -1322,8 +1318,6 @@ package body GPR2.Build.Actions.Link is
       No_Warning     : Boolean)
    is
       use GPR2.Project;
-      Object_Lister      : constant Project.Attribute.Object :=
-                             Self.View.Attribute (PRA.Object_Lister);
       Export_File_Switch : constant Project.Attribute.Object :=
                              Self.View.Attribute
                                (PRA.Linker.Export_File_Switch);
@@ -1648,6 +1642,8 @@ package body GPR2.Build.Actions.Link is
                   is
                      Dest : constant Path_Name.Object :=
                               Src_Dir.Compose (Path.Simple_Name);
+
+                     pragma Unreferenced (Kind, View, Index, Sep_Name);
                   begin
                      if not Self.Tree.Add_Output
                        (Self.UID,
@@ -1837,11 +1833,6 @@ package body GPR2.Build.Actions.Link is
    -----------------
 
    overriding function Pre_Command (Self : in out Object) return Boolean is
-      CU       : GPR2.Build.Compilation_Unit.Object;
-      CU_Dep   : GPR2.Build.Compilation_Unit.Object;
-      Analyzed : GPR2.Containers.Name_Set;
-      Todo     : GPR2.Build.Compilation_Unit.Maps.Map;
-
    begin
       if Self.Is_Static_Library and then Self.Output.Path.Exists then
          --  Remove the old .a since otherwise ar will just accumulate the
@@ -2107,6 +2098,8 @@ package body GPR2.Build.Actions.Link is
                      is
                         Dest : constant Path_Name.Object :=
                                  Src_Dir.Compose (Path.Simple_Name);
+
+                        pragma Unreferenced (Kind, View, Index, Sep_Name);
                      begin
                         if not GNATCOLL.OS.FSUtil.Copy_File
                           (Path.String_Value, Dest.String_Value)
