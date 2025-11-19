@@ -546,105 +546,110 @@ package GPR2.Project.Registry.Attribute is
    --  Compiler attribute qualified names
 
    package Compiler is
-      Config_Body_File_Name         : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"config_body_file_name");
-      Config_Body_File_Name_Index   : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"config_body_file_name_index");
-      Config_Body_File_Name_Pattern : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"config_body_file_name_pattern");
-      Config_File_Switches          : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"config_file_switches");
-      Config_File_Unique            : constant Q_Attribute_Id :=
-                                        (Pack.Compiler, +"config_file_unique");
-      Config_Spec_File_Name         : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"config_spec_file_name");
-      Config_Spec_File_Name_Index   : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"config_spec_file_name_index");
-      Config_Spec_File_Name_Pattern : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"config_spec_file_name_pattern");
-      Default_Switches              : constant Q_Attribute_Id :=
-                                        (Pack.Compiler, +"default_switches");
-      Dependency_Driver             : constant Q_Attribute_Id :=
-                                        (Pack.Compiler, +"dependency_driver");
-      Dependency_Kind               : constant Q_Attribute_Id :=
-                                        (Pack.Compiler, +"dependency_kind");
-      Dependency_Switches           : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"dependency_switches");
-      Driver                        : constant Q_Attribute_Id :=
-                                        (Pack.Compiler, +"driver");
-      Include_Path                  : constant Q_Attribute_Id :=
-                                        (Pack.Compiler, +"include_path");
-      Include_Path_File             : constant Q_Attribute_Id :=
-                                        (Pack.Compiler, +"include_path_file");
-      Include_Switches              : constant Q_Attribute_Id :=
-                                        (Pack.Compiler, +"include_switches");
-      Include_Switches_Via_Spec     : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"include_switches_via_spec");
-      Language_Kind                 : constant Q_Attribute_Id :=
-                                        (Pack.Compiler, +"language_kind");
-      Leading_Required_Switches     : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"leading_required_switches");
-      Local_Config_File             : constant Q_Attribute_Id :=
-                                        (Pack.Compiler, +"local_config_file");
-      Local_Configuration_Pragmas   : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"local_configuration_pragmas");
-      Mapping_Body_Suffix           : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"mapping_body_suffix");
-      Mapping_File_Switches         : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"mapping_file_switches");
-      Mapping_Spec_Suffix           : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"mapping_spec_suffix");
-      Max_Command_Line_Length       : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"max_command_line_length");
-      Multi_Unit_Object_Separator   : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"multi_unit_object_separator");
-      Multi_Unit_Switches           : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"multi_unit_switches");
-      Object_File_Suffix            : constant Q_Attribute_Id :=
-                                        (Pack.Compiler, +"object_file_suffix");
-      Object_File_Switches          : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"object_file_switches");
-      Object_Path_Switches          : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"object_path_switches");
-      Path_Syntax                   : constant Q_Attribute_Id :=
-                                        (Pack.Compiler, +"path_syntax");
-      Pic_Option                    : constant Q_Attribute_Id :=
-                                        (Pack.Compiler, +"pic_option");
-      Required_Switches             : constant Q_Attribute_Id :=
-                                        (Pack.Compiler, +"required_switches");
-      Response_File_Format          : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"response_file_format");
-      Response_File_Switches        : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"response_file_switches");
-      Source_File_Switches          : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"source_file_switches");
-      Switches                      : constant Q_Attribute_Id :=
-                                        (Pack.Compiler, +"switches");
-      Trailing_Required_Switches    : constant Q_Attribute_Id :=
-                                        (Pack.Compiler,
-                                         +"trailing_required_switches");
+      Config_Body_File_Name          : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"config_body_file_name");
+      Config_Body_File_Name_Index    : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"config_body_file_name_index");
+      Config_Body_File_Name_Pattern  : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"config_body_file_name_pattern");
+      Config_File_Switches           : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"config_file_switches");
+      Config_File_Unique             : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"config_file_unique");
+      Config_File_Dependency_Support : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"config_file_dependency_support");
+      Config_Spec_File_Name          : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"config_spec_file_name");
+      Config_Spec_File_Name_Index    : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"config_spec_file_name_index");
+      Config_Spec_File_Name_Pattern  : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"config_spec_file_name_pattern");
+      Default_Switches               : constant Q_Attribute_Id :=
+                                         (Pack.Compiler, +"default_switches");
+      Dependency_Driver              : constant Q_Attribute_Id :=
+                                         (Pack.Compiler, +"dependency_driver");
+      Dependency_Kind                : constant Q_Attribute_Id :=
+                                         (Pack.Compiler, +"dependency_kind");
+      Dependency_Switches            : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"dependency_switches");
+      Driver                         : constant Q_Attribute_Id :=
+                                         (Pack.Compiler, +"driver");
+      Include_Path                   : constant Q_Attribute_Id :=
+                                         (Pack.Compiler, +"include_path");
+      Include_Path_File              : constant Q_Attribute_Id :=
+                                         (Pack.Compiler, +"include_path_file");
+      Include_Switches               : constant Q_Attribute_Id :=
+                                         (Pack.Compiler, +"include_switches");
+      Include_Switches_Via_Spec      : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"include_switches_via_spec");
+      Language_Kind                  : constant Q_Attribute_Id :=
+                                         (Pack.Compiler, +"language_kind");
+      Leading_Required_Switches      : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"leading_required_switches");
+      Local_Config_File              : constant Q_Attribute_Id :=
+                                         (Pack.Compiler, +"local_config_file");
+      Local_Configuration_Pragmas    : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"local_configuration_pragmas");
+      Mapping_Body_Suffix            : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"mapping_body_suffix");
+      Mapping_File_Switches          : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"mapping_file_switches");
+      Mapping_Spec_Suffix            : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"mapping_spec_suffix");
+      Max_Command_Line_Length        : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"max_command_line_length");
+      Multi_Unit_Object_Separator    : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"multi_unit_object_separator");
+      Multi_Unit_Switches            : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"multi_unit_switches");
+      Object_File_Suffix             : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"object_file_suffix");
+      Object_File_Switches           : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"object_file_switches");
+      Object_Path_Switches           : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"object_path_switches");
+      Path_Syntax                    : constant Q_Attribute_Id :=
+                                         (Pack.Compiler, +"path_syntax");
+      Pic_Option                     : constant Q_Attribute_Id :=
+                                         (Pack.Compiler, +"pic_option");
+      Required_Switches              : constant Q_Attribute_Id :=
+                                         (Pack.Compiler, +"required_switches");
+      Response_File_Format           : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"response_file_format");
+      Response_File_Switches         : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"response_file_switches");
+      Source_File_Switches           : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"source_file_switches");
+      Switches                       : constant Q_Attribute_Id :=
+                                         (Pack.Compiler, +"switches");
+      Trailing_Required_Switches     : constant Q_Attribute_Id :=
+                                         (Pack.Compiler,
+                                          +"trailing_required_switches");
    end Compiler;
 
    --  Gnatls attribute qualified names
