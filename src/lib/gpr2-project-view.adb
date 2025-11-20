@@ -876,13 +876,14 @@ package body GPR2.Project.View is
 
       if Def.Index_Type = PRA.No_Index then
          declare
-            Attr : constant Project.Attribute.Object :=
+            Attr : Project.Attribute.Object :=
                      Self.Attribute (Name => Name);
          begin
             if Attr.Is_Defined
               and then (With_Defaults or else not Attr.Is_Default)
               and then (With_Config or else not Attr.Is_From_Config)
             then
+               Attr.Set_From_Config (Self.Is_Configuration);
                Result.Include (Attr);
             end if;
 
@@ -892,6 +893,10 @@ package body GPR2.Project.View is
 
       if Name.Pack = Project_Level_Scope then
          Result := Get_RO (Self).Attrs.Filter (Name.Attr);
+
+         for Attr of Result loop
+            Attr.Set_From_Config (Self.Is_Configuration);
+         end loop;
 
          --  Query extended views
 
@@ -913,7 +918,8 @@ package body GPR2.Project.View is
       else
          declare
             --  Self.Pack resolves inheritance
-            Pack_Inst : Pack_Internal.Object renames Self.Pack (Name.Pack);
+            Pack_Inst  : Pack_Internal.Object renames Self.Pack (Name.Pack);
+            Attr_Alias : GPR2.Project.Attribute.Object;
          begin
             if not Pack_Inst.Attrs.Is_Empty then
                Result := Pack_Inst.Attrs.Filter (Name.Attr);
@@ -921,7 +927,9 @@ package body GPR2.Project.View is
                if Alias.Attr /= No_Attribute then
                   for Attr of Pack_Inst.Attrs.Filter (Alias.Attr) loop
                      if not Result.Contains (Name.Attr, Attr.Index) then
-                        Result.Insert (Attr.Get_Alias (Name));
+                        Attr_Alias := Attr.Get_Alias (Name);
+                        Attr_Alias.Set_From_Config (Self.Is_Configuration);
+                        Result.Insert (Attr_Alias);
                      end if;
                   end loop;
                end if;
@@ -1009,6 +1017,7 @@ package body GPR2.Project.View is
                                                  PRA.Value_Map.Element (C))),
                                  Default => True);
                               Attr.Set_Case (Def.Value_Case_Sensitive);
+                              Attr.Set_From_Config (Self.Is_Configuration);
                               Result.Insert (Attr);
                            end if;
                         end if;
