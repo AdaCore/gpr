@@ -311,9 +311,46 @@
     {
       "attributes": [
         {
+          "kind": "list",
+          "name": "Archive_Builder",
+          "values": [
+            "ar",
+            "cr"
+          ]
+        },
+        {
+          "kind": "list",
+          "name": "Archive_Builder_Append_Option",
+          "values": [
+            "q"
+          ]
+        },
+        {
+          "kind": "list",
+          "name": "Archive_Indexer",
+          "values": [
+            "ranlib"
+          ]
+        },
+        {
           "kind": "single",
           "name": "Archive_Prefix",
           "value": "lib"
+        },
+        {
+          "kind": "single",
+          "name": "Archive_Suffix",
+          "value": ".a"
+        },
+        {
+          "kind": "single",
+          "name": "Canonical_Target",
+          "value": "(host)"
+        },
+        {
+          "kind": "single",
+          "name": "Default_Language",
+          "value": "Ada"
         },
         {
           "kind": "single",
@@ -326,26 +363,61 @@
           "value": "false"
         },
         {
-          "index": "Asm_Cpp",
-          "kind": "list",
-          "name": "Inherit_Source_Path",
-          "values": [
-            "Asm"
-          ]
-        },
-        {
-          "index": "C++",
-          "kind": "list",
-          "name": "Inherit_Source_Path",
-          "values": [
-            "C"
-          ]
-        },
-        {
           "kind": "list",
           "name": "Languages",
           "values": [
             "Ada"
+          ]
+        },
+        {
+          "kind": "single",
+          "name": "Library_Auto_Init_Supported",
+          "value": "true"
+        },
+        {
+          "kind": "single",
+          "name": "Library_Builder",
+          "value": "/Users/itmgr/wave/(host)/gprbuild/install/libexec/gprbuild/gprlib"
+        },
+        {
+          "kind": "list",
+          "name": "Library_Encapsulated_Options",
+          "values": [
+            "-shared",
+            "-static-libgcc"
+          ]
+        },
+        {
+          "kind": "single",
+          "name": "Library_Encapsulated_Supported",
+          "value": "true"
+        },
+        {
+          "kind": "single",
+          "name": "Library_Major_Minor_Id_Supported",
+          "value": "false"
+        },
+        {
+          "kind": "list",
+          "name": "Library_Partial_Linker",
+          "values": [
+            "<gcc>/bin/gcc",
+            "-nostdlib",
+            "-no-pie",
+            "-Wl,-r",
+            "-o"
+          ]
+        },
+        {
+          "kind": "single",
+          "name": "Library_Support",
+          "value": "full"
+        },
+        {
+          "kind": "list",
+          "name": "Library_Version_Switches",
+          "values": [
+            "-Wl,-soname,"
           ]
         },
         {
@@ -359,15 +431,41 @@
           "value": "obj2"
         },
         {
+          "kind": "list",
+          "name": "Object_Lister",
+          "values": [
+            "nm",
+            "-g",
+            "--no-demangle"
+          ]
+        },
+        {
+          "kind": "single",
+          "name": "Object_Lister_Matcher",
+          "value": " [TDRB] (.*)"
+        },
+        {
           "kind": "single",
           "name": "Project_Dir",
           "value": "<cwd>/"
         },
         {
-          "index": "Ada",
+          "kind": "list",
+          "name": "Shared_Library_Minimum_Switches",
+          "values": [
+            "-shared",
+            "-shared-libgcc"
+          ]
+        },
+        {
           "kind": "single",
-          "name": "Runtime_Dir",
-          "value": "<root>/lib/gcc/"
+          "name": "Shared_Library_Prefix",
+          "value": "lib"
+        },
+        {
+          "kind": "single",
+          "name": "Shared_Library_Suffix",
+          "value": ".dll"
         },
         {
           "kind": "list",
@@ -377,10 +475,14 @@
           ]
         },
         {
-          "index": "Ada",
           "kind": "single",
-          "name": "Toolchain_Version",
-          "value": "GNAT <version>
+          "name": "Symbolic_Link_Supported",
+          "value": "false"
+        },
+        {
+          "kind": "single",
+          "name": "Target",
+          "value": "(host)"
         }
       ],
       "extended": [
@@ -435,11 +537,23 @@
         },
         {
           "attributes": [
+            {
+              "kind": "single",
+              "name": "Executable_Suffix",
+              "value": ""
+            }
           ],
           "name": "Builder"
         },
         {
           "attributes": [
+            {
+              "kind": "list",
+              "name": "Artifacts_In_Object_Dir",
+              "values": [
+                "gnatinspect.*"
+              ]
+            },
             {
               "index": "Ada",
               "kind": "list",
@@ -630,6 +744,31 @@
           "attributes": [
             {
               "kind": "single",
+              "name": "Driver",
+              "value": "<root>/bin/gcc/"
+            },
+            {
+              "kind": "single",
+              "name": "Max_Command_Line_Length",
+              "value": "8192"
+            },
+            {
+              "kind": "single",
+              "name": "Response_File_Format",
+              "value": "GCC_GNU"
+            },
+            {
+              "kind": "single",
+              "name": "Export_File_Format",
+              "value": "GNU"
+            },
+            {
+              "kind": "single",
+              "name": "Export_File_Switch",
+              "value": "-Wl,--version-script="
+            },
+            {
+              "kind": "single",
               "name": "Group_End_Switch",
               "value": "-Wl,--end-group"
             },
@@ -637,6 +776,11 @@
               "kind": "single",
               "name": "Group_Start_Switch",
               "value": "-Wl,--start-group"
+            },
+            {
+              "kind": "single",
+              "name": "Map_File_Option",
+              "value": "-Wl,-Map,"
             }
           ],
           "name": "Linker"
@@ -693,8 +837,18 @@
             },
             {
               "kind": "single",
+              "name": "Casing",
+              "value": "lowercase"
+            },
+            {
+              "kind": "single",
               "name": "Dot_Replacement",
               "value": "~"
+            },
+            {
+              "kind": "single",
+              "name": "Separate_Suffix",
+              "value": ".adb"
             },
             {
               "index": "Ada",
@@ -738,9 +892,46 @@
       ],
       "attributes": [
         {
+          "kind": "list",
+          "name": "Archive_Builder",
+          "values": [
+            "ar",
+            "cr"
+          ]
+        },
+        {
+          "kind": "list",
+          "name": "Archive_Builder_Append_Option",
+          "values": [
+            "q"
+          ]
+        },
+        {
+          "kind": "list",
+          "name": "Archive_Indexer",
+          "values": [
+            "ranlib"
+          ]
+        },
+        {
           "kind": "single",
           "name": "Archive_Prefix",
           "value": "lib"
+        },
+        {
+          "kind": "single",
+          "name": "Archive_Suffix",
+          "value": ".a"
+        },
+        {
+          "kind": "single",
+          "name": "Canonical_Target",
+          "value": "(host)"
+        },
+        {
+          "kind": "single",
+          "name": "Default_Language",
+          "value": "Ada"
         },
         {
           "kind": "single",
@@ -748,19 +939,54 @@
           "value": "false"
         },
         {
-          "index": "Asm_Cpp",
+          "kind": "single",
+          "name": "Library_Auto_Init_Supported",
+          "value": "true"
+        },
+        {
+          "kind": "single",
+          "name": "Library_Builder",
+          "value": "/Users/itmgr/wave/(host)/gprbuild/install/libexec/gprbuild/gprlib"
+        },
+        {
           "kind": "list",
-          "name": "Inherit_Source_Path",
+          "name": "Library_Encapsulated_Options",
           "values": [
-            "Asm"
+            "-shared",
+            "-static-libgcc"
           ]
         },
         {
-          "index": "C++",
+          "kind": "single",
+          "name": "Library_Encapsulated_Supported",
+          "value": "true"
+        },
+        {
+          "kind": "single",
+          "name": "Library_Major_Minor_Id_Supported",
+          "value": "false"
+        },
+        {
           "kind": "list",
-          "name": "Inherit_Source_Path",
+          "name": "Library_Partial_Linker",
           "values": [
-            "C"
+            "<gcc>/bin/gcc",
+            "-nostdlib",
+            "-no-pie",
+            "-Wl,-r",
+            "-o"
+          ]
+        },
+        {
+          "kind": "single",
+          "name": "Library_Support",
+          "value": "full"
+        },
+        {
+          "kind": "list",
+          "name": "Library_Version_Switches",
+          "values": [
+            "-Wl,-soname,"
           ]
         },
         {
@@ -772,6 +998,20 @@
           "kind": "single",
           "name": "Object_Dir",
           "value": "."
+        },
+        {
+          "kind": "list",
+          "name": "Object_Lister",
+          "values": [
+            "nm",
+            "-g",
+            "--no-demangle"
+          ]
+        },
+        {
+          "kind": "single",
+          "name": "Object_Lister_Matcher",
+          "value": " [TDRB] (.*)"
         },
         {
           "kind": "single",
@@ -786,16 +1026,32 @@
           ]
         },
         {
-          "index": "Ada",
-          "kind": "single",
-          "name": "Runtime_Dir",
-          "value": "<root>/lib/gcc/"
+          "kind": "list",
+          "name": "Shared_Library_Minimum_Switches",
+          "values": [
+            "-shared",
+            "-shared-libgcc"
+          ]
         },
         {
-          "index": "Ada",
           "kind": "single",
-          "name": "Toolchain_Version",
-          "value": "GNAT <version>
+          "name": "Shared_Library_Prefix",
+          "value": "lib"
+        },
+        {
+          "kind": "single",
+          "name": "Shared_Library_Suffix",
+          "value": ".dll"
+        },
+        {
+          "kind": "single",
+          "name": "Symbolic_Link_Supported",
+          "value": "false"
+        },
+        {
+          "kind": "single",
+          "name": "Target",
+          "value": "(host)"
         }
       ],
       "imported-by": [
@@ -839,9 +1095,46 @@
       ],
       "attributes": [
         {
+          "kind": "list",
+          "name": "Archive_Builder",
+          "values": [
+            "ar",
+            "cr"
+          ]
+        },
+        {
+          "kind": "list",
+          "name": "Archive_Builder_Append_Option",
+          "values": [
+            "q"
+          ]
+        },
+        {
+          "kind": "list",
+          "name": "Archive_Indexer",
+          "values": [
+            "ranlib"
+          ]
+        },
+        {
           "kind": "single",
           "name": "Archive_Prefix",
           "value": "lib"
+        },
+        {
+          "kind": "single",
+          "name": "Archive_Suffix",
+          "value": ".a"
+        },
+        {
+          "kind": "single",
+          "name": "Canonical_Target",
+          "value": "(host)"
+        },
+        {
+          "kind": "single",
+          "name": "Default_Language",
+          "value": "Ada"
         },
         {
           "kind": "single",
@@ -849,19 +1142,54 @@
           "value": "false"
         },
         {
-          "index": "Asm_Cpp",
+          "kind": "single",
+          "name": "Library_Auto_Init_Supported",
+          "value": "true"
+        },
+        {
+          "kind": "single",
+          "name": "Library_Builder",
+          "value": "/Users/itmgr/wave/(host)/gprbuild/install/libexec/gprbuild/gprlib"
+        },
+        {
           "kind": "list",
-          "name": "Inherit_Source_Path",
+          "name": "Library_Encapsulated_Options",
           "values": [
-            "Asm"
+            "-shared",
+            "-static-libgcc"
           ]
         },
         {
-          "index": "C++",
+          "kind": "single",
+          "name": "Library_Encapsulated_Supported",
+          "value": "true"
+        },
+        {
+          "kind": "single",
+          "name": "Library_Major_Minor_Id_Supported",
+          "value": "false"
+        },
+        {
           "kind": "list",
-          "name": "Inherit_Source_Path",
+          "name": "Library_Partial_Linker",
           "values": [
-            "C"
+            "<gcc>/bin/gcc",
+            "-nostdlib",
+            "-no-pie",
+            "-Wl,-r",
+            "-o"
+          ]
+        },
+        {
+          "kind": "single",
+          "name": "Library_Support",
+          "value": "full"
+        },
+        {
+          "kind": "list",
+          "name": "Library_Version_Switches",
+          "values": [
+            "-Wl,-soname,"
           ]
         },
         {
@@ -873,6 +1201,20 @@
           "kind": "single",
           "name": "Object_Dir",
           "value": "."
+        },
+        {
+          "kind": "list",
+          "name": "Object_Lister",
+          "values": [
+            "nm",
+            "-g",
+            "--no-demangle"
+          ]
+        },
+        {
+          "kind": "single",
+          "name": "Object_Lister_Matcher",
+          "value": " [TDRB] (.*)"
         },
         {
           "kind": "single",
@@ -887,16 +1229,32 @@
           ]
         },
         {
-          "index": "Ada",
-          "kind": "single",
-          "name": "Runtime_Dir",
-          "value": "<root>/lib/gcc/"
+          "kind": "list",
+          "name": "Shared_Library_Minimum_Switches",
+          "values": [
+            "-shared",
+            "-shared-libgcc"
+          ]
         },
         {
-          "index": "Ada",
           "kind": "single",
-          "name": "Toolchain_Version",
-          "value": "GNAT <version>
+          "name": "Shared_Library_Prefix",
+          "value": "lib"
+        },
+        {
+          "kind": "single",
+          "name": "Shared_Library_Suffix",
+          "value": ".dll"
+        },
+        {
+          "kind": "single",
+          "name": "Symbolic_Link_Supported",
+          "value": "false"
+        },
+        {
+          "kind": "single",
+          "name": "Target",
+          "value": "(host)"
         }
       ],
       "project": {
@@ -912,8 +1270,8 @@
   ],
   "tree": {
     "object-search-paths": [
-      "<gnat rts>/adalib/",
-      "<cwd>/obj2/"
+      "<cwd>/obj2/",
+      "<gnat rts>/adalib/"
     ],
     "project-search-paths": [
       <filtered-out>
@@ -923,8 +1281,8 @@
       "name": "Root"
     },
     "source-search-paths": [
-      "<gnat rts>/adainclude/",
-      "<cwd>/src2"
+      "<cwd>/src2",
+      "<gnat rts>/adainclude/"
     ],
     "stats": {
       "project-count": 3
