@@ -75,9 +75,7 @@ package body GPR2.Build.Process_Manager is
 
    type Proc_State is record
       Stdout_Listener : Listener_Access := null;
-      Stdout_Active   : Boolean := False;
       Stderr_Listener : Listener_Access := null;
-      Stderr_Active   : Boolean := False;
       Node            : GDG.Node_Id := GDG.No_Node;
    end record;
    --  Processes do require two listeners.
@@ -293,14 +291,12 @@ package body GPR2.Build.Process_Manager is
          if States (Proc_Id).Stdout_Listener = null then
             States (Proc_Id).Stdout_Listener := new Listener;
          end if;
-         States (Proc_Id).Stdout_Active := True;
          States (Proc_Id).Stdout_Listener.Listen (Stdout_FD);
 
          --  Likewise for stderr
          if States (Proc_Id).Stderr_Listener = null then
             States (Proc_Id).Stderr_Listener := new Listener;
          end if;
-         States (Proc_Id).Stderr_Active := True;
          States (Proc_Id).Stderr_Listener.Listen (Stderr_FD);
       end Allocate_Listeners;
 
@@ -691,10 +687,7 @@ package body GPR2.Build.Process_Manager is
             --  Fetch captured stdout and stderr if necessary
 
             States (Proc_Id).Stdout_Listener.Fetch_Content (Stdout);
-            States (Proc_Id).Stdout_Active := False;
-
             States (Proc_Id).Stderr_Listener.Fetch_Content (Stderr);
-            States (Proc_Id).Stderr_Active := False;
 
             declare
                UID : constant Actions.Action_Id'Class :=
