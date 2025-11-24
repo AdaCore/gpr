@@ -92,7 +92,7 @@ include:
       job-name: build_libgpr2_bindings
       anod-args: run build_libgpr2_bindings
       save-component: true
-      cpus: 16
+      cpus: 8
       disk: 80
       windows: false
       needs: ["build:linux"]
