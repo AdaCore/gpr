@@ -37,8 +37,6 @@ package GPR2.Build.Actions.Link is
       No_Rpath : Boolean                        := True;
       Output   : Filename_Optional              := "");
 
-   overriding function View (Self : Object) return GPR2.Project.View.Object;
-
    procedure Add_Option_From_Binder (Self : in out Object; Option : String)
      with Pre => Self.Is_Defined;
    --  Add an option to the linking command line
@@ -162,9 +160,6 @@ private
       Library        : Artifacts.Library.Object;
       --  Library produced by the linker
 
-      Ctxt           : GPR2.Project.View.Object;
-      --  The view defining the Main, or the library
-
       Mapping_File : Ada.Strings.Unbounded.Unbounded_String :=
         Null_Unbounded_String;
       --  Name of the map file to be generated
@@ -231,9 +226,6 @@ private
 
    function Options_From_Binder (Self : Object) return Containers.Value_List
    is (Self.Options_From_Binder);
-
-   overriding function View (Self : Object) return GPR2.Project.View.Object is
-     (Self.Ctxt);
 
    Undefined : constant Object := (others => <>);
 

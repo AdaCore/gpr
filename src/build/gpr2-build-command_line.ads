@@ -8,6 +8,7 @@ with Ada.Containers.Vectors;
 
 with GNATCOLL.OS.Process;
 
+with GPR2.Context;
 with GPR2.Path_Name;
 
 package GPR2.Build.Command_Line is
@@ -17,7 +18,8 @@ package GPR2.Build.Command_Line is
    type Arg_Kind is (Driver, Obj, Other);
 
    function Create
-     (Working_Dir : Path_Name.Object) return Object;
+     (Working_Dir : Path_Name.Object;
+      Env         : GPR2.Context.Object) return Object;
 
    procedure Set_Driver
      (Self : in out Object;

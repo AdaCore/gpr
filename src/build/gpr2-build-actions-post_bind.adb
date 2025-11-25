@@ -160,7 +160,7 @@ package body GPR2.Build.Actions.Post_Bind is
       Self   : Object;
 
    begin
-      Self.View   := View;
+      Self.Ctxt   := View;
       Self.Binder := Binder;
       Self.Input  := Impl;
       Self.Output :=
