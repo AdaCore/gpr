@@ -56,7 +56,7 @@ package body GPR2.Build.Process_Manager.JSON is
                   Key  : constant UTF8_String :=
                            GNATCOLL.OS.Process.Env_Dicts.Key (C);
                   Elem : constant UTF8_String :=
-                           GNATCOLL.OS.Process.Env_Dicts.Key (C);
+                           GNATCOLL.OS.Process.Env_Dicts.Element (C);
                begin
                   Env_Summary.Set_Field (Key, Elem);
                end;
