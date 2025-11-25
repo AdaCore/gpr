@@ -83,7 +83,7 @@ package GPR2.Build.Actions is
    --  contain references to its inputs or outputs depending on what is
    --  relevant to make it unique.
 
-   function View (Self : Object) return GPR2.Project.View.Object is abstract;
+   function View (Self : Object) return GPR2.Project.View.Object;
    --  The view that is used for the context of the action's execution. The
    --  view is used to retrieve the switches for the tool, and to know where
    --  the output is stored (the Object_Dir attribute).
@@ -281,6 +281,8 @@ private
    type Object is abstract tagged record
       Tree           : access Tree_Db.Object;
       --  Owning Tree
+      Ctxt           : GPR2.Project.View.Object;
+      --  Owning View
       Signature      : GPR2.Build.Signature.Object;
       --  Stored signature for the action
       Tmp_Files      : GPR2.Containers.Filename_Map;
@@ -359,5 +361,8 @@ private
 
    function Signature (Self : Object) return GPR2.Build.Signature.Object
    is (Self.Signature);
+
+   function View (Self : Object) return GPR2.Project.View.Object is
+     (Self.Ctxt);
 
 end GPR2.Build.Actions;

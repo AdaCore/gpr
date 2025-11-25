@@ -71,7 +71,6 @@ private
       --  we store the object (so that post-bind object is unconstrained) but
       --  need to access it via Tree_Db.Actions (Binder.UID) to make sure the
       --  information is up-to-date
-      View   : GPR2.Project.View.Object;
       Skip   : Boolean := False;
    end record;
 
@@ -80,9 +79,6 @@ private
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object
    is (Self.View.Object_Directory);
-
-   overriding function View (Self : Object) return GPR2.Project.View.Object is
-      (Self.View);
 
    overriding
    procedure Compute_Signature
