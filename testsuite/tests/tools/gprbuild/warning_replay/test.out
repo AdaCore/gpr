@@ -71,3 +71,41 @@ gprbuild prj.gpr
 -------------------------
 pkg.adb:4:07: warning: variable "Toto" is not referenced [-gnatwu]
 
+-------------------------
+gprclean prj.gpr
+-------------------------
+
+-------------------------
+gprbuild prj.gpr
+-------------------------
+[Ada Compile]     pkg.adb
+pkg.adb:4:07: warning: variable "Toto" is not referenced [-gnatwu]
+
+-------------------------
+gprbuild prj.gpr
+-------------------------
+pkg.adb:4:07: warning: variable "Toto" is not referenced [-gnatwu]
+
+-------------------------
+gprbuild prj.gpr --no-complete-output
+-------------------------
+
+-------------------------
+gprclean prj.gpr
+-------------------------
+
+-------------------------
+gprbuild prj.gpr --no-complete-output
+-------------------------
+[Ada Compile]     pkg.adb
+pkg.adb:4:07: warning: variable "Toto" is not referenced [-gnatwu]
+
+-------------------------
+gprbuild prj.gpr --no-complete-output
+-------------------------
+
+-------------------------
+gprbuild prj.gpr
+-------------------------
+pkg.adb:4:07: warning: variable "Toto" is not referenced [-gnatwu]
+
