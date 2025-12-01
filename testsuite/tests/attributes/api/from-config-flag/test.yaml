@@ -1,0 +1,4 @@
+description: Test that the From_Config flag is set correctly for attributes obtained with the Attributes function.
+driver: build_and_run
+project_file: main.gpr
+main: main
