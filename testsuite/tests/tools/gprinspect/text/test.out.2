@@ -326,22 +326,6 @@
           "value": "false"
         },
         {
-          "index": "Asm_Cpp",
-          "kind": "list",
-          "name": "Inherit_Source_Path",
-          "values": [
-            "Asm"
-          ]
-        },
-        {
-          "index": "C++",
-          "kind": "list",
-          "name": "Inherit_Source_Path",
-          "values": [
-            "C"
-          ]
-        },
-        {
           "kind": "list",
           "name": "Languages",
           "values": [
@@ -364,23 +348,11 @@
           "value": "<cwd>/"
         },
         {
-          "index": "Ada",
-          "kind": "single",
-          "name": "Runtime_Dir",
-          "value": "<root>/lib/gcc/"
-        },
-        {
           "kind": "list",
           "name": "Source_Dirs",
           "values": [
             "src2"
           ]
-        },
-        {
-          "index": "Ada",
-          "kind": "single",
-          "name": "Toolchain_Version",
-          "value": "GNAT <version>
         }
       ],
       "extended": [
@@ -392,248 +364,6 @@
         "$<cwd>/agg.gpr"
       ],
       "packages": [
-        {
-          "attributes": [
-            {
-              "index": "-shared",
-              "kind": "list",
-              "name": "Bindfile_Option_Substitution",
-              "values": [
-                "-shared-libgcc"
-              ]
-            },
-            {
-              "index": "-static",
-              "kind": "list",
-              "name": "Bindfile_Option_Substitution",
-              "values": [
-                "-static-libgcc"
-              ]
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Driver",
-              "value": "<root>/gprbuild/gprbind/"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Objects_Path_File",
-              "value": "ADA_PRJ_OBJECTS_FILE"
-            },
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Required_Switches",
-              "values": [
-                "gnatbind_prefix="
-              ]
-            }
-          ],
-          "name": "Binder"
-        },
-        {
-          "attributes": [
-          ],
-          "name": "Builder"
-        },
-        {
-          "attributes": [
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Object_Artifact_Extensions",
-              "values": [
-                ".s",
-                ".ci",
-                ".gcno",
-                ".su",
-                ".sid"
-              ]
-            },
-            {
-              "index": "C",
-              "kind": "list",
-              "name": "Object_Artifact_Extensions",
-              "values": [
-                ".s",
-                ".ci",
-                ".gcno",
-                ".su"
-              ]
-            },
-            {
-              "index": "C++",
-              "kind": "list",
-              "name": "Object_Artifact_Extensions",
-              "values": [
-                ".s",
-                ".ci",
-                ".gcno",
-                ".su"
-              ]
-            },
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Source_Artifact_Extensions",
-              "values": [
-                ".dg",
-                ".rep"
-              ]
-            },
-            {
-              "index": "C",
-              "kind": "list",
-              "name": "Source_Artifact_Extensions",
-              "values": [
-                ".gli"
-              ]
-            },
-            {
-              "index": "C++",
-              "kind": "list",
-              "name": "Source_Artifact_Extensions",
-              "values": [
-                ".gli"
-              ]
-            }
-          ],
-          "name": "Clean"
-        },
-        {
-          "attributes": [
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Driver",
-              "value": "<root>/bin/gcc/"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Config_Body_File_Name",
-              "value": "pragma Source_File_Name_Project (%u, Body_File_Name => /"%f/");"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Config_Body_File_Name_Index",
-              "value": "pragma Source_File_Name_Project (%u, Body_File_Name => /"%f/", Index => %i);"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Config_Body_File_Name_Pattern",
-              "value": "pragma Source_File_Name_Project   (Body_File_Name  => /"*%b/",   Casing          => %c,   Dot_Replacement => /"%d/");"
-            },
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Config_File_Switches",
-              "values": [
-                "-gnatec="
-              ]
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Config_File_Unique",
-              "value": "False"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Config_Spec_File_Name",
-              "value": "pragma Source_File_Name_Project (%u, Spec_File_Name => /"%f/");"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Config_Spec_File_Name_Index",
-              "value": "pragma Source_File_Name_Project (%u, Spec_File_Name => /"%f/", Index => %i);"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Config_Spec_File_Name_Pattern",
-              "value": "pragma Source_File_Name_Project   (Spec_File_Name  => /"*%s/",   Casing          => %c,   Dot_Replacement => /"%d/");"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Dependency_Kind",
-              "value": "ALI_File"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Include_Path_File",
-              "value": "ADA_PRJ_INCLUDE_FILE"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Language_Kind",
-              "value": "unit_based"
-            },
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Leading_Required_Switches",
-              "values": [
-                "-c",
-                "-x",
-                "ada",
-                "-gnatA"
-              ]
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Mapping_Body_Suffix",
-              "value": "%b"
-            },
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Mapping_File_Switches",
-              "values": [
-                "-gnatem="
-              ]
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Mapping_Spec_Suffix",
-              "value": "%s"
-            },
-            {
-              "index": "Ada",
-              "kind": "single",
-              "name": "Multi_Unit_Object_Separator",
-              "value": "~"
-            },
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Multi_Unit_Switches",
-              "values": [
-                "-gnateI"
-              ]
-            },
-            {
-              "index": "Ada",
-              "kind": "list",
-              "name": "Pic_Option",
-              "values": [
-                "-fPIC"
-              ]
-            }
-          ],
-          "name": "Compiler"
-        },
         {
           "attributes": [
             {
@@ -652,52 +382,16 @@
         {
           "attributes": [
             {
-              "index": "Ada",
+              "index": "ada",
               "kind": "single",
               "name": "Body_Suffix",
               "value": ".adb"
             },
             {
-              "index": "Asm",
-              "kind": "single",
-              "name": "Body_Suffix",
-              "value": ".s"
-            },
-            {
-              "index": "Asm2",
-              "kind": "single",
-              "name": "Body_Suffix",
-              "value": ".asm"
-            },
-            {
-              "index": "Asm_Cpp",
-              "kind": "single",
-              "name": "Body_Suffix",
-              "value": ".S"
-            },
-            {
-              "index": "C",
+              "index": "c",
               "kind": "single",
               "name": "Body_Suffix",
               "value": ".c"
-            },
-            {
-              "index": "C++",
-              "kind": "single",
-              "name": "Body_Suffix",
-              "value": ".cpp"
-            },
-            {
-              "index": "Fortran",
-              "kind": "single",
-              "name": "Body_Suffix",
-              "value": ".f"
-            },
-            {
-              "index": "Rust",
-              "kind": "single",
-              "name": "Body_Suffix",
-              "value": ".rs"
             },
             {
               "kind": "single",
@@ -705,22 +399,40 @@
               "value": "~"
             },
             {
-              "index": "Ada",
+              "index": "ada",
+              "kind": "single",
+              "name": "Implementation_Suffix",
+              "value": ".adb"
+            },
+            {
+              "index": "c",
+              "kind": "single",
+              "name": "Implementation_Suffix",
+              "value": ".c"
+            },
+            {
+              "index": "ada",
               "kind": "single",
               "name": "Spec_Suffix",
               "value": ".ads"
             },
             {
-              "index": "C",
+              "index": "c",
               "kind": "single",
               "name": "Spec_Suffix",
               "value": ".h"
             },
             {
-              "index": "C++",
+              "index": "ada",
               "kind": "single",
-              "name": "Spec_Suffix",
-              "value": ".hh"
+              "name": "Specification_Suffix",
+              "value": ".ads"
+            },
+            {
+              "index": "c",
+              "kind": "single",
+              "name": "Specification_Suffix",
+              "value": ".h"
             }
           ],
           "name": "Naming"
@@ -756,22 +468,6 @@
           "value": "false"
         },
         {
-          "index": "Asm_Cpp",
-          "kind": "list",
-          "name": "Inherit_Source_Path",
-          "values": [
-            "Asm"
-          ]
-        },
-        {
-          "index": "C++",
-          "kind": "list",
-          "name": "Inherit_Source_Path",
-          "values": [
-            "C"
-          ]
-        },
-        {
           "kind": "single",
           "name": "Name",
           "value": "agg"
@@ -792,18 +488,6 @@
           "values": [
             "prj.gpr"
           ]
-        },
-        {
-          "index": "Ada",
-          "kind": "single",
-          "name": "Runtime_Dir",
-          "value": "<root>/lib/gcc/"
-        },
-        {
-          "index": "Ada",
-          "kind": "single",
-          "name": "Toolchain_Version",
-          "value": "GNAT <version>
         }
       ],
       "imported-by": [
@@ -857,22 +541,6 @@
           "value": "false"
         },
         {
-          "index": "Asm_Cpp",
-          "kind": "list",
-          "name": "Inherit_Source_Path",
-          "values": [
-            "Asm"
-          ]
-        },
-        {
-          "index": "C++",
-          "kind": "list",
-          "name": "Inherit_Source_Path",
-          "values": [
-            "C"
-          ]
-        },
-        {
           "kind": "single",
           "name": "Name",
           "value": "root"
@@ -893,18 +561,6 @@
           "values": [
             "agg.gpr"
           ]
-        },
-        {
-          "index": "Ada",
-          "kind": "single",
-          "name": "Runtime_Dir",
-          "value": "<root>/lib/gcc/"
-        },
-        {
-          "index": "Ada",
-          "kind": "single",
-          "name": "Toolchain_Version",
-          "value": "GNAT <version>
         }
       ],
       "project": {
