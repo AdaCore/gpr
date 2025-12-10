@@ -264,7 +264,7 @@ private package GPR2.Tree_Internal is
    --  such as loading or working with sources, to output the logs.
 
    function Reporter
-     (Self : in out Object) return Reporter.Holders.Reference_Type;
+     (Self : aliased in out Object) return Reporter.Holders.Reference_Type;
    --  Returns the tree reporter reference
 
    --  Context
