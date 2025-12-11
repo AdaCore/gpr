@@ -416,9 +416,26 @@ package body GPR2.Build.Actions.Link is
               (PRA.Shared_Library_Minimum_Switches, PAI.Undefined, True, True);
          end if;
 
-         --  ??? This shouldn't be hardcoded
          Cmd_Line.Add_Argument ("-o");
          Cmd_Line.Add_Argument (Self.Output.Path);
+
+         if not Self.View.Tree.Is_Windows_Target then
+            declare
+               Library_Version          : constant Project.Attribute.Object :=
+                 Self.View.Attribute (PRA.Library_Version);
+               Library_Version_Switches : constant Project.Attribute.Object :=
+                 Self.View.Attribute (PRA.Library_Version_Switches);
+            begin
+               if Library_Version.Is_Defined
+                 and then Library_Version_Switches.Is_Defined
+               then
+                  for Val of Library_Version_Switches.Values loop
+                     Cmd_Line.Add_Argument
+                       (Val.Text & Library_Version.Value.Text);
+                  end loop;
+               end if;
+            end;
+         end if;
       end if;
 
       for Obj of Objects loop
