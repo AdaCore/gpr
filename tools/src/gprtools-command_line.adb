@@ -61,11 +61,11 @@ package body GPRtools.Command_Line is
    --  the gprtoolX
 
    function Get_RO
-     (Self  : Command_Line_Parser;
+     (Self  : aliased Command_Line_Parser;
       Group : Argument_Group) return Group_Maps.Constant_Reference_Type;
 
    function Get_RW
-     (Self  : in out Command_Line_Parser;
+     (Self  : aliased in out Command_Line_Parser;
       Group : Argument_Group) return Group_Maps.Reference_Type;
 
    procedure Base_Argument_Action
@@ -675,7 +675,7 @@ package body GPRtools.Command_Line is
    ------------
 
    function Get_RO
-     (Self  : Command_Line_Parser;
+     (Self  : aliased Command_Line_Parser;
       Group : Argument_Group) return Group_Maps.Constant_Reference_Type is
    begin
       return Self.Groups.Constant_Reference
@@ -687,7 +687,7 @@ package body GPRtools.Command_Line is
    ------------
 
    function Get_RW
-     (Self  : in out Command_Line_Parser;
+     (Self  : aliased in out Command_Line_Parser;
       Group : Argument_Group) return Group_Maps.Reference_Type is
    begin
       return Self.Groups.Reference (GPR2.Name_Type (To_String (Group)));
