@@ -22,6 +22,7 @@ with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.Object_File;
 pragma Warnings (Off);
+with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
 with GPR2.Build.Tree_Db;
@@ -1378,6 +1379,7 @@ package body GPR2.Build.Actions_Population is
                end if;
             end loop;
          end loop Non_Ada_Archive_Loop;
+
          --  Process the mains one by one
 
          for Main of Actual_Mains loop
@@ -1425,6 +1427,38 @@ package body GPR2.Build.Actions_Population is
                   if not Tree_Db.Add_Action (Bind (Idx)) then
                      return False;
                   end if;
+               end;
+
+               --  We must detect all units from the main view that overrides
+               --  the runtime in order to properly discover other overriden
+               --  dependencies to compile and link to them.
+               declare
+                  Units : constant Compilation_Unit.Maps.Map :=
+                            Main.View.Own_Units
+                              (Overridden_From_Runtime => True);
+               begin
+                  for U of Units loop
+                     declare
+                        R_Comp : Actions.Compile.Ada.Object;
+                     begin
+                        R_Comp.Initialize (U);
+
+                        if not Tree_Db.Add_Action (R_Comp) then
+                           return False;
+                        end if;
+
+                        --  Add the overriden unit dependency file to discover
+                        --  other potential overriden dependencies.
+                        Tree_Db.Add_Input
+                          (Bind (Idx).UID, R_Comp.Local_Ali_File, True);
+
+                        --  Add the resulting object file to the final link to
+                        --  resolve their symbols before the runtime for proper
+                        --  overriding.
+                        Tree_Db.Add_Input
+                          (Link (Idx).UID, R_Comp.Object_File, True);
+                     end;
+                  end loop;
                end;
 
                Tree_Db.Add_Input (Bind (Idx).UID, A_Comp.Local_Ali_File, True);
