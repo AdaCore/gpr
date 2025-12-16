@@ -1941,6 +1941,16 @@ package body GPR2.Project.View is
       end return;
    end Interface_Closure;
 
+   --------------------------
+   -- Is_Aggregate_Library --
+   --------------------------
+
+   function Is_Aggregate_Library (Self : Object) return Boolean is
+      Ref : constant View_Internal.Const_Ref := View_Internal.Get_RO (Self);
+   begin
+      return not Ref.Aggregated.Is_Empty;
+   end Is_Aggregate_Library;
+
    ------------------------------
    -- Is_Aggregated_In_Library --
    ------------------------------
@@ -2518,13 +2528,16 @@ package body GPR2.Project.View is
    ---------------
 
    function Own_Units
-     (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
+     (Self                   : Object;
+      Overridden_From_Runtime : Boolean := False)
+      return GPR2.Build.Compilation_Unit.Maps.Map
    is
       Db : Build.View_Db.Object;
    begin
       if Self.Kind in With_Object_Dir_Kind then
          Db := Self.View_Db;
-         return Db.Own_Units;
+         return Db.Own_Units
+           (Overridden_From_Runtime => Overridden_From_Runtime);
       else
          return Build.Compilation_Unit.Maps.Empty_Map;
       end if;
