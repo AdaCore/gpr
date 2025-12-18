@@ -49,13 +49,14 @@ package body GPR2.Build.Compilation_Unit is
    ---------
 
    procedure Add
-     (Self     : in out Object;
-      Kind     : Valid_Unit_Kind;
-      View     : GPR2.Project.View.Object;
-      Path     : GPR2.Path_Name.Object;
-      Index    : Unit_Index := No_Index;
-      Sep_Name : Optional_Name_Type := "";
-      Success  : out Boolean)
+     (Self                    : in out Object;
+      Kind                    : Valid_Unit_Kind;
+      View                    : GPR2.Project.View.Object;
+      Path                    : GPR2.Path_Name.Object;
+      Index                   : Unit_Index := No_Index;
+      Sep_Name                : Optional_Name_Type := "";
+      Success                 : out Boolean;
+      Overridden_From_Runtime : Boolean := False)
    is
       UL : constant Unit_Location :=
              (View   => View,
@@ -63,6 +64,8 @@ package body GPR2.Build.Compilation_Unit is
               Index  => Index);
    begin
       Success := False;
+
+      Self.Overridden_From_Runtime := Overridden_From_Runtime;
 
       case Kind is
          when S_Spec =>

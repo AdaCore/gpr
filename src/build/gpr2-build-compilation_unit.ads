@@ -94,13 +94,14 @@ package GPR2.Build.Compilation_Unit is
    --  Whether a unit with Kind is defined for Self
 
    procedure Add
-     (Self     : in out Object;
-      Kind     : Valid_Unit_Kind;
-      View     : GPR2.Project.View.Object;
-      Path     : GPR2.Path_Name.Object;
-      Index    : Unit_Index := No_Index;
-      Sep_Name : Optional_Name_Type := "";
-      Success  : out Boolean)
+     (Self                    : in out Object;
+      Kind                    : Valid_Unit_Kind;
+      View                    : GPR2.Project.View.Object;
+      Path                    : GPR2.Path_Name.Object;
+      Index                   : Unit_Index := No_Index;
+      Sep_Name                : Optional_Name_Type := "";
+      Success                 : out Boolean;
+      Overridden_From_Runtime : Boolean := False)
      with Pre => Self.Is_Defined
                    and then (Sep_Name'Length = 0) = (Kind /= S_Separate);
 
@@ -180,15 +181,20 @@ package GPR2.Build.Compilation_Unit is
    function Dependency_File (Self : Object) return Simple_Name;
    --  Returns the .ali's simple name for Self
 
+   function Overridden_From_Runtime (Self : Object) return Boolean;
+   --  Returns whether or not this compilation unit is overriden from the
+   --  runtime.
+
 private
 
    type Object is tagged record
-      Name       : Unbounded_String;
-      Owner      : GPR2.Project.View.Object;
-      Root_View  : GPR2.Project.View.Object;
-      Spec       : Unit_Location;
-      Implem     : Unit_Location;
-      Separates  : Separate_Maps.Map;
+      Name                    : Unbounded_String;
+      Owner                   : GPR2.Project.View.Object;
+      Root_View               : GPR2.Project.View.Object;
+      Spec                    : Unit_Location;
+      Implem                  : Unit_Location;
+      Separates               : Separate_Maps.Map;
+      Overridden_From_Runtime : Boolean := False;
    end record;
 
    Undefined : constant Object := (others => <>);
@@ -235,5 +241,8 @@ private
 
    function Has_Main_Part (Self : Object) return Boolean is
      (Self.Implem /= No_Unit or else Self.Spec /= No_Unit);
+
+   function Overridden_From_Runtime (Self : Object) return Boolean is
+     (Self.Overridden_From_Runtime);
 
 end GPR2.Build.Compilation_Unit;
