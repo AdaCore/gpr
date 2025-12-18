@@ -35,7 +35,6 @@ package body GPRinstall.DB is
       use Ada.Integer_Text_IO;
       use Ada.Text_IO;
 
-      use GNAT;
       use GNAT.MD5;
 
       type Stats is record

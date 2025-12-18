@@ -56,12 +56,10 @@ with GPRclean.Options;
 
 function GPRclean.Main return Ada.Command_Line.Exit_Status is
 
-   use Ada;
    use Ada.Exceptions;
 
    use GPR2;
    use GPR2.Build;
-   use GPRtools;
    use GPRtools.Program_Termination;
    use GPR2.Path_Name;
 
