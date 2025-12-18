@@ -56,11 +56,9 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
    Traces : constant GNATCOLL.Traces.Trace_Handle :=
      GNATCOLL.Traces.Create ("GPRLS", GNATCOLL.Traces.Off);
 
-   use Ada;
    use Ada.Exceptions;
 
    use GPR2;
-   use GPRtools;
    use GPRtools.Program_Termination;
    use GPR2.Path_Name;
 

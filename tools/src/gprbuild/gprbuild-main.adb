@@ -52,12 +52,10 @@ with GPRbuild.Options;
 
 procedure GPRbuild.Main is
 
-   use Ada;
    use type Ada.Containers.Count_Type;
    use Ada.Exceptions;
 
    use GPR2;
-   use GPRtools;
    use GPRtools.Program_Termination;
 
    package PRP renames GPR2.Project.Registry.Pack;

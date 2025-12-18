@@ -1127,7 +1127,6 @@ package body GPR2.Tree_Internal is
    -------------------
 
    function Ordered_Views (Self : Object) return View.Vector.Object is
-      use GPR2.View_Ids;
       use GPR2.View_Ids.DAGs;
 
       Result : View.Vector.Object;
