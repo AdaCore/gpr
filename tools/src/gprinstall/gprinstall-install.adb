@@ -142,7 +142,6 @@ package body GPRinstall.Install is
       Project : GPR2.Project.View.Object;
       Options : GPRinstall.Options.Object)
    is
-      use GPRtools;
       use GPRtools.Util;
 
       use type GPR2.Path_Name.Object;
