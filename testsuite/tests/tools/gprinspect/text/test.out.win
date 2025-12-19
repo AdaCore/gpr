@@ -42,6 +42,8 @@
     - Attributes        : 
        - Archive_Prefix [ SINGLE ]
           - Value : "lib"
+       - Disable_Linking [ SINGLE ]
+          - Value : "false"
        - Externally_Built [ SINGLE ]
           - Value : "false"
        - Name [ SINGLE ]
@@ -63,6 +65,8 @@
     - Attributes        : 
        - Archive_Prefix [ SINGLE ]
           - Value : "lib"
+       - Disable_Linking [ SINGLE ]
+          - Value : "false"
        - Externally_Built [ SINGLE ]
           - Value : "false"
        - Name [ SINGLE ]
@@ -96,6 +100,8 @@
     - Attributes        : 
        - Archive_Prefix [ SINGLE ]
           - Value : "lib"
+       - Disable_Linking [ SINGLE ]
+          - Value : "false"
        - Excluded_Source_Files [ LIST ]
           - Values : 
              - "memtrack.adb"
@@ -130,6 +136,8 @@
     - Attributes        : 
        - Archive_Prefix [ SINGLE ]
           - Value : "lib"
+       - Disable_Linking [ SINGLE ]
+          - Value : "false"
        - Exec_Dir [ SINGLE ]
           - Value : "."
        - Externally_Built [ SINGLE ]
@@ -169,6 +177,8 @@
     - Attributes        : 
        - Archive_Prefix [ SINGLE ]
           - Value : "lib"
+       - Disable_Linking [ SINGLE ]
+          - Value : "false"
        - Exec_Dir [ SINGLE ]
           - Value : "."
        - Externally_Built [ SINGLE ]
@@ -210,6 +220,8 @@
     - Attributes        : 
        - Archive_Prefix [ SINGLE ]
           - Value : "lib"
+       - Disable_Linking [ SINGLE ]
+          - Value : "false"
        - Exec_Dir [ SINGLE ]
           - Value : "obj"
        - Externally_Built [ SINGLE ]
@@ -241,6 +253,8 @@
     - Attributes        : 
        - Archive_Prefix [ SINGLE ]
           - Value : "lib"
+       - Disable_Linking [ SINGLE ]
+          - Value : "false"
        - Exec_Dir [ SINGLE ]
           - Value : "obj2"
        - Externally_Built [ SINGLE ]
@@ -314,6 +328,11 @@
           "kind": "single",
           "name": "Archive_Prefix",
           "value": "lib"
+        },
+        {
+          "kind": "single",
+          "name": "Disable_Linking",
+          "value": "false"
         },
         {
           "kind": "single",
@@ -464,6 +483,11 @@
         },
         {
           "kind": "single",
+          "name": "Disable_Linking",
+          "value": "false"
+        },
+        {
+          "kind": "single",
           "name": "Externally_Built",
           "value": "false"
         },
@@ -534,6 +558,11 @@
           "kind": "single",
           "name": "Archive_Prefix",
           "value": "lib"
+        },
+        {
+          "kind": "single",
+          "name": "Disable_Linking",
+          "value": "false"
         },
         {
           "kind": "single",

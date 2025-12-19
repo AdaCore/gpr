@@ -508,6 +508,13 @@ begin
       & "case-insensitive values are 'static_only', 'full' or 'none' (the "
       & "default).");
 
+   Set_Attribute_Description
+     (Key          => PRA.Disable_Linking,
+      Description  =>
+        "Indicates if linking is disabled on the platform. Only "
+      & "authorized case-insensitive values are 'true' and 'false' (the "
+      & "default).");
+
    --  Archive_Builder
    Set_Attribute_Description
      (Key          => PRA.Archive_Builder,

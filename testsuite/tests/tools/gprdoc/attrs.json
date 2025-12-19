@@ -306,6 +306,46 @@
           "attribute_def": {
             "builtin": false,
             "config_concatenable": false,
+            "default": {
+              "default_value_kind": "value",
+              "value": "false"
+            },
+            "empty_value": "ALLOW",
+            "has_default_in": {
+              "abstract": true,
+              "aggregate": true,
+              "aggregate_library": true,
+              "configuration": true,
+              "library": true,
+              "standard": true
+            },
+            "index_optional": false,
+            "index_type": "NO_INDEX",
+            "inherit_from_extended": "NOT_INHERITED",
+            "is_allowed_in": {
+              "abstract": true,
+              "aggregate": true,
+              "aggregate_library": true,
+              "configuration": true,
+              "library": true,
+              "standard": true
+            },
+            "is_toolchain_config": false,
+            "type_def": [
+              "false",
+              "true"
+            ],
+            "value": "SINGLE",
+            "value_case_sensitive": false,
+            "value_is_set": false
+          },
+          "attribute_descr": "Indicates if linking is disabled on the platform. Only authorized case-insensitive values are 'true' and 'false' (the default).",
+          "attribute_name": "Disable_Linking"
+        },
+        {
+          "attribute_def": {
+            "builtin": false,
+            "config_concatenable": false,
             "empty_value": "ERROR",
             "has_default_in": {
               "abstract": false,

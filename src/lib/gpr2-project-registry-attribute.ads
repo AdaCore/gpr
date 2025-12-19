@@ -287,6 +287,9 @@ package GPR2.Project.Registry.Attribute is
    Default_Language                 : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"default_language");
+   Disable_Linking                  : constant Q_Attribute_Id :=
+                                        (Project_Level_Scope,
+                                         +"disable_linking");
    Excluded_Source_Files            : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"excluded_source_files");
