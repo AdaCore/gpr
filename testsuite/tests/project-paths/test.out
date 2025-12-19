@@ -1,6 +1,18 @@
 === Prj1
 demo.gpr:2:06: error: imported project file "first.gpr" not found
+The following directories have been searched:
+* Current directory: 
+* GPR_PROJECT_PATH environment variable:
+* Configuration file:
+
 === Prj2
 first.gpr:2:06: error: imported project file "second.gpr" not found
+The following directories have been searched:
+* Project file first.gpr directory: /one
+* Registered search paths with the -aP switch or directly with the libgpr2 API:
+* Current directory: 
+* GPR_PROJECT_PATH environment variable:
+* Configuration file:
+
 === Prj3
 last.gpr:3:08: error: an abstract project can only have an empty set of Sources
