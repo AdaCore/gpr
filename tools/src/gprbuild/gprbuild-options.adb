@@ -181,8 +181,9 @@ package body GPRbuild.Options is
                  Parameter      => "name"));
       Parser.Add_Argument
         (Build_Group,
-         Create (Name => "-p",
-                 Help => "Create missing obj/lib/exec directories"));
+         Create (Name     => "-p",
+                 Alt_Name => "--create-missing-dirs",
+                 Help     => "Create missing obj/lib/exec directories"));
       Parser.Add_Argument
         (Build_Group,
          Create (Name           => "-r",
@@ -583,7 +584,7 @@ package body GPRbuild.Options is
       elsif Arg = "-o" then
          Result.Build_Options.Output_File := To_Unbounded_String (Param);
 
-      elsif Arg = "-p" then
+      elsif Arg = "-p" or else Arg = "--create-missing-dirs" then
          Result.Create_Missing_Dirs := True;
 
       elsif Arg = "-r" then
