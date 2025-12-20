@@ -31,7 +31,8 @@ Build control switches:
  -k        Keep going after compilation errors
  -l        Link only
  -o name   Choose an alternate executable name
- -p        Create missing obj/lib/exec directories
+ -p, --create-missing-dirs
+           Create missing obj/lib/exec directories
  -R        Do not use run path option
  -r        Recursive (default except when using -u)
  -U        Unique compilation for all sources of all projects
@@ -383,7 +384,8 @@ Build control switches:
  -k        Keep going after compilation errors
  -l        Link only
  -o name   Choose an alternate executable name
- -p        Create missing obj/lib/exec directories
+ -p, --create-missing-dirs
+           Create missing obj/lib/exec directories
  -R        Do not use run path option
  -r        Recursive (default except when using -u)
  -U        Unique compilation for all sources of all projects
