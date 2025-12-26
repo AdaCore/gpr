@@ -116,7 +116,6 @@ limitations:
    * :samp:`--no-object-check`
    * :samp:`--no-exit-message`
    * :samp:`--no-complete-output`
-   * :samp:`--create-missing-dirs`
    * :samp:`--lto`
    * :samp:`--lfto`
 * The :samp:`-gnatdXX` and :samp:`-dXX` switches are not supported yet
