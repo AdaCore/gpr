@@ -34,9 +34,6 @@ package GPR2.Build.Actions.Archive_Table_List is
       Archive : GPR2.Build.Artifacts.Library.Object;
       View    : GPR2.Project.View.Object);
 
-   overriding
-   function View (Self : Object) return GPR2.Project.View.Object;
-
    --  Handles the insertion of the action into the build tree database.
    overriding
    function On_Tree_Insertion
@@ -92,8 +89,6 @@ private
       Archive : GPR2.Build.Artifacts.Library.Object;
       --  The archive file to which the new section, holding the provided
       --  arguments, will be added.
-
-      Ctxt : GPR2.Project.View.Object;
    end record;
 
    overriding
@@ -107,10 +102,6 @@ private
    overriding
    function Extended (Self : Object) return Object
    is (raise Internal_Error with "This action is not extending");
-
-   overriding
-   function View (Self : Object) return GPR2.Project.View.Object
-   is (Self.Ctxt);
 
    overriding
    function Display_Output (Action : Object) return Boolean

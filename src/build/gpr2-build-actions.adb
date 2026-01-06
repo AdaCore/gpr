@@ -222,7 +222,8 @@ package body GPR2.Build.Actions is
          --  The signature hasn't been invalidated for now, so the last
          --  element to check is its command line
          Cmd_Line :=
-           GPR2.Build.Command_Line.Create (Self.Working_Directory);
+           GPR2.Build.Command_Line.Create
+             (Self.Working_Directory, Self.Ctxt.Context);
          Self.Compute_Command (1, Cmd_Line, Signature_Only => True);
 
          Ign :=
@@ -270,7 +271,8 @@ package body GPR2.Build.Actions is
       Ign : Boolean with Unreferenced;
    begin
       Self.Cmd_Line :=
-        GPR2.Build.Command_Line.Create (Self.Working_Directory);
+        GPR2.Build.Command_Line.Create
+          (Self.Working_Directory, Self.Ctxt.Context);
       Self.Compute_Command (Slot, Self.Cmd_Line, False);
       Self.Compute_Response_Files (Self.Cmd_Line);
 

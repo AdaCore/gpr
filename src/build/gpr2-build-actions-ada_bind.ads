@@ -117,8 +117,6 @@ private
       --  The generated spec, as artifact
       Output_Body : Artifacts.Files.Object;
       --  The generated body, as artifact
-      Ctxt        : GPR2.Project.View.Object;
-      --  View referenced by the generated compilation unit
       SAL_Closure : Boolean := False;
       --  Whether the main depends on standalone libraries, in which case the
       --  binder needs to handle potentially duplicated elaboration
@@ -153,9 +151,6 @@ private
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;
       Stderr : Unbounded_String := Null_Unbounded_String) return Boolean;
-
-   overriding function View (Self : Object) return GPR2.Project.View.Object is
-     (Self.Ctxt);
 
    overriding function Extended (Self : Object) return Object is
      (raise Internal_Error with "This action is not extending");

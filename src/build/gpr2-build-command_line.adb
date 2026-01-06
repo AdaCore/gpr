@@ -78,11 +78,31 @@ package body GPR2.Build.Command_Line is
    ------------
 
    function Create
-     (Working_Dir : Path_Name.Object) return Object is
+     (Working_Dir : Path_Name.Object;
+      Env         : GPR2.Context.Object) return Object
+   is
+      Result : Object;
+
+      procedure Copy (Position : GPR2.Context.Key_Value.Cursor);
+      procedure Copy (Position : GPR2.Context.Key_Value.Cursor) is
+         use type GPR2.Context.Key_Value.Cursor;
+      begin
+         if Position /= GPR2.Context.Key_Value.No_Element then
+            declare
+               Key     : constant String :=
+                           String (GPR2.Context.Key_Value.Key (Position));
+               Element : constant String :=
+                           String (GPR2.Context.Key_Value.Element (Position));
+            begin
+               Result.Env.Insert (Key, Element);
+            end;
+         end if;
+      end Copy;
    begin
-      return Result : Object do
-         Result.Cwd := Working_Dir;
-      end return;
+      Result.Cwd := Working_Dir;
+      Env.Iterate (Process => Copy'Access);
+
+      return Result;
    end Create;
 
    -------------------------------
