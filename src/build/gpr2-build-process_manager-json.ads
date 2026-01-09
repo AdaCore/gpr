@@ -5,6 +5,7 @@
 --
 
 with GNATCOLL.Directed_Graph;
+with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
 
 private with GNATCOLL.JSON;
@@ -28,9 +29,13 @@ package GPR2.Build.Process_Manager.JSON is
       Stdout, Stderr : Unbounded_String)
       return Collect_Status;
 
-   overriding procedure Execution_Post_Process (Self : in out Object);
-   --  Write the summary of all jobs execution in a JSON file. Used internally
-   --  by the process manager but needs to be public to be overridden.
+   overriding procedure Execute
+     (Self            : in out Object;
+      Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
+      Context         : access Process_Execution_Context;
+      Options         : PM_Options);
+   --  Same execution as GPR2.Build.Process_Manager, but with a summary of all
+   --  job executions written to a JSON file.
 
 private
 
