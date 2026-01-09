@@ -459,7 +459,7 @@ begin
    --  Now populate the Build database's actions
 
    if not GPR2.Build.Actions_Population.Populate_Actions
-     (Opt.Tree, Opt.Build_Options, Static_Actions => False)
+     (Opt.Tree, Opt.Build_Options, With_Static_Completion => False)
    then
       Handle_Program_Termination
         (Force_Exit => True,

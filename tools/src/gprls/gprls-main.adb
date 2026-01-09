@@ -450,8 +450,8 @@ begin
    if not GPR2.Build.Actions_Population.Populate_Actions
             (Opt.Tree,
              Opt.Build_Options,
-             Static_Actions      => True,
-             Populate_Mains_Only => Populate_Mains_Only)
+             With_Static_Completion => True,
+             Populate_Mains_Only    => Populate_Mains_Only)
    then
       return To_Exit_Status (E_Abort);
    end if;
