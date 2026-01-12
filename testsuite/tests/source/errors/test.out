@@ -20,4 +20,4 @@ Project: Demo4
                   language: Ada    Kind: S_BODY   unit: MAIN
 Project: Demo5
 demo5.gpr:3:08: error: The source with basename "main.adb" appears multiple times
-demo5.gpr:5:18: error: main.adb is not a source of project Demo5
+demo5.gpr:5:18: error: "main.adb" is not a source of project Demo5

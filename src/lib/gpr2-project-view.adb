@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2025, AdaCore
+--  Copyright (C) 2019-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -1089,40 +1089,52 @@ package body GPR2.Project.View is
       for Value of Attr.Values loop
          Found := False;
 
-         Lang_Loop : for Lang of Self.Language_Ids loop
-            declare
-               Main      : constant Simple_Name :=
-                             Suffixed_Simple_Name (Self, Value.Text, Lang);
-               Db        : constant GPR2.Build.View_Db.Object := Self.View_Db;
-               Ambiguous : Boolean;
-            begin
-               Src := Db.Visible_Source (Main, Ambiguous);
+         if Value.Text = "" then
+            Messages.Append
+              (Message.Create
+                 (Level   => Message.Error,
+                  Message => "a main cannot have an empty name",
+                  Sloc    => Value));
 
-               if Src.Is_Defined and then not Ambiguous then
-                  Found := True;
-                  exit Lang_Loop;
+         else
+            Lang_Loop : for Lang of Self.Language_Ids loop
+               declare
+                  Main      : constant Simple_Name :=
+                                Suffixed_Simple_Name (Self, Value.Text, Lang);
+                  Db        : constant GPR2.Build.View_Db.Object :=
+                                Self.View_Db;
+                  Ambiguous : Boolean;
+               begin
+                  Src := Db.Visible_Source (Main, Ambiguous);
+
+                  if Src.Is_Defined and then not Ambiguous then
+                     Found := True;
+                     exit Lang_Loop;
+                  end if;
+
+                  Has_Ambiguous_Result := Has_Ambiguous_Result or Ambiguous;
+               end;
+            end loop Lang_Loop;
+
+            if not Found then
+               if Has_Ambiguous_Result then
+                  Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Message => "multiple sources were found for " &
+                          String (Value.Text) &
+                          " from project " & String (Self.Name),
+                        Sloc    => Value));
+               else
+                  Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Message =>
+                        '"' & String (Value.Text) &
+                          """ is not a source of project " &
+                          String (Self.Name),
+                        Sloc    => Value));
                end if;
-
-               Has_Ambiguous_Result := Has_Ambiguous_Result or Ambiguous;
-            end;
-         end loop Lang_Loop;
-
-         if not Found then
-            if Has_Ambiguous_Result then
-               Messages.Append
-                 (Message.Create
-                    (Level   => Message.Error,
-                     Message => "multiple sources were found for " &
-                       String (Value.Text) &
-                       " from project " & String (Self.Name),
-                     Sloc    => Value));
-            else
-               Messages.Append
-                 (Message.Create
-                    (Level   => Message.Error,
-                     Message => String (Value.Text) &
-                       " is not a source of project " & String (Self.Name),
-                     Sloc    => Value));
             end if;
          end if;
       end loop;
