@@ -15,10 +15,8 @@ package GPR2.Build.ALI_Parser is
    --  Object used to store the information extracted from .ali files
 
    function Create
-     (Path : GPR2.Path_Name.Object; Parse : Boolean) return Object;
-   --  Create a new instance for the ali file located at "Path". If "Parse" is
-   --  set, the ali file is parsed immediately. Else an explicit call to the
-   --  function "Parse" below is needed.
+     (Path : GPR2.Path_Name.Object) return Object;
+   --  Create a new instance for the ali file located at "Path".
 
    function Is_Defined (Self : Object) return Boolean;
 
