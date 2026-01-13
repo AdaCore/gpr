@@ -188,7 +188,7 @@ begin
          Has_Error : Boolean := False;
          Mains : constant Compilation_Unit.Unit_Location_Vector :=
                    (if not Opt.Build_Options.Mains.Is_Empty
-                    then Actions_Population.Resolve_Mains
+                    then Actions_Population.Resolve_Mains_From_Options
                       (Opt.Tree, Opt.Build_Options, Has_Error)
                     elsif Opt.Tree.Root_Project.Has_Mains
                     then Opt.Tree.Root_Project.Mains

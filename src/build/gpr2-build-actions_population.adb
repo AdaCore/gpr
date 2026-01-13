@@ -558,7 +558,7 @@ package body GPR2.Build.Actions_Population is
 
       Inserted := False;
 
-      Mains := Resolve_Mains
+      Mains := Resolve_Mains_From_Options
         (Tree, Options, Has_Error);
 
       if Has_Error then
@@ -1837,11 +1837,11 @@ package body GPR2.Build.Actions_Population is
       return True;
    end Populate_Withed_Projects;
 
-   -------------------
-   -- Resolve_Mains --
-   -------------------
+   --------------------------------
+   -- Resolve_Mains_From_Options --
+   --------------------------------
 
-   function Resolve_Mains
+   function Resolve_Mains_From_Options
      (Tree    : GPR2.Project.Tree.Object;
       Options : Build.Options.Build_Options;
       Error   : out Boolean)
@@ -1906,6 +1906,6 @@ package body GPR2.Build.Actions_Population is
       end loop;
 
       return Result;
-   end Resolve_Mains;
+   end Resolve_Mains_From_Options;
 
 end GPR2.Build.Actions_Population;
