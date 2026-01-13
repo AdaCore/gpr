@@ -840,6 +840,9 @@ package body GPR2.Build.Actions.Ada_Bind is
                   --  Ensure the ALI is parsed: as the project is
                   --  externally built, the signature won't be checked and
                   --  the ali is normally loaded during this phase.
+                  --  Note that this code is only reachable for standard
+                  --  projects, so we are sure to obtain the ALI from the
+                  --  object directory.
 
                   Comp.Parse_Ali;
                end if;
