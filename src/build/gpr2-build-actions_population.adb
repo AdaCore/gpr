@@ -842,7 +842,8 @@ package body GPR2.Build.Actions_Population is
                      Action : Build.Actions.Object'Class :=
                                 Tree_Db.Action (UID);
                   begin
-                     if not Action.On_Ready_State then
+                     if not Action.On_Static_Completion
+                     then
                         return False;
                      end if;
 

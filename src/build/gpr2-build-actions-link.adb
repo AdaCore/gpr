@@ -1630,11 +1630,11 @@ package body GPR2.Build.Actions.Link is
       return False;
    end Object_Already_In_Cmd_Line;
 
-   --------------------
-   -- On_Ready_State --
-   --------------------
+   --------------------------
+   -- On_Static_Completion --
+   --------------------------
 
-   overriding function On_Ready_State
+   overriding function On_Static_Completion
      (Self : in out Object) return Boolean
    is
       Units     : Compilation_Unit.Maps.Map;
@@ -1744,7 +1744,7 @@ package body GPR2.Build.Actions.Link is
       end if;
 
       return not Has_Error;
-   end On_Ready_State;
+   end On_Static_Completion;
 
    -----------------------
    -- On_Tree_Insertion --

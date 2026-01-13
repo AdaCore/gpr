@@ -658,11 +658,11 @@ package body GPR2.Build.Actions.Compile.Ada is
       end if;
    end Initialize;
 
-   --------------------
-   -- On_Ready_State --
-   --------------------
+   --------------------------
+   -- On_Static_Completion --
+   --------------------------
 
-   overriding function On_Ready_State
+   overriding function On_Static_Completion
      (Self : in out Object) return Boolean
    is
    begin
@@ -685,7 +685,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       else
          return False;
       end if;
-   end On_Ready_State;
+   end On_Static_Completion;
 
    -----------------------
    -- On_Tree_Insertion --

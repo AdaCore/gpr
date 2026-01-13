@@ -39,11 +39,11 @@ package GPR2.Build.Actions_Population is
    --  @Param Options
    --    the options used to amend the population of actions
    --  @Param With_Static_Completion
-   --    For actions that are not meant to be executed, but must be complete
+   --    For actions that will not be executed, but must be complete
    --    (all dependencies resolved, all parameters set, etc.), set this
    --    parameter to True. This ensures that those actions are fully
-   --    populated by calling On_Ready_State on all actions instead of the
-   --    Pre_Command and Post_Command entry points, which are dedicated to
+   --    populated by calling On_Static_Completion on all actions instead of
+   --    the Pre_Command and Post_Command entry points, which are dedicated to
    --    executed actions.
    --  @Param Populate_Mains_Only
    --    if set, then only the actions required to build the mains specified in

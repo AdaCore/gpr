@@ -145,7 +145,7 @@ private
      (Self            : in out Object;
       Check_Checksums : Boolean);
 
-   overriding function On_Ready_State
+   overriding function On_Static_Completion
      (Self : in out Object) return Boolean;
 
    Undefined : constant Object := (others => <>);
