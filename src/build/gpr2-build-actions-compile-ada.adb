@@ -408,7 +408,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       UID    : constant Actions.Action_Id'Class := Object'Class (Self).UID;
 
    begin
-      if not Self.Dep_File.Path.Exists then
+      if not Self.ALI_Object.Path_Name.Exists then
          Traces.Trace
            ("The ALI file for action " & UID.Image & " does not exist");
 
