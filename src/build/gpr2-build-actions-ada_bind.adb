@@ -825,8 +825,9 @@ package body GPR2.Build.Actions.Ada_Bind is
 
          Same_Scope := CU.Owning_View = Self.Ctxt
            or else
-             (Self.Ctxt.Closure (False, True, True).Contains (CU.Owning_View)
-              and then not CU.Owning_View.Is_Library);
+             (not CU.Owning_View.Is_Library and then
+              Self.Ctxt.Closure (False, True, True).Contains (CU.Owning_View)
+              );
 
          declare
             Comp_Id : constant Actions.Compile.Ada.Ada_Compile_Id :=
