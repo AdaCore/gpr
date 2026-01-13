@@ -17,9 +17,7 @@ procedure Main is
 
       ALI := GPR2.Build.ALI_Parser.Create
         (GPR2.Path_Name.Create_File (ALI_File));
-      ALI.Parse;
-
-      if ALI.Is_Parsed then
+      if ALI.Parse then
          for Dep of ALI.Dependencies loop
             Ada.Text_IO.Put_Line (String (Dep));
          end loop;

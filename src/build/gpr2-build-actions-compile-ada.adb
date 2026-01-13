@@ -286,11 +286,6 @@ package body GPR2.Build.Actions.Compile.Ada is
          return;
       end if;
 
-      if Check_Checksums then
-         --  ALI file is correct, so let's parse it
-         Self.ALI_Object.Parse;
-      end if;
-
       if Self.Ctxt.Tree.Has_Ada_Compiler_Version then
          Version := Artifacts.Key_Value.Create
            ("compiler_version",
@@ -410,25 +405,13 @@ package body GPR2.Build.Actions.Compile.Ada is
    overriding function Dependencies
      (Self : in out Object) return Containers.Filename_Set
    is
-      UID    : constant Actions.Action_Id'Class := Object'Class (Self).UID;
-
    begin
-      if not Self.ALI_Object.Path_Name.Exists then
+      if not Self.ALI_Object.Parse then
          Traces.Trace
-           ("The ALI file for action " & UID.Image & " does not exist");
+            ("Failed to parse dependencies from the ALI file " &
+             Self.ALI_Object.Path_Name.String_Value);
 
          return Containers.Empty_Filename_Set;
-      end if;
-
-      if not Self.ALI_Object.Is_Parsed then
-         Self.ALI_Object.Parse;
-         if not Self.ALI_Object.Is_Parsed then
-            Traces.Trace
-              ("Failed to parse dependencies from the ALI file " &
-                Self.Dep_File.Path.String_Value);
-
-            return Containers.Empty_Filename_Set;
-         end if;
       end if;
 
       return Self.ALI_Object.Dependencies;
@@ -738,49 +721,27 @@ package body GPR2.Build.Actions.Compile.Ada is
       return True;
    end On_Tree_Insertion;
 
-   ---------------
-   -- Parse_Ali --
-   ---------------
-
-   procedure Parse_Ali (Self : in out Object) is
-   begin
-      Self.ALI_Object.Parse;
-   end Parse_Ali;
-
-   ---------------------------
+   -------------------------------
    -- Update_Binds_From_ALI --
-   ---------------------------
+   -------------------------------
 
    function Update_Binds_From_ALI (Self : in out Object)
      return Boolean
    is
       Binds : Action_Id_Sets.Set;
    begin
-      if not Self.ALI_Object.Path_Name.Exists then
-         Self.Tree.Reporter.Report
-           (GPR2.Message.Create
-              (GPR2.Message.Error,
-               "ALI file " & Self.ALI_Object.Path_Name.String_Value &
-               " produced by " & Self.UID.Image & " is missing",
-               GPR2.Source_Reference.Object
-                 (GPR2.Source_Reference.Create
-                    (Self.Dep_File.Path.Value, 0, 0))));
-         return False;
-      end if;
 
       --  Now that we know the ALI file is correct, let the bind action know
       --  the actual list of imported units from this dependency file.
 
-      Self.ALI_Object.Parse;
-
-      if not Self.ALI_Object.Is_Parsed then
+      if not Self.ALI_Object.Parse then
          Self.Tree.Reporter.Report
            (GPR2.Message.Create
               (GPR2.Message.Error,
                "failed to analyze the ALI file",
                GPR2.Source_Reference.Object
                  (GPR2.Source_Reference.Create
-                    (Self.Dep_File.Path.Value, 0, 0))));
+                    (Self.ALI_Object.Path_Name.Value, 0, 0))));
          return False;
       end if;
 
@@ -877,10 +838,25 @@ package body GPR2.Build.Actions.Compile.Ada is
          end if;
       end if;
 
+      if not Self.ALI_Object.Path_Name.Exists then
+
+      --  A custom driver may not produce an ALI file, so we need to warn
+      --  that this leads to invalid dependency analysis without
+      --  preventing the driver from executing.
+
+         Self.Tree.Reporter.Report
+           (GPR2.Message.Create
+              (GPR2.Message.Warning,
+               "ALI file " & String (Self.ALI_Object.Path_Name.Simple_Name) &
+               " produced by " & Self.UID.Image & " is missing",
+               GPR2.Source_Reference.Object
+                 (GPR2.Source_Reference.Create
+                    (Self.Dep_File.Path.Value, 0, 0))));
+
       --  Now that we know the ALI file is correct, let the bind action know
       --  the actual list of imported units from this dependency file.
 
-      if not Self.Update_Binds_From_ALI then
+      elsif not Self.Update_Binds_From_ALI then
          return False;
       end if;
 

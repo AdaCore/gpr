@@ -845,7 +845,9 @@ package body GPR2.Build.Actions.Ada_Bind is
                   --  projects, so we are sure to obtain the ALI from the
                   --  object directory.
 
-                  Comp.Parse_Ali;
+                  if not Comp.Parse_Ali then
+                     return False;
+                  end if;
                end if;
 
                if not Self.Tree.Add_Action (Comp) then
@@ -896,7 +898,7 @@ package body GPR2.Build.Actions.Ada_Bind is
             --  signature has been checked). We can thus rely on its ALI file
             --  to give us accurate dependencies, so add it in the Todo list.
 
-            if not Comp.ALI.Is_Parsed then
+            if not Comp.Parse_Ali then
                Self.Tree.Reporter.Report
                  (Message.Create
                     (Message.Error,

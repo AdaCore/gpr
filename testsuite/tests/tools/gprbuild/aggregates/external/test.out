@@ -1,2 +1,3 @@
 [Ada Compile]     a.ads
 FOO=bar
+a.ali: warning: ALI file a.ali produced by [Ada Compile] a.ads (p.gpr) is missing

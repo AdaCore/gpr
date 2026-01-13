@@ -844,7 +844,10 @@ package body GPR2.Build.Actions_Population is
                   begin
                      if not Action.On_Static_Completion
                      then
-                        return False;
+                        Traces.Trace
+                           ("Static completion of action " &
+                             Action.UID.Image & " failed. Dependent actions " &
+                             " may have an incomplete state");
                      end if;
 
                      Tree_Db.Action_Id_To_Reference (UID) := Action;
