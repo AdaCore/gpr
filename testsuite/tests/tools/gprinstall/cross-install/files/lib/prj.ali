@@ -1,0 +1,31 @@
+V "GNAT Lib v22.20210510"
+A -gnatA
+A -g
+A -fPIC
+A -g
+A -gnato
+A -gnatwa
+A -gnatQ
+A -gnat12
+A -mfloat-abi=hard
+A -mfpu=vfpv3-d16
+A -mthumb
+A -mtls-dialect=gnu
+A -march=armv7-a+fp
+A -mlong-calls
+A -fexceptions
+A -funwind-tables
+P ZX
+
+RN
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U prj%s			prj.ads			397e3638 NE OO PK
+
+D prj.ads		20210511160630 397e3638 prj%s
+D system.ads		20210324013020 532fc697 system%s
+G a e
+X 1 prj.ads
+1K9*Prj 3l5 3e8
+2i4*Version{integer}
+

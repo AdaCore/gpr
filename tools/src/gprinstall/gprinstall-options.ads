@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2024, AdaCore                     --
+--                     Copyright (C) 2019-2026, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -122,6 +122,10 @@ package GPRinstall.Options is
       Side_Debug        : Boolean := False;
       --  Whether the debug symbols are kept into the main executable (default)
       --  or written into a side debug file.
+
+      Cross_Install     : Boolean := False;
+      --  Whether do the installation using a directory prefix based
+      --  on the target/runtime of the cross build.
    end record;
 
    function Project_Dir (Self : Object) return String;

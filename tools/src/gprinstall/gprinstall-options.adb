@@ -105,6 +105,9 @@ package body GPRinstall.Options is
       elsif Arg = "--minimal-project" then
          Result.Minimal_Project := True;
 
+      elsif Arg = "--cross-install" then
+         Result.Cross_Install := True;
+
       elsif Arg = "--prefix" then
          if Param /= "" then
             Set_Param (Result.Global_Prefix_Dir, Param);
@@ -367,6 +370,11 @@ package body GPRinstall.Options is
          Create
            (Name => "--no-manifest",
             Help => "Do not generate the manifest file"));
+      Parser.Add_Argument
+        (Install_Group,
+         Create
+           (Name => "--cross-install",
+            Help => "Cross-install mode based on target/runtime"));
 
       Parser.Get_Opt (Options);
 
@@ -478,4 +486,5 @@ package body GPRinstall.Options is
    begin
       P := (To_Unbounded_String (Value), False);
    end Set_Param;
+
 end GPRinstall.Options;

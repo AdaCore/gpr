@@ -1,0 +1,5 @@
+description:
+    Check for cross library installation with --cross-install
+driver: python_script
+control:
+- [SKIP, "'windows' not in env.host.platform", "DEAD on not windows"]
