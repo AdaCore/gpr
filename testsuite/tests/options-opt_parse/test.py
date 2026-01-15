@@ -19,7 +19,7 @@ assert "using project file" in r.out
 # This test should flag a non existing switch
 print("TEST 3")
 r = bnr.run(["./main", "-Pprj", "--load-project", "--nonexistentswitch"])
-assert "Unrecognized argument \"--nonexistentswitch\"" in r.out
+assert "Unrecognized argument --nonexistentswitch" in r.out
 # ... and print the help: we check that the help is printed
 # by checking this...
 assert "usage: main" in r.out
