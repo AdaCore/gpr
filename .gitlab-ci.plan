@@ -116,7 +116,7 @@ def test_gpr2_cov():
 
 def test_gpr2_valgrind():
     test_install()
-    anod_build("gpr2", qualifier={"valgrind": True})
+    anod_test("gpr2", qualifier={"valgrind": True})
 
 
 def test_gpr2build():
