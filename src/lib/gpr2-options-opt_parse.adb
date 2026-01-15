@@ -70,7 +70,7 @@ package body GPR2.Options.Opt_Parse is
       package Resolve_Links is new
         Parse_Flag
           (Parser => Parser,
-           Short  => "-el",
+           Short  => "-eL",
            Name   => "resolve-links",
            Help   => "Follows symlinks for project files");
 
