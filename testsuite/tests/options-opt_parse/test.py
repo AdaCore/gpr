@@ -44,7 +44,7 @@ r = bnr.run(
         "src",
         "--implicit-with",
         "gpr2",
-        "-el",
+        "-eL",
         "--print-gpr-registry",
         "--root-dir",
         "root",
