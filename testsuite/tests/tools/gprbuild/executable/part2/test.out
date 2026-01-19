@@ -48,7 +48,7 @@ Hello from Dep_Two
 
 ================================================================
 Case 4 - Missing main.adb
-main.gpr:5:18: error: main.adb is not a source of project Main
+main.gpr:5:18: error: "main.adb" is not a source of project Main
 gprbuild: processing failed
 Test return value: 5
 

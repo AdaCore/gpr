@@ -16,44 +16,32 @@ procedure Main is
       B_Imports  : GPR2.Containers.Name_Set;
       S_Imports  : GPR2.Containers.Name_Set;
       Needs_Body : Boolean;
+      ALI        : GPR2.Build.ALI_Parser.Object;
       use Ada.Text_IO;
    begin
-
       Ada.Text_IO.Put_Line
         ("=== Parsing file " & String (ALI_File.Simple_Name));
 
-      if not GPR2.Build.ALI_Parser.Imports
-        (ALI_File, S_Imports, B_Imports, Needs_Body)
-      then
+      ALI := Create (ALI_File, True);
+
+      if not ALI.Is_Parsed then
          Ada.Text_IO.Put_Line ("Failed to import the ALI file");
       end if;
 
-      Put_Line ("Needs body: " & Needs_Body'Image);
+      Put_Line ("Needs body: " & ALI.Spec_Needs_Body'Image);
 
       Put_Line ("Withed by the spec:");
-      for Imp of S_Imports loop
+      for Imp of ALI.Withed_From_Spec loop
          Ada.Text_IO.Put_Line (" - " & String (Imp));
       end loop;
 
       Put_Line ("Withed by the body:");
-      for Imp of B_Imports loop
+      for Imp of ALI.Withed_From_Body loop
          Ada.Text_IO.Put_Line (" - " & String (Imp));
       end loop;
    end Print_Imports;
 
-   Tree : GPR2.Project.Tree.Object;
-   Opts : GPR2.Options.Object;
 begin
-   if not Tree.Load (Opts, With_Runtime => False) then
-      Ada.Text_IO.Put_Line ("Failed to load the tree");
-
-      return;
-   end if;
-
-   if not Tree.Update_Sources (Option => GPR2.Sources_Units_Artifacts) then
-      Ada.Text_IO.Put_Line ("Failed to update sources");
-   end if;
-
    Print_Imports
      (GPR2.Path_Name.Create_File ("./ali_files/gnatcoll-memory.ali"));
 end Main;

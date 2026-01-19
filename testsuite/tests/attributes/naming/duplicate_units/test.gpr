@@ -1,0 +1,10 @@
+project Test is
+   for Source_Dirs use (".");
+
+   package Naming is
+      for Spec ("Pkg") use "sources.ada";
+      for Body ("Pkg") use "sources.ada";
+      for Spec ("Pkg2") use "sources.ada";
+   end Naming;
+end Test;
+

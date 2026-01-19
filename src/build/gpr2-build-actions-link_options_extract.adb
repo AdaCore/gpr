@@ -41,9 +41,10 @@ package body GPR2.Build.Actions.Link_Options_Extract is
    -----------------------
 
    overriding
-   procedure Compute_Signature (Self : in out Object; Load_Mode : Boolean) is
+   procedure Compute_Signature
+     (Self : in out Object; Check_Checksums : Boolean) is
    begin
-      if not Self.Signature.Add_Input (Self.Object_File) and then Load_Mode
+      if not Self.Signature.Add_Input (Self.Object_File, Check_Checksums)
       then
          return;
       end if;
@@ -229,7 +230,7 @@ package body GPR2.Build.Actions.Link_Options_Extract is
                      Link.Object'Class
                        (Self.Tree.Action_Id_To_Reference (Linker_UID)
                           .Element.all)
-                       .Add_Option (Opt);
+                       .Add_Option_From_Binder (Opt);
                      Traces.Trace
                        ("Options "
                         & Opt

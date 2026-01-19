@@ -1,0 +1,5 @@
+project A is
+
+   for Source_Dirs use ("srca");
+
+end A;

@@ -318,39 +318,36 @@ is
             A_Array : JSON_Array;
          begin
             for A of Atts loop
-               if not A.Is_From_Config
-                 or else Options.Display_Config_Attributes
-               then
-                  declare
-                     Att : constant JSON_Value := Create_Object;
-                  begin
-                     Set_Field (Att, "name", Image (A.Name.Id.Attr));
+               declare
+                  Att : constant JSON_Value := Create_Object;
+               begin
+                  Set_Field (Att, "name", Image (A.Name.Id.Attr));
 
-                     if A.Has_Index then
-                        Set_Field (Att, "index", A.Index.Value);
-                     end if;
+                  if A.Has_Index then
+                     Set_Field (Att, "index", A.Index.Value);
+                  end if;
 
-                     case A.Kind is
-                        when Project.Registry.Attribute.Single =>
-                           Set_Field (Att, "kind", "single");
-                           Set_Field (Att, "value", A.Value.Text);
-                        when Project.Registry.Attribute.List =>
-                           Set_Field (Att, "kind", "list");
+                  case A.Kind is
+                     when Project.Registry.Attribute.Single =>
+                        Set_Field (Att, "kind", "single");
+                        Set_Field (Att, "value", A.Value.Text);
 
-                           declare
-                              Values : JSON_Array;
-                           begin
-                              for V of A.Values loop
-                                 Append (Values, Create (V.Text));
-                              end loop;
+                     when Project.Registry.Attribute.List   =>
+                        Set_Field (Att, "kind", "list");
 
-                              Set_Field (Att, "values", Values);
-                           end;
-                     end case;
+                        declare
+                           Values : JSON_Array;
+                        begin
+                           for V of A.Values loop
+                              Append (Values, Create (V.Text));
+                           end loop;
 
-                     Append (A_Array, Att);
-                  end;
-               end if;
+                           Set_Field (Att, "values", Values);
+                        end;
+                  end case;
+
+                  Append (A_Array, Att);
+               end;
             end loop;
 
             return A_Array;
@@ -553,52 +550,87 @@ is
             Set_Field (F_Prj, "aggregated", A_Array);
          end if;
 
-         --  Package
+         declare
+            Attributes_Array : JSON_Array := Empty_Array;
+         begin
 
-         if Options.Display_Packages or else Options.Display_Everything then
-            declare
-               P_Array : JSON_Array := Empty_Array;
-            begin
-               for P of View.Packages (False, False) loop
-                  declare
-                     Pck  : constant JSON_Value := Create_Object;
-                  begin
-                     Set_Field (Pck, "name", Image (P));
+            --  Package
 
-                     if Options.Display_Attributes
-                       or else Options.Display_Everything
-                     then
-                        declare
-                           Atts : constant Project.Attribute.Set.Object :=
-                             View.Attributes (P);
-                        begin
-                           if not Atts.Is_Empty then
-                              Set_Field (Pck, "attributes", Attributes (Atts));
-                           end if;
-                        end;
-                     end if;
+            if Options.Display_Attributes
+              or else Options.Display_Packages
+              or else Options.Display_Everything
+            then
+               declare
+                  P_Array : JSON_Array := Empty_Array;
+               begin
+                  for P of View.Packages
+                    (With_Defaults => False,
+                     With_Config   => Options.Display_Config_Attributes)
+                  loop
+                     declare
+                        Pck : constant JSON_Value := Create_Object;
+                     begin
+                        if Options.Display_Packages
+                          or else Options.Display_Everything
+                        then
+                           Set_Field (Pck, "name", Image (P));
+                        end if;
 
-                     Append (P_Array, Pck);
-                  end;
-               end loop;
+                        if Options.Display_Attributes
+                          or else Options.Display_Everything
+                        then
+                           declare
+                              Atts : constant Project.Attribute.Set.Object :=
+                                View.Attributes
+                                  (P,
+                                   With_Config =>
+                                     Options.Display_Config_Attributes);
+                           begin
+                              if not Atts.Is_Empty then
+                                 GNATCOLL.JSON.Append
+                                   (Attributes_Array, Attributes (Atts));
 
-               if not Is_Empty (P_Array) then
-                  Set_Field (F_Prj, "packages", P_Array);
-               end if;
-            end;
-         end if;
+                                 if Options.Display_Packages
+                                   or else Options.Display_Everything
+                                 then
+                                    --  Print attributes for each package
+                                    --  instead of merging them into the
+                                    --  global project attributes array.
 
-         --  Attributes
+                                    Set_Field
+                                      (Pck, "attributes", Attributes_Array);
+                                    Attributes_Array := Empty_Array;
+                                    Append (P_Array, Pck);
+                                 end if;
+                              end if;
+                           end;
+                        end if;
+                     end;
+                  end loop;
 
-         if Options.Display_Attributes or else Options.Display_Everything then
-            declare
-               Atts : constant Project.Attribute.Set.Object := View.Attributes;
-            begin
-               if not Atts.Is_Empty then
-                  Set_Field (F_Prj, "attributes", Attributes (Atts));
-               end if;
-            end;
-         end if;
+                  if not Is_Empty (P_Array) then
+                     Set_Field (F_Prj, "packages", P_Array);
+                  end if;
+               end;
+            end if;
+
+            --  Attributes
+
+            if Options.Display_Attributes or else Options.Display_Everything
+            then
+               declare
+                  Atts : constant Project.Attribute.Set.Object :=
+                    View.Attributes
+                      (With_Config => Options.Display_Config_Attributes);
+               begin
+                  GNATCOLL.JSON.Append (Attributes_Array, Attributes (Atts));
+
+                  if not GNATCOLL.JSON.Is_Empty (Attributes_Array) then
+                     Set_Field (F_Prj, "attributes", Attributes_Array);
+                  end if;
+               end;
+            end if;
+         end;
 
          --  Variables
 

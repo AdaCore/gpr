@@ -142,7 +142,6 @@ package body GPRinstall.Install is
       Project : GPR2.Project.View.Object;
       Options : GPRinstall.Options.Object)
    is
-      use GPRtools;
       use GPRtools.Util;
 
       use type GPR2.Path_Name.Object;
@@ -1166,7 +1165,7 @@ package body GPRinstall.Install is
                   if Action in GPR2.Build.Actions.Compile.Ada.Object'Class then
                      declare
                         U    : constant GPR2.Build.Compilation_Unit.Object :=
-                                 AC (Action).Input_Unit;
+                                 AC (Action).Unit;
                         ALI  : constant Path_Name.Object :=
                                  AC (Action).Intf_Ali_File.Path;
                         TALI : constant Filename_Optional :=

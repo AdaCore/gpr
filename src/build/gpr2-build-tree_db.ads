@@ -22,6 +22,7 @@ with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.Reporter;
 with GPR2.Reporter.Holders;
+with GPR2.Utils.Hash;
 with GPR2.View_Ids;
 
 private with Ada.Containers.Hashed_Maps;
@@ -35,6 +36,10 @@ package GPR2.Build.Tree_Db is
    type Object_Access is access all Object;
 
    Undefined : constant Object;
+
+   package Action_Sets is new Ada.Containers.Indefinite_Ordered_Sets
+     (GPR2.Build.Actions.Action_Id'Class,
+      GPR2.Build.Actions."<", GPR2.Build.Actions."=");
 
    package DG renames GNATCOLL.Directed_Graph;
 
@@ -166,8 +171,9 @@ package GPR2.Build.Tree_Db is
      (List : Artifacts_List) return Artifact_Iterators.Forward_Iterator'Class;
 
    type Constant_Artifact_Reference_Type
-     (Element : not null access constant Artifacts.Object'Class) is private
-     with Implicit_Dereference => Element;
+     (Element : not null access constant Artifacts.Object'Class) is
+     limited private
+       with Implicit_Dereference => Element;
 
    function Constant_Artifact_Reference
      (Iterator : aliased Artifacts_List;
@@ -199,11 +205,11 @@ package GPR2.Build.Tree_Db is
      (List : Actions_List) return Action_Iterators.Forward_Iterator'Class;
 
    type Action_Reference_Type
-     (Element : not null access Actions.Object'Class) is private
-     with Implicit_Dereference => Element;
+     (Element : not null access Actions.Object'Class) is limited private
+       with Implicit_Dereference => Element;
 
    function Action_Id_To_Reference
-     (Self : in out Object;
+     (Self : aliased in out Object;
       Id   : Actions.Action_Id'Class) return Action_Reference_Type
      with Pre => Self.Is_Defined;
 
@@ -212,8 +218,9 @@ package GPR2.Build.Tree_Db is
       Pos      : Action_Cursor) return Action_Reference_Type;
 
    type Constant_Action_Reference_Type
-     (Element : not null access constant Actions.Object'Class) is private
-     with Implicit_Dereference => Element;
+     (Element : not null access constant Actions.Object'Class) is
+     limited private
+       with Implicit_Dereference => Element;
 
    function Constant_Action_Reference
      (Iterator : aliased Actions_List;
@@ -287,8 +294,16 @@ package GPR2.Build.Tree_Db is
      (Self : Object) return GPR2.Build.Options.Build_Options;
 
    procedure Set_Build_Options
-     (Self    : in out Object;
-      Options : GPR2.Build.Options.Build_Options);
+     (Self : in out Object; Options : GPR2.Build.Options.Build_Options);
+
+   ------------------------------
+   -- Support for file indexer --
+   ------------------------------
+
+   function File_Indexer (Self : Object) return access GPR2.Utils.Hash.Object;
+
+   function File_Index_Save_Path (Self : Object) return Path_Name.Object
+     with Pre => Self.Is_Defined;
 
    --------------------------------------
    -- Helper functions for the Actions --
@@ -311,10 +326,6 @@ private
 
    package Action_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (GPR2.Build.Actions.Action_Id'Class, GPR2.Build.Actions.Object'Class,
-      GPR2.Build.Actions."<", GPR2.Build.Actions."=");
-
-   package Action_Sets is new Ada.Containers.Indefinite_Ordered_Sets
-     (GPR2.Build.Actions.Action_Id'Class,
       GPR2.Build.Actions."<", GPR2.Build.Actions."=");
 
    package Action_Artifacts_Maps is new Ada.Containers.Indefinite_Ordered_Maps
@@ -360,6 +371,8 @@ private
 
       Executing        : Boolean := False;
       Exec_Ctxt        : aliased Process_Manager.Process_Execution_Context;
+
+      File_Index       : aliased GPR2.Utils.Hash.Object;
 
       Linker_Lib_Dir_Opt : Unbounded_String;
    end record;
@@ -416,6 +429,9 @@ private
    function Is_Executing (Self : Object) return Boolean is
      (Self.Executing);
 
+   function File_Indexer (Self : Object) return access GPR2.Utils.Hash.Object
+   is (Self.Self.File_Index'Unrestricted_Access);
+
    type Artifact_List_Kind is (Explicit_Inputs,
                                Implicit_Inputs,
                                Inputs,
@@ -438,7 +454,7 @@ private
 
    type Constant_Artifact_Reference_Type
      (Element : not null access constant Artifacts.Object'Class)
-   is record
+   is limited record
       Ref : Artifact_Vectors.Constant_Reference_Type (Element);
    end record;
 
@@ -463,13 +479,13 @@ private
 
    type Action_Reference_Type
      (Element : not null access Actions.Object'Class)
-   is record
+   is limited record
       Ref : Action_Maps.Reference_Type (Element);
    end record;
 
    type Constant_Action_Reference_Type
      (Element : not null access constant Actions.Object'Class)
-   is record
+   is limited record
       Ref : Action_Maps.Constant_Reference_Type (Element);
    end record;
 

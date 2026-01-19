@@ -20,6 +20,12 @@ begin
             exit when GNATCOLL.OS.Stat.Is_File (Stat);
             delay 0.1;
          end loop;
+
+         --  Ensure that the process we are waiting for has completed.
+         --  Otherwise, one possible scenario is that the file is created by
+         --  the process we are waiting on, but that process has not yet
+         --  finished.
+         delay 1.0;
       end;
    end if;
 

@@ -49,7 +49,8 @@ package body GPR2.Project.Attribute.Set is
    begin
       return Constant_Reference_Type'
         (Attribute => Ref.Element.all'Unrestricted_Access,
-         Ref       => Ref);
+         Ref       => Self.Attributes.Constant_Reference
+                        (Position.CM).Constant_Reference (Position.CA));
    end Constant_Reference;
 
    --------------
@@ -419,7 +420,8 @@ package body GPR2.Project.Attribute.Set is
    begin
       return Reference_Type'
         (Attribute => Ref.Element.all'Unrestricted_Access,
-         Ref       => Ref);
+         Ref       => Self.Attributes.Reference (Position.CM).Reference
+                        (Position.CA));
    end Reference;
 
 end GPR2.Project.Attribute.Set;

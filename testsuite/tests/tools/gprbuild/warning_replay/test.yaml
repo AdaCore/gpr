@@ -1,0 +1,2 @@
+description: Test gprbuild --no-warnings-replay
+driver: python_script

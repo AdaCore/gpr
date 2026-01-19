@@ -282,7 +282,7 @@ package body GPR2.Build.View_Tables is
                   CU_Instance.Remove
                     (Kind, Other.View, Other.Source, Other.Index, Sep_Name);
                   CU_Instance.Add
-                    (Kind, View_Db.View, Path, Index, Sep_Name, Success);
+                    (Kind, View_Db.View, Path, Index, Sep_Name, Success, True);
 
                elsif Other.Source.Value = Path.Value then
                   --  Same source found by multiple projects
@@ -1402,9 +1402,11 @@ package body GPR2.Build.View_Tables is
                Messages.Append
                  (Message.Create
                     (Message.Error,
-                     '"' & String (Basename) & '"' &
-                       " is found multiple times for the same source" &
-                       " directory",
+                     "The source with basename "
+                     & '"'
+                     & String (Basename)
+                     & '"'
+                     & " appears multiple times",
                      Data.View.Attribute
                        (Project.Registry.Attribute.Source_Dirs)));
             end loop;

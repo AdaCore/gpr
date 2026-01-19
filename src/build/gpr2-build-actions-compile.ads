@@ -32,8 +32,6 @@ package GPR2.Build.Actions.Compile is
 
    procedure Initialize (Self : in out Object; Src : GPR2.Build.Source.Object);
 
-   overriding function View (Self : Object) return GPR2.Project.View.Object;
-
    function Language (Self : Object) return Language_Id;
 
    function Input (Self : Object) return GPR2.Build.Source.Object;
@@ -47,9 +45,9 @@ package GPR2.Build.Actions.Compile is
      (Self : Object;
       Db   : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
-   overriding procedure Compute_Signature
-     (Self      : in out Object;
-      Load_Mode : Boolean);
+   overriding
+   procedure Compute_Signature
+     (Self : in out Object; Check_Checksums : Boolean);
 
    overriding procedure Compute_Command
      (Self           : in out Object;
@@ -119,9 +117,6 @@ private
       Src                : GPR2.Build.Source.Object;
       --  Source name
 
-      Ctxt               : GPR2.Project.View.Object;
-      --  View owning the source
-
       Inh_From           : GPR2.Project.View.Object;
       --  Set when the action is inherited from another view.
 
@@ -151,9 +146,6 @@ private
 
    function Dependency_File
      (Self : Object'Class) return Artifacts.Files.Object is (Self.Dep_File);
-
-   overriding function View (Self : Object) return GPR2.Project.View.Object is
-     (Self.Ctxt);
 
    function Language (Self : Object) return Language_Id is
      (Self.Lang);

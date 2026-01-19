@@ -35,7 +35,6 @@ with GPRinspect.Process;
 
 function GPRinspect.Main return Ada.Command_Line.Exit_Status is
 
-   use Ada;
    use GPR2;
 
    use GPRtools.Program_Termination;

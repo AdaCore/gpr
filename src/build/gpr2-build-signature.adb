@@ -10,6 +10,8 @@ with GNATCOLL.OS.FS;
 with GNATCOLL.Traces;
 
 with GPR2.Build.Actions;
+with GPR2.Build.Artifacts.Files;
+with GPR2.Project.Tree;
 
 package body GPR2.Build.Signature is
 
@@ -23,9 +25,7 @@ package body GPR2.Build.Signature is
       Checksum_Check : Boolean := True) return Boolean;
 
    Traces : constant GNATCOLL.Traces.Trace_Handle :=
-              GNATCOLL.Traces.Create
-                ("GPR.BUILD.SIGNATURE",
-                 GNATCOLL.Traces.Off);
+     GNATCOLL.Traces.Create ("GPR.BUILD.SIGNATURE", GNATCOLL.Traces.Off);
 
    ------------------------
    -- Add_Console_Output --
@@ -66,35 +66,50 @@ package body GPR2.Build.Signature is
       C     : Artifact_Sets.Cursor;
    begin
       Self.Artifacts (IO).Insert (Art, C, Added);
-
-      Traces.Trace (Art.Serialize);
+      if IO = Input then
+         Traces.Trace ("Adding input artifact " & Art.Serialize);
+      else
+         Traces.Trace ("Adding output artifact " & Art.Serialize);
+      end if;
 
       if not Checksum_Check then
+         Traces.Trace ("Not checking checksum");
          return True;
 
       elsif not Added then
+         Traces.Trace ("Signature has already been invalidated");
+
          --  Already there, so return False if the signature is already
          --  invalidated.
          return not Self.Checksums (IO).Is_Empty;
 
       elsif Self.Checksums (IO).Is_Empty then
+         Traces.Trace ("Signature has already been invalidated");
+
          --  Nothing more to do, the signature is already invalidated
          return False;
       end if;
 
       --  Check immediately if the artifact checksum matches the saved state
       declare
-         Chk : constant String := Art.Checksum;
+         Chk : constant String := Art.Checksum (Self.Indexer.all);
          CC  : constant Checksum_Maps.Cursor := Self.Checksums (IO).Find (Art);
       begin
          if not Checksum_Maps.Has_Element (CC)
            or else Checksum_Maps.Element (CC) /= Chk
          then
-            Traces.Trace
-              ((if Checksum_Maps.Has_Element (CC)
-               then "   - " & Checksum_Maps.Element (CC)
-               else "   - No checksum found"));
-            Traces.Trace ("   - " & Chk);
+            if Checksum_Maps.Has_Element (CC) then
+               Traces.Trace
+                 ("Invalidating the signature because checksums do " &
+                  "not match:");
+               Traces.Trace ("  Current checksum: " & Chk);
+               Traces.Trace
+                 ("  Saved checksum  : " & Checksum_Maps.Element (CC));
+            else
+               Traces.Trace
+                 ("Invalidating the signature because no saved checksum " &
+                  "has been found.");
+            end if;
 
             --  Invalidate the saved checksums
             Self.Checksums (Input).Clear;
@@ -104,6 +119,8 @@ package body GPR2.Build.Signature is
          end if;
       end;
 
+      Traces.Trace ("Checksums matched");
+
       return True;
    end Add_Internal;
 
@@ -112,10 +129,11 @@ package body GPR2.Build.Signature is
    ----------------
 
    function Add_Output
-     (Self : in out Object;
-      Art  : Artifacts.Object'Class) return Boolean is
+     (Self           : in out Object;
+      Art            : Artifacts.Object'Class;
+      Checksum_Check : Boolean := True) return Boolean is
    begin
-      return Add_Internal (Self, Art, Output);
+      return Add_Internal (Self, Art, Output, Checksum_Check);
    end Add_Output;
 
    -----------
@@ -124,8 +142,18 @@ package body GPR2.Build.Signature is
 
    procedure Clear (Self : in out Object) is
    begin
-      Self := (others => <>);
+      Self := (Indexer => Self.Indexer, others => <>);
    end Clear;
+
+----------------
+-- Initialize --
+----------------
+
+   procedure Initialize
+     (Self : in out Object; Indexer : access GPR2.Utils.Hash.Object) is
+   begin
+      Self := (Indexer => Indexer.all'Unrestricted_Access, others => <>);
+   end Initialize;
 
    ----------------
    -- Invalidate --
@@ -142,17 +170,20 @@ package body GPR2.Build.Signature is
    -- Load --
    ----------
 
-   function Load (Db_File : Path_Name.Object;
-                  Ctxt    : GPR2.Project.View.Object) return Object
+   function Load
+     (Db_File : Path_Name.Object; Ctxt : GPR2.Project.View.Object)
+      return Object
    is
       use type JSON.JSON_Parser_Event_Kind;
 
-      Signature   : Object;
-      Parser      : JSON.JSON_Parser;
-      Data        : Buffer.Reader := Buffer.Open (String (Db_File.Value));
-      Event       : JSON.JSON_Parser_Event;
+      Signature : Object;
+      Parser    : JSON.JSON_Parser;
+      Data      : Buffer.Reader := Buffer.Open (String (Db_File.Value));
+      Event     : JSON.JSON_Parser_Event;
 
    begin
+      Signature.Initialize (Ctxt.Tree.Artifacts_Database.File_Indexer);
+
       --  Signature is an object
       Event := Parser.Parse_Next (Data => Data);
       if Event.Kind /= JSON.OBJECT_START then
@@ -174,17 +205,18 @@ package body GPR2.Build.Signature is
          end if;
 
          declare
-            Key : String renames
-                    Data.Token (Event.First + 1, Event.Last - 1);
+            Key : String renames Data.Token (Event.First + 1, Event.Last - 1);
             IO  : IO_Type := Input;
          begin
 
-            if Key = TEXT_INPUTS or else  Key = TEXT_OUTPUTS then
+            if Key = TEXT_INPUTS or else Key = TEXT_OUTPUTS then
                --  the signature key as an array associated with it
                Event := Parser.Parse_Next (Data => Data);
 
                if Event.Kind /= JSON.ARRAY_START then
-                  return Undefined;
+                  Signature.Clear;
+
+                  return Signature;
                end if;
 
                if Key = TEXT_INPUTS then
@@ -193,11 +225,13 @@ package body GPR2.Build.Signature is
                   IO := Output;
                end if;
 
-               Array_Loop : loop
+               Array_Loop :
+               loop
                   Event := Parser.Parse_Next (Data => Data);
                   case Event.Kind is
                      when JSON.ARRAY_END =>
                         exit Array_Loop;
+
                      when JSON.OBJECT_START =>
                         declare
                            use JSON;
@@ -206,7 +240,8 @@ package body GPR2.Build.Signature is
                            Value    : JSON_Parser_Event := (NULL_VALUE, 0, 0);
                            E        : JSON_Parser_Event;
                         begin
-                           Item_Loop : loop
+                           Item_Loop :
+                           loop
                               E := Parser.Parse_Next (Data);
 
                               if E.Kind = JSON.OBJECT_END then
@@ -216,8 +251,7 @@ package body GPR2.Build.Signature is
                               if E.Kind = JSON.STRING_VALUE then
                                  declare
                                     Key : constant String :=
-                                            Data.Token
-                                              (E.First + 1, E.Last - 1);
+                                      Data.Token (E.First + 1, E.Last - 1);
                                  begin
                                     if Key = TEXT_CLASS then
                                        Protocol := Parser.Parse_Next (Data);
@@ -226,12 +260,14 @@ package body GPR2.Build.Signature is
                                     elsif Key = TEXT_VALUE then
                                        Value := Parser.Parse_Next (Data);
                                     else
-                                       return Undefined;
+                                       Signature.Clear;
+
+                                       return Signature;
                                     end if;
                                  end;
                               else
                                  Signature.Clear;
-                                 return Undefined;
+                                 return Signature;
                               end if;
                            end loop Item_Loop;
 
@@ -239,19 +275,19 @@ package body GPR2.Build.Signature is
                              or else Uri.Kind /= STRING_VALUE
                              or else Value.Kind /= STRING_VALUE
                            then
-                              return Undefined;
+                              Signature.Clear;
+                              return Signature;
                            end if;
 
                            declare
                               Art   : Artifacts.Object'Class :=
-                                        Artifacts.New_Instance
-                                          (Data.Token
-                                             (Protocol.First + 1,
-                                              Protocol.Last - 1));
+                                Artifacts.New_Instance
+                                  (Data.Token
+                                     (Protocol.First + 1, Protocol.Last - 1));
                               Chk   : constant String :=
-                                        JSON.Decode_As_String (Value, Data);
+                                JSON.Decode_As_String (Value, Data);
                               Uri_F : constant String :=
-                                        JSON.Decode_As_String (Uri, Data);
+                                JSON.Decode_As_String (Uri, Data);
                            begin
                               Art.Unserialize (Uri_F, Chk, Ctxt);
 
@@ -260,13 +296,12 @@ package body GPR2.Build.Signature is
                         end;
 
                      when others =>
-                        return Undefined;
+                        Signature.Clear;
+                        return Signature;
                   end case;
                end loop Array_Loop;
 
-            elsif Key = TEXT_STDOUT
-              or else Key = TEXT_STDERR
-            then
+            elsif Key = TEXT_STDOUT or else Key = TEXT_STDERR then
                Event := Parser.Parse_Next (Data => Data);
 
                if Event.Kind /= JSON.STRING_VALUE then
@@ -274,11 +309,11 @@ package body GPR2.Build.Signature is
                end if;
 
                if Key = TEXT_STDOUT then
-                  Signature.Stdout := To_Unbounded_String
-                    (JSON.Decode_As_String (Event, Data));
+                  Signature.Stdout :=
+                    To_Unbounded_String (JSON.Decode_As_String (Event, Data));
                elsif Key = TEXT_STDERR then
-                  Signature.Stderr := To_Unbounded_String
-                    (JSON.Decode_As_String (Event, Data));
+                  Signature.Stderr :=
+                    To_Unbounded_String (JSON.Decode_As_String (Event, Data));
                end if;
             end if;
          end;
@@ -286,6 +321,7 @@ package body GPR2.Build.Signature is
 
       --  Check for end of document
       Event := Parser.Parse_Next (Data => Data);
+
       if Event.Kind /= JSON.DOC_END then
          Signature.Clear;
          return Signature;
@@ -303,12 +339,12 @@ package body GPR2.Build.Signature is
    -- Store --
    -----------
 
-   procedure Store (Self : in out Object; Db_File : Path_Name.Object)
-   is
+   procedure Store (Self : in out Object; Db_File : Path_Name.Object) is
       FD      : GNATCOLL.OS.FS.File_Descriptor;
       Value   : constant JSON.JSON_Value := JSON.Create_Object;
       Inputs  : JSON.JSON_Array;
       Outputs : JSON.JSON_Array;
+      Repr    : Unbounded_String;
 
       use type Ada.Containers.Count_Type;
       use GNATCOLL.OS.FS;
@@ -319,10 +355,8 @@ package body GPR2.Build.Signature is
       function To_Artifact_Element
         (Position : Checksum_Maps.Cursor) return JSON.JSON_Value
       is
-         Art : constant Artifacts.Object'Class :=
-                 Checksum_Maps.Key (Position);
-         Chk : constant String :=
-                 Checksum_Maps.Element (Position);
+         Art : constant Artifacts.Object'Class := Checksum_Maps.Key (Position);
+         Chk : constant String := Checksum_Maps.Element (Position);
          Val : constant JSON.JSON_Value := JSON.Create_Object;
       begin
          JSON.Set_Field (Val, TEXT_CLASS, Art.Protocol);
@@ -338,7 +372,20 @@ package body GPR2.Build.Signature is
             Self.Checksums (IO).Clear;
 
             for A of Self.Artifacts (IO) loop
-               Self.Checksums (IO).Include (A, A.Checksum);
+               if IO = Output
+                 and then A in GPR2.Build.Artifacts.Files.Object'Class
+               then
+                  declare
+                     Chk : GPR2.Utils.Hash.Hash_Digest;
+                  begin
+                     Chk := Artifacts.Files.Object'Class (A).Checksum
+                       (Self.Indexer.all, Force_Cache => True);
+                     Self.Checksums (IO).Include (A, Chk);
+                  end;
+               else
+                  Self.Checksums (IO).Include
+                    (A, A.Checksum (Self.Indexer.all));
+               end if;
             end loop;
          end if;
       end loop;
@@ -351,27 +398,25 @@ package body GPR2.Build.Signature is
          JSON.Append (Outputs, To_Artifact_Element (C));
       end loop;
 
-      JSON.Set_Field (Val        => Value,
-                      Field_Name => TEXT_INPUTS,
-                      Field      => Inputs);
-      JSON.Set_Field (Val        => Value,
-                      Field_Name => TEXT_OUTPUTS,
-                      Field      => Outputs);
-      JSON.Set_Field (Val        => Value,
-                      Field_Name => TEXT_STDOUT,
-                      Field      => Self.Stdout);
-      JSON.Set_Field (Val        => Value,
-                      Field_Name => TEXT_STDERR,
-                      Field      => Self.Stderr);
+      JSON.Set_Field
+        (Val => Value, Field_Name => TEXT_INPUTS, Field => Inputs);
+      JSON.Set_Field
+        (Val => Value, Field_Name => TEXT_OUTPUTS, Field => Outputs);
+      JSON.Set_Field
+        (Val => Value, Field_Name => TEXT_STDOUT, Field => Self.Stdout);
+      JSON.Set_Field
+        (Val => Value, Field_Name => TEXT_STDERR, Field => Self.Stderr);
+
+      Repr := JSON.Write (Value);
 
       FD := Open (Db_File.String_Value, Write_Mode);
 
       if FD = Invalid_FD then
-         raise GPR2.Build.Actions.Action_Error with
-           "could not create file """ & Db_File.String_Value & '"';
+         raise GPR2.Build.Actions.Action_Error
+           with "could not create file """ & Db_File.String_Value & '"';
       end if;
 
-      Write (FD, JSON.Write (Value) & ASCII.CR & ASCII.LF);
+      Write_Unbounded (FD, Repr);
       Close (FD);
    end Store;
 
@@ -379,14 +424,29 @@ package body GPR2.Build.Signature is
    -- Valid --
    -----------
 
-   function Valid (Self : Object) return Boolean
-   is
+   function Valid (Self : Object) return Boolean is
       use type Ada.Containers.Count_Type;
    begin
-      return Self.Artifacts (Output).Length = Self.Checksums (Output).Length
+      return
+        Self.Artifacts (Output).Length = Self.Checksums (Output).Length
         and then Self.Artifacts (Input).Length = Self.Checksums (Input).Length
         and then (not Self.Artifacts (Input).Is_Empty
                   or else not Self.Artifacts (Output).Is_Empty);
+   end Valid;
+
+   function Valid (Self : Object; Art : Artifacts.Object'Class) return Boolean
+   is
+   begin
+      if Self = Undefined or else Self.Is_Empty then
+         return False;
+      end if;
+
+      return (Self.Checksums (Input).Contains (Art)
+              and then Self.Checksums (Input).Element (Art) =
+                Art.Checksum (Self.Indexer.all))
+              or else (Self.Checksums (Output).Contains (Art)
+                and then Self.Checksums (Output).Element (Art) =
+                  Art.Checksum (Self.Indexer.all));
    end Valid;
 
 end GPR2.Build.Signature;

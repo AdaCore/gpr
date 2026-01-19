@@ -21,31 +21,36 @@ package GPR2.Build.Process_Manager is
    Process_Manager_Error : exception;
 
    type PM_Options is record
-      Jobs            : Natural := 0;
+      Jobs               : Natural := 0;
       --  Number of jobs to execute in parallel. 0 will autodetect the
       --  number of CPUs available and use that value.
 
-      Force           : Boolean := False;
+      Force              : Boolean := False;
       --  When set, this forces the (re-)execution of the actions.
 
-      Stop_On_Fail    : Boolean := True;
+      Stop_On_Fail       : Boolean := True;
       --  If unset, the process manager will try to continue executing the
       --  actions after a failure.
 
-      Keep_Temp_Files : Boolean := False;
+      Keep_Temp_Files    : Boolean := False;
       --  When set, the temporary files are not deleted after execution
 
-      Script_File     : Path_Name.Object;
+      Script_File        : Path_Name.Object;
       --  When defined, it indicates a file where we will store the commands
       --  that have been executed during the run.
 
-      Show_Progress   : Boolean := False;
+      Show_Progress      : Boolean := False;
       --  Displays extra information on the number of executed action and
       --  the total number of actions.
 
-      Force_Jobserver : Boolean := False;
+      Force_Jobserver    : Boolean := False;
       --  When set, if we don't have a jobserver protocol defined, stop the
       --  process manager.
+
+      No_Warnings_Replay : Boolean := False;
+      --  When set, when a job is skipped (signature OK), do not provide the
+      --  saved stderr but an empty string.
+      --  Else provide the saved signature
    end record;
 
    type Collect_Status is
@@ -139,10 +144,6 @@ package GPR2.Build.Process_Manager is
       Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
       Context         : access Process_Execution_Context;
       Options         : PM_Options);
-
-   procedure Execution_Post_Process (Self : in out Object) is null;
-   --  ??? Did not manage to have this subprogram in the private part
-   --  and to be overrided by childs
 
    ----------------------------------------
    -- Process scheduler data information --

@@ -1,0 +1,6 @@
+project proj is
+
+   for Object_Dir use "subdir";
+   for Source_Dirs use (".", "subdir");
+
+end proj;

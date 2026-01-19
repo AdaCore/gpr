@@ -1,0 +1,2 @@
+description: Test that several units within the same source file at the same index produces an error
+driver: python_script

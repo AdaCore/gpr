@@ -223,8 +223,8 @@ package body GPR2.Build.Actions.Ada_Bind is
                                   Actions.Compile.Ada.Object
                                     (Self.Tree.Predecessor (Input));
                      Key      : constant String :=
-                                  To_Lower (String (Comp.Input_Unit.Name)) &
-                                  (if Comp.Input_Unit.Main_Part = S_Spec
+                                  To_Lower (String (Comp.Unit.Name)) &
+                                  (if Comp.Unit.Main_Part = S_Spec
                                    then S_Suffix else B_Suffix);
 
                   begin
@@ -319,7 +319,7 @@ package body GPR2.Build.Actions.Ada_Bind is
       --  Binder.Prefix can be removed it only serves as renaming the bexch
       --  which does not exist anymore.
 
-      if not Self.Has_Main then
+      if not Self.Main_Unit.Is_Defined then
          Cmd_Line.Add_Argument ("-n");
       end if;
 
@@ -410,7 +410,7 @@ package body GPR2.Build.Actions.Ada_Bind is
                Comp : constant Actions.Compile.Ada.Object :=
                  Compile.Ada.Object (Self.Tree.Predecessor (Art));
             begin
-               if not Self.Roots.Contains (Comp.Input_Unit.Name) then
+               if not Self.Roots.Contains (Comp.Unit.Name) then
                   Cmd_Line.Add_Argument
                     (Comp.Local_Ali_File.Path, Build.Command_Line.Simple);
                end if;
@@ -446,7 +446,20 @@ package body GPR2.Build.Actions.Ada_Bind is
       --  should be in the knowledge base instead of being hardcoded depending
       --  on the GNAT version.
       Add_Attr (PRA.Binder.Required_Switches, Lang_Ada_Idx, True, True);
-      Add_Attr (PRA.Binder.Switches, Lang_Ada_Idx, True, True);
+
+      if Self.Main_Unit.Is_Defined then
+         declare
+            Main_Source_Idx : constant PAI.Object :=
+              PAI.Create_Source (Self.Main_Unit.Main_Part.Source.Simple_Name);
+         begin
+            --  If the source index does not exist, then the Ada language index
+            --  will be used instead.
+
+            Add_Attr (PRA.Binder.Switches, Main_Source_Idx, True, True);
+         end;
+      else
+         Add_Attr (PRA.Binder.Switches, Lang_Ada_Idx, True, True);
+      end if;
 
       --  Add -bargs and -bargs:Ada
 
@@ -513,25 +526,23 @@ package body GPR2.Build.Actions.Ada_Bind is
    -----------------------
 
    overriding procedure Compute_Signature
-     (Self      : in out Object;
-      Load_Mode : Boolean)
+     (Self            : in out Object;
+      Check_Checksums : Boolean)
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      if not Self.Signature.Add_Output (Self.Generated_Spec)
-        and then Load_Mode
+      if not Self.Signature.Add_Output (Self.Generated_Spec, Check_Checksums)
       then
          return;
       end if;
 
-      if not Self.Signature.Add_Output (Self.Generated_Body)
-        and then Load_Mode
+      if not Self.Signature.Add_Output (Self.Generated_Body, Check_Checksums)
       then
          return;
       end if;
 
       for Pred of Self.Tree.Inputs (UID) loop
-         if not Self.Signature.Add_Input (Pred) and then Load_Mode then
+         if not Self.Signature.Add_Input (Pred, Check_Checksums) then
             return;
          end if;
       end loop;
@@ -622,7 +633,7 @@ package body GPR2.Build.Actions.Ada_Bind is
 
       Self.Ctxt        := Context;
       Self.Basename    := +Basename;
-      Self.Has_Main    := Main_Unit.Is_Defined;
+      Self.Main_Unit   := Main_Unit;
       Self.SAL_Closure := SAL_In_Closure;
       Self.Output_Spec :=
         Artifacts.Files.Create
@@ -786,7 +797,6 @@ package body GPR2.Build.Actions.Ada_Bind is
          Part       : Unit_Kind := S_Spec;
          S_Deps     : Containers.Name_Set;
          B_Deps     : Containers.Name_Set;
-         Ign        : Boolean;
 
          use GPR2.Project;
          use type GPR2.Project.View.Object;
@@ -825,6 +835,14 @@ package body GPR2.Build.Actions.Ada_Bind is
          begin
             if not Self.Tree.Has_Action (Comp_Id) then
                Comp.Initialize (CU);
+
+               if CU.Owning_View.Is_Externally_Built then
+                  --  Ensure the ALI is parsed: as the project is
+                  --  externally built, the signature won't be checked and
+                  --  the ali is normally loaded during this phase.
+
+                  Comp.Parse_Ali;
+               end if;
 
                if not Self.Tree.Add_Action (Comp) then
                   return False;
@@ -874,21 +892,20 @@ package body GPR2.Build.Actions.Ada_Bind is
             --  signature has been checked). We can thus rely on its ALI file
             --  to give us accurate dependencies, so add it in the Todo list.
 
-            if not GPR2.Build.ALI_Parser.Imports
-              (Comp.Dependency_File.Path, S_Deps, B_Deps, Ign)
-            then
+            if not Comp.ALI.Is_Parsed then
                Self.Tree.Reporter.Report
                  (Message.Create
                     (Message.Error,
-                     "Incorrectly formatted ali file """ &
-                       Comp.Dependency_File.Path.String_Value & '"',
+                     "Incorrectly formatted ali file """
+                     & Comp.Dependency_File.Path.String_Value
+                     & '"',
                      Source_Reference.Create
                        (Comp.Dependency_File.Path.Value, 0, 0)));
                return False;
             end if;
 
-            To_Analyze_From_Ali.Union (S_Deps);
-            To_Analyze_From_Ali.Union (B_Deps);
+            To_Analyze_From_Ali.Union (Comp.ALI.Withed_From_Spec);
+            To_Analyze_From_Ali.Union (Comp.ALI.Withed_From_Body);
             To_Analyze_From_Ali.Difference (Self.Analyzed);
 
          elsif not From_ALI then
@@ -909,6 +926,12 @@ package body GPR2.Build.Actions.Ada_Bind is
    begin
       if From_ALI then
          To_Analyze_From_Ali := Imports;
+
+         --  Consider the units already discovered at Ada source parsing time
+         --  as analyzed (so that they're not added twice, duplicating the
+         --  processing time).
+
+         Self.Analyzed := Self.Pre_Analyzed;
       else
          To_Analyze_From_Ada := Imports;
       end if;
@@ -972,8 +995,8 @@ package body GPR2.Build.Actions.Ada_Bind is
       if Self.Ctxt.Is_Library
         and then Self.Ctxt.Has_Any_Interfaces
         and then
-          (Self.Roots.Contains (Comp.Input_Unit.Name)
-           or else Self.Extra_Intf.Contains (Comp.Input_Unit))
+          (Self.Roots.Contains (Comp.Unit.Name)
+           or else Self.Extra_Intf.Contains (Comp.Unit))
       then
          if Comp.Spec_Needs_Body then
             Scope := Comp.Withed_Units;
@@ -985,7 +1008,7 @@ package body GPR2.Build.Actions.Ada_Bind is
             if not Self.Itf_Analyzed.Contains (U) then
                To_Analyze.Include
                  (Self.Ctxt.Namespace_Roots.First_Element.Unit (U),
-                  Comp.Input_Unit.Name);
+                  Comp.Unit.Name);
             end if;
          end loop;
 
@@ -1002,7 +1025,6 @@ package body GPR2.Build.Actions.Ada_Bind is
                Inserted : Boolean;
                Add_Intf : Boolean := True;
 
-               use GPR2.Project;
                use type GPR2.Project.View.Object;
 
             begin
@@ -1021,8 +1043,6 @@ package body GPR2.Build.Actions.Ada_Bind is
                if Add_Intf
                  --  Ignore external units
                  and then CU.Owning_View /= Self.View
-                 --  except for encapsulated libraries
-                 and then Self.Ctxt.Library_Standalone /= Encapsulated
                  --  except for aggregated projects
                  and then
                    (Self.Ctxt.Kind /= K_Aggregate_Library
@@ -1124,14 +1144,20 @@ package body GPR2.Build.Actions.Ada_Bind is
             Ada_Comp : Actions.Compile.Ada.Object;
             Link     : constant Actions.Link.Object'Class := Self.Link;
          begin
-            Ada_Comp.Initialize (CU);
+            if not Self.Tree.Has_Action (Compile.Ada.Create (CU)) then
+               Ada_Comp.Initialize (CU);
 
-            if not Self.Tree.Add_Action (Ada_Comp) then
-               return False;
+               if not Self.Tree.Add_Action (Ada_Comp) then
+                  return False;
+               end if;
+
+            else
+               Ada_Comp :=
+                 Actions.Compile.Ada.Object
+                   (Self.Tree.Action (Compile.Ada.Create (CU)));
             end if;
 
-            if Self.Ctxt /= CU.Owning_View
-              and then CU.Owning_View.Is_Library
+            if Self.Ctxt /= CU.Owning_View and then CU.Owning_View.Is_Library
             then
                Self.Tree.Add_Input (Self.UID, Ada_Comp.Intf_Ali_File, True);
             else
@@ -1150,7 +1176,7 @@ package body GPR2.Build.Actions.Ada_Bind is
                A_Comp : constant Actions.Compile.Ada.Object :=
                  Actions.Compile.Ada.Object (Self.Tree.Predecessor (Ali));
             begin
-               Deps.Union (A_Comp.Input_Unit.Known_Dependencies);
+               Deps.Union (A_Comp.Unit.Known_Dependencies);
             end;
          end if;
       end loop;
@@ -1440,7 +1466,7 @@ package body GPR2.Build.Actions.Ada_Bind is
             Traces.Trace ("* '" & Opt & "'");
             GPR2.Build.Actions.Link.Object'Class
               (Self.Tree.Action_Id_To_Reference (Link.UID).Element.all)
-              .Add_Option (Opt);
+              .Add_Option_From_Binder (Opt);
          end loop;
 
          if Link_Opt_Insert.Is_Defined then

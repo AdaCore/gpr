@@ -1,0 +1,2 @@
+description: Test to check the handling of Compiler.Config_File_Dependency_Support attribute
+driver: python_script

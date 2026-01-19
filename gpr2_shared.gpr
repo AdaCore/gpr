@@ -31,7 +31,7 @@ abstract project GPR2_Shared is
    --------------
 
    Common_Options :=
-     ("-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx");
+     ("-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx", "-g");
    --  Common options used for the Debug and Release modes
 
    case Profiler is
@@ -47,7 +47,9 @@ abstract project GPR2_Shared is
    --  modes
 
    Debug_Options :=
-     ("-g", "-gnatQ", "-gnatwe");
+     ("-gnatQ", "-gnatwe");
+
+   Gnatcov_Options := ("-gnatQ");
 
    Release_Options :=
      ("-O2", "-gnatn");
@@ -56,12 +58,15 @@ abstract project GPR2_Shared is
 
    package Compiler is
       case Build is
-         when "debug" | "gnatcov" =>
+         when "debug" =>
             for Default_Switches ("Ada") use Common_Options & Checks_Options &
                                              Debug_Options;
             for Default_Switches ("C") use ("-g");
             for Default_Switches ("gnatcov*") use Debug_Options;
-
+         when "gnatcov" =>
+            for Default_Switches ("Ada") use Common_Options & Checks_Options &
+                                             Gnatcov_Options;
+            for Default_Switches ("gnatcov*") use Gnatcov_Options;
          when "release_checks" =>
             for Default_Switches ("Ada") use Common_Options & Checks_Options &
                                              Release_Options;

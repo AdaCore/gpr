@@ -264,7 +264,7 @@ private package GPR2.Tree_Internal is
    --  such as loading or working with sources, to output the logs.
 
    function Reporter
-     (Self : in out Object) return Reporter.Holders.Reference_Type;
+     (Self : aliased in out Object) return Reporter.Holders.Reference_Type;
    --  Returns the tree reporter reference
 
    --  Context
@@ -500,14 +500,18 @@ private
    --  Maps View_Ids to View objects
 
    type All_Search_Paths is record
-      Default    : Path_Name.Set.Object :=
-                     Default_Search_Paths
-                       (True, GPR2.Environment.Process_Environment);
+      Default    : Env_Search_Paths :=
+        Default_Search_Paths (GPR2.Environment.Process_Environment);
+
       Registered : Path_Name.Set.Object;
+      --  Search paths registered manually by the user with the Tree API or
+      --  via the -aP command line switch.
+
       Appended   : Path_Name.Set.Object;
+      --  Search paths coming from the configuration
+
       All_Paths  : Path_Name.Set.Object :=
-                     Default_Search_Paths
-                       (True, GPR2.Environment.Process_Environment);
+        Default_Search_Paths (GPR2.Environment.Process_Environment);
    end record;
 
    type Object is tagged limited record

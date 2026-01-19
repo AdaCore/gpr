@@ -9,27 +9,54 @@ with Ada.Strings.Wide_Wide_Maps.Wide_Wide_Constants;
 
 with GNAT.UTF_32;
 
-with GPR2.Build.ALI_Parser;
-with GPR2.Message;
-with GPR2.Tree_Internal;
+with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
+with GPR2.Message;
+with GPR2.Project.Tree;
+with GPR2.Tree_Internal;
 with GPR2.View_Internal;
 
 package body GPR2.Build.Compilation_Unit is
+
+   function Ada_Compile_Action
+     (Self : Object) return GPR2.Build.Actions.Compile.Ada.Object;
+
+   ------------------------
+   -- Ada_Compile_Action --
+   ------------------------
+
+   function Ada_Compile_Action
+     (Self : Object) return GPR2.Build.Actions.Compile.Ada.Object
+   is
+      UID  : constant Actions.Compile.Ada.Ada_Compile_Id :=
+        Actions.Compile.Ada.Create (Self);
+      Tree : constant Tree_Db.Object_Access :=
+        Self.Owning_View.Tree.Artifacts_Database;
+
+   begin
+      if Tree.Has_Action (UID) then
+         return Actions.Compile.Ada.Object (Tree.Action (UID));
+      else
+         return Comp : Actions.Compile.Ada.Object do
+            Comp.Initialize (Self);
+         end return;
+      end if;
+   end Ada_Compile_Action;
 
    ---------
    -- Add --
    ---------
 
    procedure Add
-     (Self     : in out Object;
-      Kind     : Valid_Unit_Kind;
-      View     : GPR2.Project.View.Object;
-      Path     : GPR2.Path_Name.Object;
-      Index    : Unit_Index := No_Index;
-      Sep_Name : Optional_Name_Type := "";
-      Success  : out Boolean)
+     (Self                    : in out Object;
+      Kind                    : Valid_Unit_Kind;
+      View                    : GPR2.Project.View.Object;
+      Path                    : GPR2.Path_Name.Object;
+      Index                   : Unit_Index := No_Index;
+      Sep_Name                : Optional_Name_Type := "";
+      Success                 : out Boolean;
+      Overridden_From_Runtime : Boolean := False)
    is
       UL : constant Unit_Location :=
              (View   => View,
@@ -37,6 +64,8 @@ package body GPR2.Build.Compilation_Unit is
               Index  => Index);
    begin
       Success := False;
+
+      Self.Overridden_From_Runtime := Overridden_From_Runtime;
 
       case Kind is
          when S_Spec =>
@@ -312,35 +341,16 @@ package body GPR2.Build.Compilation_Unit is
    ----------------------------
 
    function Is_Body_Needed_For_SAL (Self : Object) return Boolean is
-      Tree : constant access GPR2.Tree_Internal.Object :=
-               View_Internal.Get_RO (Self.Root_View).Tree;
+      Comp : Actions.Compile.Ada.Object := Self.Ada_Compile_Action;
    begin
-      if Self.Has_Main_Part then
-         declare
-            use ALI_Parser;
+      if not Comp.ALI.Is_Parsed then
+         Comp.Parse_Ali;
+      end if;
 
-            Main : constant Unit_Location := Self.Main_Part;
-            BN   : constant Simple_Name := Main.Source.Base_Filename;
-
-            Dir : constant Path_Name.Object :=
-                    (if Main.View.Is_Library
-                     then Main.View.Library_Ali_Directory
-                     else Main.View.Object_Directory);
-
-            ALI : constant GPR2.Path_Name.Object :=
-                    Path_Name.Create_File
-                      (BN & Tree.Dependency_Suffix (Ada_Language),
-                       Dir.Value);
-         begin
-            if ALI.Exists then
-               return ALI_Parser.Unit_Flags
-                        (ALI) (U_Spec) (Body_Needed_For_SAL);
-            else
-               return True;
-            end if;
-         end;
-
+      if Comp.ALI.Is_Parsed then
+         return Comp.ALI.Spec_Needs_Body;
       else
+         --  either non-existing ALI or mal-formatted case
          return False;
       end if;
    end Is_Body_Needed_For_SAL;

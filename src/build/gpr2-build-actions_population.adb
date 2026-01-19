@@ -22,6 +22,7 @@ with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.Object_File;
 pragma Warnings (Off);
+with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Source.Sets;
 pragma Warnings (On);
 with GPR2.Build.Tree_Db;
@@ -529,7 +530,9 @@ package body GPR2.Build.Actions_Population is
      (Tree                  : GPR2.Project.Tree.Object;
       Options               : GPR2.Build.Options.Build_Options;
       Static_Actions        : Boolean;
-      With_Externally_Built : Boolean := False) return Boolean
+      With_Externally_Built : Boolean := False;
+      Populate_Mains_Only   : Boolean := False) return Boolean
+
    is
       Tree_Db     : GPR2.Build.Tree_Db.Object_Access renames
                       Tree.Artifacts_Database;
@@ -621,21 +624,20 @@ package body GPR2.Build.Actions_Population is
                -----------------------
 
                if Mains.Is_Empty then
+                  if not Populate_Mains_Only then
                   --  compile all sources, recursively in case -U is set
-                  if Options.Unique_Compilation then
-                     Result := Populate_All
-                       (Tree_Db, V, True, Options, With_Externally_Built);
-
-                  else
-                     for C of V.Closure (True, False, True) loop
+                     if Options.Unique_Compilation then
                         Result := Populate_All
-                          (Tree_Db, C, True, Options, With_Externally_Built);
-                        exit when not Result;
-                     end loop;
+                        (Tree_Db, V, True, Options, With_Externally_Built);
+
+                     else
+                        for C of V.Closure (True, False, True) loop
+                           Result := Populate_All
+                           (Tree_Db, C, True, Options, With_Externally_Built);
+                           exit when not Result;
+                        end loop;
+                     end if;
                   end if;
-
-                  return Result;
-
                else
                   --  Only compile the given sources
 
@@ -682,23 +684,28 @@ package body GPR2.Build.Actions_Population is
                      if V.Has_Mains or else not Mains.Is_Empty then
                         Result := Populate_Mains
                           (Tree_Db, V, Mains, Options, With_Externally_Built);
-                     else
+                     elsif not Populate_Mains_Only then
                         Result := Populate_All
                           (Tree_Db, V, False, Options, With_Externally_Built);
                      end if;
 
                   when K_Library | K_Aggregate_Library =>
-                     Result :=
-                       Populate_Library
-                         (Tree_Db, V, Options, Cache, Has_SAL,
-                          With_Externally_Built);
+                     if not Populate_Mains_Only then
+                        Result :=
+                          Populate_Library
+                            (Tree_Db, V, Options, Cache, Has_SAL,
+                             With_Externally_Built);
+                     end if;
 
                   when others =>
-                     Closure.Include (V);
-                     Result := Populate_Withed_Projects
-                       (Tree_Db, Options, Closure, Cache,
-                        Static_Libs, Shared_Libs, Has_SAL,
-                        With_Externally_Built);
+                     if not Populate_Mains_Only then
+
+                        Closure.Include (V);
+                        Result := Populate_Withed_Projects
+                        (Tree_Db, Options, Closure, Cache,
+                           Static_Libs, Shared_Libs, Has_SAL,
+                           With_Externally_Built);
+                     end if;
                end case;
             end if;
          end if;
@@ -939,6 +946,10 @@ package body GPR2.Build.Actions_Population is
                            and then (for some Agg of View.Aggregated =>
                                        Agg.Language_Ids.Contains
                                          (Ada_Language))));
+
+      Sorted_Libs : Library_Vector.Vector;
+      Has_Cycle   : Boolean;
+
       use GPR2.Project;
 
    begin
@@ -970,11 +981,6 @@ package body GPR2.Build.Actions_Population is
          Tree_Db.Add_Input
            (Self.Main_Link.UID, Self.Partial_Link.Output, True);
       end if;
-
-      --  Add all object files contained in Library_Options attribute if
-      --  they actually exist.
-      Self.Initial_Link_Action.Add_Objects_From_Attribute
-        (PRA.Library_Options);
 
       --  Add the lib now to prevent infinite recursion in case of
       --  circular dependencies (e.g. A withes B that limited_withes A)
@@ -1082,23 +1088,28 @@ package body GPR2.Build.Actions_Population is
          --  gpr-specific text section so that they can be retrieved later on
          --  by the final link, when such linker option has been removed from
          --  the project file (such as after an installation).
+         --  Note that this action is only added for static libraries, because
+         --  object file insertion is not easily supported on Windows for
+         --  DLLs, and because shared libraries are already linked
+         --  with the correct options, unlike static libs.
 
-         Self.Link_Options_Insert.Initialize
-           (Object_File => Self.Bind.Post_Bind.Object_File,
-            View        => View);
+         if View.Is_Static_Library then
+            Self.Link_Options_Insert.Initialize
+              (Object_File => Self.Bind.Post_Bind.Object_File, View => View);
 
-         if not Tree_Db.Add_Action (Self.Link_Options_Insert) then
-            return False;
+            if not Tree_Db.Add_Action (Self.Link_Options_Insert) then
+               return False;
+            end if;
+
+            --  The linker options object is added directly to the last link
+            --  phase so is skipped by the partial link that may not pick it up
+            --  since it is not referenced.
+
+            Tree_Db.Add_Input
+            (Self.Final_Link_Action.UID,
+               Self.Link_Options_Insert.Output_Object_File,
+               True);
          end if;
-
-         --  The linker options object is added directly to the last link
-         --  phase so is skipped by the partial link that may not pick it up
-         --  since it is not referenced.
-
-         Tree_Db.Add_Input
-           (Self.Final_Link_Action.UID,
-            Self.Link_Options_Insert.Output_Object_File,
-            True);
 
          Tree_Db.Add_Input
            (Self.Initial_Link_Action.UID,
@@ -1177,9 +1188,17 @@ package body GPR2.Build.Actions_Population is
          end loop;
       end loop;
 
-      for Id of Self.Static_Libs_Deps.Union (Self.Shared_Libs_Deps) loop
+      Sorted_Libs :=
+        Library_Map.Order_Libs
+          (Self.Static_Libs_Deps.Union (Self.Shared_Libs_Deps),
+           Cache,
+           Has_Cycle);
+
+      Self.Main_Link.Set_Has_Library_Dependency_Circle (Has_Cycle);
+
+      for Lib of Sorted_Libs loop
          declare
-            Sublib : constant LH.Object := Cache.Element (Id);
+            Sublib : constant LH.Object := Cache.Element (Lib.View.Id);
             Encaps : constant Boolean :=
                        Self.View.Library_Standalone = Encapsulated;
          begin
@@ -1273,7 +1292,6 @@ package body GPR2.Build.Actions_Population is
          Tree          : constant GPR2.Project.Tree.Object := View.Tree;
          Bind          : Bind_Array (1 .. Natural (Actual_Mains.Length));
          Link          : Link_Array (1 .. Natural (Actual_Mains.Length));
-         Attr          : GPR2.Project.Attribute.Object;
          Closure       : GPR2.Project.View.Set.Object;
          Libs_Cache    : View_Id_Library_Map.Map;
          Sorted_Libs   : Library_Vector.Vector;
@@ -1361,6 +1379,7 @@ package body GPR2.Build.Actions_Population is
                end if;
             end loop;
          end loop Non_Ada_Archive_Loop;
+
          --  Process the mains one by one
 
          for Main of Actual_Mains loop
@@ -1373,18 +1392,13 @@ package body GPR2.Build.Actions_Population is
                Output   => -Options.Output_File);
 
             if Options.Create_Map_File then
-               Attr := Main.View.Attribute (PRA.Linker.Map_File_Option);
-
-               --  ??? TODO: Add a primitive to the link object to move the
-               --  below processing there.
-
                if Length (Options.Mapping_File_Name) > 0 then
-                  Link (Idx).Add_Option
-                    (Attr.Value.Text & To_String (Options.Mapping_File_Name));
+                  Link (Idx).Set_Mapping_File
+                    (Filename_Type (To_String (Options.Mapping_File_Name)));
                else
-                  Link (Idx).Add_Option
-                    (Attr.Value.Text &
-                       String (Link (Idx).Output.Path.Base_Name) & ".map");
+                  Link (Idx).Set_Mapping_File
+                    (Filename_Type (String (Link (Idx).Output.Path.Base_Name))
+                     & ".map");
                end if;
             end if;
 
@@ -1413,6 +1427,38 @@ package body GPR2.Build.Actions_Population is
                   if not Tree_Db.Add_Action (Bind (Idx)) then
                      return False;
                   end if;
+               end;
+
+               --  We must detect all units from the main view that overrides
+               --  the runtime in order to properly discover other overriden
+               --  dependencies to compile and link to them.
+               declare
+                  Units : constant Compilation_Unit.Maps.Map :=
+                            Main.View.Own_Units
+                              (Overridden_From_Runtime => True);
+               begin
+                  for U of Units loop
+                     declare
+                        R_Comp : Actions.Compile.Ada.Object;
+                     begin
+                        R_Comp.Initialize (U);
+
+                        if not Tree_Db.Add_Action (R_Comp) then
+                           return False;
+                        end if;
+
+                        --  Add the overriden unit dependency file to discover
+                        --  other potential overriden dependencies.
+                        Tree_Db.Add_Input
+                          (Bind (Idx).UID, R_Comp.Local_Ali_File, True);
+
+                        --  Add the resulting object file to the final link to
+                        --  resolve their symbols before the runtime for proper
+                        --  overriding.
+                        Tree_Db.Add_Input
+                          (Link (Idx).UID, R_Comp.Object_File, True);
+                     end;
+                  end loop;
                end;
 
                Tree_Db.Add_Input (Bind (Idx).UID, A_Comp.Local_Ali_File, True);
@@ -1716,13 +1762,31 @@ package body GPR2.Build.Actions_Population is
          end loop;
 
          if V.Is_Extending then
-            for Ext of V.Extended loop
-               for Imp of Ext.Imports.Union (Ext.Limited_Imports) loop
-                  if not Seen.Contains (Imp) and then not Imp.Is_Extended then
-                     Todo.Append (Imp);
+            declare
+               Extending_Views : GPR2.Project.View.Set.Object := V.Extended;
+               --  Contains the extended views. This list allows to process
+               --  transitively the extended views.
+               Ext             : GPR2.Project.View.Object;
+               --  Current processed extended view
+            begin
+               while not Extending_Views.Is_Empty loop
+                  Ext := Extending_Views.First_Element;
+                  Extending_Views.Delete_First;
+
+                  for Imp of Ext.Imports.Union (Ext.Limited_Imports) loop
+                     if not Seen.Contains (Imp) and then not Imp.Is_Extended
+                     then
+                        Todo.Append (Imp);
+                     end if;
+                  end loop;
+
+                  if Ext.Is_Extending then
+
+                     --  Process transitively the extended views
+                     Extending_Views.Union (Ext.Extended);
                   end if;
                end loop;
-            end loop;
+            end;
          end if;
       end Add_Deps;
 

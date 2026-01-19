@@ -2,7 +2,8 @@ import os
 
 from e3.env import Env
 from e3.fs import cp
-from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRINSTALL
 
 if 'windows' in Env().host.platform:
     exeext = '.exe'

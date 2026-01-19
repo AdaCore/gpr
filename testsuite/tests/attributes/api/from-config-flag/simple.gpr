@@ -1,0 +1,6 @@
+with "gpr2";
+
+project Simple is
+   for Source_Dirs use ("src");
+   for Inherit_Source_Path ("Asm_Cpp") use ("Asm");
+end Simple;

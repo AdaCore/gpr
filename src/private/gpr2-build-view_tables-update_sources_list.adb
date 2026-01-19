@@ -782,11 +782,32 @@ package body Update_Sources_List is
                               then S_Spec
                               else S_Body);
 
-                     Units.Insert
-                       (Unit_Info.Create
-                          (Unit_Name      => Name_Type (Exc.Index.Text),
-                           Index          => Index,
-                           Kind           => Kind));
+                     declare
+                        Unit : constant GPR2.Build.Unit_Info.Object :=
+                          (Unit_Info.Create
+                             (Unit_Name => Name_Type (Exc.Index.Text),
+                              Index     => Index,
+                              Kind      => Kind));
+                     begin
+                        if Units.Contains (Unit.Index) then
+                           Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 "file "
+                                 & String (Full_Name (File.Path))
+                                 & " contains duplicated units """
+                                 & String (Unit.Name)
+                                 & " and """
+                                 & String (Units.Element (Unit.Index).Name)
+                                 & """ at index"
+                                 & Unit.Index'Image
+                                 & "",
+                                 SR.Create (Data.View.Path_Name.Value, 0, 0)));
+                        else
+                           Units.Insert (Unit);
+                        end if;
+                     end;
+
                   end loop;
                end if;
 
@@ -819,8 +840,6 @@ package body Update_Sources_List is
                --  If no naming exception matched, try with naming schema
 
                declare
-                  use GNATCOLL.Utils;
-
                   NS               : Naming_Schema renames
                                        Naming_Schema_Map.Element (Language);
                   Matches_Spec     : Boolean;
@@ -828,14 +847,20 @@ package body Update_Sources_List is
                   Matches_Separate : Boolean;
 
                begin
-                  Matches_Spec := NS.Has_Spec_Suffix
-                    and then Ends_With (String (Basename), NS.Spec_Suffix);
+                  Matches_Spec :=
+                    NS.Has_Spec_Suffix
+                    and then GPR2.Path_Name.Ends_With
+                               (Basename, NS.Spec_Suffix);
 
-                  Matches_Body := NS.Has_Body_Suffix
-                    and then Ends_With (String (Basename), NS.Body_Suffix);
+                  Matches_Body :=
+                    NS.Has_Body_Suffix
+                    and then GPR2.Path_Name.Ends_With
+                               (Basename, NS.Body_Suffix);
 
-                  Matches_Separate := NS.Has_Separate_Suffix
-                    and then Ends_With (String (Basename), NS.Sep_Suffix);
+                  Matches_Separate :=
+                    NS.Has_Separate_Suffix
+                    and then GPR2.Path_Name.Ends_With
+                               (Basename, NS.Sep_Suffix);
 
                   --  See GA05-012: if there's ambiguity with suffixes (e.g.
                   --  one of the suffixes if a suffix of another) we use

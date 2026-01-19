@@ -1496,6 +1496,15 @@ begin
       Is_Allowed_In        => Everywhere,
       Type_Def             => Boolean_Type_Def);
 
+   --  compiler.config_file_dependency_support
+   Add
+     (Name                 => Compiler.Config_File_Dependency_Support,
+      Index_Type           => Language_Index,
+      Value                => Single,
+      Value_Case_Sensitive => False,
+      Is_Allowed_In        => Everywhere,
+      Type_Def             => Boolean_Type_Def);
+
    --  compiler.dependency_switches
    Add
      (Name                 => Compiler.Dependency_Switches,

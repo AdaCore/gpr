@@ -9,8 +9,8 @@ with Ada.Characters.Handling; use Ada.Characters.Handling;
 with GNATCOLL.Traces;
 
 with GPR2.Build.Actions.Ada_Bind;
-with GPR2.Build.ALI_Parser;
 with GPR2.Build.Artifacts.Key_Value;
+with GPR2.Build.Artifacts.Source_Files;
 with GPR2.Build.Tree_Db;
 with GPR2.Message;
 with GPR2.Project.Attribute;
@@ -234,20 +234,56 @@ package body GPR2.Build.Actions.Compile.Ada is
    -----------------------
 
    overriding procedure Compute_Signature
-     (Self      : in out Object;
-      Load_Mode : Boolean)
+     (Self            : in out Object;
+      Check_Checksums : Boolean)
    is
-      Version : Artifacts.Key_Value.Object;
+      Stop : Boolean := False;
 
+      procedure Add_To_Signature
+        (Kind     : Unit_Kind;
+         View     : GPR2.Project.View.Object;
+         Path     : Path_Name.Object;
+         Index    : Unit_Index;
+         Sep_Name : Optional_Name_Type);
+      --  Add the file artifact found at the given path to the signature
+
+      procedure Add_To_Signature
+        (Kind     : Unit_Kind;
+         View     : GPR2.Project.View.Object;
+         Path     : Path_Name.Object;
+         Index    : Unit_Index;
+         Sep_Name : Optional_Name_Type)
+      is
+         pragma Unreferenced (Kind, View, Index, Sep_Name);
+      begin
+         if not Self.Signature.Add_Input
+           (Artifacts.Source_Files.Create (Path), Check_Checksums)
+         then
+            Stop := True;
+         end if;
+      end Add_To_Signature;
+
+      Version : Artifacts.Key_Value.Object;
    begin
+
+      GPR2.Build.Compilation_Unit.For_All_Part
+        (Self.CU, Add_To_Signature'Access);
+
+      if Stop then
+         return;
+      end if;
+
       --  The list of dependencies is only accurate if the Ali file is
       --  accurate, so check it first: if it changed there's no need to
       --  go further.
 
-      if not Self.Signature.Add_Output (Self.Dep_File)
-        and then Load_Mode
-      then
+      if not Self.Signature.Add_Output (Self.Dep_File, Check_Checksums) then
          return;
+      end if;
+
+      if Check_Checksums then
+         --  ALI file is correct, so let's parse it
+         Self.ALI_Object.Parse;
       end if;
 
       if Self.Ctxt.Tree.Has_Ada_Compiler_Version then
@@ -255,7 +291,8 @@ package body GPR2.Build.Actions.Compile.Ada is
            ("compiler_version",
             Self.Ctxt.Tree.Ada_Compiler_Version);
 
-         if not Self.Signature.Add_Input (Version) and then Load_Mode then
+         if not Self.Signature.Add_Input (Version, Check_Checksums)
+         then
             return;
          end if;
       end if;
@@ -300,15 +337,15 @@ package body GPR2.Build.Actions.Compile.Ada is
                           ("Compute_Signature: cannot find dependency " &
                              String (Dep));
 
-                        if Load_Mode then
+                        if Check_Checksums then
                            Self.Signature.Invalidate;
                            return;
                         end if;
                      end if;
 
                   elsif not Self.Signature.Add_Input
-                      (Artifacts.Files.Create (Src.Path_Name))
-                    and then Load_Mode
+                              (Artifacts.Files.Create (Src.Path_Name),
+                               Check_Checksums)
                   then
                      return;
                   end if;
@@ -319,32 +356,32 @@ package body GPR2.Build.Actions.Compile.Ada is
 
       if Self.Local_Config_Pragmas.Is_Defined
         and then not Self.Signature.Add_Input
-                       (Artifacts.Files.Create (Self.Local_Config_Pragmas))
-        and then Load_Mode
+                       (Artifacts.Files.Create (Self.Local_Config_Pragmas),
+                        Check_Checksums)
       then
          return;
       end if;
 
       if Self.Global_Config_Pragmas.Is_Defined
         and then not Self.Signature.Add_Input
-                       (Artifacts.Files.Create (Self.Global_Config_Pragmas))
-        and then Load_Mode
+                       (Artifacts.Files.Create (Self.Global_Config_Pragmas),
+                        Check_Checksums)
       then
          return;
       end if;
 
       if Self.Local_Config_File.Is_Defined
         and then not Self.Signature.Add_Input
-                       (Artifacts.Files.Create (Self.Local_Config_File))
-        and then Load_Mode
+                       (Artifacts.Files.Create (Self.Local_Config_File),
+                        Check_Checksums)
       then
          return;
       end if;
 
       if Self.Global_Config_File.Is_Defined
         and then not Self.Signature.Add_Input
-                       (Artifacts.Files.Create (Self.Global_Config_File))
-        and then Load_Mode
+                       (Artifacts.Files.Create (Self.Global_Config_File),
+                        Check_Checksums)
       then
          return;
       end if;
@@ -355,8 +392,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       --  artifact that changed we don't compute it.
 
       if Self.Obj_File.Is_Defined
-        and then not Self.Signature.Add_Output (Self.Obj_File)
-        and then Load_Mode
+        and then not Self.Signature.Add_Output (Self.Obj_File, Check_Checksums)
       then
          return;
       end if;
@@ -369,7 +405,6 @@ package body GPR2.Build.Actions.Compile.Ada is
    overriding function Dependencies
      (Self : Object) return Containers.Filename_Set
    is
-      Result : GPR2.Containers.Filename_Set;
       UID    : constant Actions.Action_Id'Class := Object'Class (Self).UID;
 
    begin
@@ -380,8 +415,7 @@ package body GPR2.Build.Actions.Compile.Ada is
          return Containers.Empty_Filename_Set;
       end if;
 
-      if not GPR2.Build.ALI_Parser.Dependencies (Self.Dep_File.Path, Result)
-      then
+      if not Self.ALI_Object.Is_Parsed then
          Traces.Trace
            ("Failed to parse dependencies from the ALI file " &
               Self.Dep_File.Path.String_Value);
@@ -389,7 +423,7 @@ package body GPR2.Build.Actions.Compile.Ada is
          return Containers.Empty_Filename_Set;
       end if;
 
-      return Result;
+      return Self.ALI_Object.Dependencies;
    end Dependencies;
 
    --------------
@@ -535,6 +569,9 @@ package body GPR2.Build.Actions.Compile.Ada is
                Self.Inh_From := Candidate;
             end if;
          end if;
+
+         Self.ALI_Object :=
+           GPR2.Build.ALI_Parser.Create (Self.Dep_File.Path, False);
       end;
 
       --  Identify the copies of the ali file in libraries
@@ -626,19 +663,16 @@ package body GPR2.Build.Actions.Compile.Ada is
       --  Now that we know the ALI file is correct, let the bind action know
       --  the actual list of imported units from this dependency file.
 
-      if not GPR2.Build.ALI_Parser.Imports
-        (Self.Dep_File.Path,
-         Self.Withed_From_Spec,
-         Self.Withed_From_Body,
-         Self.Needs_Body)
-      then
+      Self.ALI_Object.Parse;
+
+      if not Self.ALI_Object.Is_Parsed then
          Self.Tree.Reporter.Report
            (GPR2.Message.Create
               (GPR2.Message.Error,
                "failure to analyze the produced ali file",
                GPR2.Source_Reference.Object
                  (GPR2.Source_Reference.Create
-                      (Self.Dep_File.Path.Value, 0, 0))));
+                    (Self.Dep_File.Path.Value, 0, 0))));
          return False;
       end if;
 
@@ -681,7 +715,28 @@ package body GPR2.Build.Actions.Compile.Ada is
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
 
+      procedure Add_Input_For
+        (Kind     : Unit_Kind;
+         View     : GPR2.Project.View.Object;
+         Path     : Path_Name.Object;
+         Index    : Unit_Index;
+         Sep_Name : Optional_Name_Type);
+      --  Add the provided input source file as an input to the current action
+
+      procedure Add_Input_For
+        (Kind     : Unit_Kind;
+         View     : GPR2.Project.View.Object;
+         Path     : Path_Name.Object;
+         Index    : Unit_Index;
+         Sep_Name : Optional_Name_Type)
+      is
+         pragma Unreferenced (Kind, View, Index, Sep_Name);
+      begin
+         Db.Add_Input (UID, Artifacts.Source_Files.Create (Path), True);
+      end Add_Input_For;
    begin
+      GPR2.Build.Compilation_Unit.For_All_Part (Self.CU, Add_Input_For'Access);
+
       if Self.Obj_File.Is_Defined then
          if not Db.Add_Output (UID, Self.Obj_File) then
             return False;
@@ -700,6 +755,15 @@ package body GPR2.Build.Actions.Compile.Ada is
 
       return True;
    end On_Tree_Insertion;
+
+   ---------------
+   -- Parse_Ali --
+   ---------------
+
+   procedure Parse_Ali (Self : in out Object) is
+   begin
+      Self.ALI_Object.Parse;
+   end Parse_Ali;
 
    ------------------
    -- Post_Command --
@@ -749,6 +813,16 @@ package body GPR2.Build.Actions.Compile.Ada is
                   Self.Obj_File := Local_O;
                   Self.Dep_File := Local_Ali;
                   Self.Inh_From := GPR2.Project.View.Undefined;
+
+                  Self.ALI_Object :=
+                    GPR2.Build.ALI_Parser.Create (Self.Dep_File.Path, False);
+
+                  --  At this point make sure Self is updated in the tree
+                  --  so that any use of it reference the proper .o and .ali.
+                  --  In particular during the call to On_Ready_State below
+
+                  Self.Tree.Action_Id_To_Reference (Self.UID) :=
+                    Actions.Object'Class (Self);
                end if;
             end;
          end if;

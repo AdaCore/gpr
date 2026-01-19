@@ -96,25 +96,25 @@ package body GPR2.Build.Actions.Link_Options_Insert is
    -----------------------
 
    overriding
-   procedure Compute_Signature (Self : in out Object; Load_Mode : Boolean) is
+   procedure Compute_Signature
+     (Self : in out Object; Check_Checksums : Boolean) is
    begin
-      if not Self.Signature.Add_Input (Self.Input_Object_File)
-        and then Load_Mode
+      if not Self.Signature.Add_Input
+        (Self.Input_Object_File, Check_Checksums)
       then
          return;
       end if;
 
       for Opt of Self.Options loop
          if not Self.Signature.Add_Input
-           (Artifacts.Key_Value.Create ("linker-option", Opt))
-           and then Load_Mode
+           (Artifacts.Key_Value.Create ("linker-option", Opt), Check_Checksums)
          then
             return;
          end if;
       end loop;
 
-      if not Self.Signature.Add_Output (Self.Output_Object_File)
-        and then Load_Mode
+      if not Self.Signature.Add_Output
+        (Self.Output_Object_File, Check_Checksums)
       then
          return;
       end if;
@@ -181,7 +181,7 @@ package body GPR2.Build.Actions.Link_Options_Insert is
             for Opt of Self.Options loop
                Traces.Trace
                  ("Adding option """ & Opt & """ to " & Act.UID.Image);
-               Link.Object'Class (Act).Add_Option (Opt);
+               Link.Object'Class (Act).Add_Option_From_Binder (Opt);
             end loop;
          end if;
       end loop;

@@ -1,0 +1,5 @@
+with "faulty_lib_with_library_options";
+project Faulty_Prj is
+   for Main use ("main");
+end Faulty_Prj;
+

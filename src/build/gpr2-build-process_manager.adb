@@ -75,9 +75,7 @@ package body GPR2.Build.Process_Manager is
 
    type Proc_State is record
       Stdout_Listener : Listener_Access := null;
-      Stdout_Active   : Boolean := False;
       Stderr_Listener : Listener_Access := null;
-      Stderr_Active   : Boolean := False;
       Node            : GDG.Node_Id := GDG.No_Node;
    end record;
    --  Processes do require two listeners.
@@ -267,6 +265,13 @@ package body GPR2.Build.Process_Manager is
 
       procedure Report_Progress;
 
+      function Find_Activated_And_Unskipped_Successor_Actions
+        (Act : Actions.Object'Class) return Action_Id_Sets.Set;
+      --  For each artifact produced by the specified action, find the first
+      --  transitive activated actions that depend on it. If a successor
+      --  is deactivated, then the search continues until an activated action
+      --  is found. If no action is found, then an empty set is returned.
+
       ------------------------
       -- Allocate_Listeners --
       ------------------------
@@ -286,16 +291,57 @@ package body GPR2.Build.Process_Manager is
          if States (Proc_Id).Stdout_Listener = null then
             States (Proc_Id).Stdout_Listener := new Listener;
          end if;
-         States (Proc_Id).Stdout_Active := True;
          States (Proc_Id).Stdout_Listener.Listen (Stdout_FD);
 
          --  Likewise for stderr
          if States (Proc_Id).Stderr_Listener = null then
             States (Proc_Id).Stderr_Listener := new Listener;
          end if;
-         States (Proc_Id).Stderr_Active := True;
          States (Proc_Id).Stderr_Listener.Listen (Stderr_FD);
       end Allocate_Listeners;
+
+      ----------------------------------------------------
+      -- Find_Activated_And_Unskipped_Successor_Actions --
+      ----------------------------------------------------
+
+      function Find_Activated_And_Unskipped_Successor_Actions
+        (Act : Actions.Object'Class) return Action_Id_Sets.Set
+      is
+         Result             : Action_Id_Sets.Set := Action_Id_Sets.Empty_Set;
+         Actions_To_Process : Action_Id_Sets.Set;
+      begin
+         Actions_To_Process.Include (Act.UID);
+
+         while not Actions_To_Process.Is_Empty loop
+            declare
+               Current_Action : constant Action_Id'Class :=
+                 Actions_To_Process.First_Element;
+            begin
+               Actions_To_Process.Exclude (Current_Action);
+               for Artifact of Self.Tree_Db.Outputs (Action => Current_Action)
+               loop
+                  for Action of Self.Tree_Db.Successors (Artifact) loop
+                     if Action.Is_Deactivated or else Action.Skip then
+
+                        --  If an action successor is also deactivated or to
+                        --  be skipped, then the search for the first
+                        --  dependent correct action continues.
+
+                        Actions_To_Process.Include (Action.UID);
+                     else
+                        Result.Include (Action.UID);
+                     end if;
+                  end loop;
+               end loop;
+            end;
+         end loop;
+
+         return Result;
+      end Find_Activated_And_Unskipped_Successor_Actions;
+
+      --------------------
+      -- Report_Process --
+      --------------------
 
       procedure Report_Progress is
       begin
@@ -500,13 +546,50 @@ package body GPR2.Build.Process_Manager is
                      pragma Annotate (Xcov, Exempt_Off);
                   end if;
 
-                  if Proc_Handler_L.Status in Skipped | Deactivated
-                    and then Act.Valid_Signature
-                  then
-                     --  Only consider the visit complete for valid skipped
-                     --  actions, else this will enable the dependent actions
-                     --  that won't have the proper inputs to complete
-                     Context.Graph.Complete_Visit (Node);
+                  if Proc_Handler_L.Status in Skipped | Deactivated then
+                     if Act.Valid_Signature then
+                        --  Only consider the visit complete for valid skipped
+                        --  actions, else this will enable the dependent
+                        --  actions that won't have the proper inputs to
+                        --  complete.
+
+                        Context.Graph.Complete_Visit (Node);
+                     else
+                        declare
+                           Impacted_Successors : constant Action_Id_Sets.Set :=
+                             Find_Activated_And_Unskipped_Successor_Actions
+                               (Act);
+                        begin
+                           if not Impacted_Successors.Is_Empty then
+                              if Proc_Handler_L.Status in Skipped then
+                                 Tree_Db.Reporter.Report
+                                   ("Action "
+                                    & Act.UID.Image
+                                    & " has been skipped, but its signature is"
+                                    & " invalid. This can happen if the"
+                                    & " command line for the action is empty."
+                                    & " As a result, the following dependent"
+                                    & " action(s) will not be executed:",
+                                    To_Stderr => True);
+                              else
+                                 Tree_Db.Reporter.Report
+                                   ("Action "
+                                    & Act.UID.Image
+                                    & " has been deactivated, but its"
+                                    & " signature is invalid. As a result, the"
+                                    & " following dependent action(s) will not"
+                                    & " be executed:",
+                                    To_Stderr => True);
+                              end if;
+
+                              for Successor_ID of Impacted_Successors loop
+                                 Tree_Db.Reporter.Report
+                                   ("   * " & Successor_ID.Image,
+                                    To_Stderr => True);
+                              end loop;
+                           end if;
+                        end;
+                     end if;
                   end if;
 
                   --  Cleanup the temporary files that are local to the job
@@ -558,7 +641,10 @@ package body GPR2.Build.Process_Manager is
                        Stderr       =>
                          (if Proc_Handler_L.Status = Failed_To_Launch
                           then Proc_Handler_L.Error_Message
-                          else Act.Saved_Stderr));
+                          else
+                            (if Options.No_Warnings_Replay
+                             then Null_Unbounded_String
+                             else Act.Saved_Stderr)));
 
                   Self.Tree_Db.Action_Id_To_Reference (UID) := Act;
                end;
@@ -601,10 +687,7 @@ package body GPR2.Build.Process_Manager is
             --  Fetch captured stdout and stderr if necessary
 
             States (Proc_Id).Stdout_Listener.Fetch_Content (Stdout);
-            States (Proc_Id).Stdout_Active := False;
-
             States (Proc_Id).Stderr_Listener.Fetch_Content (Stderr);
-            States (Proc_Id).Stderr_Active := False;
 
             declare
                UID : constant Actions.Action_Id'Class :=
@@ -695,8 +778,6 @@ package body GPR2.Build.Process_Manager is
             Free (State.Stderr_Listener);
          end if;
       end loop;
-
-      Execution_Post_Process (Object'Class (Self));
    end Execute;
 
    -----------

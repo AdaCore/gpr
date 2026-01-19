@@ -48,9 +48,11 @@ package body GPR2.Build.Actions.Archive_Table_List is
    -----------------------
 
    overriding
-   procedure Compute_Signature (Self : in out Object; Load_Mode : Boolean) is
+   procedure Compute_Signature
+     (Self : in out Object; Check_Checksums : Boolean) is
    begin
-      if not Self.Signature.Add_Input (Self.Archive) and then Load_Mode then
+      if not Self.Signature.Add_Input (Self.Archive, Check_Checksums)
+      then
          return;
       end if;
    end Compute_Signature;

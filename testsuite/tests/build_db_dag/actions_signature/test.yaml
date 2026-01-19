@@ -1,5 +1,3 @@
 description: Extensive check of actions signatures
 driver: python_script
 timeout: 800
-control:
-- [XFAIL, "True", "mixing wave tools and release libgpr2"]

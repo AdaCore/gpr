@@ -116,7 +116,6 @@ limitations:
    * :samp:`--no-object-check`
    * :samp:`--no-exit-message`
    * :samp:`--no-complete-output`
-   * :samp:`--create-missing-dirs`
    * :samp:`--lto`
    * :samp:`--lfto`
 * The :samp:`-gnatdXX` and :samp:`-dXX` switches are not supported yet
@@ -159,11 +158,20 @@ The general syntax is thus:
 
 
 GPRbuild requires a project file, which may be specified on the
-command line either directly or through the :samp:`-P` switch. If not
-specified, GPRbuild uses the project file :file:`default.gpr` if there
-is one in the current working directory. Otherwise, if there is only
-one project file in the current working directory, GPRbuild uses this
-project file.
+command line either directly or through the :samp:`-P` switch. If the path is
+relative, the project file is searched relative to the current working
+directory. If it is not found there, the search continues relative to the
+directories specified in the environment variables :envvar:`GPR_PROJECT_PATH_FILE`,
+:envvar:`GPR_PROJECT_PATH` and :envvar:`ADA_PROJECT_PATH` (in that order) if they exist.
+The value of :envvar:`GPR_PROJECT_PATH_FILE`, when defined, is the path name of a text
+file that contains project directory path names, one per line.
+:envvar:`GPR_PROJECT_PATH` and :envvar:`ADA_PROJECT_PATH`, when defined,
+contain project directory path names separated by directory separators.
+
+If no project file has been specified, GPRbuild uses the project file
+:file:`default.gpr` if there is one in the current working directory.
+Otherwise, if there is only one project file in the current working directory,
+GPRbuild uses this project file.
 
 Main source files represent the sources to be used as the main
 programs. If they are not specified on the command line, GPRbuild uses

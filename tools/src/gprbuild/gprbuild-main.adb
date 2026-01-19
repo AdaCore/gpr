@@ -52,12 +52,10 @@ with GPRbuild.Options;
 
 procedure GPRbuild.Main is
 
-   use Ada;
    use type Ada.Containers.Count_Type;
    use Ada.Exceptions;
 
    use GPR2;
-   use GPRtools;
    use GPRtools.Program_Termination;
 
    package PRP renames GPR2.Project.Registry.Pack;
@@ -232,7 +230,8 @@ begin
             begin
                for Main of Mains loop
                   Src :=
-                    Opt.Tree.Root_Project.Source (Main.Source.Simple_Name);
+                    Opt.Tree.Root_Project.Visible_Source
+                      (Main.Source.Simple_Name);
 
                   if Src.Is_Defined then
                      if Lang = No_Language then
@@ -244,10 +243,6 @@ begin
 
                         exit;
                      end if;
-                  else
-                     Lang := No_Language;
-
-                     exit;
                   end if;
                end loop;
 
@@ -476,7 +471,7 @@ exception
       Handle_Program_Termination
         (Display_Command_Line_Help => True,
          Force_Exit                => False,
-         Exit_Code                 => E_General,
+         Exit_Code                 => E_Fatal,
          Message                   => Exception_Message (E));
 
    when E_Program_Termination =>

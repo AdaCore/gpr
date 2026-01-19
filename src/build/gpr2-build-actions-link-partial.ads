@@ -30,7 +30,8 @@ package GPR2.Build.Actions.Link.Partial is
      (Self : Object;
       Db   : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
-   overriding procedure Add_Option (Self : in out Object; Option : String);
+   overriding
+   procedure Add_Option_From_Binder (Self : in out Object; Option : String);
 
    overriding function Output
      (Self : Object) return Artifacts.Files.Object'Class;
@@ -61,9 +62,9 @@ private
       --  Is the standalone library encapsulated
    end record;
 
-   overriding procedure Compute_Signature
-     (Self      : in out Object;
-      Load_Mode : Boolean);
+   overriding
+   procedure Compute_Signature
+     (Self : in out Object; Check_Checksums : Boolean);
 
    overriding function Extended (Self : Object) return Object is
      (raise Internal_Error with "This action is not extending");

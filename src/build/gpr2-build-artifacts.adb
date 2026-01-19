@@ -10,6 +10,7 @@ with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.Key_Value;
 with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Artifacts.Object_File;
+with GPR2.Build.Artifacts.Source_Files;
 
 package body GPR2.Build.Artifacts is
 
@@ -44,5 +45,5 @@ begin
    Register_Artifact_Class (Key_Value.Undefined);
    Register_Artifact_Class (Library.Undefined);
    Register_Artifact_Class (Object_File.Undefined);
-
+   Register_Artifact_Class (Source_Files.Undefined);
 end GPR2.Build.Artifacts;

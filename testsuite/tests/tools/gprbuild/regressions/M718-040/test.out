@@ -1,0 +1,2 @@
+$ gprbuild -q -P original/os.gpr -p
+$ gprbuild -q -P derived/derived.gpr -p -cargs -gnatws
