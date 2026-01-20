@@ -1630,7 +1630,7 @@ package body GPR2.Build.Actions.Link is
          end;
       end loop;
 
-      --  Also add the artifacts for Libarary_Src_Directory if any
+      --  Also add the artifacts for Library_Src_Directory if any
 
       if Self.Ctxt.Has_Library_Src_Directory then
          declare

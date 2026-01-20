@@ -295,13 +295,10 @@ package body GPR2.Build.ALI_Parser is
    ------------
 
    function Create
-     (Path : GPR2.Path_Name.Object; Parse : Boolean) return Object is
+     (Path : GPR2.Path_Name.Object) return Object is
    begin
       return Self : Object do
          Self.Path := Path;
-         if Parse then
-            Self.Parse;
-         end if;
       end return;
    end Create;
 

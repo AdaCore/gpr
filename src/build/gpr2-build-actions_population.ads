@@ -18,7 +18,7 @@ package GPR2.Build.Actions_Population is
       GPR2."<",
       GPR2.Containers.Value_Type_List."=");
 
-   function Resolve_Mains
+   function Resolve_Mains_From_Options
      (Tree    : GPR2.Project.Tree.Object;
       Options : GPR2.Build.Options.Build_Options;
       Error   : out Boolean)

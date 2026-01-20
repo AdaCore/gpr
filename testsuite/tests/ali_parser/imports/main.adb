@@ -22,7 +22,8 @@ procedure Main is
       Ada.Text_IO.Put_Line
         ("=== Parsing file " & String (ALI_File.Simple_Name));
 
-      ALI := Create (ALI_File, True);
+      ALI := Create (ALI_File);
+      ALI.Parse;
 
       if not ALI.Is_Parsed then
          Ada.Text_IO.Put_Line ("Failed to import the ALI file");

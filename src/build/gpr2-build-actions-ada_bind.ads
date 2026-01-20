@@ -75,9 +75,8 @@ package GPR2.Build.Actions.Ada_Bind is
    function On_Ali_Parsed
      (Self : in out Object;
       Comp : GPR2.Build.Actions.Compile.Ada.Object) return Boolean;
-   --  Propagated the Ada imports to the tree. In case this actually comes from
-   --  an actual up-to-date ALI file, Sound_Input is set, else it must not, so
-   --  that further updates are taken into account.
+   --  Propagated the Ada imports to the tree and update the current library
+   --  interface when needed.
 
    function Extended_Interface
      (Self : Object) return Compilation_Unit.Maps.Map;

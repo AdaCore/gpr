@@ -408,7 +408,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       UID    : constant Actions.Action_Id'Class := Object'Class (Self).UID;
 
    begin
-      if not Self.Dep_File.Path.Exists then
+      if not Self.ALI_Object.Path_Name.Exists then
          Traces.Trace
            ("The ALI file for action " & UID.Image & " does not exist");
 
@@ -571,7 +571,7 @@ package body GPR2.Build.Actions.Compile.Ada is
          end if;
 
          Self.ALI_Object :=
-           GPR2.Build.ALI_Parser.Create (Self.Dep_File.Path, False);
+           GPR2.Build.ALI_Parser.Create (Self.Dep_File.Path);
       end;
 
       --  Identify the copies of the ali file in libraries
@@ -815,7 +815,7 @@ package body GPR2.Build.Actions.Compile.Ada is
                   Self.Inh_From := GPR2.Project.View.Undefined;
 
                   Self.ALI_Object :=
-                    GPR2.Build.ALI_Parser.Create (Self.Dep_File.Path, False);
+                    GPR2.Build.ALI_Parser.Create (Self.Dep_File.Path);
 
                   --  At this point make sure Self is updated in the tree
                   --  so that any use of it reference the proper .o and .ali.
