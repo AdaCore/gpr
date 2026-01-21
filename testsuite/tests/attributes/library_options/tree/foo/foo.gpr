@@ -1,9 +1,0 @@
-project Foo is
-   for Source_Dirs use (".");
-   for Object_Dir use ".";
-   for Languages use ("C");
-
-   package Compiler is
-      for Default_Switches ("C") use ("-fPIC");
-   end Compiler;
-end Foo;

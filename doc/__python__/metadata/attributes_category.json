@@ -168,7 +168,7 @@
 				{
 					"category_name": "Hidden",
 					"category_to_display": false,
-					"attributes": [{"attribute_name": "Include_Switches_Via_Spec"},{"attribute_name": "Path_Syntax"},{"attribute_name": "Pic_Option"},{"attribute_name": "Config_File_Dependency_Support"}]
+					"attributes": [{"attribute_name": "Include_Switches_Via_Spec"},{"attribute_name": "Path_Syntax"},{"attribute_name": "Pic_Option"}]
 				}
 			]
 		},

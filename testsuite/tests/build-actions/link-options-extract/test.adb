@@ -107,8 +107,7 @@ begin
       Ada.Text_IO.Put_Line ("Command stdout is empty");
    else
       declare
-         Number_Of_Options : constant Count_Type :=
-           Link.Options_From_Binder.Length;
+         Number_Of_Options : constant Count_Type := Link.Options.Length;
       begin
          if not Link_Extract.Post_Command (Success, Stdout) then
             Ada.Text_IO.Put_Line ("Failed action post-command");
@@ -117,7 +116,7 @@ begin
          if GPR2.Build.Actions.Link.Object'Class
               (Tree.Artifacts_Database.Action_Id_To_Reference (Link.UID)
                  .Element.all)
-              .Options_From_Binder
+              .Options
               .Length
            > Number_Of_Options
          then

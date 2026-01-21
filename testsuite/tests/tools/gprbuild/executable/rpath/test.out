@@ -1,6 +1,0 @@
-$ gprbuild -p -Pmylib/mylib.gpr -q
-
-$ gprbuild -p -Pmain.gpr -q
-
-$ ./main
-10

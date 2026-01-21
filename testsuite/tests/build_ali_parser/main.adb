@@ -5,21 +5,19 @@ with GPR2.Path_Name;
 with GNATCOLL.Traces;
 
 procedure Main is
-   procedure Test (ALI_File : GPR2.Filename_Type);
+   procedure Test (ALI_File : String);
    -- Print dependencies name
 
-   procedure Test (ALI_File : GPR2.Filename_Type) is
+   procedure Test (ALI_File : String) is
       Dep_Names : GPR2.Containers.Filename_Set;
-      ALI       : GPR2.Build.ALI_Parser.Object;
-      use GPR2;
    begin
-      Ada.Text_IO.Put_Line ("== ALI file: " & String (ALI_File));
+      Ada.Text_IO.Put_Line ("== ALI file: " & ALI_File);
 
-      ALI := GPR2.Build.ALI_Parser.Create
-        (GPR2.Path_Name.Create_File (ALI_File), True);
-
-      if ALI.Is_Parsed then
-         for Dep of ALI.Dependencies loop
+      if GPR2.Build.ALI_Parser.Dependencies
+        (GPR2.Path_Name.Create_File (GPR2.Filename_Type (ALI_File)),
+         Dep_Names)
+      then
+         for Dep of Dep_Names loop
             Ada.Text_IO.Put_Line (String (Dep));
          end loop;
       else

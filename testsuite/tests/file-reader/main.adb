@@ -1,9 +1,8 @@
-with GNAT.IO;  use GNAT.IO;
-
-with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source.Sets;
+with GPR2.Context;
 with GPR2.File_Readers;
-with GPR2.Options;
+with GNAT.IO;  use GNAT.IO;
+with GPR2.Log;
 with GPR2.Path_Name; use GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -20,9 +19,8 @@ procedure main is
      My_File_Reader.Reference;
 
    Prj : GPR2.Project.Tree.Object;
-   Opt : GPR2.Options.Object;
-   Cwd : constant GPR2.Path_Name.Object :=
-     GPR2.Path_Name.Create_Directory (".");
+   Ctx : GPR2.Context.Object;
+   Log : GPR2.Log.Object;
 
    M_ADB : constant GPR2.Path_Name.Object :=
              GPR2.Path_Name.Create_File ("m.adb");
@@ -34,32 +32,31 @@ procedure main is
    ----------
 
    procedure Test is
-      CU : GPR2.Build.Compilation_Unit.Object;
-      Dep : GPR2.Build.Compilation_Unit.Object;
    begin
 
-      if not Prj.Load (Opt, File_Reader => Reference) then
-         return;
-      end if;
+      Prj.Load
+        (Filename         => GPR2.Path_Name.Create_File ("aggregating.gpr"),
+         Context          => Ctx,
+         File_Reader      => Reference);
+      Prj.Log_Messages.Output_Messages (Information => False);
 
       --  Get dependencies
 
-      Prj.Update_Sources;
+      Prj.Update_Sources (Messages => Log);
+      Log.Output_Messages;
 
       --  Print m.adb dependencies
 
-      for NS of Prj.Namespace_Root_Projects loop
-         if Prj.Artifacts_Database (NS).Has_Compilation_Unit ("M") then
-            CU := Prj.Artifacts_Database (NS).Compilation_Unit ("M");
-
-            for D of CU.Known_Dependencies loop
-               Dep := Prj.Artifacts_Database (NS).Compilation_Unit (D);
-               if Dep.Has_Part (GPR2.S_Spec) then
-                  Put_Line (String (Dep.Spec.Source.Relative_Path (Cwd)));
+      for Source of Prj.Root_Project.Aggregated.First_Element.Sources loop
+         if Source.Path_Name = M_ADB then
+            for D of Source.Dependencies (Closure => True) loop
+               if D.Source.Path_Name /= M_ADB then
+                  Put_Line (D.Source.Path_Name.Value);
                end if;
             end loop;
          end if;
       end loop;
+
    end Test;
 
 begin
@@ -86,9 +83,9 @@ begin
 
    My_File_Reader.Add
      ("withed.gpr",
-      "project withed is" & " for Source_Dirs use(""a"");" & "end withed;");
-
-   Opt.Add_Switch (GPR2.Options.P, "aggregating.gpr");
+      "project withed is"
+      & " for Source_Dirs use(""a"");"
+      & "end withed;");
 
    --  Test all GPR files load are using file reader.
 
@@ -96,7 +93,7 @@ begin
 
    --  Unload parsed m.adb
 
-   Prj.Unload;
+   Prj.Unload (Full => True);
 
    --  Let m.adb depends on b.ads (instead of a.ads)
 

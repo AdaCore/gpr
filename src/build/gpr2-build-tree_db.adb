@@ -67,17 +67,6 @@ package body GPR2.Build.Tree_Db is
      (Iter : Action_Internal_Iterator;
       Position : Action_Cursor) return Action_Cursor;
 
-   function File_Index_Base_Name (Self : Object) return Filename_Type is
-     (".gpr-file-index-" & Self.Tree.Root_Project.Path_Name.Base_Filename
-      & ".json");
-
-   function File_Index_Save_Path (Self : Object) return Path_Name.Object is
-     (if Self.Tree.Root_Project.Kind in With_Object_Dir_Kind
-      then Self.Tree.Root_Project.Object_Directory.Compose
-        (Self.File_Index_Base_Name)
-      else Self.Tree.Root_Project.Dir_Name.Compose
-        (Self.File_Index_Base_Name));
-
    --------------------
    -- Action_Iterate --
    --------------------
@@ -96,13 +85,12 @@ package body GPR2.Build.Tree_Db is
    ----------------------------
 
    function Action_Id_To_Reference
-     (Self : aliased in out Object;
+     (Self : in out Object;
       Id   : Actions.Action_Id'Class) return Action_Reference_Type
    is
       Ref : constant Action_Maps.Reference_Type := Self.Actions.Reference (Id);
    begin
-      return (Element => Ref.Element.all'Unchecked_Access,
-              Ref     => Self.Actions.Reference (Id));
+      return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
    end Action_Id_To_Reference;
 
    ----------------------
@@ -116,8 +104,7 @@ package body GPR2.Build.Tree_Db is
       Ref : constant Action_Maps.Reference_Type :=
               Iterator.Db.Actions.Reference (Pos.Pos);
    begin
-      return (Element => Ref.Element.all'Unchecked_Access,
-              Ref     => Iterator.Db.Actions.Reference (Pos.Pos));
+      return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
    end Action_Reference;
 
    ----------------
@@ -356,8 +343,7 @@ package body GPR2.Build.Tree_Db is
       Ref : constant Action_Maps.Constant_Reference_Type :=
               Iterator.Db.Actions.Constant_Reference (Pos.Pos);
    begin
-      return (Element => Ref.Element.all'Unchecked_Access,
-              Ref     => Iterator.Db.Actions.Constant_Reference (Pos.Pos));
+      return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
    end Constant_Action_Reference;
 
    ---------------------------------
@@ -382,20 +368,7 @@ package body GPR2.Build.Tree_Db is
                when others          =>
                   raise Internal_Error with "Wrong kind of cursor");
    begin
-      return (Element => Ref.Element.all'Unchecked_Access,
-              Ref     =>
-                (case Pos.Current is
-                 when Implicit_Inputs =>
-                    Iterator.Db.Implicit_Inputs.Constant_Reference
-                      (Pos.Map_Pos).Constant_Reference (Pos.Pos),
-                 when Explicit_Inputs =>
-                    Iterator.Db.Inputs.Constant_Reference
-                      (Pos.Map_Pos).Constant_Reference (Pos.Pos),
-                 when Outputs         =>
-                    Iterator.Db.Outputs.Constant_Reference
-                      (Pos.Map_Pos).Constant_Reference (Pos.Pos),
-                 when others          =>
-                    raise Internal_Error with "Wrong kind of cursor"));
+      return (Element => Ref.Element.all'Unchecked_Access, Ref => Ref);
    end Constant_Artifact_Reference;
 
    ------------
@@ -413,11 +386,6 @@ package body GPR2.Build.Tree_Db is
       end if;
 
       Self.Create_View_Dbs;
-
-      --  Load the file index if possible
-
-      Self.File_Index :=
-        GPR2.Utils.Hash.Load (Self.File_Index_Save_Path);
    end Create;
 
    ---------------------
@@ -560,17 +528,6 @@ package body GPR2.Build.Tree_Db is
          Self.Exec_Ctxt.Actions.Clear;
          Self.Exec_Ctxt.Nodes.Clear;
       end if;
-
-      --  Save the file index of the involved artifacts
-      begin
-         Self.File_Index.Save (Self.File_Index_Save_Path);
-      exception
-         when others =>
-            --  Ignore issues when saving the index: this is optimization
-            --  and not being able to save the index don't impact the
-            --  functionality of libgpr2.
-            null;
-      end;
 
       return Self.Exec_Ctxt.Status;
    end Execute;

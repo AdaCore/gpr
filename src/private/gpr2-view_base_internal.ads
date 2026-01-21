@@ -13,6 +13,7 @@ with GPR2.Path_Name;
 private package GPR2.View_Base_Internal is
 
    type Definition_Base is abstract tagged record
+      Id                : Natural := 0;
       Path              : Path_Name.Object;
       Externals         : Containers.External_Name_Set;
       --  List of externals directly or indirectly visible

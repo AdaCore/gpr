@@ -1,0 +1,4 @@
+project extending extends "base.gpr" is
+   for source_dirs use ("extending_sources");
+   for object_dir use "obj";
+end extending;

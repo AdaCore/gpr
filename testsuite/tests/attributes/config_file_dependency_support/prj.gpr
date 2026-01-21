@@ -1,9 +1,0 @@
-project Prj is
-   for Languages use ("Ada");
-   for Object_Dir use "obj";
-   for Main use ("main.adb");
-
-   package Compiler is
-      for Config_File_Dependency_Support ("Ada") use "True";
-   end Compiler;
-end Prj;

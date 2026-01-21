@@ -1,8 +1,0 @@
-with "faulty_lib_with_library_options";
-
-project Faulty_Importing_Lib is
-   for Library_Name use "importing_lib";
-   for Library_Dir  use "lib";
-   for Source_Dirs use ("../src");
-   for Library_Kind use "static";
-end Faulty_Importing_Lib;

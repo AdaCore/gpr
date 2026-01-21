@@ -3,29 +3,24 @@
 ------------------
 [Ada Compile] main.adb (p1.gpr)
   inputs:
-  - /tree/src/p1/main.adb
   outputs:
   - /tree/obj/p1/main.o
   - /tree/obj/p1/main.ali
   - UID_Artifact
 [Ada Compile] pkg.adb (p1.gpr)
   inputs:
-  - /tree/src/p1/pkg.ads
-  - /tree/src/p1/pkg.adb
   outputs:
   - /tree/obj/p1/pkg.o
   - /tree/obj/p1/pkg.ali
   - UID_Artifact
 [C Compile] foo.c (p1.gpr)
   inputs:
-  - /tree/src/p1/foo.c
   outputs:
   - /tree/obj/p1/foo.o
   - /tree/obj/p1/foo.d
   - UID_Artifact
 [Ada Compile] foo.ada@2 (p2.gpr)
   inputs:
-  - /tree/src/p2/foo.ada
   outputs:
   - /tree/obj/p2/foo~2.o
   - /tree/obj/p2/foo~2.ali
@@ -33,8 +28,6 @@
   - UID_Artifact
 [Ada Compile] pkg.adb (p2.gpr)
   inputs:
-  - /tree/src/base2/pkg.ads
-  - /tree/src/p2/pkg.adb
   outputs:
   - /tree/obj/p2/pkg.o
   - /tree/obj/p2/pkg.ali
@@ -42,8 +35,6 @@
   - UID_Artifact
 [Ada Compile] pkg3.adb (p2.gpr)
   inputs:
-  - /tree/src/base2/pkg3.ads
-  - /tree/src/base2/pkg3.adb
   outputs:
   - /tree/obj/base2/pkg3.o
   - /tree/obj/base2/pkg3.ali
@@ -51,8 +42,6 @@
   - UID_Artifact
 [Ada Compile] pkg2.adb (shared.gpr)
   inputs:
-  - /tree/src/shared/pkg2.ads
-  - /tree/src/shared/pkg2.adb
   outputs:
   - /tree/obj/shared/pkg2.o
   - /tree/obj/shared/pkg2.ali

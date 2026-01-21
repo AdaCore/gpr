@@ -27,13 +27,15 @@ package GPR2.Build.Actions.Write_File is
       Index      : Integer);
    --  Initialize the action with the provided index
 
+   overriding function View (Self : Object) return GPR2.Project.View.Object;
+
    overriding function On_Tree_Insertion
      (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
    procedure Compute_Signature
      (Self      : in out Object;
-      Check_Checksums : Boolean);
+      Load_Mode : Boolean);
 
    overriding procedure Compute_Command
      (Self           : in out Object;
@@ -68,8 +70,12 @@ private
      (Self.Index'Image (2 .. Self.Index'Image'Last));
 
    type Object is new Actions.Object with record
+      Ctxt       : GPR2.Project.View.Object;
       Index      : Integer;
    end record;
+
+   overriding function View (Self : Object) return GPR2.Project.View.Object is
+     (Self.Ctxt);
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object

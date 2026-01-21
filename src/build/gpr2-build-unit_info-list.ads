@@ -56,8 +56,7 @@ package GPR2.Build.Unit_Info.List is
       Index : Unit_Index) return Unit_Info.Object;
    --  Get a single unit
 
-   type Reference_Type
-     (Element : not null access Unit_Info.Object) is limited private
+   type Reference_Type (Element : not null access Unit_Info.Object) is private
      with Implicit_Dereference => Element;
 
    function Reference
@@ -65,7 +64,7 @@ package GPR2.Build.Unit_Info.List is
       Position : Cursor) return Reference_Type;
 
    type Constant_Reference_Type
-     (Element : not null access constant Unit_Info.Object) is limited private
+     (Element : not null access constant Unit_Info.Object) is private
      with Implicit_Dereference => Element;
 
    function Constant_Reference

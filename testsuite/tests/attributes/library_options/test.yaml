@@ -1,3 +1,0 @@
-description: Test that Library_Options values are correctly added to the library link action, and that only object files are accepted when required.
-driver: python_script
-timeout: 800

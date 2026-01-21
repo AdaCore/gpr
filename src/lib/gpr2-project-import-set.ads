@@ -66,8 +66,7 @@ package GPR2.Project.Import.Set is
      new Ada.Iterator_Interfaces (Cursor, Has_Element);
 
    type Constant_Reference_Type
-     (Import : not null access constant Project.Import.Object)
-   is limited private
+     (Import : not null access constant Project.Import.Object) is private
      with Implicit_Dereference => Import;
 
    function Constant_Reference
@@ -94,8 +93,7 @@ private
                   Cursor'(Current => Base_Name_Set.No_Element);
 
    type Constant_Reference_Type
-     (Import : not null access constant Project.Import.Object)
-   is limited record
+     (Import : not null access constant Project.Import.Object) is record
       --  We need to keep the underlying reference so that it is not cleared
       --  upon return of the getter, and so that the container has the proper
       --  busy state

@@ -1,6 +1,0 @@
-Project: Demo
-----------
- > src/b.c            language: C     Kind: S_BODY
- > src/b.h            language: C     Kind: S_SPEC
- > src/d.adb          language: Ada   Kind: S_BODY
- > src/d.ads          language: Ada   Kind: S_SPEC

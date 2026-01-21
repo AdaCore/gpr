@@ -41,15 +41,14 @@ package body GPR2.Build.Actions.Archive_Extract is
    -----------------------
 
    overriding
-   procedure Compute_Signature
-     (Self : in out Object; Check_Checksums : Boolean) is
+   procedure Compute_Signature (Self : in out Object; Load_Mode : Boolean) is
    begin
-      if not Self.Signature.Add_Input (Self.Archive, Check_Checksums)
-      then
+      if not Self.Signature.Add_Input (Self.Archive) and then Load_Mode then
          return;
       end if;
 
-      if not Self.Signature.Add_Output (Self.Extracted_Object, Check_Checksums)
+      if not Self.Signature.Add_Output (Self.Extracted_Object)
+        and then Load_Mode
       then
          return;
       end if;

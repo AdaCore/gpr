@@ -143,11 +143,7 @@ package body GPR2.View_Internal is
                end if;
             end loop;
 
-         elsif V.Is_Library
-           and then V.Kind in With_Object_Dir_Kind
-           and then not V.Is_Externally_Built
-           and then not V.Is_Aggregate_Library
-         then
+         elsif V.Is_Library and then V.Kind in With_Object_Dir_Kind then
             if V.Library_Directory = V.Object_Directory then
                Tree.Log_Messages.Append
                  (Message.Create

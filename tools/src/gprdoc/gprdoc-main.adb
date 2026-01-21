@@ -35,6 +35,7 @@ with GPRtools.Util;
 
 function GPRdoc.Main return Ada.Command_Line.Exit_Status is
 
+   use Ada;
    use Ada.Exceptions;
 
    use GPRtools.Program_Termination;

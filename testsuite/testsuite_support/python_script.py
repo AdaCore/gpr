@@ -37,7 +37,4 @@ class PythonScriptDriver(BaseDriver):
             self.create_fake_ada_compilers(env)
 
         builder_and_runner.insert_build_and_runner_parameters(env)
-
-        # We do not run under valgrind/gnatcov wrapper here, as the Python
-        # script is in charge of calling BuilderAndRunner methods directly.
-        builder_and_runner.simple_run(cmd, env)
+        builder_and_runner.run(cmd, env)

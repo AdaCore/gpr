@@ -56,7 +56,7 @@ package body GPR2.Build.Process_Manager.JSON is
                   Key  : constant UTF8_String :=
                            GNATCOLL.OS.Process.Env_Dicts.Key (C);
                   Elem : constant UTF8_String :=
-                           GNATCOLL.OS.Process.Env_Dicts.Element (C);
+                           GNATCOLL.OS.Process.Env_Dicts.Key (C);
                begin
                   Env_Summary.Set_Field (Key, Elem);
                end;
@@ -107,32 +107,21 @@ package body GPR2.Build.Process_Manager.JSON is
         (Job, Context, Proc_Handler, Stdout, Stderr);
    end Collect_Job;
 
-   -------------
-   -- Execute --
-   -------------
+     ----------------------------
+     -- Execution_Post_Process --
+     ----------------------------
 
-   overriding procedure Execute
-     (Self            : in out Object;
-      Tree_Db         : GPR2.Build.Tree_Db.Object_Access;
-      Context         : access Process_Execution_Context;
-      Options         : PM_Options)
-   is
+   overriding procedure Execution_Post_Process (Self : in out Object) is
       File : GNATCOLL.OS.FS.File_Descriptor;
-      Repr : Unbounded_String;
    begin
-      GPR2.Build.Process_Manager.Object (Self).Execute
-        (Tree_Db, Context, Options);
-
       if not Self.JSON_File.Is_Defined then
          return;
       end if;
 
-      Repr := Write (Create (Self.JSON));
-
       File := Open (Self.JSON_File.String_Value, Write_Mode);
-      Write_Unbounded (File, Repr);
+      Write (File, Write (Create (Self.JSON)) & ASCII.CR & ASCII.LF);
       Close (File);
-   end Execute;
+   end Execution_Post_Process;
 
    -------------------
    -- Set_JSON_File --

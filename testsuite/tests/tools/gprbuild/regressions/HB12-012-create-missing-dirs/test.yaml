@@ -1,3 +1,0 @@
-description: Regression test for HB12-012 (--create-missing-dirs)
-driver: python_script
-timeout: 800

@@ -123,19 +123,7 @@ GPR file: files/import_empty_string_check.gpr
 import_empty_string_check.gpr:1:06: error: missing project file for with clause
 GPR file: files/import_space_check.gpr
 import_space_check.gpr:1:06: error: imported project file " .gpr" not found
-The following directories have been searched:
-* Project file import_space_check.gpr directory: /files
-* Current directory: 
-* GPR_PROJECT_PATH environment variable:
-* Configuration file:
-
 GPR file: files/extends_empty_string_check.gpr
 extends_empty_string_check.gpr:1:36: error: extended project name cannot be empty
 GPR file: files/extends_space_check.gpr
 extends_space_check.gpr:1:29: error: extended project file " .gpr" not found
-The following directories have been searched:
-* Project file extends_space_check.gpr directory: /files
-* Current directory: 
-* GPR_PROJECT_PATH environment variable:
-* Configuration file:
-

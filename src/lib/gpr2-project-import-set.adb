@@ -38,8 +38,7 @@ package body GPR2.Project.Import.Set is
    begin
       return Constant_Reference_Type'
         (Import => Ref.Element.all'Unrestricted_Access,
-         Ref    => Base_Name_Set.Constant_Reference
-                     (Self.Set, Position.Current));
+         Ref    => Ref);
    end Constant_Reference;
 
    --------------

@@ -81,12 +81,4 @@
 [ Setup ] actions are propagated in the tree
 [ OK ] Unknown tool
 [ OK ] Process error expected due to a fake gnatbind being used
-[ Test case 10 ] - [ Named binder switches ]
-[ Setup ] tree/gnatbind_named_switches.gpr Loaded
-[ Setup ] Sources updated
-[ Setup ] New binder action
-[ Setup ] Action inserted in Tree_DB
-[ Setup ] actions are propagated in the tree
-[ OK ] Global Ada binding switch should not be used
-[ OK ] Main specific binding switch should be used
 

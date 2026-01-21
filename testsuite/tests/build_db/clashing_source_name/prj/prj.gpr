@@ -1,4 +1,0 @@
-project Prj is
-   for Languages use ("Ada");
-   for Source_Dirs use ("srcs/**", "src3");
-end Prj;

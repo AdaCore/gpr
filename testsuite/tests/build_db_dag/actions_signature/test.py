@@ -32,8 +32,7 @@ def write_file(file, data):
 def get_all_signature_json_files(project):
     json_file_list = []
     for filename in glob.glob(f"tree/obj/{project}/.*.json", recursive=True):
-        if not os.path.basename(filename).startswith(".gpr-file-index"):
-            json_file_list.append(filename)
+        json_file_list.append(filename)
     return json_file_list
 
 

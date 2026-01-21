@@ -1,7 +1,0 @@
-Project: Simple
-Attributes WITH DEFAULT, WITH CONFIG:
-* for Inherit_Source_Path ("Asm_Cpp") use ("Asm"); from_config=FALSE
-* for Inherit_Source_Path ("C++") use ("C"); from_config=TRUE
-
-Attributes WITH DEFAULT, WITHOUT CONFIG:
-* for Inherit_Source_Path ("Asm_Cpp") use ("Asm"); from_config=FALSE

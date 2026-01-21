@@ -23,7 +23,6 @@ package body GPR2.C is
       TREE_SET_CONTEXT             => Tree.Set_Context'Access,
       TREE_TARGET                  => Tree.Target'Access,
       TREE_UPDATE_SOURCES          => Tree.Update_Sources'Access,
-      VIEW_CONSTRUCTOR             => View.Constructor'Access,
       VIEW_DESTRUCTOR              => View.Destructor'Access,
       VIEW_EXECUTABLES             => View.Executables'Access,
       VIEW_OBJECT_DIRECTORY        => View.Object_Directory'Access,

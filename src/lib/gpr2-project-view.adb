@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2026, AdaCore
+--  Copyright (C) 2019-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -28,6 +28,7 @@ with GPR2.View_Internal;
 package body GPR2.Project.View is
 
    use GNAT;
+   use type GPR2.View_Ids.View_Id;
 
    package Regexp_List is new Ada.Containers.Indefinite_Vectors
      (Positive, GNAT.Regexp.Regexp, "=" => GNAT.Regexp."=");
@@ -876,14 +877,13 @@ package body GPR2.Project.View is
 
       if Def.Index_Type = PRA.No_Index then
          declare
-            Attr : Project.Attribute.Object :=
+            Attr : constant Project.Attribute.Object :=
                      Self.Attribute (Name => Name);
          begin
             if Attr.Is_Defined
               and then (With_Defaults or else not Attr.Is_Default)
               and then (With_Config or else not Attr.Is_From_Config)
             then
-               Attr.Set_From_Config (Self.Is_Configuration);
                Result.Include (Attr);
             end if;
 
@@ -893,10 +893,6 @@ package body GPR2.Project.View is
 
       if Name.Pack = Project_Level_Scope then
          Result := Get_RO (Self).Attrs.Filter (Name.Attr);
-
-         for Attr of Result loop
-            Attr.Set_From_Config (Self.Is_Configuration);
-         end loop;
 
          --  Query extended views
 
@@ -918,8 +914,7 @@ package body GPR2.Project.View is
       else
          declare
             --  Self.Pack resolves inheritance
-            Pack_Inst  : Pack_Internal.Object renames Self.Pack (Name.Pack);
-            Attr_Alias : GPR2.Project.Attribute.Object;
+            Pack_Inst : Pack_Internal.Object renames Self.Pack (Name.Pack);
          begin
             if not Pack_Inst.Attrs.Is_Empty then
                Result := Pack_Inst.Attrs.Filter (Name.Attr);
@@ -927,9 +922,7 @@ package body GPR2.Project.View is
                if Alias.Attr /= No_Attribute then
                   for Attr of Pack_Inst.Attrs.Filter (Alias.Attr) loop
                      if not Result.Contains (Name.Attr, Attr.Index) then
-                        Attr_Alias := Attr.Get_Alias (Name);
-                        Attr_Alias.Set_From_Config (Self.Is_Configuration);
-                        Result.Insert (Attr_Alias);
+                        Result.Insert (Attr.Get_Alias (Name));
                      end if;
                   end loop;
                end if;
@@ -1017,7 +1010,6 @@ package body GPR2.Project.View is
                                                  PRA.Value_Map.Element (C))),
                                  Default => True);
                               Attr.Set_Case (Def.Value_Case_Sensitive);
-                              Attr.Set_From_Config (Self.Is_Configuration);
                               Result.Insert (Attr);
                            end if;
                         end if;
@@ -1089,52 +1081,40 @@ package body GPR2.Project.View is
       for Value of Attr.Values loop
          Found := False;
 
-         if Value.Text = "" then
-            Messages.Append
-              (Message.Create
-                 (Level   => Message.Error,
-                  Message => "a main cannot have an empty name",
-                  Sloc    => Value));
+         Lang_Loop : for Lang of Self.Language_Ids loop
+            declare
+               Main      : constant Simple_Name :=
+                             Suffixed_Simple_Name (Self, Value.Text, Lang);
+               Db        : constant GPR2.Build.View_Db.Object := Self.View_Db;
+               Ambiguous : Boolean;
+            begin
+               Src := Db.Visible_Source (Main, Ambiguous);
 
-         else
-            Lang_Loop : for Lang of Self.Language_Ids loop
-               declare
-                  Main      : constant Simple_Name :=
-                                Suffixed_Simple_Name (Self, Value.Text, Lang);
-                  Db        : constant GPR2.Build.View_Db.Object :=
-                                Self.View_Db;
-                  Ambiguous : Boolean;
-               begin
-                  Src := Db.Visible_Source (Main, Ambiguous);
-
-                  if Src.Is_Defined and then not Ambiguous then
-                     Found := True;
-                     exit Lang_Loop;
-                  end if;
-
-                  Has_Ambiguous_Result := Has_Ambiguous_Result or Ambiguous;
-               end;
-            end loop Lang_Loop;
-
-            if not Found then
-               if Has_Ambiguous_Result then
-                  Messages.Append
-                    (Message.Create
-                       (Level   => Message.Error,
-                        Message => "multiple sources were found for " &
-                          String (Value.Text) &
-                          " from project " & String (Self.Name),
-                        Sloc    => Value));
-               else
-                  Messages.Append
-                    (Message.Create
-                       (Level   => Message.Error,
-                        Message =>
-                        '"' & String (Value.Text) &
-                          """ is not a source of project " &
-                          String (Self.Name),
-                        Sloc    => Value));
+               if Src.Is_Defined and then not Ambiguous then
+                  Found := True;
+                  exit Lang_Loop;
                end if;
+
+               Has_Ambiguous_Result := Has_Ambiguous_Result or Ambiguous;
+            end;
+         end loop Lang_Loop;
+
+         if not Found then
+            if Has_Ambiguous_Result then
+               Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Message => "multiple sources were found for " &
+                       String (Value.Text) &
+                       " from project " & String (Self.Name),
+                     Sloc    => Value));
+            else
+               Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Message => String (Value.Text) &
+                       " is not a source of project " & String (Self.Name),
+                     Sloc    => Value));
             end if;
          end if;
       end loop;
@@ -1204,9 +1184,7 @@ package body GPR2.Project.View is
          V := Todo.First_Element;
          Todo.Delete_First;
 
-         if (Include_Extended or else not V.Is_Extended)
-           and then (Include_Aggregated or else not V.Is_Aggregated_In_Library)
-         then
+         if Include_Extended or else not V.Is_Extended then
             Closure_Views.Append (V);
          end if;
 
@@ -1227,7 +1205,7 @@ package body GPR2.Project.View is
             end loop;
          end if;
 
-         if V.Kind = K_Aggregate_Library then
+         if Include_Aggregated and then V.Kind = K_Aggregate_Library then
             for Agg of V.Aggregated loop
                Add (Agg);
             end loop;
@@ -1249,10 +1227,8 @@ package body GPR2.Project.View is
    function Compiler_Prefix (Self : Object) return String is
    begin
       for Driver of Self.Attributes (Name => PRA.Compiler.Driver) loop
-         if GPR2.Path_Name.Ends_With
-              (Filename_Optional (Driver.Value.Text), "gcc.exe")
-           or else GPR2.Path_Name.Ends_With
-                     (Filename_Optional (Driver.Value.Text), "gcc")
+         if GNATCOLL.Utils.Ends_With (Driver.Value.Text, "gcc.exe")
+           or else GNATCOLL.Utils.Ends_With (Driver.Value.Text, "gcc")
          then
             declare
                Basename : constant String :=
@@ -1311,11 +1287,10 @@ package body GPR2.Project.View is
         (Base_Name : Value_Not_Empty) return GPR2.Path_Name.Object
       is
          Suffix : constant Value_Type :=
-           (if GPR2.Path_Name.Ends_With
-                 (Filename_Optional (Base_Name),
-                  String (Self.Executable_Suffix))
-            then ""
-            else Value_Type (Self.Executable_Suffix));
+                    (if GNATCOLL.Utils.Ends_With
+                       (Base_Name, String (Self.Executable_Suffix))
+                     then ""
+                     else Value_Type (Self.Executable_Suffix));
       begin
          return Self.Executable_Directory.Compose
                   (Filename_Type (Base_Name & Suffix));
@@ -1953,16 +1928,6 @@ package body GPR2.Project.View is
       end return;
    end Interface_Closure;
 
-   --------------------------
-   -- Is_Aggregate_Library --
-   --------------------------
-
-   function Is_Aggregate_Library (Self : Object) return Boolean is
-      Ref : constant View_Internal.Const_Ref := View_Internal.Get_RO (Self);
-   begin
-      return not Ref.Aggregated.Is_Empty;
-   end Is_Aggregate_Library;
-
    ------------------------------
    -- Is_Aggregated_In_Library --
    ------------------------------
@@ -2285,8 +2250,7 @@ package body GPR2.Project.View is
                   Name : constant String :=
                            String (Version (Version'First .. K - 1));
                begin
-                  if GPR2.Path_Name.Ends_With
-                       (Filename_Optional (Name), Shared_Ext)
+                  if GNATCOLL.Utils.Ends_With (Name, Shared_Ext)
                     or else Strings.Fixed.Index (Name, Shared_Ext & '.') /= 0
                   then
                      Result.Include (Simple_Name (Name));
@@ -2540,16 +2504,13 @@ package body GPR2.Project.View is
    ---------------
 
    function Own_Units
-     (Self                   : Object;
-      Overridden_From_Runtime : Boolean := False)
-      return GPR2.Build.Compilation_Unit.Maps.Map
+     (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
    is
       Db : Build.View_Db.Object;
    begin
       if Self.Kind in With_Object_Dir_Kind then
          Db := Self.View_Db;
-         return Db.Own_Units
-           (Overridden_From_Runtime => Overridden_From_Runtime);
+         return Db.Own_Units;
       else
          return Build.Compilation_Unit.Maps.Empty_Map;
       end if;
@@ -3168,6 +3129,8 @@ package body GPR2.Project.View is
       Name : String;
       Lang : Language_Id := Ada_Language) return Simple_Name
    is
+      use GNATCOLL.Utils;
+
       Default_Ada_MU_BS : constant String := ".ada";
       Index             : constant Attribute_Index.Object :=
                             Attribute_Index.Create (Lang);
@@ -3189,13 +3152,10 @@ package body GPR2.Project.View is
          Spec_Attr : constant Project.Attribute.Object :=
                        Self.Attribute (PRA.Naming.Spec_Suffix, Index);
       begin
-         return
-           (Body_Attr.Is_Defined
-            and then GPR2.Path_Name.Ends_With
-              (Filename_Optional (Name), Body_Attr.Value.Text))
+         return (Body_Attr.Is_Defined
+                 and then Ends_With (Name, Body_Attr.Value.Text))
            or else (Spec_Attr.Is_Defined
-                    and then GPR2.Path_Name.Ends_With
-                      (Filename_Optional (Name), Spec_Attr.Value.Text));
+                    and then Ends_With (Name, Spec_Attr.Value.Text));
       end Ends_With_One_Language;
 
       ---------------------
@@ -3253,8 +3213,7 @@ package body GPR2.Project.View is
    begin
       if Is_An_Exception (Name)
         or else Ends_With_One_Language (Name)
-        or else GPR2.Path_Name.Ends_With
-                  (Filename_Optional (Name), Default_Ada_MU_BS)
+        or else Ends_With (Name, Default_Ada_MU_BS)
       then
          return Simple_Name (Name);
       else

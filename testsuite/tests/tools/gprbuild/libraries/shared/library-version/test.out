@@ -1,2 +1,0 @@
-$ gprbuild -q -Pmylib.gpr -p --json-summary -j1
-SUCCESS

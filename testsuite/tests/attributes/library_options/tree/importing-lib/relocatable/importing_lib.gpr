@@ -1,9 +1,0 @@
-with "lib_with_library_options";
-
-project Importing_Lib is
-   for Library_Name use "importing_lib";
-   for Library_Dir  use "lib";
-   for Source_Dirs use ("../src");
-   for Library_Kind use "relocatable";
-end Importing_Lib;
-

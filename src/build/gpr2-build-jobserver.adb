@@ -152,11 +152,6 @@ package body GPR2.Build.Jobserver is
          Self.Protocol.Clear;
       end if;
 
-      loop
-         exit when not Self.Task_Launched;
-         delay 0.001;
-      end loop;
-
       if Self.Reader /= null then
          Free (Self.Reader);
       end if;

@@ -92,10 +92,10 @@ package body GPR2.C.Tree is
    is
       Tree     : GPR2.Project.Tree.Object;
       Reporter : GPR2.C.Reporter.Object;
-      Loaded   : Boolean;
+      Dummy    : Boolean;
 
    begin
-      Loaded :=
+      Dummy :=
         Tree.Load
           (Options      =>
              GPR2.C.JSON.Codecs.Options.Decode (Request.Value ("options")),
@@ -103,7 +103,6 @@ package body GPR2.C.Tree is
            Reporter     => Reporter);
 
       Result.Insert ("tree_id", GPR2.C.Registry.Tree.Register (Tree));
-      Result.Insert ("is_loaded", GPR2.C.JSON.Values.To_JSON_Value (Loaded));
    end Load;
 
    ------------------

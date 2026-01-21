@@ -20,21 +20,6 @@ package body GPR2.C.View is
      (Request : GPR2.C.JSON.Objects.JSON_Object)
       return GPR2.Project.View.Object;
 
-   -----------------
-   -- Constructor --
-   -----------------
-
-   procedure Constructor
-     (Request : GPR2.C.JSON.Objects.JSON_Object;
-      Result  : out GPR2.C.JSON.Objects.JSON_Object)
-   is
-      View : constant GPR2.Project.View.Object := Get_View (Request);
-
-   begin
-      Result.Insert ("name", String (View.Name));
-      Result.Insert ("path_name", String (View.Path_Name.Value));
-   end Constructor;
-
    ----------------
    -- Destructor --
    ----------------

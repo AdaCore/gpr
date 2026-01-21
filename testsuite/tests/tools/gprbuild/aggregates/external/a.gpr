@@ -1,4 +1,0 @@
-aggregate project A is
-   for External ("FOO") use "bar";
-   for Project_Files use ("p.gpr");
-end A;
