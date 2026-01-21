@@ -1,8 +1,0 @@
-with "gpr2.gpr";
-
-project Prj is
-   for Main use ("main.adb");
-   for Source_Dirs use (".");
-   for Object_Dir  use "obj";
-   for Exec_Dir    use ".";
-end Prj;

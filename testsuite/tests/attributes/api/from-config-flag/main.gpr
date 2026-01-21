@@ -1,7 +1,0 @@
-with "gpr2";
-
-project Main is
-   for Object_Dir use "obj";
-   for Exec_Dir use ".";
-   for Main use ("main.adb");
-end Main;

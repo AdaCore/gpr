@@ -733,7 +733,7 @@ package body GPR2.Project.Tree is
          declare
             Search_Paths : Path_Name.Set.Object :=
                              GPR2.Project.Default_Search_Paths
-                               (Environment);
+                               (True, Environment);
          begin
             for P of Options.User_Specified_Project_Search_Path loop
                Search_Paths.Prepend (P);

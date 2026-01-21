@@ -5,7 +5,6 @@
 --
 
 with GPR2.Project.View;
-with GPR2.Utils.Hash;
 
 private with Ada.Tags;
 
@@ -39,9 +38,7 @@ package GPR2.Build.Artifacts is
       Ctxt : GPR2.Project.View.Object) is abstract;
    --  Translates the JSON representation to an actual instance
 
-   function Checksum
-     (Self : Object; Hash : in out Utils.Hash.Object) return String
-   is abstract;
+   function Checksum (Self : Object) return String is abstract;
    --  The current checksum of the resource
 
    function "<" (L, R : Object) return Boolean is abstract;

@@ -58,16 +58,3 @@ test("demo.gpr", ["main.adb", "-b"], False)
 # link main
 test("demo.gpr", ["main.adb", "-l"], False)
 run(["./main"])
-
-# Now, check that a warning is emitted when deactivated actions signature
-# are invalid.
-
-run([GPRCLEAN, "-P", "demo.gpr", "-q", "-r"], quiet=True)
-run([GPRBUILD, "-P", "demo.gpr", "-p", "-j1", "main.adb", "-b"])
-run([GPRBUILD, "-P", "demo.gpr", "-p", "-j1", "main.adb", "-l"])
-
-run([GPRBUILD, "-P", "demo.gpr", "-p", "-j1", "main.adb", "-c"])
-run([GPRBUILD, "-P", "demo.gpr", "-p", "-j1", "main.adb", "-l"])
-run([GPRBUILD, "-P", "demo.gpr", "-p", "-j1", "main.adb", "-b"])
-
-run([GPRBUILD, "-P", "demo.gpr", "-p", "-j1", "main.adb", "-l"])

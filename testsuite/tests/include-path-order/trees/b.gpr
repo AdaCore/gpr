@@ -1,5 +1,0 @@
-project B is
-
-   for Source_Dirs use ("srcb");
-
-end B;

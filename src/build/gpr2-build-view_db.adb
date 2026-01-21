@@ -132,26 +132,15 @@ package body GPR2.Build.View_Db is
    -- Own_Units --
    ---------------
 
-   function Own_Units
-     (Self : Object; Overridden_From_Runtime : Boolean := False)
-      return Build.Compilation_Unit.Maps.Map
-   is
+   function Own_Units (Self : Object) return Build.Compilation_Unit.Maps.Map is
       Db  : constant View_Tables.View_Data_Ref := Ref (Self);
       Res : Build.Compilation_Unit.Maps.Map;
    begin
       for C in Db.Own_CUs.Iterate loop
          declare
             Name : constant Name_Type := Unit_Maps.Key (C);
-            CU   : constant Build.Compilation_Unit.Object :=
-                     Unit_Maps.Element (C).First_Element.Unit (Name);
          begin
-            if Overridden_From_Runtime then
-               if CU.Overridden_From_Runtime then
-                  Res.Insert (Name, CU);
-               end if;
-            else
-               Res.Insert (Name, CU);
-            end if;
+            Res.Insert (Name, Unit_Maps.Element (C).First_Element.Unit (Name));
          end;
       end loop;
 

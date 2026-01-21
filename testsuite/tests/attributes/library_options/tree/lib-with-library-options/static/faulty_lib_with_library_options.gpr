@@ -1,8 +1,0 @@
-project Faulty_Lib_With_Library_Options is
-   for Library_Name use "lib";
-   for Library_Dir  use "lib";
-   for Source_Dirs use ("../src");
-   for Library_Kind use "static";
-   for Library_Options use ("../../foo/foo.o", "-g3");
-end Faulty_Lib_With_Library_Options;
-

@@ -1,5 +1,5 @@
 from gpr2.capi import LibGPR2
-from gpr2.tree import ProjectTree, Options
+from gpr2.tree import ProjectTree
 from gpr2 import GPR2Error
 from ctypes import c_char_p, byref
 import json
@@ -19,15 +19,11 @@ def test_invalid_json_request():
     answer = json.loads(answer.value.decode("utf-8"))
     assert status == 1
 
+
 @pytest.mark.data_dir("simple_project")
-@pytest.mark.xfail
 def test_missing_json_member_request():
     """Missing manadatory key in C binding request."""
-
-    # XXX Can't be tested yet, there are no methods with many parameters,
-    # and "tree_id"/"view_id" are mapped to "empty" objects.
-
-    with ProjectTree(Options("p.gpr")) as tree:
+    with ProjectTree("p.gpr") as tree:
         with pytest.raises(GPR2Error) as exc_info:
             LibGPR2.view_attribute({"tree_id": tree.root_view.tree.id,
                                     "view_id": tree.root_view.id})

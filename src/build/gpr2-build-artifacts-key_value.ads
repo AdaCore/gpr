@@ -26,9 +26,7 @@ package GPR2.Build.Artifacts.Key_Value is
       Chk  : String;
       Ctxt : GPR2.Project.View.Object);
 
-   overriding
-   function Checksum
-     (Self : Object; Hash : in out Utils.Hash.Object) return String;
+   overriding function Checksum (Self : Object) return String;
 
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type;
 
@@ -52,15 +50,14 @@ private
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
 
-   function Create (Key : Value_Type; Value : Value_Type) return Object
-   is (Key => +Key, Value => +Value);
+   function Create
+     (Key   : Value_Type;
+      Value : Value_Type) return Object is
+     (Key   => +Key,
+      Value => +Value);
 
-   pragma Warnings (Off, "*formal parameter ""Hash"" is not referenced*");
-   overriding
-   function Checksum
-     (Self : Object; Hash : in out Utils.Hash.Object) return String
-   is (-Self.Value);
-   pragma Warnings (On, "*formal parameter ""Hash"" is not referenced*");
+   overriding function Checksum (Self : Object) return String is
+     (-Self.Value);
 
    overriding function Serialize (Self : Object) return String is
      (-Self.Key);

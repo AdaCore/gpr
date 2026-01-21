@@ -129,10 +129,10 @@ function Test return Integer is
                begin
                   if Attr.Is_Defined then
                      for V of Attr.Values loop
-                        Action.Add_Option_From_Binder (V.Text);
+                        Action.Add_Option (V.Text);
                      end loop;
                   else
-                     Action.Add_Option_From_Binder (Trimed_Line);
+                     Action.Add_Option (Trimed_Line);
                   end if;
                end;
             end if;

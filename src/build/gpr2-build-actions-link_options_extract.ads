@@ -39,6 +39,9 @@ package GPR2.Build.Actions.Link_Options_Extract is
    --  @param View The view that contains the action
 
    overriding
+   function View (Self : Object) return GPR2.Project.View.Object;
+
+   overriding
    function On_Tree_Insertion
      (Self : Object; Db : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
@@ -90,11 +93,12 @@ private
    type Object is new Actions.Object with record
       Object_File : GPR2.Build.Artifacts.Object_File.Object;
       --  The object file containing the link option to be extracted
+
+      Ctxt : GPR2.Project.View.Object;
    end record;
 
    overriding
-   procedure Compute_Signature
-     (Self : in out Object; Check_Checksums : Boolean);
+   procedure Compute_Signature (Self : in out Object; Load_Mode : Boolean);
 
    overriding
    function Working_Directory (Self : Object) return Path_Name.Object
@@ -103,6 +107,10 @@ private
    overriding
    function Extended (Self : Object) return Object
    is (raise Internal_Error with "This action is not extending");
+
+   overriding
+   function View (Self : Object) return GPR2.Project.View.Object
+   is (Self.Ctxt);
 
    overriding
    function Display_Output (Action : Object) return Boolean is (False);

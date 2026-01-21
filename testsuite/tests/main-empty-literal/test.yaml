@@ -1,5 +1,0 @@
-description:
-    Test value of Main attribute should be non-empty
-driver: build_and_run
-project_file: test
-main: main

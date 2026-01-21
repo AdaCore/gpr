@@ -1,0 +1,7 @@
+description:
+    Test coherence of unit names after parsing ali file.
+driver: build_and_run
+project_file: test
+main: main
+control:
+- [XFAIL, "True", "pending libgpr2-next changes"]

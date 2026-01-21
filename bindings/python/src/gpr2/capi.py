@@ -26,11 +26,10 @@ class LibGPR2:
         "tree_set_context": 8,
         "tree_target": 9,
         "tree_update_sources": 10,
-        "view_constructor": 11,
-        "view_destructor": 12,
-        "view_executables": 13,
-        "view_object_directory": 14,
-        "view_sources": 15,
+        "view_destructor": 11,
+        "view_executables": 12,
+        "view_object_directory": 13,
+        "view_sources": 14,
     }
 
     # ??? not portable ???

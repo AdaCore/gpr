@@ -327,26 +327,6 @@ begin
                "Process error expected due to a fake gnatbind being used",
                Ada.Exceptions.Exception_Message (E));
       end;
-
-      Test_Helper.New_Test_Case ("Named binder switches");
-      --  package Binder is
-      -- 	for Switches ("Ada") use ("-general-ada-bind-switch");
-      --	for Switches ("main.adb") use ("-custom-main-switch");
-      --  end Binder;
-      Tree := Test_Helper.Load_Project ("tree/gnatbind_named_switches.gpr");
-      Action := Test_Helper.Create_Binder_Action (Tree);
-      declare
-         Args : Argument_List;
-      begin
-         Action.Update_Command_Line (1);
-         Args := Action.Command_Line.Argument_List;
-         Test_Helper.Assert
-           (not Args.Contains ("-general-ada-bind-switch"),
-            "Global Ada binding switch should not be used");
-         Test_Helper.Assert
-           (Args.Contains ("-custom-main-switch"),
-            "Main specific binding switch should be used");
-      end;
    end Test_Cases_Parse_Binder_Tool;
 
    return Test_Helper.Result;

@@ -1,11 +1,9 @@
-================
-with ALI files:
 main.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
     unit name    = MAIN
-    kind         = S_BODY
+    kind         = S_BODY_ONLY
     withed units = { ada pkg u }
     object file  = main.o
     deps file    = main.ali
@@ -23,40 +21,34 @@ pkg.ads
   - compilation unit at 0
     unit name    = PKG
     kind         = S_SPEC
-    object file  = pkg.o
-    deps file    = pkg.ali
 sep.adb
   single-unit          = FALSE
   has naming exception = TRUE
   - compilation unit at 1
     unit name    = U.V
-    kind         = S_BODY
+    kind         = S_SEPARATE
   - compilation unit at 2
     unit name    = U.W
-    kind         = S_BODY
+    kind         = S_SEPARATE
 u.adb
   single-unit          = FALSE
   has naming exception = TRUE
   - compilation unit at 1
     unit name    = U
     kind         = S_SPEC
-    object file  = u~2.o
-    deps file    = u~2.ali
   - compilation unit at 2
     unit name    = U
     kind         = S_BODY
     withed units = { ada ada.text_io gnat gnat.os_lib gnat.regexp }
     object file  = u~2.o
     deps file    = u~2.ali
-================
-without ALI files:
-multi.gpr:2:23: warning: object directory "obj" not found
 main.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
     unit name    = MAIN
-    kind         = S_BODY
+    kind         = S_BODY_ONLY
+    withed units = { Ada Pkg U }
     object file  = main.o
     deps file    = main.ali
 pkg.adb
@@ -73,25 +65,25 @@ pkg.ads
   - compilation unit at 0
     unit name    = PKG
     kind         = S_SPEC
-    object file  = pkg.o
-    deps file    = pkg.ali
 sep.adb
   single-unit          = FALSE
   has naming exception = TRUE
   - compilation unit at 1
     unit name    = U.V
-    kind         = S_BODY
+    kind         = S_BODY_ONLY
+    object file  = sep~1.o
+    deps file    = sep~1.ali
   - compilation unit at 2
     unit name    = U.W
-    kind         = S_BODY
+    kind         = S_BODY_ONLY
+    object file  = sep~2.o
+    deps file    = sep~2.ali
 u.adb
   single-unit          = FALSE
   has naming exception = TRUE
   - compilation unit at 1
     unit name    = U
     kind         = S_SPEC
-    object file  = u~2.o
-    deps file    = u~2.ali
   - compilation unit at 2
     unit name    = U
     kind         = S_BODY

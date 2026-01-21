@@ -24,13 +24,6 @@ package GPR2.Project is
 
    type Standalone_Library_Kind is (No, Standard, Encapsulated, Full);
 
-   type Env_Search_Paths is record
-      Current_Directory          : Path_Name.Object;
-      From_Gpr_Project_File_Path : Path_Name.Set.Object;
-      From_Gpr_Project_Path      : Path_Name.Set.Object;
-      From_Ada_Project_Path      : Path_Name.Set.Object;
-   end record;
-
    --
    --  Iterators
    --
@@ -104,21 +97,20 @@ package GPR2.Project is
    --  Config_File is set.
 
    function Default_Search_Paths
-     (Environment : GPR2.Environment.Object :=
-        GPR2.Environment.Process_Environment) return Path_Name.Set.Object;
-   --  Get the search paths common for all targets, in order:
-   --  - The current directory
-   --  - The content of the file specified by the environment variable
-   --      GPR_PROJECT_FILE_PATH.
-   --  - The environment variable GPR_PROJECT_PATH
-   --  - The environment variable ADA_PROJECT_PATH
+     (Current_Directory : Boolean;
+      Environment       : GPR2.Environment.Object :=
+                             GPR2.Environment.Process_Environment)
+      return Path_Name.Set.Object;
+   --  Get the search paths common for all targets.
+   --  If Current_Directory is True then the current directory is included at
+   --  the first place in the result set.
 
-   function Default_Search_Paths
-     (Environment : GPR2.Environment.Object :=
-        GPR2.Environment.Process_Environment) return Env_Search_Paths;
-
-   function To_Path_Name_Set
-     (Search_Paths : Env_Search_Paths) return Path_Name.Set.Object;
+   procedure Append_Default_Search_Paths
+     (Paths       : in out Path_Name.Set.Object;
+      Environment : GPR2.Environment.Object :=
+                       GPR2.Environment.Process_Environment);
+   --  Add Default_Search_Paths without current directory to the Paths
+   --  parameter.
 
 private
 
@@ -144,10 +136,5 @@ private
       then Value.At_Pos
       else Default);
    --  Returns At_Pos if defined or Default if not defined
-
-   function Default_Search_Paths
-     (Environment : GPR2.Environment.Object :=
-        GPR2.Environment.Process_Environment) return Path_Name.Set.Object
-   is (To_Path_Name_Set (Default_Search_Paths (Environment)));
 
 end GPR2.Project;

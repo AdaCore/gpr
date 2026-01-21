@@ -1127,6 +1127,7 @@ package body GPR2.Tree_Internal is
    -------------------
 
    function Ordered_Views (Self : Object) return View.Vector.Object is
+      use GPR2.View_Ids;
       use GPR2.View_Ids.DAGs;
 
       Result : View.Vector.Object;
@@ -1169,15 +1170,8 @@ package body GPR2.Tree_Internal is
       --  Used to check for duplicate project names possibly in
       --  different (inconsistent naming) filenames.
 
-      Final_Search_Paths : Path_Name.Set.Object := Self.Search_Paths.All_Paths;
-      --  Search path to be complemented later with values from the
-      --  Project_Path attribute as well as the root project file directory.
-
-      Project_Path_Attr : Attribute.Object;
-
-      Project_Path_Attr_Search_Paths : Path_Name.Set.Object;
-      --  Use to display the origin of each search path when a project file
-      --  is not found.
+      Search_Path : Path_Name.Set.Object := Self.Search_Paths.All_Paths;
+      PP          : Attribute.Object;
 
       function Load (Filename : Path_Name.Object) return View_Internal.Data;
       --  Returns the Data View_Internal for the given project
@@ -1592,157 +1586,22 @@ package body GPR2.Tree_Internal is
 
       function Load (Filename : Path_Name.Object) return View_Internal.Data is
 
-         Project_Dir : constant GPR2.Path_Name.Object :=
-           Path_Name.Create_Directory (Filename_Type (Filename.Dir_Name));
-         Project     : GPR2.Project_Parser.Object :=
-           GPR2.Project_Parser.Undefined;
-         Data        : View_Internal.Data;
-
-         function Get_Missing_Project_Err_Msg
-           (File : Path_Name.Object; Message_Prefix : String) return String;
-         --  Return the error message to display when dealing with a missing
-         --  project file.
-
-         ---------------------------------
-         -- Get_Missing_Project_Err_Msg --
-         ---------------------------------
-
-         function Get_Missing_Project_Err_Msg
-           (File : Path_Name.Object; Message_Prefix : String) return String
-         is
-            function Search_Paths_Image return String;
-            --  Return the list of search paths categorized by origin,
-            --  displayed as a multi-line string.
-
-            ------------------------
-            -- Search_Paths_Image --
-            ------------------------
-
-            function Search_Paths_Image return String is
-               Result : Unbounded_String := To_Unbounded_String ("");
-            begin
-               if Self.Search_Paths.Default.Current_Directory /= Project_Dir
-               then
-                  Append
-                    (Result,
-                     "* Project file "
-                     & String (Filename.Simple_Name)
-                     & " directory: "
-                     & Project_Dir.String_Value
-                     & ASCII.LF);
-               end if;
-
-               if not Project_Path_Attr_Search_Paths.Is_Empty then
-                  Append (Result, "* Project_Path attribute:" & ASCII.LF);
-                  for P of Project_Path_Attr_Search_Paths loop
-                     Append (Result, "   - " & P.String_Value & ASCII.LF);
-                  end loop;
-               end if;
-
-               if not Self.Search_Paths.Registered.Is_Empty then
-                  Append
-                    (Result,
-                     "* Registered search paths with the -aP switch or "
-                     & "directly with the libgpr2 API:"
-                     & ASCII.LF);
-                  for P of Self.Search_Paths.Registered loop
-                     Append (Result, "   - " & P.String_Value & ASCII.LF);
-                  end loop;
-               end if;
-
-               Append
-                 (Result,
-                  "* Current directory: "
-                  & Self.Search_Paths.Default.Current_Directory.String_Value
-                  & ASCII.LF);
-               if not Self
-                        .Search_Paths
-                        .Default
-                        .From_Gpr_Project_File_Path
-                        .Is_Empty
-               then
-                  Append
-                    (Result,
-                     "* GPR_PROJECT_FILE_PATH environment variable:"
-                     & ASCII.LF);
-                  for P of Self.Search_Paths.Default.From_Gpr_Project_File_Path
-                  loop
-                     Append (Result, "   - " & P.String_Value & ASCII.LF);
-                  end loop;
-               end if;
-
-               if not Self.Search_Paths.Default.From_Gpr_Project_Path.Is_Empty
-               then
-                  Append
-                    (Result,
-                     "* GPR_PROJECT_PATH environment variable:" & ASCII.LF);
-                  for P of Self.Search_Paths.Default.From_Gpr_Project_Path loop
-                     Append (Result, "   - " & P.String_Value & ASCII.LF);
-                  end loop;
-               end if;
-
-               if not Self.Search_Paths.Default.From_Ada_Project_Path.Is_Empty
-               then
-                  Append
-                    (Result,
-                     "* ADA_PROJECT_PATH environment variable:" & ASCII.LF);
-                  for P of Self.Search_Paths.Default.From_Ada_Project_Path loop
-                     Append (Result, "   - " & P.String_Value & ASCII.LF);
-                  end loop;
-               end if;
-
-               if not Self.Search_Paths.Appended.Is_Empty then
-                  Append (Result, "* Configuration file:" & ASCII.LF);
-                  for P of Self.Search_Paths.Appended loop
-                     Append (Result, "   - " & P.String_Value & ASCII.LF);
-                  end loop;
-               end if;
-
-               return To_String (Result);
-            end Search_Paths_Image;
-         begin
-            if GNAT.OS_Lib.Is_Absolute_Path (String (File.Name)) then
-               return
-                 Message_Prefix
-                 & "project file """
-                 & String (Filename.Name)
-                 & """ not found";
-            else
-               return
-                 Message_Prefix
-                 & "project file """
-                 & String (File.Name)
-                 & """ not found"
-                 & ASCII.LF
-                 & "The following directories"
-                 & " have been searched:"
-                 & ASCII.LF
-                 & Search_Paths_Image;
-            end if;
-         end Get_Missing_Project_Err_Msg;
-
+         Paths   : constant Path_Name.Set.Object :=
+                     GPR2.Project.Search_Paths (Filename, Search_Path);
+         Project : constant GPR2.Project_Parser.Object :=
+                     GPR2.Project_Parser.Parse
+                       (Filename,
+                        Self.Implicit_With,
+                        Self.Messages,
+                        GPR2.File_Readers.Convert (Self.File_Reader));
+         Data    : View_Internal.Data;
       begin
-         Final_Search_Paths.Prepend (Project_Dir);
-
-         if not Filename.Exists then
-            Self.Messages.Append
-              (GPR2.Message.Create
-                 (Level   => Message.Error,
-                  Message => Get_Missing_Project_Err_Msg (Filename, "")));
-            return Data;
-         end if;
+         Data.Trees.Project := Project;
 
          --  Record the project tree for this view
+
          Data.Tree := Self.Self;
          Data.Kind := K_Standard;
-         Project :=
-            GPR2.Project_Parser.Parse
-               (Filename,
-               Self.Implicit_With,
-               Self.Messages,
-               GPR2.File_Readers.Convert (Self.File_Reader));
-
-         Data.Trees.Project := Project;
 
          --  Do the following only if there are no error messages
 
@@ -1766,10 +1625,9 @@ package body GPR2.Tree_Internal is
             for Import of Data.Trees.Project.Imports loop
                declare
                   Import_Filename : constant Path_Name.Object :=
-                    Create
-                      (Import.Path_Name.Name,
-                       Self.Resolve_Links,
-                       Final_Search_Paths);
+                                      Create (Import.Path_Name.Name,
+                                              Self.Resolve_Links,
+                                              Paths);
                begin
                   if Import_Filename.Exists then
                      Data.Trees.Imports.Insert
@@ -1786,8 +1644,9 @@ package body GPR2.Tree_Internal is
                           (Level   => (if Self.Pre_Conf_Mode
                                        then Message.Warning
                                        else Message.Error),
-                           Message => Get_Missing_Project_Err_Msg
-                             (Import_Filename, "imported "),
+                           Message => "imported project file """
+                                        & String (Import.Path_Name.Name)
+                                        & """ not found",
                            Sloc    => Import));
                   end if;
                end;
@@ -1796,12 +1655,13 @@ package body GPR2.Tree_Internal is
             if Data.Trees.Project.Has_Extended then
                declare
                   Extended          : constant GPR2.Project.Import.Object :=
-                    Data.Trees.Project.Extended;
+                                        Data.Trees.Project.Extended;
                   Extended_Name     : constant Filename_Type :=
-                    Extended.Path_Name.Name;
+                                        Extended.Path_Name.Name;
                   Extended_Filename : constant Path_Name.Object :=
-                    Create
-                      (Extended_Name, Self.Resolve_Links, Final_Search_Paths);
+                                        Create (Extended_Name,
+                                                Self.Resolve_Links,
+                                                Paths);
                begin
                   if Extended_Filename.Exists then
                      Data.Trees.Extended := GPR2.Project_Parser.Parse
@@ -1815,8 +1675,9 @@ package body GPR2.Tree_Internal is
                           (Level   => (if Self.Pre_Conf_Mode
                                        then Message.Warning
                                        else Message.Error),
-                           Message => Get_Missing_Project_Err_Msg
-                             (Extended_Filename, "extended "),
+                           Message => "extended project file """
+                                        & String (Extended_Name)
+                                        & """ not found",
                            Sloc    => Data.Trees.Project.Extended));
                   end if;
                end;
@@ -1869,15 +1730,15 @@ package body GPR2.Tree_Internal is
 
    begin
       if Starting_From.Is_Defined then
-         Project_Path_Attr := Starting_From.Attribute (PRA.Project_Path);
+         PP := Starting_From.Attribute (PRA.Project_Path);
       end if;
 
-      if Project_Path_Attr.Is_Defined then
+      if PP.Is_Defined then
          declare
             Prepend : Boolean := False;
             Path    : Path_Name.Object;
          begin
-            for P of Project_Path_Attr.Values loop
+            for P of PP.Values loop
                if P.Text = "-" then
                   Prepend := True;
 
@@ -1887,12 +1748,10 @@ package body GPR2.Tree_Internal is
                      Starting_From.Dir_Name.Value);
 
                   if Prepend then
-                     Final_Search_Paths.Prepend (Path);
+                     Search_Path.Prepend (Path);
                   else
-                     Final_Search_Paths.Append (Path);
+                     Search_Path.Append (Path);
                   end if;
-
-                  Project_Path_Attr_Search_Paths.Append (Path);
                end if;
             end loop;
          end;
@@ -2036,6 +1895,10 @@ package body GPR2.Tree_Internal is
       View : Project.View.Object;
 
    begin
+      --  Is the Id actually needed here?
+
+      Def.Id := Natural (Def.Tree.Views_Set.Length) + 1;
+
       --  Populate the view with its View_Internals
       View_Internal.Set (View, Def);
 
@@ -2057,7 +1920,7 @@ package body GPR2.Tree_Internal is
    --------------
 
    function Reporter
-     (Self : aliased in out Object) return GPR2.Reporter.Holders.Reference_Type
+     (Self : in out Object) return GPR2.Reporter.Holders.Reference_Type
    is
    begin
       return Self.Reporter_Holder.Reference;
@@ -3513,7 +3376,7 @@ package body GPR2.Tree_Internal is
      (Self : in out Object; Environment : GPR2.Environment.Object) is
    begin
       Self.Environment := Environment;
-      Self.Search_Paths.Default := Default_Search_Paths (Environment);
+      Self.Search_Paths.Default := Default_Search_Paths (True, Environment);
       Self.Update_Search_Paths;
    end Set_Environment;
 
@@ -3893,7 +3756,7 @@ package body GPR2.Tree_Internal is
    begin
       Self.Search_Paths.All_Paths := Self.Search_Paths.Registered;
 
-      for P of To_Path_Name_Set (Self.Search_Paths.Default) loop
+      for P of Self.Search_Paths.Default loop
          Self.Search_Paths.All_Paths.Append (P);
       end loop;
 

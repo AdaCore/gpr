@@ -1,0 +1,7 @@
+description:
+    Test for source dependencies and closure
+driver: build_and_run
+project_file: dependencies
+main: main
+control:
+- [XFAIL, "True", "libgpr2-next: missing Source.Dependencies"]

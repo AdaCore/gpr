@@ -33,6 +33,7 @@ with GPRinstall.Uninstall;
 
 function GPRinstall.Main return Ada.Command_Line.Exit_Status is
 
+   use Ada;
    use Ada.Exceptions;
    use Ada.Strings.Unbounded;
 

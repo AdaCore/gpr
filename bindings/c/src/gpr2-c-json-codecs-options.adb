@@ -51,11 +51,6 @@ package body GPR2.C.JSON.Codecs.Options is
                  (GPR2.C.JSON.Values.To_JSON_Value (Value)));
          end if;
 
-      elsif Key = "target" then
-         if not GNATCOLL.JSON.Is_Empty (Value) then
-            Self.Add_Switch (GPR2.Options.Target, GNATCOLL.JSON.Get (Value));
-         end if;
-
       else
          raise Constraint_Error with "unknown option";
       end if;

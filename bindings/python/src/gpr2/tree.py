@@ -4,7 +4,6 @@
 #  SPDX-License-Identifier: Apache-2.0
 #
 
-from __future__ import annotations
 from gpr2.capi import LibGPR2
 from gpr2.view import ProjectView
 from gpr2.message import Message
@@ -18,11 +17,10 @@ if TYPE_CHECKING:
 
 class Options:
 
-    def __init__(self, project_file=None, context=None, target=None):
+    def __init__(self, project_file=None, context=None):
         self._options = {}
         self._options["P"] = project_file
         self._options["context"] = context
-        self._options["target"] = target
 
 
 class ProjectTree:
@@ -35,7 +33,6 @@ class ProjectTree:
     ) -> None:
         """Load a project tree."""
 
-        self._id = ""
         self._project_data = LibGPR2.tree_load(
             request={
                 "options": options._options,
@@ -43,22 +40,10 @@ class ProjectTree:
             }
         )
 
-        self._id = self._project_data["tree_id"]
-        self.is_loaded = self._project_data["is_loaded"]
+        self.id = self._project_data["tree_id"]
 
     def __del__(self):
-        LibGPR2.tree_destructor(request={"tree_id": self._id})
-
-    def __enter__(self) -> ProjectTree:
-        return self
-
-    def __exit__(
-        self,
-        _type: Optional[Type[BaseException]],
-        _val: Optional[BaseException],
-        _tb: Optional[TracebackType],
-    ) -> None:
-        pass
+        LibGPR2.tree_destructor(request={"tree_id": self.id})
 
     @property
     def artifacts_directory(self) -> str | None:
@@ -71,13 +56,13 @@ class ProjectTree:
         object dirs are required to have read/write access. So this function
         needs to be used with care.
         """
-        answer = LibGPR2.tree_artifacts_directory(request={"tree_id": self._id})
+        answer = LibGPR2.tree_artifacts_directory(request={"tree_id": self.id})
         return answer["artifacts_directory"]
 
     @property
     def context(self):
         """Returns the Context for the given project tree"""
-        answer = LibGPR2.tree_context(request={"tree_id": self._id})
+        answer = LibGPR2.tree_context(request={"tree_id": self.id})
         return answer["context"]
 
     @property
@@ -85,7 +70,7 @@ class ProjectTree:
         """Returns the Logs, this contains information, warning and error
         messages found while handling the project.
         """
-        answer = LibGPR2.tree_log_messages(request={"tree_id": self._id})
+        answer = LibGPR2.tree_log_messages(request={"tree_id": self.id})
         return [Message.from_dict(msg) for msg in answer["messages"]]
 
     def set_context(self, context):
@@ -99,14 +84,14 @@ class ProjectTree:
         project tree.
         """
         answer = LibGPR2.tree_set_context(
-            request={"tree_id": self._id, "context": context}
+            request={"tree_id": self.id, "context": context}
         )
         return answer["success"]
 
     @property
     def target(self):
         """Returns the target for the project tree"""
-        answer = LibGPR2.tree_target(request={"tree_id": self._id})
+        answer = LibGPR2.tree_target(request={"tree_id": self.id})
         return answer["target"]
 
     def update_sources(self) -> None:
@@ -121,7 +106,7 @@ class ProjectTree:
         to fetch sources.
         """
         # Invalidate all sources before recomputing (GPR2 bug?)
-        answer = LibGPR2.tree_update_sources(request={"tree_id": self._id})
+        answer = LibGPR2.tree_update_sources(request={"tree_id": self.id})
 
     @property
     def root_project(self) -> ProjectView:
@@ -129,12 +114,12 @@ class ProjectTree:
 
         :return: the root project view
         """
-        answer = LibGPR2.tree_root_project(request={"tree_id": self._id})
+        answer = LibGPR2.tree_root_project(request={"tree_id": self.id})
         return ProjectView(tree=self, id=answer["view_id"])
 
     @property
     def runtime_project(self) -> ProjectView | None:
         """Returns the runtime project for the given tree"""
-        answer = LibGPR2.tree_runtime_project(request={"tree_id": self._id})
+        answer = LibGPR2.tree_runtime_project(request={"tree_id": self.id})
         view_id = answer["view_id"]
         return None if view_id is None else ProjectView(tree=self, id=view_id)

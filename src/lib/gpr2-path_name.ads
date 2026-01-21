@@ -59,9 +59,8 @@ package GPR2.Path_Name is
    --  Returns True if Self is a virtual file
 
    function Create_File
-     (Name          : Filename_Type;
-      Directory     : Filename_Optional := Resolve_On_Current;
-      Resolve_Links : Boolean := False) return Object
+     (Name      : Filename_Type;
+      Directory : Filename_Optional := Resolve_On_Current) return Object
      with Post => Create_File'Result.Is_Defined
                   and then not Create_File'Result.Is_Directory;
    --  Creates a Path_Name.Object for a file.
@@ -73,13 +72,12 @@ package GPR2.Path_Name is
    --  parameter the Directory parameter has no meaning.
 
    function Create_Directory
-     (Name             : Filename_Type;
-      Parent_Directory : Filename_Optional := "";
-      Resolve_Links    : Boolean := False) return Object
+     (Name          : Filename_Type;
+      Directory     : Filename_Optional := "";
+      Resolve_Links : Boolean := False) return Object
      with Post => Create_Directory'Result.Is_Defined
                   and then Create_Directory'Result.Is_Directory;
-   --  Creates a Path_Name_Type for a directory. If Parent_Directory is empty
-   --  the current working directory is used if Name is not an absolute path.
+   --  Creates a Path_Name_Type for a directory
 
    function Create_Pseudo_File (Name : Filename_Type) return Object
      with Post => Create_Pseudo_File'Result.Is_Defined
@@ -90,6 +88,14 @@ package GPR2.Path_Name is
    --  memory during autoconfiguration step.
    --  All possible path information is ignored, and resulting object gets
    --  a pseudo-path /<ram>/Base_Name (Name).
+
+   function Create
+     (Name          : Filename_Type;
+      Path_Name     : Filename_Type;
+      Resolve_Links : Boolean := False) return Object
+     with Post => Create'Result.Is_Defined;
+   --  Creates a path-name object. If Resolve_Links is set the returned
+   --  path-name object will be fully resolved to point to the actual file.
 
    subtype Full_Name is Filename_Type
      with Dynamic_Predicate => (for some C of Full_Name => C in '/' | '\');
@@ -103,7 +109,7 @@ package GPR2.Path_Name is
    --  removed.
 
    function Has_Value (Self : Object) return Boolean;
-   --  Whether Self is defined and has a full pathname
+   --  Whether Self is defined and has a full pathname.
 
    function Value (Self : Object) return Full_Name
      with Pre => Self.Is_Defined and then Self.Has_Value,
@@ -223,11 +229,6 @@ package GPR2.Path_Name is
    --  If filenames is case insensitive converts path name to lowercase,
    --  returns the same value otherwise.
 
-   function Ends_With
-     (Filename : Filename_Optional; Suffix : String) return Boolean;
-   --  Returns True if Filename ends with Suffix. Takes into account the
-   --  OS case.
-
    function Change_Extension
      (Self : Object; Extension : Filename_Optional) return Object
      with Pre => Self.Is_Defined and then not Self.Is_Directory;
@@ -254,22 +255,21 @@ package GPR2.Path_Name is
 private
 
    type Object_Internal
-     (Simple_Name_Len : Natural;
-      Value_Len       : Natural;
-      Comparing_Len   : Natural;
-      Base_Name_Len   : Natural;
-      Dir_Name_Len    : Natural)
+     (As_Is_Len     : Natural;
+      Value_Len     : Natural;
+      Comparing_Len : Natural;
+      Base_Name_Len : Natural;
+      Dir_Name_Len  : Natural)
    is record
-      Is_Dir      : Boolean := False;
-      In_Memory   : Boolean := False;
-      Simple_Name : Filename_Optional (1 .. Simple_Name_Len);
-      --  the non normalized simple-name for a file or name for a directory
-      Value       : Filename_Optional (1 .. Value_Len);
+      Is_Dir    : Boolean := False;
+      In_Memory : Boolean := False;
+      As_Is     : Filename_Optional (1 .. As_Is_Len);
+      Value     : Filename_Optional (1 .. Value_Len);
       --  the normalized path-name
-      Comparing   : String (1 .. Comparing_Len);
+      Comparing : String (1 .. Comparing_Len);
       --  normalized path-name for comparison
-      Base_Name   : Filename_Optional (1 .. Base_Name_Len);
-      Dir_Name    : Filename_Optional (1 .. Dir_Name_Len);
+      Base_Name : Filename_Optional (1 .. Base_Name_Len);
+      Dir_Name  : Filename_Optional (1 .. Dir_Name_Len);
    end record;
    --  Comparing is equal to Value for case sensitive OS and lowercased Value
    --  for case insensitive OS.
@@ -337,7 +337,7 @@ private
       then
         (if GNATCOLL.Utils.Is_Directory_Separator (Filename (Filename'Last))
          then Create_Directory (Filename_Type (Filename))
-         else Create_File (Filename_Type (Filename)))
+         else Create (Filename_Type (Filename), Filename_Type (Filename)))
       else Undefined);
 
    function Create (File : VFS.Virtual_File) return Object
@@ -349,8 +349,9 @@ private
                    (File.Full_Name (File.Full_Name.all'Last))
          then Create_Directory
                 (Filename_Type (File.Display_Full_Name))
-         else Create_File
-                (Filename_Type (File.Display_Full_Name)))
+         else Create
+                (Filename_Type (File.Display_Full_Name),
+                 Filename_Type (File.Display_Full_Name)))
       else Undefined);
 
    function Virtual_File (Self : Object) return VFS.Virtual_File is
@@ -360,11 +361,5 @@ private
 
    function Hash (Self : Object) return Ada.Containers.Hash_Type is
      (Ada.Strings.Hash (Get (Self).Comparing));
-
-   function Ends_With
-     (Filename : Filename_Optional; Suffix : String) return Boolean
-   is (GNATCOLL.Utils.Ends_With
-         (GPR2.Path_Name.To_OS_Case (Filename),
-          GPR2.Path_Name.To_OS_Case (Filename_Optional (Suffix))));
 
 end GPR2.Path_Name;

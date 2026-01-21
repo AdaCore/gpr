@@ -108,7 +108,7 @@ begin
          ----
          --  Scenario 3
          --
-         --  Action n. 6 does not depend on action n. 5
+         --  Action n. 5 does not depend on action n. 4
          ----
 
          --  To have repeatable output, we ensure that Write_File wait

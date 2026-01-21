@@ -38,13 +38,15 @@ package GPR2.Build.Actions.Write_File is
    --  the executable. The executable used by test.py is mostly the one
    --  coming from the "directory" write_file.
 
+   overriding function View (Self : Object) return GPR2.Project.View.Object;
+
    overriding function On_Tree_Insertion
      (Self     : Object;
       Db       : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
    overriding procedure Compute_Signature
      (Self      : in out Object;
-      Check_Checksums : Boolean);
+      Load_Mode : Boolean);
 
    overriding procedure Compute_Command
      (Self           : in out Object;
@@ -82,12 +84,16 @@ private
      (Self.Index'Image (2 .. Self.Index'Image'Last));
 
    type Object is new Actions.Object with record
+      Ctxt       : GPR2.Project.View.Object;
       Index      : Integer;
       Ret_Code   : Integer;
       With_Deps  : Boolean;
       With_Wait  : Natural;
       Executable : GPR2.Path_Name.Object;
    end record;
+
+   overriding function View (Self : Object) return GPR2.Project.View.Object is
+     (Self.Ctxt);
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object

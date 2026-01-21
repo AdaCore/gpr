@@ -122,9 +122,7 @@ package GPR2.Build.View_Db is
       Name : Name_Type) return Build.Compilation_Unit.Object
      with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Units;
 
-   function Own_Units
-     (Self : Object; Overridden_From_Runtime : Boolean := False)
-      return Build.Compilation_Unit.Maps.Map
+   function Own_Units (Self : Object) return Build.Compilation_Unit.Maps.Map
      with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Units;
 
    function View (Self : Object) return GPR2.Project.View.Object
@@ -140,16 +138,7 @@ package GPR2.Build.View_Db is
      with Pre => Self.Is_Defined;
 
    function Source_Option (Self : Object) return Optional_Source_Info_Option
-   with Pre => Self.Is_Defined;
-
-   function Is_Ada_Runtime (Self : Object) return Boolean
-   with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Only;
-   --  Checks the sources of the project and returns true if it has system.ads
-   --  or s-osinte.ads listed as source.
-   --  The result may differ from GPR2.Project.View.Is_Runtime that will always
-   --  match the virtual representation of the runtime generated when loading
-   --  the tree (so before the sources are looked up), in case an actual
-   --  project is describing a runtime.
+     with Pre => Self.Is_Defined;
 
    function "<" (L, R : Object) return Boolean;
 
@@ -181,11 +170,6 @@ private
      (Self     : Object;
       Basename : Simple_Name) return Boolean
    is (Self.Get.Basenames.Contains (Basename));
-
-   function Is_Ada_Runtime (Self : Object) return Boolean
-   is (Self.View.Is_Library
-       and then (Self.Has_Source ("system.ads")
-                 or else Self.Has_Source ("s-osinte.ads")));
 
    function Source
      (Self     : Object;

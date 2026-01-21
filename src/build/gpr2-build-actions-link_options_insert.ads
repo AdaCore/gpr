@@ -39,6 +39,9 @@ package GPR2.Build.Actions.Link_Options_Insert is
    --  @param Options The options to add to the object file
    --  @param View The view that contains the action
 
+   overriding
+   function View (Self : Object) return GPR2.Project.View.Object;
+
    procedure Add_Option (Self : in out Object; Option : String);
    --  Add an option to add to the object file section
    --  @param Self The action to modify
@@ -82,7 +85,7 @@ private
 
    overriding
    function Action_Class (Self : Link_Options_Insert_Id) return Value_Type
-   is ("Link-Options-Insert");
+   is ("Add-Link-Options");
 
    overriding
    function Language (Self : Link_Options_Insert_Id) return Language_Id
@@ -108,14 +111,16 @@ private
         Artifacts.Object_File.Undefined;
       --  Contains the linker section.
 
+      Ctxt : GPR2.Project.View.Object;
+      --  The view defining the Main, or the library
+
       Options : Containers.Value_List := Containers.Empty_Value_List;
       --  Command line options added manually with the Add_Option procedure
       --  and provided during the initialization of the action.
    end record;
 
    overriding
-   procedure Compute_Signature
-     (Self : in out Object; Check_Checksums : Boolean);
+   procedure Compute_Signature (Self : in out Object; Load_Mode : Boolean);
 
    overriding
    function Working_Directory (Self : Object) return Path_Name.Object
@@ -124,6 +129,10 @@ private
    overriding
    function Extended (Self : Object) return Object
    is (raise Internal_Error with "This action is not extending");
+
+   overriding
+   function View (Self : Object) return GPR2.Project.View.Object
+   is (Self.Ctxt);
 
    function Output_Object_File
      (Self : Object) return Artifacts.Object_File.Object

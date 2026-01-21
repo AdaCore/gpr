@@ -1,8 +1,0 @@
-project derived extends all "../original/os.gpr" is 
-   for Source_Dirs use ( "." );
-   for Main use ("test_driver.adb");
-   package NAMING is
-      for SPECIFICATION_SUFFIX ("ada") use ".ads";
-      for IMPLEMENTATION_SUFFIX ("ada") use ".adb";
-   end NAMING;
-end derived;

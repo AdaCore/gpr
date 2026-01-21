@@ -20,6 +20,12 @@ procedure Main is
          else
             Ada.Text_IO.Put_Line (String (Name) & " in externals");
          end if;
+--         if not Context.Contains (Name) then
+--            Ada.Text_IO.Put_Line (String (Name) & " not found in context");
+--         else
+--            Ada.Text_IO.Put_Line
+--              (String (Name) & "=" & String (Context.Element (Name)));
+--         end if;
       end;
       procedure Print_Variable (Name : Name_Type) is
       begin

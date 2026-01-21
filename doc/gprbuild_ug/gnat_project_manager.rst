@@ -2185,8 +2185,8 @@ files. The recommended extension is still :file:`.gpr`. However, a special
 The :samp:`Project_Files` attribute is used to
 describe the aggregated projects whose object files have to be
 included into the aggregate library. The environment variables
-:envvar:`ADA_PROJECT_PATH`, :envvar:`GPR_PROJECT_PATH` and
-:envvar:`GPR_PROJECT_PATH_FILE` are not used to find the project files.
+:samp:`ADA_PROJECT_PATH`, :samp:`GPR_PROJECT_PATH` and
+:samp:`GPR_PROJECT_PATH_FILE` are not used to find the project files.
 
 An aggregate library project can only |with| abstract projects that can be used
 to share attribute values.

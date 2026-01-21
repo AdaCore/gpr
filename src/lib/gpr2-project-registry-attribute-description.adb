@@ -974,15 +974,6 @@ begin
       & "authorized case-insensitive values are 'true' and 'false' (the "
       & "default).");
 
-   --  Compiler.Config_File_Dependency_Support
-   Set_Attribute_Description
-     (Key          => PRA.Compiler.Config_File_Dependency_Support,
-      Description  =>
-        "Index is a language name. Indicates if the dependence on "
-      & "configuration pragma files is supported (GNAT more recent than 7.2.2)"
-      & ". Only authorized case-insensitive values are 'true' (the default) "
-      & "and 'false'");
-
    --  Compiler.Dependency_Switches
    Set_Attribute_Description
      (Key          => PRA.Compiler.Dependency_Switches,

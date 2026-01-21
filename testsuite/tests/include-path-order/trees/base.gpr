@@ -1,9 +1,0 @@
-with "a";
-with "b";
-with "c";
-
-project Base is
-
-   for Source_Dirs use ("srcbase");
-
-end Base;

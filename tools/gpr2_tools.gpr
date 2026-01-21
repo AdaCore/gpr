@@ -26,7 +26,6 @@ aggregate project GPR2_Tools is
       "projects/gpr2tools-gprinspect.gpr",
       "projects/gpr2tools-gprinstall.gpr",
       "projects/gpr2tools-gprdriver.gpr",
-      "projects/gpr2tools-gprls.gpr",
       "projects/gpr2tools-processes_wrapper.gpr");
 
 end GPR2_Tools;

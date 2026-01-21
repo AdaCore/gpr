@@ -1,11 +1,11 @@
 Project: Prj_C
-prj_c.gpr:3:13: error: The source with basename "a.h" appears multiple times
+prj_c.gpr:3:13: error: "a.h" is found multiple times for the same source directory
 Project: Prj_C_2
  > src/b/a.h          language: C      Kind: S_SPEC
 Project: Prj_C_3
  > src/a/a.h          language: C      Kind: S_SPEC
 Project: Prj_Ada
-prj_ada.gpr:3:13: error: The source with basename "a.ads" appears multiple times
+prj_ada.gpr:3:13: error: "a.ads" is found multiple times for the same source directory
 Project: Prj_Ada_2
  > src/b/a.ads        language: Ada    Kind: S_SPEC   unit: A
 Project: Prj_Ada_3

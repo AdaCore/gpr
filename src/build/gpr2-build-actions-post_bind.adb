@@ -123,20 +123,20 @@ package body GPR2.Build.Actions.Post_Bind is
    -- Compute_Signature --
    -----------------------
 
-   overriding
-   procedure Compute_Signature
-     (Self : in out Object; Check_Checksums : Boolean) is
+   overriding procedure Compute_Signature
+     (Self      : in out Object;
+      Load_Mode : Boolean)
+   is
    begin
-      if not Self.Signature.Add_Input (Self.Input, Check_Checksums)
-      then
+      if not Self.Signature.Add_Input (Self.Input) and then Load_Mode then
          return;
       end if;
 
-      if not Self.Signature.Add_Input (Self.Ali, Check_Checksums) then
+      if not Self.Signature.Add_Input (Self.Ali) and then Load_Mode then
          return;
       end if;
 
-      if not Self.Signature.Add_Output (Self.Output, Check_Checksums) then
+      if not Self.Signature.Add_Output (Self.Output) and then Load_Mode then
          return;
       end if;
    end Compute_Signature;
@@ -160,7 +160,7 @@ package body GPR2.Build.Actions.Post_Bind is
       Self   : Object;
 
    begin
-      Self.Ctxt   := View;
+      Self.View   := View;
       Self.Binder := Binder;
       Self.Input  := Impl;
       Self.Output :=

@@ -1,5 +1,0 @@
-with "lib_with_library_options";
-project Prj is
-   for Main use ("main");
-end Prj;
-

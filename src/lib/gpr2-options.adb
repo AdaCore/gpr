@@ -95,19 +95,16 @@ package body GPR2.Options is
 
          when P =>
             if not Self.Project_File.Is_Defined or else Override then
-               if GNATCOLL.Utils.Starts_With (Param, "-") then
-                  raise GPR2.Options.Usage_Error with
-                    "project file name missing after -P";
-               else
-                  declare
-                     Path : constant Filename_Type :=
-                       GPR2.Project.Ensure_Extension (Filename_Type (Param));
-                  begin
-                     Self.Project_File :=
-                       GPR2.Path_Name.Create_File
-                         (Path, GPR2.Path_Name.No_Resolution);
-                  end;
-               end if;
+               declare
+                  Path : constant Filename_Type :=
+                           GPR2.Project.Ensure_Extension
+                             (Filename_Type (Param));
+               begin
+                  Self.Project_File :=
+                    GPR2.Path_Name.Create_File
+                      (Path,
+                       GPR2.Path_Name.No_Resolution);
+               end;
             else
                if Self.Prj_Got_On_Extra_Arg then
                   raise GPR2.Options.Usage_Error with

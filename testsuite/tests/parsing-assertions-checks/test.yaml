@@ -1,3 +1,6 @@
-description: parser assertion regression test
-driver: python_script
+description:
+    parser assertion regression test
+driver: build_and_run
+project_file: test
+main: main
 timeout: 600

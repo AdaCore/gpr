@@ -1,2 +1,0 @@
-description: Test to check if we correctly pass the environment when spawning processes
-driver: python_script

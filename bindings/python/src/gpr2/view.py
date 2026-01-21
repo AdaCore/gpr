@@ -25,11 +25,6 @@ class ProjectView:
         self.id = id
         self.tree = tree
 
-        answer = LibGPR2.view_constructor(request={"view_id": self.id})
-
-        self.name = answer["name"]
-        self.path_name = answer["path_name"]
-
     def __del__(self):
         LibGPR2.view_destructor(request={"view_id": self.id})
 

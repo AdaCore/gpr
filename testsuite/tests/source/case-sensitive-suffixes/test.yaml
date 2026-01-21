@@ -1,6 +1,0 @@
-description: Test the impact of OS case sensitivity on source detection
-driver: build_and_run
-project_file: test
-main: main
-output:
-  - [ "test.out.win", "'windows' in env.host.platform" ]

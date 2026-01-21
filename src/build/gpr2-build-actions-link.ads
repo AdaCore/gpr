@@ -37,25 +37,28 @@ package GPR2.Build.Actions.Link is
       No_Rpath : Boolean                        := True;
       Output   : Filename_Optional              := "");
 
-   procedure Add_Option_From_Binder (Self : in out Object; Option : String)
+   procedure Add_Objects_From_Attribute
+     (Self : Object'Class;
+      Id   : Q_Attribute_Id);
+
+   overriding function View (Self : Object) return GPR2.Project.View.Object;
+
+   procedure Add_Option (Self : in out Object; Option : String)
      with Pre => Self.Is_Defined;
    --  Add an option to the linking command line
-
-   function Options_From_Binder (Self : Object) return Containers.Value_List;
 
    procedure Set_Bind_Action
      (Self : in out Object;
       Bind : Actions.Ada_Bind.Object);
-
-   procedure Set_Mapping_File
-     (Self : in out Object; Mapping_File : Filename_Type);
-   --  Set the name of the map file to generate
 
    procedure Set_Has_Library_Dependency_Circle
      (Self  : in out Object;
       State : Boolean);
    --  Mark the action as having a library dependency circle requiring the use
    --  of --start-group --end-group as linker option
+
+   function Options (Self : Object'Class) return Containers.Value_List;
+   --  Return the options added with the Add_Option procedure
 
    function Is_Library (Self : Object'Class) return Boolean;
 
@@ -160,15 +163,14 @@ private
       Library        : Artifacts.Library.Object;
       --  Library produced by the linker
 
-      Mapping_File : Ada.Strings.Unbounded.Unbounded_String :=
-        Null_Unbounded_String;
-      --  Name of the map file to be generated
+      Ctxt           : GPR2.Project.View.Object;
+      --  The view defining the Main, or the library
 
-      Options_From_Binder : Containers.Value_List :=
-                              Containers.Empty_Value_List;
-      --  Command line options coming from the binder
+      Static_Options : Containers.Value_List :=
+                         Containers.Empty_Value_List;
+      --  Command line options added manually with the Add_Option procedure
 
-      Bind : Actions.Ada_Bind.Object;
+      Bind            : Actions.Ada_Bind.Object;
       --  The bind action generating the initialisation of the linked library
 
       No_Rpath        : Boolean := False;
@@ -191,9 +193,9 @@ private
    --  This can have no effects if symbols cannot be filtered or if the
    --  library symbol policy is unrestricted.
 
-   overriding
-   procedure Compute_Signature
-     (Self : in out Object; Check_Checksums : Boolean);
+   overriding procedure Compute_Signature
+     (Self      : in out Object;
+      Load_Mode : Boolean);
 
    overriding function Extended (Self : Object) return Object is
      (raise Internal_Error with "This action is not extending");
@@ -204,19 +206,8 @@ private
    function Check_Linker_Driver (Self : Object) return Boolean;
    --  True if the linker driver is found
 
-   procedure Add_Mapping_File_To_Cmd_Line
-     (Self : Object; Cmd_Line : in out GPR2.Build.Command_Line.Object);
-   --  Add the mapping file to generate to the command line
-
-   procedure Process_Library_Options
-     (Self           : Object;
-      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
-      Signature_Only : Boolean := False);
-   --  Add the library options to the command line. If Signature_Only, no
-   --  warning or error messages should be displayed.
-
-   function Is_Library (Self : Object'Class) return Boolean
-   is (Self.Is_Library);
+   function Is_Library (Self : Object'Class) return Boolean is
+     (Self.Is_Library);
 
    function Is_Static_Library (Self : Object) return Boolean is
      (Self.Is_Library and then Self.Is_Static);
@@ -224,8 +215,11 @@ private
    function Output (Self : Object) return Artifacts.Files.Object'Class is
      (if Self.Is_Library then Self.Library else Self.Executable);
 
-   function Options_From_Binder (Self : Object) return Containers.Value_List
-   is (Self.Options_From_Binder);
+   function Options (Self : Object'Class) return Containers.Value_List is
+     (Self.Static_Options);
+
+   overriding function View (Self : Object) return GPR2.Project.View.Object is
+     (Self.Ctxt);
 
    Undefined : constant Object := (others => <>);
 
@@ -247,6 +241,10 @@ private
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object is
-     (Self.Ctxt.Object_Directory);
+     (if Self.In_Obj
+      then Self.Ctxt.Object_Directory
+      elsif Self.Ctxt.Is_Library
+      then Self.Ctxt.Library_Directory
+      else Self.Ctxt.Executable_Directory);
 
 end GPR2.Build.Actions.Link;

@@ -1,5 +1,0 @@
-description: Compile the native runtime and check the result
-driver: python_script
-timeout: 800
-output:
-- ["test.out.win", "env.host.os.name == 'windows'"]

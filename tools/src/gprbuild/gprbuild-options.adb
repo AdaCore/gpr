@@ -80,9 +80,8 @@ package body GPRbuild.Options is
       --  BUILD
       Parser.Add_Argument
         (Build_Group,
-         Create (Name   => "--single-compiler-per-obj-dir",
-                 Help   => "For compatibility reason only",
-                 Hidden => True));
+         Create (Name => "--single-compiler-per-obj-dir",
+                 Help => "No simultaneous compilations for the same obj dir"));
       Parser.Add_Argument
         (Build_Group,
          Create (Name           => "--build-script",
@@ -181,9 +180,8 @@ package body GPRbuild.Options is
                  Parameter      => "name"));
       Parser.Add_Argument
         (Build_Group,
-         Create (Name     => "-p",
-                 Alt_Name => "--create-missing-dirs",
-                 Help     => "Create missing obj/lib/exec directories"));
+         Create (Name => "-p",
+                 Help => "Create missing obj/lib/exec directories"));
       Parser.Add_Argument
         (Build_Group,
          Create (Name           => "-r",
@@ -229,14 +227,14 @@ package body GPRbuild.Options is
                  Help => "Do not delete temporary files"));
       Parser.Add_Argument
         (Build_Group,
-         Create (Name   => "--autodetect-jobserver",
-                 Help   => "now the default, so no effect",
-                 Hidden => True));
+         Create (Name => "--autodetect-jobserver",
+                 Help => "Autodetect GNU make jobserver and attempt to share "
+                 & "job slots"));
       Parser.Add_Argument
         (Build_Group,
          Create (Name           => "--temp-dir",
-                 Help           => "Determinte where temporary files should "
-                 & "be located. Either in the object directory of the owning "
+                 Help           => "Determinte where temporary files should be"
+                 & "located. Either in the object directory of the owning "
                  & "project or the default system temporary directory",
                  In_Switch_Attr => False,
                  Delimiter      => Equal,
@@ -300,11 +298,9 @@ package body GPRbuild.Options is
         (Compiler_Group,
          Create
            ("-O",
-            Help      => "",
+            Help   => "",
             Delimiter => None,
-            Parameter => "<level>",
-            Default   => "1"));
-      --  if -O is passed, it will default correctly to -O1
+            Parameter => "<level>"));
 
       --  Switches there only for compatibility reason but without any
       --  effect
@@ -324,23 +320,6 @@ package body GPRbuild.Options is
       --  complete-output (e.g. replaying warnings upon successive compilations
       --  even when no action is performed) is now the default, so this
       --  switch is ignored
-
-      Parser.Add_Argument
-        (Build_Group,
-         Create
-           (Name     => "--no-warnings-replay",
-            Alt_Name => "-n",
-            Help     => "Do not replay the warnings of skipped actions"));
-      --  Do not replay warnings if there are nothing to do for an action
-      Parser.Add_Argument
-        (Build_Group,
-         Create (Name   => "--no-complete-output",
-                 Help   => "for compatibility with older gprbuild",
-                 Hidden => True));
-      --  no-complete-output repurposed as --no-warnings-replay but we keep it
-      --  as hidden and treat it as no-warnings-replay for backward
-      --  compatibility.
-
       Parser.Add_Argument
         (Build_Group,
          Create (Name   => "-eS",
@@ -480,7 +459,10 @@ package body GPRbuild.Options is
       end Add_Ada_Compiler_Option;
 
    begin
-      if Arg = "--build-script" then
+      if Arg = "--single-compiler-per-obj-dir" then
+         Result.Single_Build_Per_Obj_Dir := True;
+
+      elsif Arg = "--build-script" then
          Result.PM_Options.Script_File :=
            GPR2.Path_Name.Create_File (Filename_Type (Param));
          Result.PM_Options.Keep_Temp_Files := True;
@@ -509,7 +491,8 @@ package body GPRbuild.Options is
             for Idx in Param'Range loop
                if Param (Idx) = ',' then
                   declare
-                     Lang : constant String := Param (Last .. Idx - 1);
+                     Lang : constant String :=
+                              Param (Last .. Idx - 1);
                   begin
                      if Lang'Length > 0 then
                         Result.Build_Options.Restricted_To_Languages.Include
@@ -518,7 +501,9 @@ package body GPRbuild.Options is
 
                      Last := Idx + 1;
                   end;
-               elsif Idx = Param'Last and then Last <= Idx then
+               elsif Idx = Param'Last
+                 and then Last <= Idx
+               then
                   Result.Build_Options.Restricted_To_Languages.Include
                     (+Optional_Name_Type (Param (Last .. Param'Last)));
                end if;
@@ -528,12 +513,15 @@ package body GPRbuild.Options is
          for Idx in Param'Range loop
             if Param (Idx) = ',' then
                declare
-                  Lang     : constant String := Param (Param'First .. Idx - 1);
-                  Compiler : constant String := Param (Idx + 1 .. Param'Last);
+                  Lang : constant String :=
+                           Param (Param'First .. Idx - 1);
+                  Compiler : constant String :=
+                     Param (Idx + 1 .. Param'Last);
                begin
                   if Lang'Length > 0 and then Compiler'Length > 0 then
                      Result.Build_Options.Comp_Substr.Include
-                       (+Optional_Name_Type (Lang), Value_Type (Compiler));
+                        (+Optional_Name_Type (Lang),
+                         Value_Type (Compiler));
                   end if;
                end;
             end if;
@@ -555,8 +543,8 @@ package body GPRbuild.Options is
             Result.Build_Options.Unit_Index := GPR2.Unit_Index'Value (Param);
          exception
             when Constraint_Error =>
-               raise GPR2.Options.Usage_Error
-                 with "'" & Param & "' is not a valid unit index";
+               raise GPR2.Options.Usage_Error with
+                 "'" & Param & "' is not a valid unit index";
          end;
 
       elsif Arg = "-f" then
@@ -570,8 +558,8 @@ package body GPRbuild.Options is
             Result.PM_Options.Jobs := Val;
          exception
             when Constraint_Error =>
-               raise GPR2.Options.Usage_Error
-                 with "'" & Param & "' is not a valid parameter for -j";
+               raise GPR2.Options.Usage_Error with
+                 "'" & Param & "' is not a valid parameter for -j";
          end;
 
       elsif Arg = "-k" then
@@ -584,7 +572,7 @@ package body GPRbuild.Options is
       elsif Arg = "-o" then
          Result.Build_Options.Output_File := To_Unbounded_String (Param);
 
-      elsif Arg = "-p" or else Arg = "--create-missing-dirs" then
+      elsif Arg = "-p" then
          Result.Create_Missing_Dirs := True;
 
       elsif Arg = "-r" then
@@ -635,19 +623,14 @@ package body GPRbuild.Options is
          --  gprbuild mode (spawn as many process as the -jX option allows)
          Result.PM_Options.Force_Jobserver := True;
 
-      elsif Arg = "--no-warnings-replay" or else Arg = "-n"
-        or else Arg = "--no-complete-output"
-      then
-         Result.PM_Options.No_Warnings_Replay := True;
-
       elsif Arg = "--temp-dir" then
          if Param = "obj" then
             Result.Build_Options.Use_Obj_Dir_As_Temp_Dir := True;
          elsif Param = "os" then
             Result.Build_Options.Use_Obj_Dir_As_Temp_Dir := False;
          else
-            raise GPR2.Options.Usage_Error
-              with "'" & Param & "' is not a valid parameter for --temp-dir=";
+            raise GPR2.Options.Usage_Error with
+              "'" & Param & "' is not a valid parameter for --temp-dir=";
          end if;
 
       elsif Arg = "-nostdinc" then
@@ -679,10 +662,9 @@ package body GPRbuild.Options is
             end;
 
             if Failed then
-               raise GPR2.Options.Usage_Error
-                 with
-                   "argument to '-O' should be a non-negative integer, "
-                   & "'g', 's' or 'fast'";
+               raise GPR2.Options.Usage_Error with
+                 "argument to '-O' should be a non-negative integer, " &
+                 "'g', 's' or 'fast'";
             end if;
          end if;
 
@@ -705,7 +687,6 @@ package body GPRbuild.Options is
         or else Arg = "-s"
         or else Arg = "-x"
         or else Arg = "--complete-output"
-        or else Arg = "--single-compiler-per-obj-dir"
       then
          --  Ignore, only there for compatibility reason
          null;

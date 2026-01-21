@@ -168,10 +168,6 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns True if Self is part of an aggregate library project
 
-   function Is_Aggregate_Library (Self : Object) return Boolean
-     with Pre => Self.Is_Defined;
-   --  Returns True if Self is an aggregate library project
-
    function View_For (Self : Object; Name : Name_Type) return Object
      with Pre => Self.Is_Defined;
    --  Returns the view for the given name accessible from Self context. This
@@ -554,14 +550,10 @@ package GPR2.Project.View is
    --  corresponding source file location.
 
    function Own_Units
-     (Self                    : Object;
-      Overridden_From_Runtime : Boolean := False)
-      return GPR2.Build.Compilation_Unit.Maps.Map
+     (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
      with Pre => Self.Is_Defined;
    --  Returns all the units owned by the view. Note that the list of units
    --  is populated only when Update_Sources is called.
-   --  If Overridden_From_Runtime is True, then the result will only contain
-   --  the units that are overriden from the runtime.
 
    function Own_Unit
      (Self : Object; Name : Name_Type) return Build.Compilation_Unit.Object
@@ -885,7 +877,6 @@ package GPR2.Project.View is
 private
 
    use View_Base_Internal;
-   use type GPR2.View_Ids.View_Id;
 
    type Object is new Definition_References.Ref with
      null record;
@@ -902,7 +893,7 @@ private
      (Self /= Undefined);
 
    function "<" (Left, Right : Object) return Boolean is
-     (Left.Id < Right.Id);
+     (Left.Get.Id < Right.Get.Id);
 
    function Is_Library (Self : Object) return Boolean is
      (Self.Kind in GPR2.Library_Kind

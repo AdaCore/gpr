@@ -46,6 +46,9 @@ package GPR2.Build.Actions.Archive_Extract is
    --  @return The extracted object file artifact
 
    overriding
+   function View (Self : Object) return GPR2.Project.View.Object;
+
+   overriding
    function On_Tree_Insertion
      (Self : Object; Db : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
@@ -99,11 +102,12 @@ private
 
       Extracted_Object : GPR2.Build.Artifacts.Object_File.Object;
       --  The extracted object file
+
+      Ctxt : GPR2.Project.View.Object;
    end record;
 
    overriding
-   procedure Compute_Signature
-     (Self : in out Object; Check_Checksums : Boolean);
+   procedure Compute_Signature (Self : in out Object; Load_Mode : Boolean);
 
    overriding
    function Working_Directory (Self : Object) return Path_Name.Object
@@ -112,6 +116,10 @@ private
    overriding
    function Extended (Self : Object) return Object
    is (raise Internal_Error with "This action is not extending");
+
+   overriding
+   function View (Self : Object) return GPR2.Project.View.Object
+   is (Self.Ctxt);
 
    function Extracted_Object
      (Self : Object) return GPR2.Build.Artifacts.Object_File.Object

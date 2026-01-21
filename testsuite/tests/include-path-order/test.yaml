@@ -1,5 +1,0 @@
-description:
-    Test calculation of include path
-driver: build_and_run
-project_file: test
-main: main

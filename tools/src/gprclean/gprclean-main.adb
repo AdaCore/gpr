@@ -56,10 +56,12 @@ with GPRclean.Options;
 
 function GPRclean.Main return Ada.Command_Line.Exit_Status is
 
+   use Ada;
    use Ada.Exceptions;
 
    use GPR2;
    use GPR2.Build;
+   use GPRtools;
    use GPRtools.Program_Termination;
    use GPR2.Path_Name;
 
@@ -382,7 +384,7 @@ begin
                               declare
                                  CU : constant Compilation_Unit.Object :=
                                         Actions.Compile.Ada.Object'Class
-                                          (Action).Unit;
+                                          (Action).Input_Unit;
 
                                  procedure For_Part
                                    (Kind     : Unit_Kind;
@@ -445,16 +447,6 @@ begin
    if Opt.Remove_Config then
       Delete_File (Opt.Config_Project.String_Value, Opt);
    end if;
-
-   --  Cleanup the file index
-   declare
-      File_Index_Save : constant Path_Name.Object :=
-                          Opt.Tree.Artifacts_Database.File_Index_Save_Path;
-   begin
-      if File_Index_Save.Exists then
-         Delete_File (File_Index_Save.String_Value, Opt);
-      end if;
-   end;
 
    declare
       Views       : GPR2.Project.View.Vector.Object;

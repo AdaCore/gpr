@@ -36,7 +36,6 @@ package body GPR2.Build.Actions is
    is
    begin
       Self.Tree := Db.Ref;
-      Self.Signature.Initialize (Db.File_Indexer);
    end Attach;
 
    ------------------------
@@ -200,8 +199,8 @@ package body GPR2.Build.Actions is
    -- Load_Signature --
    --------------------
 
-   procedure Load_Signature
-     (Self : in out Object'Class; Check_Checksums : Boolean := True) is
+   procedure Load_Signature (Self : in out Object'Class)
+   is
       Db_File  : constant GPR2.Path_Name.Object :=
                      Self.Tree.Db_Filename_Path (Self.UID, True);
       Cmd_Line : GPR2.Build.Command_Line.Object;
@@ -216,20 +215,18 @@ package body GPR2.Build.Actions is
 
       Self.Signature := Build.Signature.Load (Db_File, Self.View);
 
-      Self.Compute_Signature (Check_Checksums);
+      Self.Compute_Signature (Load_Mode => True);
 
       if Self.Signature.Was_Saved then
          --  The signature hasn't been invalidated for now, so the last
          --  element to check is its command line
          Cmd_Line :=
-           GPR2.Build.Command_Line.Create
-             (Self.Working_Directory, Self.Ctxt.Context);
+           GPR2.Build.Command_Line.Create (Self.Working_Directory);
          Self.Compute_Command (1, Cmd_Line, Signature_Only => True);
 
-         Ign :=
-           Self.Signature.Add_Input
-             (Artifacts.Key_Value.Create
-                (Command_Line_Key, Cmd_Line.Signature), Check_Checksums);
+         Ign := Self.Signature.Add_Input
+           (Artifacts.Key_Value.Create
+              (Command_Line_Key, Cmd_Line.Signature));
       end if;
 
    exception
@@ -271,8 +268,7 @@ package body GPR2.Build.Actions is
       Ign : Boolean with Unreferenced;
    begin
       Self.Cmd_Line :=
-        GPR2.Build.Command_Line.Create
-          (Self.Working_Directory, Self.Ctxt.Context);
+        GPR2.Build.Command_Line.Create (Self.Working_Directory);
       Self.Compute_Command (Slot, Self.Cmd_Line, False);
       Self.Compute_Response_Files (Self.Cmd_Line);
 
@@ -300,7 +296,7 @@ package body GPR2.Build.Actions is
       --  refined after the fact.
 
       Self.Signature.Clear;
-      Self.Compute_Signature (Check_Checksums => False);
+      Self.Compute_Signature (Load_Mode => False);
 
       if Self.Signature.Is_Empty then
          return False;

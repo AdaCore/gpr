@@ -3,44 +3,64 @@ with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Text_IO;
 
-with GPR2; use GPR2;
-with GPR2.Build; use GPR2.Build;
-with GPR2.Build.Actions.Compile.Ada;
-with GPR2.Build.Actions_Population;
-with GPR2.Build.Compilation_Unit;
-with GPR2.Build.Options;
-with GPR2.Build.Source.Sets;
-with GPR2.Build.Unit_Info;
-with GPR2.Build.View_Db;
-with GPR2.Containers;
+with GPR2;
+with GPR2.Context;
 with GPR2.Path_Name;
-with GPR2.Options;
 with GPR2.Project.Tree;
+with GPR2.Project.Source;
+with GPR2.Project.Source.Artifact;
+with GPR2.Project.Source.Set;
+with GPR2.Unit;
+
+with GPR2.Source_Info.Parser.Ada_Language;
 
 procedure Main is
    use Ada;
 
-   Tree  : Project.Tree.Object;
-   Opt   : GPR2.Options.Object;
-   B_Opt : GPR2.Build.Options.Build_Options;
+   use GPR2;
 
-   procedure Print (S : Build.Source.Object);
+   Tree : Project.Tree.Object;
+   Ctx  : Context.Object;
+
+   procedure Print (S : Project.Source.Object);
    --  Print source information and remove dependency files if exists
 
    -----------
    -- Print --
    -----------
 
-   procedure Print (S : Build.Source.Object) is
-      Dep     : Path_Name.Object;
-      View_Db : constant GPR2.Build.View_Db.Object :=
-        Tree.Artifacts_Database (S.Owning_View);
+   procedure Print (S : Project.Source.Object) is
+      Dep : Path_Name.Object;
+
+      procedure Print_Dependency
+        (Src : Project.Source.Object;
+         Unit : GPR2.Unit.Object;
+         Timestamp : Ada.Calendar.Time);
+
+      ----------------------
+      -- Print_Dependency --
+      ----------------------
+
+      procedure Print_Dependency
+        (Src : Project.Source.Object;
+         Unit : GPR2.Unit.Object;
+         Timestamp : Ada.Calendar.Time)
+      is
+         pragma Unreferenced (Timestamp);
+      begin
+         Text_IO.Put_Line
+           ("    dependency unit " & String (Unit.Name) & ' ' & Unit.Kind'Img
+            & " in " & String (Src.Path_Name.Simple_Name)
+            & (if Src.Has_Single_Unit then ""
+               else " at" & Unit.Index'Img));
+      end Print_Dependency;
 
    begin
       Text_IO.Put_Line (String (S.Path_Name.Simple_Name));
-      Text_IO.Put_Line ("  single-unit          = " & S.Has_Single_Unit'Image);
-      Text_IO.Put_Line
-        ("  has naming exception = " & S.Has_Naming_Exception'Image);
+      Text_IO.Put_Line ("  single-unit          = "
+                        & S.Has_Single_Unit'Image);
+      Text_IO.Put_Line ("  has naming exception = "
+                        & S.Has_Naming_Exception'Image);
       for CU of S.Units loop
          Text_IO.Put_Line ("  - compilation unit at" & CU.Index'Image);
          Text_IO.Put_Line ("    unit name    = " & String (CU.Name));
@@ -56,52 +76,49 @@ procedure Main is
             Text_IO.Put_Line ("}");
          end if;
 
-         if CU.Name'Length > 0
-           and then View_Db.Has_Compilation_Unit (CU.Name)
-          then
-            declare
-               Unit : GPR2.Build.COmpilation_Unit.Object :=
-                 View_Db.Compilation_Unit (CU.Name);
-               C_ID : constant GPR2.Build.Actions.Compile.Ada.Ada_Compile_Id :=
-                 GPR2.Build.Actions.Compile.Ada.Create (Unit);
-               Comp : GPR2.Build.Actions.Compile.Ada.Object;
-            begin
-               if Tree.Artifacts_Database.Has_Action (C_Id) then
-                  Comp :=
-                    Build.Actions.Compile.Ada.Object
-                      (Tree.Artifacts_Database.Action (C_Id));
-                  Text_IO.Put_Line
-                    ("    object file  = "
-                     & String (Comp.Object_File.Path.Simple_Name));
-                  Text_IO.Put_Line
-                    ("    dep file     = "
-                     & String (Comp.Intf_Ali_File.Path.Simple_Name));
+         if S.Artifacts.Has_Dependency (CU.Index) then
+            Dep := S.Artifacts.Dependency (CU.Index);
+            Text_IO.Put_Line
+              ("    object file  = " & String (Dep.Simple_Name));
 
-                  for D of Comp.Dependencies loop
-                     Text_IO.Put_Line ("    depends on " & String (D));
-                  end loop;
-               end if;
-            end;
+            S.Dependencies
+              (CU.Index, Print_Dependency'Access, Closure => True);
+         end if;
+      end loop;
+
+      for CU of S.Units loop
+         Dep := GPR2.Project.Source.Artifact.Dependency
+           (S, CU.Index, Actual_File => True);
+         if Dep.Is_Defined then
+            Directories.Delete_File (Dep.Value);
          end if;
       end loop;
    end Print;
 
 begin
-   Opt.Add_Switch (GPR2.Options.P, "files/p.gpr");
+   --  Source_Info.Parser.Ada_Language.Unregister;
 
-   if not Tree.Load (Opt) then
-      return;
-   end if;
-
-   if not Tree.Update_Sources then
-      return;
-   end if;
-
-   if not Build.Actions_Population.Populate_Actions (Tree, B_Opt, True) then
-      return;
-   end if;
+   Tree.Load (Filename => Project.Create ("files/p.gpr"),
+              Context  => Ctx);
 
    for S of Tree.Root_Project.Sources loop
       Print (S);
    end loop;
+
+   --  First iteration over the sources removes dependency files, i.e. next
+   --  source parsing going to be with Ada_Language parser.
+
+   Tree.Invalidate_Sources;
+
+   for S of Tree.Root_Project.Sources loop
+      Print (S);
+   end loop;
+
+exception
+   when E : others =>
+      Ada.Text_IO.Put_Line (Ada.Exceptions.Exception_Information (E));
+
+      for M of Tree.Log_Messages.all loop
+         Text_IO.Put_Line (M.Format);
+      end loop;
 end Main;

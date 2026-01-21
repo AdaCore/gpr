@@ -1,5 +1,0 @@
-project P is
-   package Compiler is
-      for Driver("Ada") use Project'Project_Dir & "exe/env_program";
-   end Compiler;
-end P;

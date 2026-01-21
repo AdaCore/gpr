@@ -422,7 +422,7 @@ private
       Index          : String := "";
       In_Switch_Attr : Boolean := True;
       Hidden         : Boolean := False) return Argument_Definition
-   is (Argument_Definition'(With_Value       => False,
+   is (Argument_Definition'(With_Value => False,
                             Name             => To_Unbounded_String (Name),
                             Alt_Name         => To_Unbounded_String (Alt_Name),
                             Group            => No_Group,
