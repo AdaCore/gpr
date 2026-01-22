@@ -1,8 +1,11 @@
 with "../../gpr2";
 
-project GPR2tools.Common extends "gpr2tools.gpr" is
+library project GPR2tools.Common extends "gpr2tools.gpr" is
 
    for Source_Dirs use ("../src");
    for Object_Dir use GPR2tools.Base_Object_Dir;
+   for Library_Name use "gpr2tools_common";
+   for Library_Dir use
+     GPR2_Shared.Build_Root & "/" & GPR2_Shared.Build & "/lib-tools-common";
 
 end GPR2tools.Common;
