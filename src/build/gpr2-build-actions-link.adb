@@ -2306,6 +2306,31 @@ package body GPR2.Build.Actions.Link is
       Self.Mapping_File := To_Unbounded_String (String (Mapping_File));
    end Set_Mapping_File;
 
+   ----------
+   -- Skip --
+   ----------
+
+   overriding function Skip (Self : Object) return Boolean is
+   begin
+      if (Object'Class (Self).Is_Static_Library
+         and then not Self.Check_Archive_Driver)
+         or else not Self.Check_Linker_Driver
+      then
+         return True;
+      end if;
+
+      declare
+         Attr : constant GPR2.Project.Attribute.Object :=
+                  Self.View.Attribute (PRA.Disable_Linking);
+      begin
+         if Attr.Is_Defined and then Attr.Value.Text = "true" then
+            return True;
+         end if;
+      end;
+
+      return False;
+   end Skip;
+
    ---------
    -- UID --
    ---------
