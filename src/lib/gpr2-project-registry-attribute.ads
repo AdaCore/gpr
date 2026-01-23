@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2024, AdaCore
+--  Copyright (C) 2019-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -284,6 +284,9 @@ package GPR2.Project.Registry.Attribute is
    Default_Language                 : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"default_language");
+   Disable_Linking                  : constant Q_Attribute_Id :=
+                                        (Project_Level_Scope,
+                                         +"disable_linking");
    Excluded_Source_Files            : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"excluded_source_files");
