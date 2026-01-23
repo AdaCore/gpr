@@ -30,7 +30,6 @@ with GPRtools.Util;
 
 procedure GPRls.Main is
 
-   use Ada;
    use Ada.Exceptions;
    use GPR2;
    use GPRtools.Program_Termination;
