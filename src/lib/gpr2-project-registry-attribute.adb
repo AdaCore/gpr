@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2024, AdaCore
+--  Copyright (C) 2019-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -668,6 +668,18 @@ begin
       Is_Allowed_In         => In_Library,
       Inherit_From_Extended => Inherited,
       Is_Set                => True);
+
+   --  disable_linking
+   Add
+     (Name                  => Disable_Linking,
+      Index_Type            => No_Index,
+      Value                 => Single,
+      Value_Case_Sensitive  => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited,
+      Default               => Create ("false"),
+      Has_Default_In        => Everywhere,
+      Type_Def              => Boolean_Type_Def);
 
 
    declare

@@ -291,6 +291,13 @@ Project Level Attributes
     Value is the case-insensitive name of the language of a project when attribute
     Languages is not specified.
 
+  .. index:: Attributes - Project Level Attributes; Disable_Linking
+
+  * **Disable_Linking**: single value, not inherited from extended project
+
+    Indicates if linking is disabled on the platform. Only authorized
+    case-insensitive values are 'true' and 'false' (the default).
+
   .. index:: Attributes - Project Level Attributes; Object_Generated
 
   * **Object_Generated**: single value, indexed by a language

@@ -26,7 +26,6 @@ with GNATCOLL.Utils;
 
 package body GPRtools.Util is
 
-   use Ada;
    use Ada.Strings.Unbounded;
 
    Partial_Prefix : constant Simple_Name := "p__";

@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2024, AdaCore
+--  Copyright (C) 2019-2025, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -501,6 +501,13 @@ begin
       Description  =>
         "Indicates the level of support of libraries. Only authorized "
       & "case-insensitive values are 'static_only', 'full' or 'none' (the "
+      & "default).");
+
+   Set_Attribute_Description
+     (Key          => PRA.Disable_Linking,
+      Description  =>
+        "Indicates if linking is disabled on the platform. Only "
+      & "authorized case-insensitive values are 'true' and 'false' (the "
       & "default).");
 
    --  Archive_Builder
