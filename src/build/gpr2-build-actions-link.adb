@@ -155,8 +155,7 @@ package body GPR2.Build.Actions.Link is
                   begin
                      Cmd_Line.Add_Argument
                        (Self.Tree.Linker_Lib_Dir_Option &
-                          String
-                            (Path.Relative_Path (Self.Working_Directory)));
+                          Path.String_Value);
                   end;
                else
                   Cmd_Line.Add_Argument (Arg, Mode);
