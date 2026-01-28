@@ -10,6 +10,7 @@ with GPR2.Build.Source_Base.Vectors;
 with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Log;
 with GPR2.Path_Name;
+with GPR2.Path_Name.Set;
 with GPR2.Project.View;
 
 limited with GPR2.Build.Source.Sets;
@@ -88,6 +89,11 @@ package GPR2.Build.View_Db is
      with Pre => Self.Is_Defined and then Self.Source_Option > No_Source;
    --  Get the complete list of visible sources: so sources owned by the view
    --  but also all sources made visible by withed or limited withed views.
+
+   function Excluded_Sources (Self : Object) return GPR2.Path_Name.Set.Object
+     with Pre => Self.Is_Defined;
+   --  List of sources that have been excluded explicitly by Self's View.
+   --  This list is used to tell the compiler to ignore those sources.
 
    function Excluded_Inherited_Sources
      (Self : Object) return GPR2.Build.Source_Base.Vectors.Vector

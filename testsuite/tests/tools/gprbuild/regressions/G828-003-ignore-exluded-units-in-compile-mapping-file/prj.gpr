@@ -1,0 +1,6 @@
+project Prj is
+   for Main use ("main.adb");
+   for Source_Dirs use (".", "bodies");
+   for Excluded_Source_Files use ("pkg.adb");
+end Prj;
+

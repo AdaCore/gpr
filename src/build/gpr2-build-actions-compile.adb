@@ -10,6 +10,7 @@ with GNATCOLL.OS.FS;
 with GNATCOLL.Traces;
 
 with GPR2.Build.Artifacts.Source_Files;
+with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Makefile_Parser;
 pragma Warnings (Off, ".* is not referenced");
 with GPR2.Build.Source.Sets;
@@ -512,6 +513,38 @@ package body GPR2.Build.Actions.Compile is
                         end if;
                      end loop;
                   end if;
+               end loop;
+
+               for S of Self.View.View_Db.Excluded_Sources loop
+                  declare
+                     U   : constant Build.Compilation_Unit.Object :=
+                             Self.View.Own_Unit (S.Base_Name);
+                  begin
+                     --  If we have an excluded source with a valid unit in
+                     --  the View, and the unit is at least missing one of its
+                     --  part, this means the other part of the unit has
+                     --  its source exluded by the View.
+                     --  If we have an Unit with none of its part missing, this
+                     --  means the source was excluded due to not matching Self
+                     --  naming scheme.
+                     if U.Is_Defined
+                       and then U.Has_Main_Part
+                       and then (not U.Has_Part (S_Body)
+                                 or else not U.Has_Part (S_Spec))
+                     then
+                        declare
+                           Key : constant String :=
+                                   To_Lower (String (U.Name))
+                                   & (if U.Main_Part = S_Spec
+                                      then B_Suffix else S_Suffix);
+                        begin
+                           Write
+                             (Map_File.FD,
+                              Key & ASCII.LF & String (S.Simple_Name)
+                              & ASCII.LF & "/" & ASCII.LF);
+                        end;
+                     end if;
+                  end;
                end loop;
 
                for S of Self.View.View_Db.Excluded_Inherited_Sources loop
