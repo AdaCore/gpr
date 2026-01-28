@@ -1,0 +1,6 @@
+description: Regression test for handling simlink to a main unit on the command line
+driver: python_script
+timeout: 800
+control:
+- [SKIP, "'windows' in env.host.platform", "DEAD on windows"]
+
