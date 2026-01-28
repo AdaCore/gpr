@@ -1,0 +1,3 @@
+$ gprbuild -P prj.gpr
+[Ada Compile]     titi.ads
+[Ada Compile]     toto.ads

@@ -1,0 +1,3 @@
+with "../ada_test_b/hello_b";
+project hello_a  is
+end hello_a;

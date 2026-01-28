@@ -1,0 +1,3 @@
+with "../develop_b/user_hello_b";
+project user_hello_a extends "../ada_test_a/hello_a" is
+end user_hello_a;

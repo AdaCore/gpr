@@ -1,0 +1,5 @@
+project Prj is
+   for Source_Dirs use ("./**");
+   for Excluded_Source_Dirs use ("a/b/e", "a/b/e/**");
+end Prj;
+
