@@ -1,0 +1,3 @@
+description: Regression test duplicates sources and units error messages
+driver: python_script
+timeout: 800
