@@ -1,0 +1,3 @@
+description: Regression test correctly exluding a unit part in the compilation mapping file
+driver: python_script
+timeout: 800

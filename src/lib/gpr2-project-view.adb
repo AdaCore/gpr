@@ -2813,19 +2813,19 @@ package body GPR2.Project.View is
          Position : GPR2.Containers.Filename_Type_Set.Cursor;
          Inserted : Boolean;
       begin
-         if Excluded_Dirs_List.Contains (Directory.Value) then
-            --  Do not visit this directory's files but still look for
-            --  subdirectories.
-
-            Do_Dir_Visit := False;
-
-            return;
-
-         elsif Excluded_Recurse_Dirs_List.Contains (Directory.Value) then
+         if Excluded_Recurse_Dirs_List.Contains (Directory.Value) then
             --  Do not visit directory and subdirectories
 
             Do_Dir_Visit := False;
             Do_Subdir_Visit := False;
+
+            return;
+
+         elsif Excluded_Dirs_List.Contains (Directory.Value) then
+            --  Do not visit this directory's files but still look for
+            --  subdirectories.
+
+            Do_Dir_Visit := False;
 
             return;
          end if;

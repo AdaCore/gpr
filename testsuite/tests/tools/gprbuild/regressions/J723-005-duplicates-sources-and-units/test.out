@@ -1,0 +1,8 @@
+$ gprbuild -P prj.gpr
+prj.gpr:2:08: error: The source with basename "b.ads" appears multiple times
+prj.gpr:2:08: error: The source with basename "a.ads" appears multiple times
+gprbuild: processing failed
+$ gprbuild -P prj1.gpr
+prj1.gpr: error: file /sources/sources.ada contains duplicated units "PKG2 and "PKG" at index 0
+prj1.gpr: error: file /sources/sources.ada contains duplicated units "PKG and "PKG" at index 0
+gprbuild: processing failed

@@ -742,7 +742,19 @@ package body Update_Sources_List is
             null;
 
          elsif Data.Excluded_Sources.Contains (Basename) then
-            Data.Actually_Excluded.Include (Basename, No_Proxy);
+            declare
+               --  Add the source proxy with undefined view information since
+               --  the source object doesn't exist in Data.View DB.
+               --  We still need to store elementary information about the
+               --  source path.
+               Proxy : constant Source_Proxy :=
+                         (File.Path_Len,
+                          Project.View.Undefined,
+                          Project.View.Undefined,
+                          File.Path);
+            begin
+               Data.Actually_Excluded.Include (Basename, Proxy);
+            end;
 
             return False;
 

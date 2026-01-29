@@ -393,6 +393,14 @@ package body GPR2.Build.Actions_Population is
          Full := Path_Name.Create_File (Filename_Type (Basename));
          Src := View.Visible_Source (Full);
 
+         if not Src.Is_Defined then
+            --  If the source is still not defined, then try to resolve
+            --  potential symbolic links.
+            Full := Path_Name.Create_File
+              (Filename_Type (Basename), Resolve_Links => True);
+            Src := View.Visible_Source (Full);
+         end if;
+
       else
          Src := View.Visible_Source (SN, Ambiguous);
       end if;
@@ -442,7 +450,17 @@ package body GPR2.Build.Actions_Population is
 
          begin
             if Path /= Src.Path_Name then
-               return Compilation_Unit.Empty_Vector;
+               declare
+                  SPath : constant Path_Name.Object :=
+                            GPR2.Path_Name.Create_File
+                              (Filename_Type (Basename),
+                               Resolve_Links => True);
+
+               begin
+                  if SPath /= Src.Path_Name then
+                     return Compilation_Unit.Empty_Vector;
+                  end if;
+               end;
             end if;
          end;
       end if;

@@ -1,0 +1,12 @@
+$ gprbuild -P ada_test_a/hello_a.gpr -f
+[Ada Compile]     hello_world_a.adb
+[Ada Compile]     hello_world_b.adb
+$ gprbuild -P develop_a/user_hello_a.gpr -f
+user_hello_b.gpr: warning: there are no sources of language "Ada" in this project
+[Ada Compile]     hello_world_a.adb
+$ gprbuild -P a/b/c/c.gpr -f
+[Ada Compile]     pkg.adb
+$ gprbuild -P a/b/b.gpr -f
+[Ada Compile]     pkg.ads
+$ gprbuild -P a/a.gpr -f
+[Ada Compile]     pkg.adb

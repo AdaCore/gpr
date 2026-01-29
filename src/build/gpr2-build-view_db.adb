@@ -85,7 +85,12 @@ package body GPR2.Build.View_Db is
             Todo.Delete_First;
 
             for Proxy of Ref (Current).Actually_Excluded loop
-               if Proxy /= No_Proxy then
+               --  If we have a Proxy and a defined Proxy view, it means the
+               --  source has been excluded but exists in the Proxy view DB.
+               --  We can extract the source object information drectly.
+               if Proxy /= No_Proxy
+                 and then Proxy.View /= Project.View.Undefined
+               then
                   Src :=
                     Ref (Proxy.View.View_Db).Src_Infos.Element
                     (Proxy.Path_Name);
@@ -102,6 +107,38 @@ package body GPR2.Build.View_Db is
          end loop;
       end return;
    end Excluded_Inherited_Sources;
+
+   ----------------------
+   -- Excluded_Sources --
+   ----------------------
+
+   function Excluded_Sources (Self : Object) return Path_Name.Set.Object
+   is
+      Current : Object := Self;
+      Todo    : GPR2.Project.View.Set.Object;
+   begin
+      Todo.Include (Self.View);
+
+      return Result : Path_Name.Set.Object do
+         while not Todo.Is_Empty loop
+            Current := Self.View_Base_For (Todo.First_Element);
+            Todo.Delete_First;
+
+            for Proxy of Ref (Current).Actually_Excluded loop
+               --  If we have a Proxy and a no defined Proxy view, it means the
+               --  source has been excluded before being added to the source
+               --  set. In this case we still need the Path_Name of the source
+               --  to have elementary information on the excluded sources even
+               --  though the source doesn't actually exist.
+               if Proxy /= No_Proxy
+                 and then Proxy.View = Project.View.Undefined
+               then
+                  Result.Append (Path_Name.Create_File (Proxy.Path_Name));
+               end if;
+            end loop;
+         end loop;
+      end return;
+   end Excluded_Sources;
 
    --------------
    -- Own_Unit --

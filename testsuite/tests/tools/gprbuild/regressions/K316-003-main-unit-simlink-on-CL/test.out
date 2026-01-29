@@ -1,0 +1,2 @@
+$ gprbuild -c -u -P proj1.gpr xsrc/toto.adb
+[Ada Compile]     toto.adb

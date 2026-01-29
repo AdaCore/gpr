@@ -1,0 +1,4 @@
+project B extends "c/c" is
+   for Locally_Removed_Files use ("pkg.adb");
+end B;
+

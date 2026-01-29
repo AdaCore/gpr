@@ -1,0 +1,3 @@
+project user_hello_b extends "../ada_test_b/hello_b" is
+   for Locally_Removed_Files use ("hello_world_b.adb");
+end user_hello_b;

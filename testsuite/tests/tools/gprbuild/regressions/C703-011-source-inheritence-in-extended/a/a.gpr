@@ -1,0 +1,3 @@
+project A extends "b/b" is
+end A;
+
