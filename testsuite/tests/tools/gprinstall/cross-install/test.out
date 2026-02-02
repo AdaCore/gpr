@@ -1,0 +1,34 @@
+======================== 1
+cp /files/lib/libprj1.so.20.0w /inst1/armhf-linux/lib/prj1/libprj1.so.20.0w
+
+cp /files/lib/prj.ali /inst1/armhf-linux/lib/prj1/prj.ali
+
+cp /files/src/prj.ads /inst1/armhf-linux/include/prj1/prj.ads
+
+cp /inst1/armhf-linux/lib/libprj1.so.20.0w /inst1/armhf-linux/lib/libprj1.so
+
+cp /inst1/armhf-linux/lib/libprj1.so.20.0w /inst1/armhf-linux/lib/libprj1.so.20
+
+cp /inst1/armhf-linux/lib/prj1/libprj1.so.20.0w /inst1/armhf-linux/lib/libprj1.so.20.0w
+
+cp /inst1/armhf-linux/lib/prj1/libprj1.so.20.0w /inst1/armhf-linux/lib/prj1/libprj1.so
+
+cp /inst1/armhf-linux/lib/prj1/libprj1.so.20.0w /inst1/armhf-linux/lib/prj1/libprj1.so.20
+
+======================== 2
+cp /files/lib/libprj2.so.20.0w /inst2/armhf-linux/lib/prj2/libprj2.so.20.0w
+
+cp /files/lib/prj.ali /inst2/armhf-linux/lib/prj2/prj.ali
+
+cp /files/src/prj.ads /inst2/armhf-linux/include/prj2/prj.ads
+
+cp /inst2/armhf-linux/lib/libprj2.so.20.0w /inst2/armhf-linux/lib/libprj2.so
+
+cp /inst2/armhf-linux/lib/libprj2.so.20.0w /inst2/armhf-linux/lib/libprj2.so.20
+
+cp /inst2/armhf-linux/lib/prj2/libprj2.so.20.0w /inst2/armhf-linux/lib/libprj2.so.20.0w
+
+cp /inst2/armhf-linux/lib/prj2/libprj2.so.20.0w /inst2/armhf-linux/lib/prj2/libprj2.so
+
+cp /inst2/armhf-linux/lib/prj2/libprj2.so.20.0w /inst2/armhf-linux/lib/prj2/libprj2.so.20
+

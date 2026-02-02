@@ -213,8 +213,8 @@ private
 
       Root_Path             : GPR2.Path_Name.Object;
       Build_Path            : GPR2.Path_Name.Object;
-      Src_Subdirs           : Ada.Strings.Unbounded.Unbounded_String;
-      Subdirs               : Ada.Strings.Unbounded.Unbounded_String;
+      Src_Subdirs           : Unbounded_String;
+      Subdirs               : Unbounded_String;
       Implicit_With         : GPR2.Path_Name.Set.Object;
 
       Context               : GPR2.Context.Object;
@@ -223,9 +223,8 @@ private
 
       Config_Project        : GPR2.Path_Name.Object;
       Create_Missing_Config : Boolean := False;
-      Target                : Ada.Strings.Unbounded.Unbounded_String :=
-                                Ada.Strings.Unbounded.To_Unbounded_String
-                                  ("all");
+      Target                : Unbounded_String :=
+                                To_Unbounded_String ("all");
       RTS_Map               : GPR2.Containers.Lang_Value_Map;
       Skip_Default_KB       : aliased Boolean := False;
       KB_Locations          : GPR2.Path_Name.Set.Object;

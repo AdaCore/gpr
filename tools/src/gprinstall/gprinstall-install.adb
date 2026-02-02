@@ -277,7 +277,7 @@ package body GPRinstall.Install is
              then No_Filename
              else Filename_Optional (-Prefix_Dir.V))));
       --  Returns directory as Path_Name.Object prefixed with Prefix_Dir.V.all
-      --  if not absote.
+      --  if not absolute.
 
       function Exec_Dir return Path_Name.Object;
       --  Returns the full pathname to the executable destination directory
@@ -491,7 +491,7 @@ package body GPRinstall.Install is
                      else
                         Replace
                           (Prefix_Dir,
-                           -Options.Global_Prefix_Dir.V & "/" &
+                           -Options.Global_Prefix_Dir.V & DS &
                              V.Value.Text,
                            Normalize => True);
                      end if;
@@ -3108,7 +3108,7 @@ package body GPRinstall.Install is
       -----------------
 
       function Project_Dir return Path_Name.Object is
-         (Prefix_For_Dir (-Project_Subdir.V));
+        (Prefix_For_Dir (-Project_Subdir.V));
 
       ------------------------
       -- Rollback_Manifests --

@@ -209,6 +209,8 @@ install switches:
            Build name value (default is "Default")
  --build-var=<name>
            Name of the variable which identify a build)
+ --cross-install
+           Cross-install mode based on target/runtime
  --exec-subdir=<dir>
            The executable directory/sub-directory
  --install-name=<name>
@@ -562,6 +564,8 @@ install switches:
            Build name value (default is "Default")
  --build-var=<name>
            Name of the variable which identify a build)
+ --cross-install
+           Cross-install mode based on target/runtime
  --exec-subdir=<dir>
            The executable directory/sub-directory
  --install-name=<name>

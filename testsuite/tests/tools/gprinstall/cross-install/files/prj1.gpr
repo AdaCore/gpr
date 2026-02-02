@@ -1,0 +1,24 @@
+library project Prj1 is
+
+   for Languages use ("Ada");
+   for Source_Dirs use ("src/**");
+   for Object_Dir use "obj";
+   for Library_Name use project'Name;
+   for Library_Dir use "lib";
+   for Library_Ali_Dir use project'Library_Dir;
+   for Externally_Built use "False";
+   for Library_Version use "lib" & project'Library_Name & ".so.20.0w";
+   for Library_Kind use "relocatable";
+   for Library_Src_Dir use project'Library_Dir;
+
+   package Compiler is
+      for Default_Switches ("ada") use ("-g", "-gnato", "-gnatwa", "-gnatQ", "-gnat12");
+      for Default_Switches ("c") use ("-g", "-Wall");
+      for Default_Switches ("c++") use ("-g", "-Wall");
+   end Compiler;
+
+   package Builder is
+      for Default_Switches ("ada") use ("-g");
+   end Builder;
+
+end Prj1;
