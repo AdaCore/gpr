@@ -29,5 +29,5 @@ begin
    Test ("aggrprj1.gpr");
    Test ("aggrlibprj1.gpr");
    Test ("library_name_duplicate/aggregate.gpr");
-
+   Test ("missing_library_name/lib1/lib1.gpr");
 end main;
