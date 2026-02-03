@@ -5,7 +5,6 @@
 --
 
 with Ada.Characters.Handling;
-with Ada.Containers.Hashed_Maps;
 with Ada.Directories;
 with Ada.IO_Exceptions;
 with Ada.Strings.Fixed;
@@ -29,7 +28,6 @@ with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Import.Set;
 with GPR2.Project.Registry.Pack;
-with GPR2.Project.Tree;
 with GPR2.Tree_Internal.View_Builder;
 with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Value;
@@ -2201,19 +2199,6 @@ package body GPR2.Tree_Internal is
      (Self    : in out Object;
       Changed : access procedure (Project : View.Object) := null)
    is
-      package View_Id_To_View_Ids_Maps is new
-        Ada.Containers.Hashed_Maps
-          (Key_Type        => GPR2.View_Ids.View_Id,
-           Element_Type    => GPR2.View_Ids.Set.Set,
-           Hash            => GPR2.View_Ids.Hash,
-           Equivalent_Keys => GPR2.View_Ids."=",
-           "="             => GPR2.View_Ids.Set."=");
-
-      subtype View_Id_To_View_Ids_Map is View_Id_To_View_Ids_Maps.Map;
-
-      Library_Names_Clashes : View_Id_To_View_Ids_Map;
-      --  Contains a bidirectional mapping between views that share the same
-      --  library name.
 
       procedure Set_View (View : Project.View.Object);
       --  Set the context for the given view
@@ -2221,8 +2206,88 @@ package body GPR2.Tree_Internal is
       procedure Validity_Check (View : Project.View.Object);
       --  Do validity check on the given view
 
+      procedure Check_Library_Names_Are_Unique;
+      --  Check that library names are unique within each closure. If not,
+      --  report an error.
+
       function Has_Error return Boolean is
         (Self.Messages.Has_Error);
+
+
+      ------------------------------------
+      -- Check_Library_Names_Are_Unique --
+      ------------------------------------
+
+      procedure Check_Library_Names_Are_Unique is
+
+         package Simple_Name_To_View_Id_Maps is new
+           Ada.Containers.Indefinite_Hashed_Maps
+             (Key_Type        => Simple_Name,
+              Element_Type    => GPR2.View_Ids.View_Id,
+              Hash            => GPR2.Hash,
+              Equivalent_Keys => "=",
+              "="             => GPR2.View_Ids."=");
+
+         subtype Simple_Name_To_View_Id_Map is Simple_Name_To_View_Id_Maps.Map;
+
+         Library_Name_To_View_Ids : Simple_Name_To_View_Id_Map;
+
+         Closure  : GPR2.Project.View.Vector.Object;
+         Cursor   : Simple_Name_To_View_Id_Maps.Cursor;
+         Inserted : Boolean;
+      begin
+         for Root_Project of Self.Namespace_Root_Projects loop
+            Library_Name_To_View_Ids.Clear;
+
+            Closure :=
+              Root_Project.Closure
+                (Include_Self       => True,
+                 Include_Extended   => False,
+                 Include_Aggregated => False);
+
+            for V of Closure loop
+               if V.Is_Library then
+                  Library_Name_To_View_Ids.Insert
+                    (V.Library_Name, V.Id, Cursor, Inserted);
+
+                  if not Inserted then
+                     --  There is already a library with the same name,
+                     --  report an error.
+
+                     declare
+                        View : constant GPR2.Project.View.Object :=
+                          Self.Get_View
+                            (Library_Name_To_View_Ids.Element
+                               (V.Library_Name));
+                        Library_Name_Attr :
+                          constant Project.Attribute.Object :=
+                            View.Attribute (PRA.Library_Name);
+                     begin
+                        if Library_Name_Attr.Has_Source_Reference then
+                           Self.Error
+                             ("Library name cannot be the same as "
+                              & "in project """
+                              & String (V.Name)
+                              & """",
+                              Source_Reference.Create
+                                (View.Path_Name.Value,
+                                 Library_Name_Attr.Line,
+                                 Library_Name_Attr.Column));
+                        else
+                           Self.Error
+                             ("Library name cannot be the same as "
+                              & "in project """
+                              & String (V.Path_Name.Value)
+                              & """",
+                              Source_Reference.Create
+                                (View.Path_Name.Value, 0, 0));
+                        end if;
+                     end;
+                  end if;
+               end if;
+            end loop;
+         end loop;
+      end Check_Library_Names_Are_Unique;
 
       --------------
       -- Set_View --
@@ -3265,11 +3330,13 @@ package body GPR2.Tree_Internal is
             end case;
          end;
 
-         --  Check library attributes validity
+         --  Check library attributes validity that do not depend on
+         --  the whole closure, such as the library name uniqueness.
+         --  To do check on the closure, we first need to ensure that all
+         --  views are valid.
 
          declare
             procedure Check_Library_Is_Standalone (Name : Q_Attribute_Id);
-            procedure Check_Library_Name_Is_Unique;
 
             ---------------------------------
             -- Check_Library_Is_Standalone --
@@ -3296,113 +3363,10 @@ package body GPR2.Tree_Internal is
                end if;
             end Check_Library_Is_Standalone;
 
-            ----------------------------------
-            -- Check_Library_Name_Is_Unique --
-            ----------------------------------
-
-            procedure Check_Library_Name_Is_Unique is
-
-               function Library_Name_Clash_Already_Detected
-                 (V1, V2 : GPR2.View_Ids.View_Id) return Boolean;
-
-               procedure Add_Library_Name_Clash_Between_Views
-                 (V1, V2 : GPR2.View_Ids.View_Id);
-
-               ------------------------------------------
-               -- Add_Library_Name_Clash_Between_Views --
-               ------------------------------------------
-
-               procedure Add_Library_Name_Clash_Between_Views
-                 (V1, V2 : GPR2.View_Ids.View_Id) is
-               begin
-                  if not Library_Names_Clashes.Contains (V1) then
-                     Library_Names_Clashes.Insert
-                       (V1, GPR2.View_Ids.Set.Empty);
-                  end if;
-
-                  Library_Names_Clashes (V1).Include (V2);
-
-                  if not Library_Names_Clashes.Contains (V2) then
-                     Library_Names_Clashes.Insert
-                       (V2, GPR2.View_Ids.Set.Empty);
-                  end if;
-
-                  Library_Names_Clashes (V2).Include (V1);
-               end Add_Library_Name_Clash_Between_Views;
-
-               -----------------------------------------
-               -- Library_Name_Clash_Already_Detected --
-               -----------------------------------------
-
-               function Library_Name_Clash_Already_Detected
-                 (V1, V2 : GPR2.View_Ids.View_Id) return Boolean is
-               begin
-                  if Library_Names_Clashes.Contains (V1) then
-                     return Library_Names_Clashes (V1).Contains (V2);
-                  end if;
-
-                  return False;
-               end Library_Name_Clash_Already_Detected;
-
-               Library_Name_Attr : constant Project.Attribute.Object :=
-                 View.Attribute (PRA.Library_Name);
-               Library_Name      : constant Simple_Name :=
-                 Simple_Name (Library_Name_Attr.Value.Text);
-               use GPR2.Project.Tree;
-               Closure           : GPR2.Project.View.Vector.Object;
-            begin
-               for Root_Project of View.Tree.Namespace_Root_Projects loop
-                  Closure :=
-                    Root_Project.Closure
-                      (Include_Self       => True,
-                       Include_Extended   => False,
-                       Include_Aggregated => False);
-                  if Closure.Contains (View) then
-                     for V of Closure loop
-                        if V.Is_Library
-                          and then V.Library_Name = Library_Name
-                          and then V /= View
-                        then
-                           if not Library_Name_Clash_Already_Detected
-                                    (View.Id, V.Id)
-                           then
-                              Add_Library_Name_Clash_Between_Views
-                                (View.Id, V.Id);
-
-                              if Library_Name_Attr.Has_Source_Reference then
-                                 Self.Error
-                                   ("Library name cannot be the same as "
-                                    & "in project """
-                                    & String (V.Name)
-                                    & """",
-                                    Source_Reference.Create
-                                      (View.Path_Name.Value,
-                                       Library_Name_Attr.Line,
-                                       Library_Name_Attr.Column));
-                              else
-                                 Self.Error
-                                   ("Library name cannot be the same as "
-                                    & "in project """
-                                    & String (V.Path_Name.Value)
-                                    & """",
-                                    Source_Reference.Create
-                                      (View.Path_Name.Value, 0, 0));
-                              end if;
-                           end if;
-                        end if;
-                     end loop;
-                  end if;
-               end loop;
-            end Check_Library_Name_Is_Unique;
-
          begin
             if View.Is_Library then
                Check_Library_Is_Standalone (PRA.Library_Symbol_File);
                Check_Library_Is_Standalone (PRA.Library_Symbol_Policy);
-
-               if View.Attribute (PRA.Library_Name).Is_Defined then
-                  Check_Library_Name_Is_Unique;
-               end if;
             end if;
          end;
       end Validity_Check;
@@ -3464,44 +3428,55 @@ package body GPR2.Tree_Internal is
          end if;
       end;
 
-      if not Has_Error and then not Self.Pre_Conf_Mode then
-         for View of Self.Ordered_Views loop
-            --  Finally add a dependency over the runtime view if the view has
-            --  Ada language
+      if not Self.Pre_Conf_Mode then
+         if not Has_Error then
+            for View of Self.Ordered_Views loop
+               --  Finally add a dependency over the runtime view if the view*
+               --  has Ada language
 
-            declare
-               Data : constant View_Internal.Ref :=
-                        View_Internal.Get_RW (View);
-            begin
-               if Self.Has_Runtime_Project
-                 and then not View.Is_Runtime
-                 and then View.Kind in With_Source_Dirs_Kind
-                 and then View.Language_Ids.Contains (Ada_Language)
-                 and then
-                   (Self.Root_Project.Kind /= K_Aggregate
-                    or else Data.Context = Aggregate)
-                 and then not Data.Limited_Imports.Contains (Self.Runtime.Name)
-               then
-                  Data.Limited_Imports.Insert
-                    (Self.Runtime.Name, Self.Runtime);
+               declare
+                  Data : constant View_Internal.Ref :=
+                    View_Internal.Get_RW (View);
+               begin
+                  if Self.Has_Runtime_Project
+                    and then not View.Is_Runtime
+                    and then View.Kind in With_Source_Dirs_Kind
+                    and then View.Language_Ids.Contains (Ada_Language)
+                    and then
+                      (Self.Root_Project.Kind /= K_Aggregate
+                       or else Data.Context = Aggregate)
+                    and then
+                      not Data.Limited_Imports.Contains (Self.Runtime.Name)
+                  then
+                     Data.Limited_Imports.Insert
+                       (Self.Runtime.Name, Self.Runtime);
 
-                  for Root of Data.Root_Views loop
-                     View_Internal.Get_RW
-                       (Self.Runtime).Root_Views.Include (Root);
-                  end loop;
-               end if;
-            end;
+                     for Root of Data.Root_Views loop
+                        View_Internal.Get_RW (Self.Runtime).Root_Views.Include
+                          (Root);
+                     end loop;
+                  end if;
+               end;
 
-            --  We now have an up-to-date tree, do some validity checks if
-            --  there is no issue detected yet.
+               --  We now have an up-to-date tree, do some validity checks if
+               --  there is no issue detected yet.
 
-            Validity_Check (View);
-         end loop;
-      end if;
+               Validity_Check (View);
+            end loop;
+         end if;
 
-      if Has_Error and then not Self.Pre_Conf_Mode then
-         raise Project_Error
-           with Self.Root.Path_Name.String_Value & " semantic error";
+         if not Has_Error then
+
+            --  Now that we know that each view is valid, do cross view checks
+            --  for library names uniqueness.
+
+            Check_Library_Names_Are_Unique;
+         end if;
+
+         if Has_Error then
+            raise Project_Error
+              with Self.Root.Path_Name.String_Value & " semantic error";
+         end if;
       end if;
    end Set_Context;
 
