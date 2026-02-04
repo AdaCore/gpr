@@ -195,3 +195,11 @@ def test_default_iterate_extending():
         assert 'C' in names, "view C not found"
         assert 'D' in names, "view D not found"
         assert 'E' in names, "view E not found"
+
+@pytest.mark.data_dir("simple_project")
+def test_ada_source_closure():
+    with ProjectTree(Options("p.gpr")) as tree:
+        tree.update_sources();
+        closure = tree.ada_closure()
+        assert len(closure) == 1
+        assert os.path.basename (closure[0].path_name) == 'main.adb'
