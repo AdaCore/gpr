@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2025, AdaCore
+--  Copyright (C) 2025-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -80,15 +80,35 @@ package body GPR2.C.Registry is
 
    package body View is
 
+      type View_Record is record
+         View  : GPR2.Project.View.Object;
+         Count : Natural;
+      end record;
+
+      function Equal (Left : View_Record; Right : View_Record) return Boolean;
+
       package View_Maps is new
         Ada.Containers.Hashed_Maps
           (Ada.Strings.Unbounded.Unbounded_String,
-           GPR2.Project.View.Object,
+           View_Record,
            Ada.Strings.Unbounded.Hash,
            Ada.Strings.Unbounded."=",
-           GPR2.Project.View."=");
+           Equal);
 
       View_Map : View_Maps.Map;
+
+      -----------
+      -- Equal --
+      -----------
+
+      function Equal
+        (Left : View_Record; Right : View_Record) return Boolean
+      is
+         use type GPR2.Project.View.Object;
+
+      begin
+         return Left.View = Right.View;
+      end Equal;
 
       ------------
       -- Lookup --
@@ -102,7 +122,7 @@ package body GPR2.C.Registry is
 
       begin
          if View_Map.Contains (S) then
-            return View_Map (S);
+            return View_Map (S).View;
 
          else
             return GPR2.Project.View.Undefined;
@@ -125,7 +145,10 @@ package body GPR2.C.Registry is
          else
             if View.Is_Defined then
                if not View_Map.Contains (Id) then
-                  View_Map.Insert (Id, View);
+                  View_Map.Insert (Id, (View, 1));
+
+               else
+                  View_Map.Replace (Id, (View, View_Map (Id).Count + 1));
                end if;
             end if;
 
@@ -138,9 +161,18 @@ package body GPR2.C.Registry is
       ----------------
 
       procedure Unregister (Id : GPR2.C.JSON.Values.JSON_Value) is
+         Identifier : constant Ada.Strings.Unbounded.Unbounded_String :=
+           Ada.Strings.Unbounded.To_Unbounded_String (Id.To_String);
+
       begin
-         View_Map.Delete
-           (Ada.Strings.Unbounded.To_Unbounded_String (Id.To_String));
+         if View_Map (Identifier).Count = 1 then
+            View_Map.Delete (Identifier);
+
+         else
+            View_Map.Replace
+              (Identifier,
+               (View_Map (Identifier).View, View_Map (Identifier).Count - 1));
+         end if;
       end Unregister;
 
    end View;
