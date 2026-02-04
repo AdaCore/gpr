@@ -13,6 +13,7 @@ def test_view():
         assert os.path.basename(view.path_name) == "p.gpr"
         assert view.id is not None
         assert len(view.sources) == 1, json.dumps(view.sources, indent=2)
+        assert len(view.visible_sources) == 1, json.dumps(view.visible_sources, indent=2)
 
 
 @pytest.mark.data_dir("attribute_project")
