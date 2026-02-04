@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2020-2025, AdaCore
+--  Copyright (C) 2020-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -118,5 +118,26 @@ package body GPR2.C.View is
 
       Result.Insert ("sources", Sources);
    end Sources;
+
+   ---------------------
+   -- Visible_Sources --
+   ---------------------
+
+   procedure Visible_Sources
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
+   is
+      View    : constant GPR2.Project.View.Object := Get_View (Request);
+      Sources : GPR2.C.JSON.Arrays.JSON_Array;
+
+   begin
+      if View.Is_Defined then
+         for Source of View.Visible_Sources loop
+            Sources.Append (GPR2.C.JSON.Codecs.Sources.Encode (Source));
+         end loop;
+      end if;
+
+      Result.Insert ("visible_sources", Sources);
+   end Visible_Sources;
 
 end GPR2.C.View;

@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2020-2025, AdaCore
+--  Copyright (C) 2020-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -47,6 +47,7 @@ package GPR2.C is
    VIEW_EXECUTABLES         : constant C_Function := 13;
    VIEW_OBJECT_DIRECTORY    : constant C_Function := 14;
    VIEW_SOURCES             : constant C_Function := 15;
+   VIEW_VISIBLE_SOURCES     : constant C_Function := 16;
 
    type C_Request is new Interfaces.C.Strings.chars_ptr;
    --  Request C null terminated string

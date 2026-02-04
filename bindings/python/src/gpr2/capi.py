@@ -31,6 +31,7 @@ class LibGPR2:
         "view_executables": 13,
         "view_object_directory": 14,
         "view_sources": 15,
+        "view_visible_sources": 16,
     }
 
     # ??? not portable ???

@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2020-2025, AdaCore
+--  Copyright (C) 2020-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -27,7 +27,8 @@ package body GPR2.C is
       VIEW_DESTRUCTOR              => View.Destructor'Access,
       VIEW_EXECUTABLES             => View.Executables'Access,
       VIEW_OBJECT_DIRECTORY        => View.Object_Directory'Access,
-      VIEW_SOURCES                 => View.Sources'Access);
+      VIEW_SOURCES                 => View.Sources'Access,
+      VIEW_VISIBLE_SOURCES         => View.Visible_Sources'Access);
 
    ----------------------
    -- GPR2_Free_Answer --
