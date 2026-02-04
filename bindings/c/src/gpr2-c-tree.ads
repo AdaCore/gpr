@@ -12,7 +12,7 @@ package GPR2.C.Tree is
 
    pragma Elaborate_Body;
 
-   procedure Ada_Closure
+   procedure Ada_Source_Closure
      (Request : GPR2.C.JSON.Objects.JSON_Object;
       Result  : out GPR2.C.JSON.Objects.JSON_Object);
    --  Implements TREE_ADA_CLOSURE

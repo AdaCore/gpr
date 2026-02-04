@@ -16,7 +16,7 @@ import sys
 class LibGPR2:
 
     METHOD_LIST = {
-        "tree_ada_closure": 1,
+        "tree_ada_source_closure": 1,
         "tree_artifacts_directory": 2,
         "tree_context": 3,
         "tree_destructor": 4,

@@ -32,7 +32,7 @@ package GPR2.C is
    --  Function to invoke
 
    --  Tree functions
-   TREE_ADA_CLOSURE         : constant C_Function := 1;
+   TREE_ADA_SOURCE_CLOSURE  : constant C_Function := 1;
    TREE_ARTIFACTS_DIRECTORY : constant C_Function := 2;
    TREE_CONTEXT             : constant C_Function := 3;
    TREE_DESTRUCTOR          : constant C_Function := 4;

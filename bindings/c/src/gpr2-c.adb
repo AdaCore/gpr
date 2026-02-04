@@ -13,7 +13,7 @@ package body GPR2.C is
    type Binding_Map is array (C_Function range <>) of GPR2.C.JSON.Bind_Handler;
 
    Binding : constant Binding_Map :=
-     (TREE_ADA_CLOSURE         => Tree.Ada_Closure'Access,
+     (TREE_ADA_SOURCE_CLOSURE  => Tree.Ada_Source_Closure'Access,
       TREE_ARTIFACTS_DIRECTORY => Tree.Artifacts_Directory'Access,
       TREE_CONTEXT             => Tree.Context'Access,
       TREE_DESTRUCTOR          => Tree.Destructor'Access,

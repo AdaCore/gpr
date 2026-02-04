@@ -200,6 +200,6 @@ def test_default_iterate_extending():
 def test_ada_source_closure():
     with ProjectTree(Options("p.gpr")) as tree:
         tree.update_sources();
-        closure = tree.ada_closure()
+        closure = tree.ada_source_closure()
         assert len(closure) == 1
         assert os.path.basename (closure[0].path_name) == 'main.adb'

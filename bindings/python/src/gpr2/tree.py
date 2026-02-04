@@ -67,13 +67,13 @@ class ProjectTree:
             [ProjectView(tree=self, id=view_id) for view_id in answer["iterate"]]
         )
 
-    def ada_closure(
+    def ada_source_closure(
         self, root_project_only: bool = False, externally_built: bool = False
     ) -> list[ProjectSource]:
         """
         Returns closure of the source files for the given project tree.
         """
-        answer = LibGPR2.tree_ada_closure(
+        answer = LibGPR2.tree_ada_source_closure(
             request={
                 "tree_id": self._id,
                 "root_project_only": root_project_only,

@@ -40,11 +40,11 @@ package body GPR2.C.Tree is
         "<"          => Less,
         "="          => Equal);
 
-   -----------------
-   -- Ada_Closure --
-   -----------------
+   ------------------------
+   -- Ada_Source_Closure --
+   ------------------------
 
-   procedure Ada_Closure
+   procedure Ada_Source_Closure
      (Request : GPR2.C.JSON.Objects.JSON_Object;
       Result  : out GPR2.C.JSON.Objects.JSON_Object)
    is
@@ -84,7 +84,7 @@ package body GPR2.C.Tree is
       end loop;
 
       Result.Insert ("ada_closure", Closure);
-   end Ada_Closure;
+   end Ada_Source_Closure;
 
    -------------------------
    -- Artifacts_Directory --
