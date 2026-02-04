@@ -1054,7 +1054,7 @@ properly integrated. For example, a soft-float runtime may add this:
 .. code-block:: xml
 
   <?xml version="1.0" ?>
-  
+
   <gprconfig>
     <configuration>
       <config><![CDATA[
@@ -2250,6 +2250,42 @@ The switches for GPRinstall are:
   compiler is used. That is, ``path`` corresponds to parent directory
   where ``gprinstall`` is found.
 
+* :samp:`--cross-install`
+
+  Use cross specific location of the installation. Together with
+  the --prefix option above it indicates to GPRinstall that the
+  installation must be done using a specific pattern taking into
+  account the ``target`` and ``runtime`` of the cross compilation.
+
+  If only ``target`` is specified::
+
+     <prefix>/
+        <target>/
+           include
+           lib
+           shared
+              gpr
+
+  If only ``runtime`` is specified::
+
+     <prefix>/
+        <native-target>/
+           <runtime>/
+              include
+              lib
+              shared
+                 gpr
+
+  If ``target`` and ``runtime`` are specified::
+
+     <prefix>/
+        <target>/
+           <runtime>/
+              include
+              lib
+              shared
+                 gpr
+
 * :samp:`--install-name={name}`
 
   Specify the name to use for recording the installation.
@@ -3035,4 +3071,3 @@ toolchain), in JSON format:
         }
       ],
   ...
-
