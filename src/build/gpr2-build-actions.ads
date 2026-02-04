@@ -197,11 +197,7 @@ package GPR2.Build.Actions is
    --  the overridden action.
 
    procedure Deactivate (Self : in out Object);
-   --  Deactivates the action, can be useful to mark the action as skipped
-
-   function Skip (Self : Object) return Boolean;
-   --  Indicates whether the action should be skipped. By default this returns
-   --  False.
+   --  Deactivates the action manually
 
    function Display_Output (Action : Object) return Boolean;
    --  Indicates whether the action output needs to be displayed by the
@@ -212,6 +208,8 @@ package GPR2.Build.Actions is
    --  where individual outputs are not relevant to the user.
 
    function Is_Deactivated (Self : Object) return Boolean;
+   --  Returns whether the action has been deactivated manually or implicitly
+   --  by its project nature.
 
    function Write_Signature
      (Self   : in out Object'Class;
@@ -335,9 +333,6 @@ private
 
    function Is_Deactivated (Self : Object) return Boolean
    is (Self.Deactivated);
-
-   function Skip (Self : Object) return Boolean
-   is (False);
 
    function Display_Output (Action : Object) return Boolean
    is (True);

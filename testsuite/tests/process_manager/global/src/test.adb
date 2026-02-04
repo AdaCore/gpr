@@ -188,6 +188,124 @@ begin
                end if;
             end;
          end loop;
+
+      when 5 =>
+         ----
+         --  Scenario 5
+         --
+         --  Action n. 2 is deactivated
+         ----
+
+            declare
+               A1                 : GBA.Write_File.Object;
+               A2                 : GBA.Write_File.Object;
+               Ret_Code           : Integer               := 0;
+               With_Deps          : Boolean               := True;
+               Valid_Executable   : GPR2.Path_Name.Object :=
+                                      GPR2.Path_Name.Create_File
+                                        (Name      => "write_file",
+                                         Directory => "write_file");
+            begin
+
+               A1.Initialize
+                  (Root_View, 1, Valid_Executable,
+                  Ret_Code, With_Deps);
+               A2.Initialize
+                  (Root_View, 2, Valid_Executable,
+                  Ret_Code, With_Deps);
+               A2.Deactivate;
+
+               if not Tree.Artifacts_Database.Add_Action (A1) then
+                  return 1;
+               end if;
+
+               if not Tree.Artifacts_Database.Add_Action (A2) then
+                  return 1;
+               end if;
+            end;
+
+      when 6 =>
+         ----
+         --  Scenario 6
+         --
+         --  Action n. 1 is deactivated so action n.2 is not executed
+         ----
+
+            declare
+               A1                 : GBA.Write_File.Object;
+               A2                 : GBA.Write_File.Object;
+               Ret_Code           : Integer               := 0;
+               With_Deps          : Boolean               := True;
+               Valid_Executable   : GPR2.Path_Name.Object :=
+                                      GPR2.Path_Name.Create_File
+                                        (Name      => "write_file",
+                                         Directory => "write_file");
+            begin
+               A1.Initialize (Root_View, 1, Valid_Executable);
+               A1.Deactivate;
+               A2.Initialize (Root_View, 2, Valid_Executable);
+
+               if not Tree.Artifacts_Database.Add_Action (A1) then
+                  return 1;
+               end if;
+
+               if not Tree.Artifacts_Database.Add_Action (A2) then
+                  return 1;
+               end if;
+            end;
+
+      when 7 =>
+         ----
+         --  Scenario 7
+         --
+         --  Scenario required for scenario 8
+         ----
+
+            declare
+               A                  : GBA.Write_File.Object;
+               Valid_Executable   : GPR2.Path_Name.Object :=
+                                      GPR2.Path_Name.Create_File
+                                        (Name      => "write_file",
+                                         Directory => "write_file");
+            begin
+               A.Initialize (Root_View, 1, Valid_Executable);
+
+               if not Tree.Artifacts_Database.Add_Action (A) then
+                  return 1;
+               end if;
+            end;
+
+      when 8 =>
+         ----
+         --  Scenario 8
+         --
+         --  Action n. 1 is deactivated but its signature is valid,
+         --  so action n.2 executed. Note that scenario 7 must be run before
+         --  so the artifacts and signatures are already present
+         ----
+
+            declare
+               A1                 : GBA.Write_File.Object;
+               A2                 : GBA.Write_File.Object;
+               Ret_Code           : Integer               := 0;
+               With_Deps          : Boolean               := True;
+               Valid_Executable   : GPR2.Path_Name.Object :=
+                                      GPR2.Path_Name.Create_File
+                                        (Name      => "write_file",
+                                         Directory => "write_file");
+            begin
+               A1.Initialize (Root_View, 1, Valid_Executable);
+               A1.Deactivate;
+               A2.Initialize (Root_View, 2, Valid_Executable);
+
+               if not Tree.Artifacts_Database.Add_Action (A1) then
+                  return 1;
+               end if;
+
+               if not Tree.Artifacts_Database.Add_Action (A2) then
+                  return 1;
+               end if;
+            end;
       when others =>
          null;
    end case;

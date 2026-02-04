@@ -113,8 +113,7 @@ package GPR2.Build.Actions.Link is
       Stdout : Unbounded_String := Null_Unbounded_String;
       Stderr : Unbounded_String := Null_Unbounded_String) return Boolean;
 
-   overriding function Skip (Self : Object) return Boolean
-     with Pre => Self.Is_Defined;
+   overriding function Is_Deactivated (Self : Object) return Boolean;
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object

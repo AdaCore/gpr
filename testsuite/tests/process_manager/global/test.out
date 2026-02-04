@@ -14,6 +14,7 @@ uid: '[Write File] 3 (main.gpr)', status : 'SKIPPED'
 
 ================================================================
 Case 3 - Action n. 2 returns an erroneous code
+execute detected errors
 == Content of jobs.json:
 uid: '[Write File] 1 (main.gpr)', status : '0'
 uid: '[Write File] 2 (main.gpr)', status : '1'
@@ -34,8 +35,31 @@ uid: '[Write File] 5 (main.gpr)', status : '0'
 
 ================================================================
 Case 5 - Action n. 3 does not have a valid executable
+execute detected errors
 == Content of jobs.json:
 uid: '[Write File] 1 (main.gpr)', status : '0'
 uid: '[Write File] 2 (main.gpr)', status : '0'
 uid: '[Write File] 3 (main.gpr)', status : 'FAILED_TO_LAUNCH or 127'
+
+================================================================
+Case 6 - Action n. 2 is deactivated
+== Content of jobs.json:
+uid: '[Write File] 1 (main.gpr)', status : '0'
+uid: '[Write File] 2 (main.gpr)', status : 'DEACTIVATED'
+
+================================================================
+Case 7 - Action n. 1 is deactivated so action n. 2 is not executed
+== Content of jobs.json:
+uid: '[Write File] 1 (main.gpr)', status : 'DEACTIVATED'
+
+================================================================
+Case 8 - Prepare action n.1 signature for next scenario
+== Content of jobs.json:
+uid: '[Write File] 1 (main.gpr)', status : '0'
+
+================================================================
+Case 9 - Action n. 1 is deactivated but has a valid signature, so action n. 2 is executed
+== Content of jobs.json:
+uid: '[Write File] 1 (main.gpr)', status : 'DEACTIVATED'
+uid: '[Write File] 2 (main.gpr)', status : '0'
 
