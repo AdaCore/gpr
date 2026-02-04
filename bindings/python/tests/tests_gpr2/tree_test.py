@@ -175,3 +175,23 @@ def test_cli():
         ]
     )
     assert p.status == 0, p.out
+
+@pytest.mark.data_dir("simple_project")
+def test_default_iterate_simple():
+    with ProjectTree(Options("p.gpr")) as tree:
+        for view in tree:
+            assert view.name == 'P'
+
+@pytest.mark.data_dir("extending_project")
+def test_default_iterate_extending():
+    with ProjectTree(Options("e.gpr")) as tree:
+        names = set()
+        for view in tree:
+            assert view.name not in names, f"view {view.name} already seen"
+            names.add(view.name)
+        assert len(names) == 5, f"expected 5 views, got {len(names)}"
+        assert 'A' in names, "view A not found"
+        assert 'B' in names, "view B not found"
+        assert 'C' in names, "view C not found"
+        assert 'D' in names, "view D not found"
+        assert 'E' in names, "view E not found"

@@ -1,0 +1,4 @@
+
+project E extends "d/d.gpr" is
+
+end E;

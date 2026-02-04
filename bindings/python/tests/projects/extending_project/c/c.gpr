@@ -1,0 +1,5 @@
+with "../b/b.gpr";
+
+project C is
+
+end C;
