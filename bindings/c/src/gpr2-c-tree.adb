@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2020-2025, AdaCore
+--  Copyright (C) 2020-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -12,6 +12,7 @@ with GPR2.C.JSON.Codecs.Options;
 with GPR2.C.Registry;
 with GPR2.C.Reporter;
 with GPR2.Context;
+with GPR2.Project;
 with GPR2.Project.Tree;
 
 package body GPR2.C.Tree is
@@ -81,6 +82,26 @@ package body GPR2.C.Tree is
    begin
       return GPR2.C.Registry.Tree.Lookup (Request.Value ("tree_id"));
    end Get_Tree;
+
+   -------------
+   -- Iterate --
+   -------------
+
+   procedure Iterate
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object)
+   is
+      Tree  : constant GPR2.Project.Tree.Object := Get_Tree (Request);
+      Views : GPR2.C.JSON.Arrays.JSON_Array;
+
+   begin
+      for J in Tree.Iterate loop
+         Views.Append
+           (GPR2.C.Registry.View.Register (GPR2.Project.Tree.Element (J)));
+      end loop;
+
+      Result.Insert ("iterate", Views);
+   end Iterate;
 
    ----------
    -- Load --

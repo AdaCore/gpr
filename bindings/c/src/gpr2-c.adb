@@ -16,6 +16,7 @@ package body GPR2.C is
      (TREE_ARTIFACTS_DIRECTORY     => Tree.Artifacts_Directory'Access,
       TREE_CONTEXT                 => Tree.Context'Access,
       TREE_DESTRUCTOR              => Tree.Destructor'Access,
+      TREE_ITERATE                 => Tree.Iterate'Access,
       TREE_LOAD                    => Tree.Load'Access,
       TREE_LOG_MESSAGES            => Tree.Log_Messages'Access,
       TREE_ROOT_PROJECT            => Tree.Root_Project'Access,

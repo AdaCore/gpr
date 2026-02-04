@@ -1,12 +1,12 @@
 #
-#  Copyright (C) 2020-2025, AdaCore
+#  Copyright (C) 2020-2026, AdaCore
 #
 #  SPDX-License-Identifier: Apache-2.0
 #
 
 from __future__ import annotations
 from gpr2.capi import LibGPR2
-from gpr2.view import ProjectView
+from gpr2.view import ProjectView, ProjectViewIterator
 from gpr2.message import Message
 from typing import TYPE_CHECKING
 
@@ -59,6 +59,12 @@ class ProjectTree:
         _tb: Optional[TracebackType],
     ) -> None:
         pass
+
+    def __iter__(self):
+        answer = LibGPR2.tree_iterate(request={"tree_id": self._id})
+        return ProjectViewIterator(
+            [ProjectView(tree=self, id=view_id) for view_id in answer["iterate"]]
+        )
 
     @property
     def artifacts_directory(self) -> str | None:

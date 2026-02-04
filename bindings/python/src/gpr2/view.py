@@ -73,3 +73,17 @@ class ProjectView:
             ProjectSource.from_dict(view=self, data=src)
             for src in answer["visible_sources"]
         ]
+
+
+class ProjectViewIterator:
+    def __init__(self, views: list[ProjectView]):
+        self._views = views
+        self._index = 0
+
+    def __next__(self):
+        if self._index < len(self._views):
+            self._index += 1
+            return self._views[self._index - 1]
+
+        else:
+            raise StopIteration

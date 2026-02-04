@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2020-2025, AdaCore
+--  Copyright (C) 2020-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -26,6 +26,11 @@ package GPR2.C.Tree is
      (Request : GPR2.C.JSON.Objects.JSON_Object;
       Result  : out GPR2.C.JSON.Objects.JSON_Object);
    --  Implements TREE_DESTRUCTOR
+
+   procedure Iterate
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object);
+   --  Implements TREE_ITERATE
 
    procedure Load
      (Request : GPR2.C.JSON.Objects.JSON_Object;

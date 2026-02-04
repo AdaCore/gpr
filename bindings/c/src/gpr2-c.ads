@@ -35,19 +35,20 @@ package GPR2.C is
    TREE_ARTIFACTS_DIRECTORY : constant C_Function := 1;
    TREE_CONTEXT             : constant C_Function := 2;
    TREE_DESTRUCTOR          : constant C_Function := 3;
-   TREE_LOAD                : constant C_Function := 4;
-   TREE_LOG_MESSAGES        : constant C_Function := 5;
-   TREE_ROOT_PROJECT        : constant C_Function := 6;
-   TREE_RUNTIME_PROJECT     : constant C_Function := 7;
-   TREE_SET_CONTEXT         : constant C_Function := 8;
-   TREE_TARGET              : constant C_Function := 9;
-   TREE_UPDATE_SOURCES      : constant C_Function := 10;
-   VIEW_CONSTRUCTOR         : constant C_Function := 11;
-   VIEW_DESTRUCTOR          : constant C_Function := 12;
-   VIEW_EXECUTABLES         : constant C_Function := 13;
-   VIEW_OBJECT_DIRECTORY    : constant C_Function := 14;
-   VIEW_SOURCES             : constant C_Function := 15;
-   VIEW_VISIBLE_SOURCES     : constant C_Function := 16;
+   TREE_ITERATE             : constant C_Function := 4;
+   TREE_LOAD                : constant C_Function := 5;
+   TREE_LOG_MESSAGES        : constant C_Function := 6;
+   TREE_ROOT_PROJECT        : constant C_Function := 7;
+   TREE_RUNTIME_PROJECT     : constant C_Function := 8;
+   TREE_SET_CONTEXT         : constant C_Function := 9;
+   TREE_TARGET              : constant C_Function := 10;
+   TREE_UPDATE_SOURCES      : constant C_Function := 11;
+   VIEW_CONSTRUCTOR         : constant C_Function := 12;
+   VIEW_DESTRUCTOR          : constant C_Function := 13;
+   VIEW_EXECUTABLES         : constant C_Function := 14;
+   VIEW_OBJECT_DIRECTORY    : constant C_Function := 15;
+   VIEW_SOURCES             : constant C_Function := 16;
+   VIEW_VISIBLE_SOURCES     : constant C_Function := 17;
 
    type C_Request is new Interfaces.C.Strings.chars_ptr;
    --  Request C null terminated string
