@@ -48,7 +48,8 @@ private
    end record;
 
    overriding function Valid_Signature (Self : Object) return Boolean is
-     (Self.Skip or else GPR2.Build.Actions.Object (Self).Valid_Signature);
+     (Self.Is_Deactivated or else
+      GPR2.Build.Actions.Object (Self).Valid_Signature);
 
    overriding function View (Self : Post_Bind_Id) return Project.View.Object is
      (Self.View);

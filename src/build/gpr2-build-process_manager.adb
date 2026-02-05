@@ -321,7 +321,7 @@ package body GPR2.Build.Process_Manager is
                for Artifact of Self.Tree_Db.Outputs (Action => Current_Action)
                loop
                   for Action of Self.Tree_Db.Successors (Artifact) loop
-                     if Action.Is_Deactivated or else Action.Skip then
+                     if Action.Is_Deactivated then
 
                         --  If an action successor is also deactivated or to
                         --  be skipped, then the search for the first
@@ -549,9 +549,9 @@ package body GPR2.Build.Process_Manager is
                   if Proc_Handler_L.Status in Skipped | Deactivated then
                      if Act.Valid_Signature then
                         --  Only consider the visit complete for valid skipped
-                        --  actions, else this will enable the dependent
-                        --  actions that won't have the proper inputs to
-                        --  complete.
+                        --  or deactivated actions, else this will enable the
+                        --  dependent actions that won't have the proper inputs
+                        --  to complete.
 
                         Context.Graph.Complete_Visit (Node);
                      else
@@ -929,18 +929,6 @@ package body GPR2.Build.Process_Manager is
                end if;
 
                Proc_Handler := Process_Handler'(Status => Deactivated);
-
-               return;
-
-            elsif Job.Skip then
-               if Traces.Is_Active then
-                  pragma Annotate (Xcov, Exempt_On, "debug code");
-                  Traces.Trace
-                    ("job asked to be skipped: " & Job.UID.Image);
-                  pragma Annotate (Xcov, Exempt_Off);
-               end if;
-
-               Proc_Handler := Process_Handler'(Status => Skipped);
 
                return;
             end if;

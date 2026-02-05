@@ -14,7 +14,7 @@ def test(header, scenario_idx):
     global test_number
     print("================================================================")
     print("Case " + str(test_number) + " - " + header)
-    proc = bnr.call(["./test", str(scenario_idx)], quiet=True)
+    proc = bnr.call(["./test", str(scenario_idx)])
 
     if proc.status:
         print("Test returned erroneous value: " + str(proc.status))
@@ -22,7 +22,6 @@ def test(header, scenario_idx):
         print("== Content of jobs.json:")
         json_file = open("jobs.json")
         jobs = json.load(json_file)
-        error = False
 
         for job in jobs:
             status = job["status"]
@@ -69,3 +68,10 @@ clean_artifacts_and_signatures()
 test("Action n. 5 does not depend on action n. 4", 3)
 clean_artifacts_and_signatures()
 test("Action n. 3 does not have a valid executable", 4)
+clean_artifacts_and_signatures()
+test("Action n. 2 is deactivated", 5)
+clean_artifacts_and_signatures()
+test("Action n. 1 is deactivated so action n. 2 is not executed", 6)
+clean_artifacts_and_signatures()
+test("Prepare action n.1 signature for next scenario", 7)
+test("Action n. 1 is deactivated but has a valid signature, so action n. 2 is executed", 8)
