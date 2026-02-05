@@ -1,0 +1,78 @@
+===== inst1
+standard project Prj is
+   type BUILD_KIND is ("default");
+   BUILD : BUILD_KIND := external("PRJ_BUILD", "default");
+
+   for Languages use ("Ada");
+
+   case BUILD is
+      when "default" =>
+         for Source_Dirs use ("../../include/prj");
+         for Object_Dir use "../../lib/prj";
+   end case;
+
+   package Naming is
+      case BUILD is
+         when "default" =>
+            null;
+      end case;
+   end Naming;
+
+   package Linker is
+      case BUILD is
+         when "default" =>
+            null;
+      end case;
+   end Linker;
+
+   package Install is
+      for Active use "False";
+   end Install;
+
+   for Externally_Built use "True";
+
+   package U1 is
+      for Default_Switches ("Key1") use ("value-u1");
+      for Me use "toto-u1";
+   end U1;
+
+   package U2 is
+      for Default_Switches ("Key2") use ("value-u2");
+      for Me use "toto-u2";
+   end U2;
+
+   V := "12";
+end Prj;
+===== inst2
+standard project Prj is
+   type BUILD_KIND is ("default");
+   BUILD : BUILD_KIND := external("PRJ_BUILD", "default");
+
+   for Languages use ("Ada");
+
+   case BUILD is
+      when "default" =>
+         for Source_Dirs use ("../../include/prj");
+         for Object_Dir use "../../lib/prj";
+   end case;
+
+   package Naming is
+      case BUILD is
+         when "default" =>
+            null;
+      end case;
+   end Naming;
+
+   package Linker is
+      case BUILD is
+         when "default" =>
+            null;
+      end case;
+   end Linker;
+
+   package Install is
+      for Active use "False";
+   end Install;
+
+   for Externally_Built use "True";
+end Prj;

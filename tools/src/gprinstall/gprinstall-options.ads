@@ -18,6 +18,7 @@
 
 with Ada.Strings.Unbounded;
 
+with GPR2.Path_Name;
 with GPRtools.Options;
 
 with GPR2.Project.Tree;
@@ -126,6 +127,9 @@ package GPRinstall.Options is
       Cross_Install     : Boolean := False;
       --  Whether do the installation using a directory prefix based
       --  on the target/runtime of the cross build.
+
+      Registry_File     : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined;
+      --  File with JSON based definitions to recognize additional attributes
    end record;
 
    function Project_Dir (Self : Object) return String;

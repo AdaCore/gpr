@@ -20,10 +20,13 @@ with Ada.Command_Line;
 with Ada.Containers;
 with Ada.Exceptions;
 with Ada.Strings.Unbounded;
+with Ada.Text_IO;
 
+with GPR2;
 with GPR2.Build.Actions_Population;
 with GPR2.Containers;
 with GPR2.Options;
+with GPR2.Project.Registry.Exchange;
 with GPR2.Project.Tree;
 with GPRtools.Util;
 with GPRtools.Program_Termination;
@@ -35,6 +38,7 @@ with GPRinstall.Uninstall;
 
 function GPRinstall.Main return Ada.Command_Line.Exit_Status is
 
+   use Ada;
    use Ada.Exceptions;
    use Ada.Strings.Unbounded;
 
@@ -194,6 +198,19 @@ begin
       DB.List (Options);
 
    else
+      --  Load additional registry definitions from file if needed before
+      --  loading the project.
+
+      if Options.Registry_File.Is_Defined then
+         if Options.Registry_File.Exists then
+            GPR2.Project.Registry.Exchange.Import (Options.Registry_File);
+         else
+            Text_IO.Put_Line
+              ("Warning: GPR registry file does not exist: "
+               & Options.Registry_File.String_Value);
+         end if;
+      end if;
+
       if not Options.Load_Project (GPR2.No_Error) then
          Handle_Program_Termination (Message => "");
       end if;

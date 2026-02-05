@@ -2324,6 +2324,12 @@ The switches for GPRinstall are:
   project installation directory if an absolute path. Otherwise it is
   appended to the prefix above. The default is ``share/gpr``.
 
+* :smap:`--gpr-registry-file=<file>`
+
+  The JSON file passed as argument describes additional attributes
+  that should be handled. In a user defined package the attributes
+  won't be listed except if explicitly described into the JSON file.
+
 * :samp:`--no-project`
 
   Specify that no project is to be generated and installed.
