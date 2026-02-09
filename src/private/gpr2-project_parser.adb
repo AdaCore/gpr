@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2025, AdaCore
+--  Copyright (C) 2019-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -3425,6 +3425,7 @@ package body GPR2.Project_Parser is
                         Index => Index,
                         Value => Values.First_Element);
                   end if;
+
                else
                   declare
                      Created : Boolean := False;
@@ -3462,6 +3463,7 @@ package body GPR2.Project_Parser is
                                        end if;
                                     end if;
                                  end loop;
+
                                  A := PA.Create
                                    (Name   => Id,
                                     Index  => Index,
@@ -3486,7 +3488,6 @@ package body GPR2.Project_Parser is
                if PRA.Exists (Q_Name) then
                   declare
                      Def : constant PRA.Def := PRA.Get (Q_Name);
-
                   begin
                      if Def.Builtin then
                         Tree.Log_Messages.Append
@@ -3557,7 +3558,6 @@ package body GPR2.Project_Parser is
                                 else Project.Attribute.Undefined);
                   begin
                      if In_Pack then
-
                         if Is_Name_Exception
                           and then A.Value.Text'Length = 0
                         then
@@ -3639,42 +3639,42 @@ package body GPR2.Project_Parser is
 
          begin
             if not I_Sloc.Is_Defined
-             and then PRA.Exists (Q_Name)
-             and then PRA.Get (Q_Name).Index_Type /= PRA.No_Index
+              and then PRA.Exists (Q_Name)
+              and then PRA.Get (Q_Name).Index_Type /= PRA.No_Index
             then
                if not Values.Indexed_Values.Filled then
                   Tree.Log_Messages.Append
-                   (Message.Create
-                      (Level   => Message.Error,
-                       Sloc    => Sloc,
-                       Message => "full associative array expression " &
-                         "requires simple attribute reference"));
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Sloc,
+                        Message => "full associative array expression "
+                          & "requires simple attribute reference"));
 
                elsif
                  Values.Indexed_Values.Attribute_Name.Pack /= Pack_Name
                then
                   Tree.Log_Messages.Append
-                   (Message.Create
-                      (Level   => Message.Error,
-                       Sloc    => Sloc,
-                       Message => "not the same package as " &
-                         Image (Pack_Name)));
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Sloc,
+                        Message => "not the same package as "
+                          & Image (Pack_Name)));
 
                elsif Values.Indexed_Values.Attribute_Name.Attr /= N_Id then
                   Tree.Log_Messages.Append
-                   (Message.Create
-                      (Level   => Message.Error,
-                       Sloc    => Sloc,
-                       Message => "full associative array expression " &
-                         "must reference the same attribute """ &
-                         Image (N_Id) & '"'));
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Sloc,
+                        Message => "full associative array expression "
+                          & "must reference the same attribute """
+                          & Image (N_Id) & '"'));
 
                else
                   for V of Values.Indexed_Values.Values loop
                      Create_And_Register_Attribute
-                      (Index  => V.Index,
-                       Values => V.Values,
-                       Single => V.Single);
+                       (Index  => V.Index,
+                        Values => V.Values,
+                        Single => V.Single);
                   end loop;
                end if;
 
@@ -3686,9 +3686,9 @@ package body GPR2.Project_Parser is
                end if;
 
                Create_And_Register_Attribute
-                (Index  => I_Sloc,
-                 Values => Values.Values,
-                 Single => Values.Single);
+                 (Index  => I_Sloc,
+                  Values => Values.Values,
+                  Single => Values.Single);
             end if;
          end Parse_Attribute_Decl;
 
@@ -4336,8 +4336,8 @@ package body GPR2.Project_Parser is
                  (Message.Create
                     (Level => Message.Error,
                      Sloc  => Source_Reference.Object (A),
-                     Message => "undefined attribute """ &
-                                Image (Q_Name) & """"));
+                     Message => "undefined attribute """
+                                & Image (Q_Name) & """"));
             end if;
 
             Include := False;

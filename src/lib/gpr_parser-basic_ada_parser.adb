@@ -1,8 +1,9 @@
 --
---  Copyright (C) 2023, AdaCore
+--  Copyright (C) 2023-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 --
+
 with System;
 
 with Ada.Characters.Conversions;
@@ -10,31 +11,40 @@ with Ada.Exceptions;
 with Ada.Containers.Vectors;
 with Ada.Strings.Unbounded;
 
-with Gpr_Parser_Support.File_Readers; use Gpr_Parser_Support.File_Readers;
-with Gpr_Parser_Support.Diagnostics;  use Gpr_Parser_Support.Diagnostics;
-with Gpr_Parser.Lexer_State_Machine;  use Gpr_Parser.Lexer_State_Machine;
-with Gpr_Parser.Common;               use Gpr_Parser.Common;
-with Gpr_Parser_Support.Text;         use Gpr_Parser_Support.Text;
-with Gpr_Parser_Support.Slocs;        use Gpr_Parser_Support.Slocs;
+with Gpr_Parser_Support.File_Readers;
+with Gpr_Parser_Support.Diagnostics;
+with Gpr_Parser.Lexer_State_Machine;
+with Gpr_Parser.Common;
+with Gpr_Parser_Support.Text;
+with Gpr_Parser_Support.Slocs;
 with Gpr_Parser_Support.Token_Data_Handlers;
-use Gpr_Parser_Support.Token_Data_Handlers;
-with Gpr_Parser.Public_Converters; use Gpr_Parser.Public_Converters;
-with Gpr_Parser.Implementation;    use Gpr_Parser.Implementation;
+with Gpr_Parser.Public_Converters;
+with Gpr_Parser.Implementation;
 with Gpr_Parser.Analysis;
 
 package body Gpr_Parser.Basic_Ada_Parser is
 
+   use Gpr_Parser_Support.File_Readers;
+   use Gpr_Parser_Support.Diagnostics;
+   use Gpr_Parser.Lexer_State_Machine;
+   use Gpr_Parser.Common;
+   use Gpr_Parser_Support.Text;
+   use Gpr_Parser_Support.Slocs;
+   use Gpr_Parser_Support.Token_Data_Handlers;
+   use Gpr_Parser.Public_Converters;
+   use Gpr_Parser.Implementation;
+
    package GPS renames Gpr_Parser_Support;
 
-   package Lexed_Token_Vectors is new
-     Ada.Containers.Vectors
-       (Index_Type   => Natural,
-        Element_Type => Lexed_Token);
+   package Lexed_Token_Vectors is new Ada.Containers.Vectors
+     (Index_Type   => Natural,
+      Element_Type => Lexed_Token);
 
    subtype Lexed_Token_Vector is Lexed_Token_Vectors.Vector;
 
-   function Encode (Text  : Gpr_Parser.Text.Text_Type;
-                    State : GNATCOLL.Iconv.Iconv_T) return String;
+   function Encode
+     (Text  : Gpr_Parser.Text.Text_Type;
+      State : GNATCOLL.Iconv.Iconv_T) return String;
 
    function Encode_String_Without_Whitespaces
      (Contents            : Decoded_File_Contents;
@@ -79,8 +89,9 @@ package body Gpr_Parser.Basic_Ada_Parser is
    -- Encode --
    ------------
 
-   function Encode (Text  : Gpr_Parser.Text.Text_Type;
-                    State : GNATCOLL.Iconv.Iconv_T) return String
+   function Encode
+     (Text  : Gpr_Parser.Text.Text_Type;
+      State : GNATCOLL.Iconv.Iconv_T) return String
    is
       S : String (1 .. 4 * Text'Length) with Import, Address => Text'Address;
    begin
@@ -103,12 +114,12 @@ package body Gpr_Parser.Basic_Ada_Parser is
       use Ada.Strings.Unbounded;
 
       Current_Idx : Natural := First_Idx;
-      Result : Unbounded_String;
+      Result      : Unbounded_String;
    begin
       if Whitespaces.Is_Empty then
          return Encode
-                  (Contents.Buffer (First_Idx .. Last_Idx),
-                   States.To_State);
+           (Contents.Buffer (First_Idx .. Last_Idx),
+            States.To_State);
       end if;
 
       --  Remove all whitespace characters
@@ -138,9 +149,9 @@ package body Gpr_Parser.Basic_Ada_Parser is
       return To_String (Result);
    end Encode_String_Without_Whitespaces;
 
-   --------------------------
-   -- Parse_Context_Clause --
-   --------------------------
+   ---------------------------
+   -- Parse_Context_Clauses --
+   ---------------------------
 
    procedure Parse_Context_Clauses
      (Filename       : String;
@@ -185,7 +196,7 @@ package body Gpr_Parser.Basic_Ada_Parser is
          T           : out Lexed_Token;
          Identifiers :     Specific_Identifier_Access_Array := (2 .. 1 => <>);
          Expected    :     Boolean                          := True)
-         return Boolean;
+        return Boolean;
       --  Skip tokens until one of the specified token is encountered. Because
       --  identifiers token regroup several specific tokens, like separate,
       --  generic, etc, we may want to skip until specific identifiers. Last
@@ -198,7 +209,7 @@ package body Gpr_Parser.Basic_Ada_Parser is
       --  without finding one of the expected tokens, then False is returned.
 
       function Parse_Library_Item_And_Subunit_Pre_Cond
-         return Boolean;
+        return Boolean;
       --  Pre condition function for Parse_Library_Item_And_Subunit. Ensure
       --  that the current token is valid as a first library item or subunit
       --  token.
@@ -218,8 +229,8 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
       procedure Parse_With_Clause with
         Pre =>
-         Last_Token (State).Kind = Gpr_With
-         or else Last_Token (State).Kind = Gpr_Limited;
+          Last_Token (State).Kind = Gpr_With
+          or else Last_Token (State).Kind = Gpr_Limited;
       --  Parse "with" clause, and calls With_Clause_CB if the callback is
       --  not null.
 
@@ -250,21 +261,20 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
          procedure Skip_Generic with
            Pre =>
-            T.Kind = Gpr_Identifier
-            and then To_Lower (Contents.Buffer (T.Text_First .. T.Text_Last)) =
-              Generic_Token;
+             T.Kind = Gpr_Identifier
+             and then To_Lower (Contents.Buffer (T.Text_First .. T.Text_Last)) =
+               Generic_Token;
          --  Skip tokens related to the generic part of a unit
 
          procedure Parse_Separate with
            Pre =>
-            T.Kind = Gpr_Identifier
-            and then To_Lower (Contents.Buffer (T.Text_First .. T.Text_Last)) =
-              Separate_Token;
+             T.Kind = Gpr_Identifier
+             and then To_Lower (Contents.Buffer (T.Text_First .. T.Text_Last)) =
+               Separate_Token;
          --  Set Separate_From_First and Separate_From_Last with indexes of the
          --  separate argument.
 
-         function Parse_Unit_Pre_Cond
-            return Boolean;
+         function Parse_Unit_Pre_Cond return Boolean;
          --  Pre-condition function for Parse_Unit. Ensure that the current
          --  token is either "package", "function" or "procedure".
 
@@ -273,6 +283,10 @@ package body Gpr_Parser.Basic_Ada_Parser is
          --  Parse the mandatory part of the library item which contains the
          --  compilation unit name. Calls the library item callback if it is
          --  not null.
+
+         --------------------
+         -- Parse_Separate --
+         --------------------
 
          procedure Parse_Separate is
          begin
@@ -330,7 +344,7 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
             begin
                declare
-                  U_Name : String :=
+                  U_Name : constant String :=
                              Encode_String_Without_Whitespaces
                                (Contents    => Contents,
                                 First_Idx   => Unit_First,
@@ -340,11 +354,11 @@ package body Gpr_Parser.Basic_Ada_Parser is
                   Sep_Name : constant String :=
                                (if Separate_From_First /= 0
                                 then Encode_String_Without_Whitespaces
-                                   (Contents    => Contents,
-                                    First_Idx   => Separate_From_First,
-                                    Last_Idx    => Separate_From_Last,
-                                    Whitespaces => Separate_Whitespaces,
-                                    States      => States)
+                                  (Contents    => Contents,
+                                   First_Idx   => Separate_From_First,
+                                   Last_Idx    => Separate_From_Last,
+                                   Whitespaces => Separate_Whitespaces,
+                                   States      => States)
                                 else "");
                begin
                   Unit_Name_CB
@@ -369,7 +383,7 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
             elsif T.Kind = Gpr_Identifier then
                declare
-                  Token_Text : Text_Type :=
+                  Token_Text : constant Text_Type :=
                                  To_Lower
                                    (Contents.Buffer
                                       (T.Text_First .. T.Text_Last));
@@ -477,7 +491,7 @@ package body Gpr_Parser.Basic_Ada_Parser is
       ---------------------------------------------
 
       function Parse_Library_Item_And_Subunit_Pre_Cond
-         return Boolean
+        return Boolean
       is
          T           : Lexed_Token := Last_Token (State);
          Valid_Token : Boolean     := False;
@@ -489,8 +503,8 @@ package body Gpr_Parser.Basic_Ada_Parser is
          elsif T.Kind = Gpr_Identifier then
             declare
                Token_Text : Text_Type :=
-                            To_Lower (Contents.Buffer
-                              (T.Text_First .. T.Text_Last));
+                 To_Lower (Contents.Buffer
+                             (T.Text_First .. T.Text_Last));
 
             begin
                if Token_Text = Procedure_Token
@@ -545,8 +559,7 @@ package body Gpr_Parser.Basic_Ada_Parser is
       -- Parse_With_Clause --
       -----------------------
 
-      procedure Parse_With_Clause
-      is
+      procedure Parse_With_Clause is
          T                 : Lexed_Token := Last_Token (State);
          Withed_Unit_First : Positive;
          Withed_Unit_Last  : Positive;
@@ -582,12 +595,12 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
             if With_Clause_CB /= null then
                With_Clause_CB
-                  (Encode_String_Without_Whitespaces
-                     (Contents    => Contents,
-                      First_Idx   => Withed_Unit_First,
-                      Last_Idx    => Withed_Unit_Last,
-                      Whitespaces => Whitespaces,
-                      States      => States),
+                 (Encode_String_Without_Whitespaces
+                    (Contents    => Contents,
+                     First_Idx   => Withed_Unit_First,
+                     Last_Idx    => Withed_Unit_Last,
+                     Whitespaces => Whitespaces,
+                     States      => States),
                   Lim);
             end if;
 
@@ -618,7 +631,7 @@ package body Gpr_Parser.Basic_Ada_Parser is
          T           : out Lexed_Token;
          Identifiers :     Specific_Identifier_Access_Array := (2 .. 1 => <>);
          Expected    :     Boolean                          := True)
-         return Boolean is
+        return Boolean is
       begin
          while Has_Next (State) loop
             Next_Token (State, T);
@@ -696,13 +709,13 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
          Diagnostics : GPS.Diagnostics.Diagnostics_Vectors.Vector;
       begin
-
          if Internal_Ctx.File_Reader /= null then
             Read
               (Internal_Ctx.File_Reader.all, Filename, "iso-8859-15", True,
                Contents, Diagnostics);
          else
-            Direct_Read (Filename, States.From_State, True, Contents, Diagnostics);
+            Direct_Read
+              (Filename, States.From_State, True, Contents, Diagnostics);
          end if;
 
          if not Diagnostics.Is_Empty then
@@ -715,8 +728,8 @@ package body Gpr_Parser.Basic_Ada_Parser is
       exception
          when E : others =>
             Log_Error_Internal
-              ("exception while parsing " & String (Filename) & ASCII.LF &
-                 Ada.Exceptions.Exception_Information (E));
+              ("exception while parsing " & String (Filename) & ASCII.LF
+               & Ada.Exceptions.Exception_Information (E));
       end;
 
       --  Initialize the lexer
@@ -731,14 +744,13 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
          declare
             T : Lexed_Token;
-
          begin
             if not Skip_Until
-                ((Gpr_With, Gpr_Identifier, Gpr_Package, Gpr_Limited,
-                  Gpr_Pragma),
-                 T,
-                 (Procedure_Token'Access, Function_Token'Access,
-                  Separate_Token'Access, Generic_Token'Access))
+              ((Gpr_With, Gpr_Identifier, Gpr_Package, Gpr_Limited,
+               Gpr_Pragma),
+               T,
+               (Procedure_Token'Access, Function_Token'Access,
+                Separate_Token'Access, Generic_Token'Access))
             then
                Log_Error_Internal ("Unexpected preamble");
 
@@ -767,7 +779,6 @@ package body Gpr_Parser.Basic_Ada_Parser is
                exit;
 
             elsif T.Kind = Gpr_Pragma then
-
                --  Two cases:
                --  - pragma No_Body: The source can only contain this pragma
                --    and possibly comments. The parsing is ended.
@@ -784,10 +795,10 @@ package body Gpr_Parser.Basic_Ada_Parser is
 
                else
                   declare
-                     Text : Text_Type :=
-                              To_Lower
-                                (Contents.Buffer
-                                   (T.Text_First .. T.Text_Last));
+                     Text : constant Text_Type :=
+                       To_Lower
+                         (Contents.Buffer
+                            (T.Text_First .. T.Text_Last));
 
                   begin
                      if Text = No_Body_Token then
