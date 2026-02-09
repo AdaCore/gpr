@@ -287,7 +287,7 @@ package body GPRinstall.Options is
         (Install_Group,
          Create
            (Name => "--minimal-project",
-            Help => "Record the strict minimal date in project file"));
+            Help => "Record the strict minimal data in project file"));
       Parser.Add_Argument
         (Install_Group,
          Create
