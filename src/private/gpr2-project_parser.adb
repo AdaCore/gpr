@@ -1498,12 +1498,12 @@ package body GPR2.Project_Parser is
       function Is_Open return Boolean is
         (Case_Values.Is_Empty
          or else (for all CV of Case_Values => CV (1) = '+'));
-      --  Is_Open is a parsing barrier, it is True when whole parsing can be
-      --  conducted and False otherwise. When it is False the naming exceptions
-      --  source filenames collected into Object.Skip_Src container to ignore
-      --  at the Update_Sources stage. When it is True, the entire parsing
-      --  processes and naming exception source filenames collected into Actual
-      --  to remove it from Object.Skip_Src at the end of parsing.
+      --  Is_Open controls the parsing scope. When True, full parsing is
+      --  performed. When False, only naming exception source filenames are
+      --  collected into Object.Skip_Src to be ignored during the
+      --  Update_Sources stage. When True, complete parsing occurs and naming
+      --  exception source filenames are collected into Actual to later remove
+      --  them from Object.Skip_Src at the end of parsing.
 
       -----------------------
       -- Ensure_Source_Loc --
