@@ -1,5 +1,5 @@
 #
-#  Copyright (C) 2020-2025, AdaCore
+#  Copyright (C) 2020-2026, AdaCore
 #
 #  SPDX-License-Identifier: Apache-2.0
 #
@@ -61,3 +61,29 @@ class ProjectView:
         return [
             ProjectSource.from_dict(view=self, data=src) for src in answer["sources"]
         ]
+
+    @property
+    def visible_sources(self) -> list[ProjectSource]:
+        """Get the list of visible sources for the given view.
+
+        :return: the list of Source part of the view
+        """
+        answer = LibGPR2.view_visible_sources(request={"view_id": self.id})
+        return [
+            ProjectSource.from_dict(view=self, data=src)
+            for src in answer["visible_sources"]
+        ]
+
+
+class ProjectViewIterator:
+    def __init__(self, views: list[ProjectView]):
+        self._views = views
+        self._index = 0
+
+    def __next__(self):
+        if self._index < len(self._views):
+            self._index += 1
+            return self._views[self._index - 1]
+
+        else:
+            raise StopIteration

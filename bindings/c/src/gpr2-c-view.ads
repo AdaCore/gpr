@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2020-2025, AdaCore
+--  Copyright (C) 2020-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -34,5 +34,10 @@ package GPR2.C.View is
      (Request : GPR2.C.JSON.Objects.JSON_Object;
       Result  : out GPR2.C.JSON.Objects.JSON_Object);
    --  Implements VIEW_SOURCES
+
+   procedure Visible_Sources
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object);
+   --  Implements VIEW_VISIBLE_SOURCES
 
 end GPR2.C.View;

@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2020-2025, AdaCore
+--  Copyright (C) 2020-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -11,6 +11,11 @@ with GPR2.C.JSON.Objects;
 package GPR2.C.Tree is
 
    pragma Elaborate_Body;
+
+   procedure Ada_Source_Closure
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object);
+   --  Implements TREE_ADA_CLOSURE
 
    procedure Artifacts_Directory
      (Request : GPR2.C.JSON.Objects.JSON_Object;
@@ -26,6 +31,11 @@ package GPR2.C.Tree is
      (Request : GPR2.C.JSON.Objects.JSON_Object;
       Result  : out GPR2.C.JSON.Objects.JSON_Object);
    --  Implements TREE_DESTRUCTOR
+
+   procedure Iterate
+     (Request : GPR2.C.JSON.Objects.JSON_Object;
+      Result  : out GPR2.C.JSON.Objects.JSON_Object);
+   --  Implements TREE_ITERATE
 
    procedure Load
      (Request : GPR2.C.JSON.Objects.JSON_Object;

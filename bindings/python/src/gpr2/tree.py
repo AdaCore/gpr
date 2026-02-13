@@ -1,13 +1,14 @@
 #
-#  Copyright (C) 2020-2025, AdaCore
+#  Copyright (C) 2020-2026, AdaCore
 #
 #  SPDX-License-Identifier: Apache-2.0
 #
 
 from __future__ import annotations
 from gpr2.capi import LibGPR2
-from gpr2.view import ProjectView
+from gpr2.view import ProjectView, ProjectViewIterator
 from gpr2.message import Message
+from gpr2.source import ProjectSource
 from typing import TYPE_CHECKING
 
 
@@ -59,6 +60,29 @@ class ProjectTree:
         _tb: Optional[TracebackType],
     ) -> None:
         pass
+
+    def __iter__(self):
+        answer = LibGPR2.tree_iterate(request={"tree_id": self._id})
+        return ProjectViewIterator(
+            [ProjectView(tree=self, id=view_id) for view_id in answer["iterate"]]
+        )
+
+    def ada_source_closure(
+        self, root_project_only: bool = False, externally_built: bool = False
+    ) -> list[ProjectSource]:
+        """
+        Returns closure of the source files for the given project tree.
+        """
+        answer = LibGPR2.tree_ada_source_closure(
+            request={
+                "tree_id": self._id,
+                "root_project_only": root_project_only,
+                "externally_built": externally_built,
+            }
+        )
+        return [
+            ProjectSource.from_dict(view=None, data=src) for src in answer["ada_closure"]
+        ]
 
     @property
     def artifacts_directory(self) -> str | None:

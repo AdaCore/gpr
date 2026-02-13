@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2020-2025, AdaCore
+--  Copyright (C) 2020-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -32,21 +32,24 @@ package GPR2.C is
    --  Function to invoke
 
    --  Tree functions
-   TREE_ARTIFACTS_DIRECTORY : constant C_Function := 1;
-   TREE_CONTEXT             : constant C_Function := 2;
-   TREE_DESTRUCTOR          : constant C_Function := 3;
-   TREE_LOAD                : constant C_Function := 4;
-   TREE_LOG_MESSAGES        : constant C_Function := 5;
-   TREE_ROOT_PROJECT        : constant C_Function := 6;
-   TREE_RUNTIME_PROJECT     : constant C_Function := 7;
-   TREE_SET_CONTEXT         : constant C_Function := 8;
-   TREE_TARGET              : constant C_Function := 9;
-   TREE_UPDATE_SOURCES      : constant C_Function := 10;
-   VIEW_CONSTRUCTOR         : constant C_Function := 11;
-   VIEW_DESTRUCTOR          : constant C_Function := 12;
-   VIEW_EXECUTABLES         : constant C_Function := 13;
-   VIEW_OBJECT_DIRECTORY    : constant C_Function := 14;
-   VIEW_SOURCES             : constant C_Function := 15;
+   TREE_ADA_SOURCE_CLOSURE  : constant C_Function := 1;
+   TREE_ARTIFACTS_DIRECTORY : constant C_Function := 2;
+   TREE_CONTEXT             : constant C_Function := 3;
+   TREE_DESTRUCTOR          : constant C_Function := 4;
+   TREE_ITERATE             : constant C_Function := 5;
+   TREE_LOAD                : constant C_Function := 6;
+   TREE_LOG_MESSAGES        : constant C_Function := 7;
+   TREE_ROOT_PROJECT        : constant C_Function := 8;
+   TREE_RUNTIME_PROJECT     : constant C_Function := 9;
+   TREE_SET_CONTEXT         : constant C_Function := 10;
+   TREE_TARGET              : constant C_Function := 11;
+   TREE_UPDATE_SOURCES      : constant C_Function := 12;
+   VIEW_CONSTRUCTOR         : constant C_Function := 13;
+   VIEW_DESTRUCTOR          : constant C_Function := 14;
+   VIEW_EXECUTABLES         : constant C_Function := 15;
+   VIEW_OBJECT_DIRECTORY    : constant C_Function := 16;
+   VIEW_SOURCES             : constant C_Function := 17;
+   VIEW_VISIBLE_SOURCES     : constant C_Function := 18;
 
    type C_Request is new Interfaces.C.Strings.chars_ptr;
    --  Request C null terminated string
