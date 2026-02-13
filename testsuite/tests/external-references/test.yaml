@@ -2,4 +2,5 @@ description:
     external in extended support
 driver: build_and_run
 project_file: test
+timeout: 500
 main: main
