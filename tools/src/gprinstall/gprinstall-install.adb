@@ -230,9 +230,10 @@ package body GPRinstall.Install is
       package Artifacts_Set is
         new Ada.Containers.Vectors (Positive, Artifacts_Data);
 
-      Artifacts : Artifacts_Set.Vector;
+      Artifacts         : Artifacts_Set.Vector;
+      --  Install's package defined artifacts
 
-      Excluded_Naming : GPR2.Containers.Name_Set;
+      Excluded_Naming   : GPR2.Containers.Name_Set;
       --  This set contains names of Ada unit to exclude from the generated
       --  package Naming. This is needed to avoid renaming for bodies which
       --  are not installed when the minimum installation (-m) is used. In
