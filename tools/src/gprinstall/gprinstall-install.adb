@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2025, AdaCore                     --
+--                     Copyright (C) 2019-2026, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -36,7 +36,7 @@ with GNATCOLL.OS.FSUtil;
 with GPR2.Build.Actions.Compile.Ada;
 with GPR2.Build.Actions.Link;
 with GPR2.Build.Artifacts.Files;
-with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Unit_Info.List;
 with GPR2.Build.Source.Sets;
 with GPR2.Build.View_Db;
@@ -230,9 +230,10 @@ package body GPRinstall.Install is
       package Artifacts_Set is
         new Ada.Containers.Vectors (Positive, Artifacts_Data);
 
-      Artifacts : Artifacts_Set.Vector;
+      Artifacts         : Artifacts_Set.Vector;
+      --  Install's package defined artifacts
 
-      Excluded_Naming : GPR2.Containers.Name_Set;
+      Excluded_Naming   : GPR2.Containers.Name_Set;
       --  This set contains names of Ada unit to exclude from the generated
       --  package Naming. This is needed to avoid renaming for bodies which
       --  are not installed when the minimum installation (-m) is used. In
@@ -242,6 +243,13 @@ package body GPRinstall.Install is
       --
       --  2. the naming convention for the body must be excluded from the
       --     generated project.
+
+      Interface_Closure : constant GPR2.Build.Compilation_Unit.Maps.Map :=
+                         (if Project.Is_Library
+                            and then Project.Is_Library_Standalone
+                          then Project.Interface_Closure
+                          else GPR2.Build.Compilation_Unit.Maps.Empty_Map);
+      --  The interface closure of the project. Cached here as slow to compute.
 
       procedure Copy_File
         (From, To      : Path_Name.Object;
@@ -1183,7 +1191,7 @@ package body GPRinstall.Install is
 
                         if not Project.Is_Library
                           or else not Project.Is_Library_Standalone
-                          or else Project.Interface_Closure.Contains (U.Name)
+                          or else Interface_Closure.Contains (U.Name)
                           or else U.Is_Body_Needed_For_SAL
                         then
                            Copy_File
