@@ -1,0 +1,2 @@
+description: Regression test for recompilation of C file on timestamp/content changes
+driver: python_script
