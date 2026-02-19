@@ -17,7 +17,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Command_Line;
-with Ada.Exceptions; use Ada.Exceptions;
+with Ada.Exceptions;
 
 with GNATCOLL.Traces;
 
@@ -35,6 +35,7 @@ with GPRinspect.Process;
 
 function GPRinspect.Main return Ada.Command_Line.Exit_Status is
 
+   use Ada.Exceptions;
    use GPR2;
 
    use GPRtools.Program_Termination;

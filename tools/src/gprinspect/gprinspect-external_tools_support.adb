@@ -44,7 +44,6 @@ package body GPRinspect.External_Tools_Support is
    package PRA renames GPR2.Project.Registry.Attribute;
    package PRAD renames GPR2.Project.Registry.Attribute.Description;
 
-
    procedure Register_Legacy_Gnatcheck;
    --  Add support of gnatcheck tool not installed or not able to print
    --  registered data
@@ -103,10 +102,10 @@ package body GPRinspect.External_Tools_Support is
             Args_Vector.Append (GPR2.Options.Print_GPR_Registry_Option);
 
             Output := GNATCOLL.OS.Process.Run
-              (Args        => Args_Vector,
-               Stdin       => GNATCOLL.OS.Process.FS.Null_FD,
-               Stderr      => GNATCOLL.OS.Process.FS.To_Stdout,
-               Status      => Dummy);
+              (Args   => Args_Vector,
+               Stdin  => GNATCOLL.OS.Process.FS.Null_FD,
+               Stderr => GNATCOLL.OS.Process.FS.To_Stdout,
+               Status => Dummy);
 
             if Dummy = 0 then
                GPR2.Project.Registry.Exchange.Import (Output);
@@ -160,12 +159,12 @@ package body GPRinspect.External_Tools_Support is
 
       if not PRA.Exists (Check_Default_Switches) then
          PRA.Add
-           (Name                  => Check_Default_Switches,
-            Index_Type            => PRA.Language_Index,
-            Value                 => PRA.List,
-            Value_Case_Sensitive  => True,
-            Is_Allowed_In         => PRA.Everywhere,
-            Config_Concatenable   => True);
+           (Name                 => Check_Default_Switches,
+            Index_Type           => PRA.Language_Index,
+            Value                => PRA.List,
+            Value_Case_Sensitive => True,
+            Is_Allowed_In        => PRA.Everywhere,
+            Config_Concatenable  => True);
       end if;
 
       if PRAD.Get_Attribute_Description (Check_Default_Switches) = "" then
@@ -180,13 +179,13 @@ package body GPRinspect.External_Tools_Support is
 
       if not PRA.Exists (Check_Switches) then
          PRA.Add
-           (Name                  => Check_Switches,
-            Index_Type            => PRA.Language_Index,
-            Value                 => PRA.List,
-            Value_Case_Sensitive  => True,
-            Is_Allowed_In         => PRA.Everywhere,
-            Index_Optional        => True,
-            Config_Concatenable   => True);
+           (Name                 => Check_Switches,
+            Index_Type           => PRA.Language_Index,
+            Value                => PRA.List,
+            Value_Case_Sensitive => True,
+            Is_Allowed_In        => PRA.Everywhere,
+            Index_Optional       => True,
+            Config_Concatenable  => True);
       end if;
 
       if PRAD.Get_Attribute_Description (Check_Switches) = "" then
@@ -219,11 +218,11 @@ package body GPRinspect.External_Tools_Support is
 
       if not PRA.Exists (Codepeer_File_Patterns) then
          PRA.Add
-           (Name                  => Codepeer_File_Patterns,
-            Index_Type            => PRA.No_Index,
-            Value                 => PRA.List,
-            Value_Case_Sensitive  => True,
-            Is_Allowed_In         => PRA.Everywhere);
+           (Name                 => Codepeer_File_Patterns,
+            Index_Type           => PRA.No_Index,
+            Value                => PRA.List,
+            Value_Case_Sensitive => True,
+            Is_Allowed_In        => PRA.Everywhere);
       end if;
 
       if PRAD.Get_Attribute_Description (Codepeer_File_Patterns) = "" then
@@ -272,11 +271,11 @@ package body GPRinspect.External_Tools_Support is
 
       if not PRA.Exists (Prove_Proof_Switches) then
          PRA.Add
-           (Name                  => Prove_Proof_Switches,
-            Index_Type            => PRA.FileGlob_Or_Language_Index,
-            Value                 => PRA.List,
-            Value_Case_Sensitive  => False,
-            Is_Allowed_In         => PRA.Everywhere);
+           (Name                 => Prove_Proof_Switches,
+            Index_Type           => PRA.FileGlob_Or_Language_Index,
+            Value                => PRA.List,
+            Value_Case_Sensitive => False,
+            Is_Allowed_In        => PRA.Everywhere);
       end if;
 
       if PRAD.Get_Attribute_Description (Prove_Proof_Switches) = "" then
@@ -292,11 +291,11 @@ package body GPRinspect.External_Tools_Support is
 
       if not PRA.Exists (Prove_Switches) then
          PRA.Add
-           (Name                  => Prove_Switches,
-            Index_Type            => PRA.No_Index,
-            Value                 => PRA.List,
-            Value_Case_Sensitive  => False,
-            Is_Allowed_In         => PRA.Everywhere);
+           (Name                 => Prove_Switches,
+            Index_Type           => PRA.No_Index,
+            Value                => PRA.List,
+            Value_Case_Sensitive => False,
+            Is_Allowed_In        => PRA.Everywhere);
       end if;
 
       if PRAD.Get_Attribute_Description (Prove_Switches) = "" then
@@ -309,11 +308,11 @@ package body GPRinspect.External_Tools_Support is
 
       if not PRA.Exists (Prove_Proof_Dir) then
          PRA.Add
-           (Name                  => Prove_Proof_Dir,
-            Index_Type            => PRA.No_Index,
-            Value                 => PRA.Single,
-            Value_Case_Sensitive  => True,
-            Is_Allowed_In         => PRA.Everywhere);
+           (Name                 => Prove_Proof_Dir,
+            Index_Type           => PRA.No_Index,
+            Value                => PRA.Single,
+            Value_Case_Sensitive => True,
+            Is_Allowed_In        => PRA.Everywhere);
       end if;
 
       if PRAD.Get_Attribute_Description (Prove_Proof_Dir) = "" then
