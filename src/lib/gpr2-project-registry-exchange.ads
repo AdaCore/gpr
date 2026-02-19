@@ -45,7 +45,7 @@ package GPR2.Project.Registry.Exchange is
    --  Import in registry Definitions (in JSON format) filtered by
    --  Included/Excluded parameters.
    --  By default import all definitions except project scope and gpr2
-   --  prefedined packages.
+   --  predefined packages.
    --  Raise GNATCOLL.JSON.Invalid_JSON_Stream exception if Definitions is an
    --  invalid JSON string.
 
