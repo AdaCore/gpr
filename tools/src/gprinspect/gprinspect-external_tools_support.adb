@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2024, AdaCore                     --
+--                     Copyright (C) 2019-2026, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -53,9 +53,6 @@ package body GPRinspect.External_Tools_Support is
    --  Add support of gnatprove tool not installed or not able to print
    --  registered data
 
-   procedure Import_From_File (File : GPR2.Path_Name.Object);
-   --  Import attribute definitions/documentation from provided file
-
    procedure Import_From_Tool
      (Tool_Name       : String;
       Legacy_Callback : access procedure := null);
@@ -68,38 +65,19 @@ package body GPRinspect.External_Tools_Support is
 
    procedure Import_External_Tools_Registry (File : GPR2.Path_Name.Object) is
    begin
-      Import_From_File (File);
+      if File.Is_Defined then
+         if File.Exists then
+            Project.Registry.Exchange.Import (File);
+         else
+            Text_IO.Put_Line
+              ("Warning: GPR registry file does not exist: "
+               & File.String_Value);
+         end if;
+      end if;
+
       Import_From_Tool ("gnatcheck", Register_Legacy_Gnatcheck'Access);
       Import_From_Tool ("gnatprove", Register_Legacy_Gnatprove'Access);
    end Import_External_Tools_Registry;
-
-   ----------------------
-   -- Import_From_File --
-   ----------------------
-
-   procedure Import_From_File (File : GPR2.Path_Name.Object) is
-      use Ada.Exceptions;
-   begin
-      if File.Is_Defined and then File.Exists then
-         declare
-            Definitions : Unbounded_String;
-            F           : Text_IO.File_Type;
-         begin
-            Text_IO.Open (F, Text_IO.In_File, File.String_Value);
-
-            while not Text_IO.End_Of_File (F) loop
-               Append (Definitions, Text_IO.Get_Line (F) & ASCII.LF);
-            end loop;
-
-            GPR2.Project.Registry.Exchange.Import (Definitions);
-         exception
-            when E : others =>
-               Ada.Text_IO.Put_Line
-                 ("Warning: Cannot import attribute registry from file: "
-                  & Exception_Information (E));
-         end;
-      end if;
-   end Import_From_File;
 
    ----------------------
    -- Import_From_Tool --
