@@ -1,0 +1,13 @@
+first compilation
+$ gprbuild -P prj.gpr
+[C Compile]       toto.c
+no changes: no recompilation
+$ gprbuild -P prj.gpr
+update timestamp (now): no recompilation
+$ gprbuild -P prj.gpr
+update timestamp (past): no recompilation
+$ gprbuild -P prj.gpr
+change file and update timestamp (past): recompilation
+$ gprbuild -P prj.gpr
+[C Compile]       toto.c
+$ gprclean -P prj.gpr
