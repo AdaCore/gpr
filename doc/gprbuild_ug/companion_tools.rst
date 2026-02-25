@@ -2330,6 +2330,11 @@ The switches for GPRinstall are:
   that should be handled. In a user defined package the attributes
   won't be listed except if explicitly described into the JSON file.
 
+* :smap:`--minimal-project`
+
+  Record the strict minimal data into the generated project file. With
+  this option the variabels and user's packages won't be generated.
+
 * :samp:`--no-project`
 
   Specify that no project is to be generated and installed.
