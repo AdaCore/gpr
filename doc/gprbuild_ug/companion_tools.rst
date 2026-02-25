@@ -3016,6 +3016,12 @@ are recognized:
 
   Display variables and types.
 
+* :smap:`--gpr-registry-file=<file>`
+
+  The JSON file passed as argument describes additional attributes
+  that should be handled. In a user defined package the attributes
+  won't be listed except if explicitly described into the JSON file.
+
 * :samp:`--display[=json|json-compact|textual]`
 
   Output using human-readable or JSON format.
