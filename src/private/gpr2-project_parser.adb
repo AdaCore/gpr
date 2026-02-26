@@ -4277,7 +4277,25 @@ package body GPR2.Project_Parser is
                   Parse_Case_Item (Node.As_Case_Item);
 
                when Gpr_Attribute_Decl =>
-                  Parse_Attribute_Decl (Node.As_Attribute_Decl);
+                  declare
+                     use PRA;
+
+                     Name              : constant Identifier :=
+                       F_Attr_Name (Node.As_Attribute_Decl);
+                     N_Str             : constant Name_Type :=
+                       Get_Name_Type (Name.As_Single_Tok_Node);
+                     N_Id              : constant Attribute_Id := +N_Str;
+                     Is_Name_Exception : constant Boolean :=
+                       N_Id
+                       in Naming.Spec.Attr
+                        | Naming.Specification.Attr
+                        | Naming.Body_N.Attr
+                        | Naming.Implementation.Attr;
+                  begin
+                     if Is_Name_Exception then
+                        Parse_Attribute_Decl (Node.As_Attribute_Decl);
+                     end if;
+                  end;
 
                when others =>
                   null;

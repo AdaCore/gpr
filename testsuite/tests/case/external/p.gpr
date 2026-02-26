@@ -1,0 +1,11 @@
+project P is
+   type My_Type1 is ("A", "B");
+   Var1 : My_Type1 := "A";
+
+   case Var1 is
+      when "A" => null;
+      when "B" => for Object_Directory use external("UNDEFINED");
+      --  B should not be parsed, so no error should be raised for the
+      --  undefined external value.
+   end case;
+end P;
