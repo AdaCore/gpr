@@ -259,6 +259,19 @@ package body GPR2.Project.Tree.Inspect is
          Set_Field (Prj, "simple-name", String (View.Path_Name.Simple_Name));
          Set_Field (Prj, "file-name", View.Path_Name.String_Value);
          Set_Field (Prj, "directory", String (View.Path_Name.Dir_Name));
+         Set_Field (Prj, "is-externally-built", View.Is_Externally_Built);
+
+         declare
+            L_Array : JSON_Array;
+         begin
+            for Language of View.Language_Ids loop
+               Append (L_Array, Create (String (Name (Language))));
+            end loop;
+
+            if not Is_Empty (L_Array) then
+               Set_Field (Prj, "languages", L_Array);
+            end if;
+         end;
 
          if View.Kind in With_Object_Dir_Kind then
             Set_Field
@@ -279,6 +292,15 @@ package body GPR2.Project.Tree.Inspect is
                   Set_Field
                     (Prj, "source-directories", To_JSON_Array (Src_Array));
                end;
+            end if;
+         end if;
+
+         if View.Kind = K_Standard then
+            if View.Executable_Directory.Is_Defined then
+               Set_Field
+                 (Prj,
+                  "executable-directory",
+                  View.Executable_Directory.String_Value);
             end if;
          end if;
 
