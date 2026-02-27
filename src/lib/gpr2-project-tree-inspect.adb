@@ -6,6 +6,7 @@
 
 with Ada.Calendar.Formatting;
 
+with GPR2.Build.Source.Sets;
 with GPR2.Containers;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Registry.Attribute;
@@ -482,6 +483,30 @@ package body GPR2.Project.Tree.Inspect is
                end if;
             end;
          end if;
+
+         --  Sources
+
+         declare
+            S_Array : JSON_Array;
+            S       : JSON_Value;
+
+         begin
+            for Source of View.Sources loop
+               S := Create_Object;
+
+               Set_Field
+                 (S, "directory", String (Source.Path_Name.Dir_Name));
+               Set_Field (S, "file-name", Source.Path_Name.String_Value);
+               Set_Field
+                 (S, "simple-name", String (Source.Path_Name.Simple_Name));
+
+               Append (S_Array, S);
+            end loop;
+
+            if not Is_Empty (S_Array) then
+               Set_Field (F_Prj, "sources", S_Array);
+            end if;
+         end;
 
          Append (Prjs, F_Prj);
       end Parse_Project;
