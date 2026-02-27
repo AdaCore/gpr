@@ -489,6 +489,7 @@ package body GPR2.Project.Tree.Inspect is
          R       : constant JSON_Value := Create_Object;
          Stat    : constant JSON_Value := Create_Object;
          P_Array : JSON_Array;
+         RT      : constant JSON_Value := Create_Object;
       begin
          --  Some stats about the tree
 
@@ -530,6 +531,31 @@ package body GPR2.Project.Tree.Inspect is
          Set_Field (R, "id", View_Id (Tree.Root_Project));
 
          Set_Field (T, "root-project", R);
+
+         --  Artifacts directory
+
+         if Tree.Artifacts_Dir.Is_Defined then
+            Set_Field (T, "artifacts-dir", Tree.Artifacts_Dir.String_Value);
+         end if;
+
+         --  Target
+
+         Set_Field (T, "target", String (Tree.Target));
+
+         --  Runtimes
+
+         for Language of Tree.Languages loop
+            if Tree.Runtime (Language) /= "" then
+               Set_Field
+                 (RT,
+                  String (Name (Language)),
+                  String (Tree.Runtime (Language)));
+            end if;
+         end loop;
+
+         if not RT.Is_Empty then
+            Set_Field (T, "runtime", RT);
+         end if;
 
          return T;
       end Tree_Object;
