@@ -213,6 +213,8 @@ install switches:
            Cross-install mode based on target/runtime
  --exec-subdir=<dir>
            The executable directory/sub-directory
+ --gpr-registry-file=<file>
+           Recognize additional attributes defined in <file>
  --install-name=<name>
            The name of the installation (manifest)
  --lib-subdir=<dir>
@@ -221,7 +223,7 @@ install switches:
            The symlib directory/sub-directory to libraries
  --list    List all installed projects
  --minimal-project
-           Record the strict minimal date in project file
+           Record the strict minimal data in project file
  --mode=dev|usage
            Kind of installation (default is "dev")
  --no-build-var
@@ -568,6 +570,8 @@ install switches:
            Cross-install mode based on target/runtime
  --exec-subdir=<dir>
            The executable directory/sub-directory
+ --gpr-registry-file=<file>
+           Recognize additional attributes defined in <file>
  --install-name=<name>
            The name of the installation (manifest)
  --lib-subdir=<dir>
@@ -576,7 +580,7 @@ install switches:
            The symlib directory/sub-directory to libraries
  --list    List all installed projects
  --minimal-project
-           Record the strict minimal date in project file
+           Record the strict minimal data in project file
  --mode=dev|usage
            Kind of installation (default is "dev")
  --no-build-var

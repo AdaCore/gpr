@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2024, AdaCore                     --
+--                     Copyright (C) 2019-2026, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -21,7 +21,7 @@ with GPR2.Path_Name;
 package GPRinspect.External_Tools_Support is
 
    procedure Import_External_Tools_Registry (File : GPR2.Path_Name.Object);
-   --  Add gnatcheck,gnatprove,etc... related packages/attributes support
-   --  Try first to import attributes from 'File'
+   --  Add gnatcheck, gnatprove, etc... related packages/attributes support
+   --  Try first to import attributes from 'File'.
 
 end GPRinspect.External_Tools_Support;

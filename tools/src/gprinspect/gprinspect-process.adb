@@ -245,9 +245,9 @@ is
       --  Information node (date, toolset version, ...)
 
       procedure Parse_Project
-        (Prjs : in out JSON_Array;
-         View    : Project.View.Object;
-         Parent  : Project.View.Object);
+        (Prjs   : in out JSON_Array;
+         View   : Project.View.Object;
+         Parent : Project.View.Object);
       --  Project information (name, kind, ...)
 
       function To_JSON_Array (A : GPR2.Containers.Value_Set) return JSON_Array;

@@ -1,10 +1,11 @@
 --
---  Copyright (C) 2023, AdaCore
+--  Copyright (C) 2023-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
 with Ada.Characters.Handling;
+with Ada.Exceptions;
 
 with GNATCOLL;
 with GNATCOLL.JSON;
@@ -1242,6 +1243,35 @@ package body GPR2.Project.Registry.Exchange is
       else
          raise Invalid_JSON_Stream with To_String (Result.Error.Message);
       end if;
+   end Import;
+
+   ------------
+   -- Import --
+   ------------
+
+   procedure Import (File : GPR2.Path_Name.Object) is
+      use Ada.Exceptions;
+      Definitions : Unbounded_String;
+      F           : Text_IO.File_Type;
+   begin
+      Text_IO.Open (F, Text_IO.In_File, File.String_Value);
+
+      while not Text_IO.End_Of_File (F) loop
+         Append (Definitions, Text_IO.Get_Line (F) & ASCII.LF);
+      end loop;
+
+      Text_IO.Close (F);
+
+      Import (Definitions);
+   exception
+      when E : others =>
+         if Text_IO.Is_Open (F) then
+            Text_IO.Close (F);
+         end if;
+
+         Text_IO.Put_Line
+           ("Warning: Cannot import attribute registry from file: "
+            & Exception_Information (E));
    end Import;
 
 end GPR2.Project.Registry.Exchange;

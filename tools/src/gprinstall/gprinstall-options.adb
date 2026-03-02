@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2025, AdaCore                     --
+--                     Copyright (C) 2019-2026, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -20,7 +20,6 @@ with Ada.Characters.Handling;
 
 with GPR2.Containers;
 with GPR2.Options;
-with GPR2.Path_Name;
 
 with GPRtools.Command_Line;
 with GPRtools.Util;
@@ -174,6 +173,9 @@ package body GPRinstall.Options is
       elsif Arg = "--no-manifest" then
          Result.Install_Manifest := False;
 
+      elsif Arg = "--gpr-registry-file" then
+         Result.Registry_File :=
+           GPR2.Path_Name.Create_File (GPR2.Filename_Type (Param));
       end if;
    end On_Switch;
 
@@ -287,7 +289,7 @@ package body GPRinstall.Options is
         (Install_Group,
          Create
            (Name => "--minimal-project",
-            Help => "Record the strict minimal date in project file"));
+            Help => "Record the strict minimal data in project file"));
       Parser.Add_Argument
         (Install_Group,
          Create
@@ -375,6 +377,13 @@ package body GPRinstall.Options is
          Create
            (Name => "--cross-install",
             Help => "Cross-install mode based on target/runtime"));
+      Parser.Add_Argument
+        (Install_Group,
+         Create
+           ("--gpr-registry-file",
+            Help      => "Recognize additional attributes defined in <file>",
+            Delimiter => Equal,
+            Parameter => "<file>"));
 
       Parser.Get_Opt (Options);
 

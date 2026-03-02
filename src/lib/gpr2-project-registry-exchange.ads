@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2023, AdaCore
+--  Copyright (C) 2023-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -45,8 +45,14 @@ package GPR2.Project.Registry.Exchange is
    --  Import in registry Definitions (in JSON format) filtered by
    --  Included/Excluded parameters.
    --  By default import all definitions except project scope and gpr2
-   --  prefedined packages.
+   --  predefined packages.
    --  Raise GNATCOLL.JSON.Invalid_JSON_Stream exception if Definitions is an
+   --  invalid JSON string.
+
+   procedure Import (File : GPR2.Path_Name.Object)
+     with Pre => File.Is_Defined and then File.Exists;
+   --  Import in registry definitions from File (in JSON format).
+   --  Raise GNATCOLL.JSON.Invalid_JSON_Stream exception if File content is an
    --  invalid JSON string.
 
 end GPR2.Project.Registry.Exchange;

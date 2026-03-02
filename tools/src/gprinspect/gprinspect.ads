@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2024, AdaCore                     --
+--                     Copyright (C) 2019-2026, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -34,8 +34,8 @@ package GPRinspect is
    end record;
 
    type GPRinspect_Options is new GPRtools.Options.Base_Options with record
-      Kind_Of_Display           : GPRtools.Display_Kind
-        := GPRtools.K_Textual_IO;
+      Kind_Of_Display           : GPRtools.Display_Kind :=
+                                    GPRtools.K_Textual_IO;
       All_Projects              : Boolean := False;
       Display_Everything        : Boolean := False;
       Display_Attributes        : Boolean := False;
@@ -43,8 +43,8 @@ package GPRinspect is
       Display_Packages          : Boolean := False;
       Display_Variables         : Boolean := False;
       Restricted_Views          : Restricted_Scope;
-      Gpr_Registry_File         : GPR2.Path_Name.Object
-        := GPR2.Path_Name.Undefined;
+      Gpr_Registry_File         : GPR2.Path_Name.Object :=
+                                    GPR2.Path_Name.Undefined;
    end record;
 
 end GPRinspect;

@@ -1,0 +1,20 @@
+project Prj is
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj";
+
+   package U1 is
+      for Default_Switches ("Key1") use ("value-u1");
+      for Me use "toto-u1";
+   end U1;
+
+   package Builder is
+      for Default_Switches ("Ada") use ("-O2");
+   end Builder;
+
+   package U2 is
+      for Default_Switches ("Key2") use ("value-u2");
+      for Me use "toto-u2";
+   end U2;
+
+   V := "12";
+end Prj;
