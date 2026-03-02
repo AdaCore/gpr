@@ -1705,14 +1705,15 @@ in front of the `project` keyword.
 
 **Library_Dir**:
 
-  This attribute  is the path (absolute or relative) of the directory where
+  This attribute is the path (absolute or relative) of the directory where
   the library is to be installed. In the process of building a library,
   the sources are compiled and the object files are placed in the explicitly or
   implicitly specified :file:`Object_Dir` directory. When all sources of a
   library are compiled, some of the compilation artifacts, including the
-  library itself, are copied to the library_dir directory. This directory must
-  be different from the object directory so that cleanup activities inside
-  Library_Dir do not affect recompilation needs.
+  library itself, are copied to the library_dir directory. Unless the library
+  project is externally built or is an aggregate library project (see below),
+  this directory must be different from the object directory so that cleanup
+  activities inside Library_Dir do not affect recompilation needs.
 
 Here is the new version of :file:`logging.gpr` that makes it a library:
 
