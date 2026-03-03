@@ -1,0 +1,5 @@
+project Empty_Ext extends "root/empty_root" is
+   for Source_Dirs use ("sources");
+   for Library_Dir use "";
+end Empty_Ext;
+

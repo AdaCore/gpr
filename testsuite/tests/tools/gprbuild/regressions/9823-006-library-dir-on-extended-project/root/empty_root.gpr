@@ -1,0 +1,4 @@
+project Empty_Root is
+   for Source_Dirs use ();
+end Empty_Root;
+

@@ -1,0 +1,7 @@
+project Root is
+
+   for Library_Name use "root";
+   for Library_Dir use "lib";
+
+end Root;
+

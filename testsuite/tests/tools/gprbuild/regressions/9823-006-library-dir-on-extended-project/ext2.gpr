@@ -1,0 +1,4 @@
+project Ext2 extends "root/root" is
+   for Library_Dir use "lib";
+end Ext2;
+
