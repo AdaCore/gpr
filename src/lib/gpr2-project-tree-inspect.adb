@@ -487,24 +487,29 @@ package body GPR2.Project.Tree.Inspect is
          --  Sources
 
          declare
-            S_Array : JSON_Array;
-            S       : JSON_Value;
+            Source_Array  : JSON_Array;
+            Source_Object : JSON_Value;
 
          begin
             for Source of View.Sources loop
-               S := Create_Object;
+               Source_Object := Create_Object;
 
                Set_Field
-                 (S, "directory", String (Source.Path_Name.Dir_Name));
-               Set_Field (S, "file-name", Source.Path_Name.String_Value);
+                 (Source_Object,
+                  "directory",
+                  String (Source.Path_Name.Dir_Name));
                Set_Field
-                 (S, "simple-name", String (Source.Path_Name.Simple_Name));
+                 (Source_Object, "file-name", Source.Path_Name.String_Value);
+               Set_Field
+                 (Source_Object,
+                  "simple-name",
+                  String (Source.Path_Name.Simple_Name));
 
-               Append (S_Array, S);
+               Append (Source_Array, Source_Object);
             end loop;
 
-            if not Is_Empty (S_Array) then
-               Set_Field (F_Prj, "sources", S_Array);
+            if not Is_Empty (Source_Array) then
+               Set_Field (F_Prj, "sources", Source_Array);
             end if;
          end;
 
@@ -532,16 +537,16 @@ package body GPR2.Project.Tree.Inspect is
       -----------------
 
       function Tree_Object return JSON_Value is
-         T       : constant JSON_Value := Create_Object;
-         R       : constant JSON_Value := Create_Object;
-         Stat    : constant JSON_Value := Create_Object;
-         P_Array : JSON_Array;
-         RT      : constant JSON_Value := Create_Object;
+         Result_Object  : constant JSON_Value := Create_Object;
+         Root_Object    : constant JSON_Value := Create_Object;
+         Stat           : constant JSON_Value := Create_Object;
+         P_Array        : JSON_Array;
+         Runtime_Object : constant JSON_Value := Create_Object;
       begin
          --  Some stats about the tree
 
          Set_Field (Stat, "project-count", Create (Integer (Handled.Length)));
-         Set_Field (T, "stats", Stat);
+         Set_Field (Result_Object, "stats", Stat);
 
          --  Project search paths
 
@@ -549,7 +554,7 @@ package body GPR2.Project.Tree.Inspect is
             Append (P_Array, Create (String (P.Dir_Name)));
          end loop;
 
-         Set_Field (T, "project-search-paths", P_Array);
+         Set_Field (Result_Object, "project-search-paths", P_Array);
 
          if Tree.Has_Runtime_Project then
             O_Array.Include
@@ -563,48 +568,53 @@ package body GPR2.Project.Tree.Inspect is
          --  Object search paths
 
          if not O_Array.Is_Empty then
-            Set_Field (T, "object-search-paths", To_JSON_Array (O_Array));
+            Set_Field
+              (Result_Object, "object-search-paths", To_JSON_Array (O_Array));
          end if;
 
          --  Source search path
 
          if not S_Array.Is_Empty then
-            Set_Field (T, "source-search-paths", To_JSON_Array (S_Array));
+            Set_Field
+              (Result_Object, "source-search-paths", To_JSON_Array (S_Array));
          end if;
 
          --  The root project data
 
-         Set_Field (R, "name", String (Tree.Root_Project.Name));
-         Set_Field (R, "id", View_Id (Tree.Root_Project));
+         Set_Field (Root_Object, "name", String (Tree.Root_Project.Name));
+         Set_Field (Root_Object, "id", View_Id (Tree.Root_Project));
 
-         Set_Field (T, "root-project", R);
+         Set_Field (Result_Object, "root-project", Root_Object);
 
          --  Artifacts directory
 
          if Tree.Artifacts_Dir.Is_Defined then
-            Set_Field (T, "artifacts-dir", Tree.Artifacts_Dir.String_Value);
+            Set_Field
+              (Result_Object,
+               "artifacts-dir",
+               Tree.Artifacts_Dir.String_Value);
          end if;
 
          --  Target
 
-         Set_Field (T, "target", String (Tree.Target));
+         Set_Field (Result_Object, "target", String (Tree.Target));
 
          --  Runtimes
 
          for Language of Tree.Languages loop
             if Tree.Runtime (Language) /= "" then
                Set_Field
-                 (RT,
+                 (Runtime_Object,
                   String (Name (Language)),
                   String (Tree.Runtime (Language)));
             end if;
          end loop;
 
-         if not RT.Is_Empty then
-            Set_Field (T, "runtime", RT);
+         if not Runtime_Object.Is_Empty then
+            Set_Field (Result_Object, "runtime", Runtime_Object);
          end if;
 
-         return T;
+         return Result_Object;
       end Tree_Object;
 
    begin
