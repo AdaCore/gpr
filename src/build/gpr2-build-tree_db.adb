@@ -857,9 +857,10 @@ package body GPR2.Build.Tree_Db is
    -------------
 
    procedure Refresh
-     (Self     : in out Object;
-      Option   : Source_Info_Option;
-      Messages : out GPR2.Log.Object) is
+     (Self           : in out Object;
+      Option         : Source_Info_Option;
+      Messages       : out GPR2.Log.Object;
+      Matching_Units : Boolean := True) is
    begin
       Self.Src_Option := Option;
 
@@ -875,7 +876,8 @@ package body GPR2.Build.Tree_Db is
       for V of Self.Tree.Ordered_Views loop
          if V.Kind in With_Object_Dir_Kind then
             View_Tables.Refresh
-              (View_Tables.Get_Data (Self.Self, V), Messages);
+              (View_Tables.Get_Data
+                (Self.Self, V), Messages, Matching_Units);
          end if;
       end loop;
 

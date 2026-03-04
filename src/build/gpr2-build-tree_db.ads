@@ -51,9 +51,10 @@ package GPR2.Build.Tree_Db is
      with Post => (if Complete then not Self.Is_Defined);
 
    procedure Refresh
-     (Self     : in out Object;
-      Option   : Source_Info_Option;
-      Messages : out GPR2.Log.Object)
+     (Self           : in out Object;
+      Option         : Source_Info_Option;
+      Messages       : out GPR2.Log.Object;
+      Matching_Units : Boolean := True)
      with Pre => Self.Is_Defined;
 
    function Source_Option (Self : Object) return Optional_Source_Info_Option;

@@ -367,13 +367,16 @@ private package GPR2.Tree_Internal is
    --  Invalidates the sources for all views in the tree
 
    procedure Update_Sources
-     (Self     : Object;
-      Option   : Source_Info_Option := Sources_Units;
-      Messages : out GPR2.Log.Object);
+     (Self           : Object;
+      Option         : Source_Info_Option := Sources_Units;
+      Messages       : out GPR2.Log.Object;
+      Matching_Units : Boolean := True);
    --  Ensures that all views' sources are up-to-date.
    --  Option selects the information that will be gathered on the sources. The
    --   more information is requested, the slower is the update operation.
    --  Messages is used to report errors or info about the update.
+   --  Matching_Units: when enabled, verifies that source filenames correspond
+   --   to their unit names.
 
    procedure Register_Project_Search_Path
      (Self : in out Object;

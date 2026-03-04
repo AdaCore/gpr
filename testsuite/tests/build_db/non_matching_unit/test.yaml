@@ -1,0 +1,4 @@
+description: Check for non matching units option of update_sources
+driver: build_and_run
+project_file: prj
+main: main
