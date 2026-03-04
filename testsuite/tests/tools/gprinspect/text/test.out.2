@@ -459,9 +459,14 @@
       ],
       "project": {
         "directory": "<cwd>/",
+        "executable-directory": "<cwd>/obj2",
         "file-name": "<cwd>/prj.gpr",
         "id": "$<cwd>/prj.gpr",
+        "is-externally-built": false,
         "kind": "standard",
+        "languages": [
+          "ada"
+        ],
         "name": "Prj",
         "object-directory": "<cwd>/obj2/",
         "qualifier": "standard",
@@ -521,6 +526,7 @@
         "directory": "<cwd>/",
         "file-name": "<cwd>/agg.gpr",
         "id": "$<cwd>/agg.gpr",
+        "is-externally-built": false,
         "kind": "aggregate",
         "name": "Agg",
         "qualifier": "aggregate",
@@ -596,6 +602,7 @@
         "directory": "<cwd>/",
         "file-name": "<cwd>/root.gpr",
         "id": "<<cwd>/root.gpr",
+        "is-externally-built": false,
         "kind": "aggregate",
         "name": "Root",
         "qualifier": "aggregate",
@@ -604,6 +611,7 @@
     }
   ],
   "tree": {
+    "artifacts-dir": "<cwd>",
     "object-search-paths": [
       "<gnat rts>/adalib/",
       "<cwd>/obj2/"
@@ -621,7 +629,8 @@
     ],
     "stats": {
       "project-count": 3
-    }
+    },
+    "target": "(host)"
   }
 }
 Check JSON validity:
