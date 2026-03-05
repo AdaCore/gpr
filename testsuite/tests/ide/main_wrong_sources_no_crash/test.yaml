@@ -1,0 +1,2 @@
+description: test missing of crash when `Main` attribute contains wrong value
+driver: python_script
