@@ -194,7 +194,7 @@ package body GPR2.Build.Source.Sets is
          Opt := Sorted;
       end if;
 
-      if Self = Empty_Set then
+      if Self = Empty_Set or else not Self.Db.Is_Defined then
          return Source_Iterator'
            (Ada.Finalization.Controlled with
             From_View_Db => False,
