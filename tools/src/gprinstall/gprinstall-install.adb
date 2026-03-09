@@ -2046,12 +2046,32 @@ package body GPRinstall.Install is
                         Line := +"         for Interfaces use (";
 
                         for V of Attr.Values loop
-                           if not First then
-                              Append (Line, ", ");
-                           end if;
+                           --  Check if a body is needed for this interface, if
+                           --  not then we need to skip it.
+                           declare
+                              Name : constant Name_Type := Name_Type (V.Text);
+                              S    : constant GPR2.Build.Source.Object :=
+                                       Project.Source (Simple_Name (Name));
+                           begin
+                              --  Adding into Interfaces if:
+                              --    - not an Ada source
+                              --    - or not a body
+                              --    - or a needed for SAL body
+                              if S.Language /= Ada_Language
+                                or else S.Kind /= S_Body
+                                or else
+                                  (Project.Units.Contains (Name)
+                                     and then
+                                   Project.Unit (Name).Is_Body_Needed_For_SAL)
+                              then
+                                 if not First then
+                                    Append (Line, ", ");
+                                 end if;
 
-                           Append (Line, Quote (V.Text));
-                           First := False;
+                                 Append (Line, Quote (V.Text));
+                                 First := False;
+                              end if;
+                           end;
                         end loop;
 
                      else
