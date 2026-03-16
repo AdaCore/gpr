@@ -3171,6 +3171,8 @@ package body GPR2.Project.View is
       Default_Ada_MU_BS : constant String := ".ada";
       Index             : constant Attribute_Index.Object :=
                             Attribute_Index.Create (Lang);
+      Attr              : constant Project.Attribute.Object :=
+                            Self.Attribute (PRA.Naming.Body_Suffix, Index);
 
       function Ends_With_One_Language (Name : String) return Boolean;
       --  Check if Name ends with any Self language naming convention suffix
@@ -3258,16 +3260,25 @@ package body GPR2.Project.View is
       then
          return Simple_Name (Name);
       else
-         declare
-            Attr   : constant Project.Attribute.Object :=
-                        Self.Attribute (PRA.Naming.Body_Suffix, Index);
-         begin
-            if Attr.Is_Defined then
-               return Simple_Name (Name & Attr.Value.Text);
-            else
-               return Simple_Name (Name);
+         --  Look for an implementation naming scheme for an unit
+         for Attr of Self.Attributes (PRA.Naming.Implementation) loop
+            if Attr.Index.Text = Name then
+               return Simple_Name (Attr.Value.Text);
             end if;
-         end;
+         end loop;
+
+         --  Look for a specification naming scheme for an unit
+         for Attr of Self.Attributes (PRA.Naming.Specification) loop
+            if Attr.Index.Text = Name then
+               return Simple_Name (Attr.Value.Text);
+            end if;
+         end loop;
+
+         if Attr.Is_Defined then
+            return Simple_Name (Name & Attr.Value.Text);
+         end if;
+
+         return Simple_Name (Name);
       end if;
    end Suffixed_Simple_Name;
 
