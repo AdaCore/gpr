@@ -1,0 +1,2 @@
+prj.gpr:7:33: "procedure" is not a valid unit name.
+gprbuild: "prj" processing failed
