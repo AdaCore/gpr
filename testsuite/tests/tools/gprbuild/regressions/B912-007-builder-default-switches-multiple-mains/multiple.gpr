@@ -1,0 +1,8 @@
+project Multiple is 
+   for Main use ("toto.adb", "titi"); 
+
+   package Builder is 
+      for Default_Switches ("Ada") use ("-g", "-q"); 
+   end Builder; 
+end Multiple; 
+

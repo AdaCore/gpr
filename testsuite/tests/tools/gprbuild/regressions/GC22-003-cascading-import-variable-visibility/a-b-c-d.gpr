@@ -1,0 +1,5 @@
+with "a-b-c.gpr";
+Project a.b.c.D is
+   for Source_Files use ();
+   Fix  : Boolean := "true"; -- Visible from a.b.c
+end a.b.c.D;

@@ -1,0 +1,7 @@
+project Prj is
+   for Library_Name use "prj";
+   for Library_Dir  use "lib";
+   for Library_Kind use "relocatable";
+   for Library_Version use "libprj.so.1.2";
+end Prj;
+

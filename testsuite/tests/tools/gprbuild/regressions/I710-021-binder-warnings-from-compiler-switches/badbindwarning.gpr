@@ -1,0 +1,21 @@
+project Badbindwarning is
+
+   package Compiler is
+      for Default_Switches ("ada") use ("-gnatwemruv", "-gnat05",
+                                        "-gnatg", "-gnatQ", "-gnaty", "-g");
+      for Default_Switches ("C") use ("-Wall", "-Werror");
+
+      for Default_Switches ("ada") use
+         Compiler'Default_Switches ("ada") & ("-gnatVa");
+   end Compiler;
+
+   package Builder is
+      for Global_Configuration_Pragmas use "gnat.adc";
+      for Default_Switches ("ada") use ("-m");
+   end Builder;
+
+   package Binder is
+      for Default_Switches ("Ada") use ("-E", "-static", "-g");
+   end Binder;
+
+end Badbindwarning;

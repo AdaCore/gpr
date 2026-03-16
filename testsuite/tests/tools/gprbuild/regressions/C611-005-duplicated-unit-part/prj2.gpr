@@ -1,0 +1,7 @@
+project Prj2 is
+   for Main use ("main");
+
+   for Source_Dirs use ("./**");
+
+end Prj2;
+

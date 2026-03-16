@@ -1,0 +1,15 @@
+CROSS
+NATIVE
+prj2.gpr:1:09: duplicate unit "pkg"
+gprbuild: "prj2" processing failed
+prj3.gpr:2:09: unit "pkg" cannot belong to several projects
+prj3.gpr:2:09:   project "prj3", "cross/pkg.adb"
+prj3.gpr:2:09:   project "import", "import/pkg.adb"
+gprbuild: "prj3" processing failed
+prj3.gpr:2:09: unit "pkg" cannot belong to several projects
+prj3.gpr:2:09:   project "prj3", "native/pkg.adb"
+prj3.gpr:2:09:   project "import", "import/pkg.adb"
+prj3.gpr:2:09: unit "pkg" cannot belong to several projects
+prj3.gpr:2:09:   project "prj3", "cross/pkg.adb"
+prj3.gpr:2:09:   project "import", "import/pkg.adb"
+gprbuild: "prj3" processing failed

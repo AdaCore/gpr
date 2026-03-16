@@ -1,0 +1,8 @@
+$ gprbuild -P prj.gpr
+"lib" created
+[Ada Compile]     toto.ads
+[Link]            libprj.so.1.2
+$ ls -l lib/libprj*
+libprj.so -> libprj.so.1.2
+libprj.so.1 -> libprj.so.1.2
+libprj.so.1.2
