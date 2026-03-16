@@ -1,0 +1,8 @@
+$ gprbuild -P prj.gpr
+prj.gpr:2:08: error: source file "toto.txt" not found
+prj.gpr: warning: there are no sources of language "Ada" in this project
+gprbuild: processing failed
+$ gprbuild -P prj2.gpr
+prj2.gpr:2:08: error: source file "toto.txt" not found
+prj2.gpr: warning: there are no sources of language "Ada" in this project
+gprbuild: processing failed

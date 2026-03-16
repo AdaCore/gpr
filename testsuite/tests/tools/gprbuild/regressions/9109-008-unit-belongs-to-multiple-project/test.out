@@ -1,0 +1,4 @@
+src.gpr:2:09: unit "toto" cannot belong to several projects
+src.gpr:2:09:   project "src", "src/toto.ads"
+src.gpr:2:09:   project "common", "common/toto.ads"
+gprbuild: "src" processing failed

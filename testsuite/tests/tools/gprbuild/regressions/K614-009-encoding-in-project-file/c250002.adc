@@ -1,0 +1,4 @@
+pragma source_file_name (unit_name => C250002_["C1"],
+                         spec_file_name => "c250002_aa.ads");
+pragma source_file_name (unit_name => C250002_["C1"],
+                         body_file_name => "c250002_aa.adb");

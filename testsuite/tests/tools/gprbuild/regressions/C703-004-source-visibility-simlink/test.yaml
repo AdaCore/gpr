@@ -1,0 +1,6 @@
+description: Regression test for not having duplicate sources error when using -eL when there is a simlink
+driver: python_script
+timeout: 800
+control:
+- [XFAIL, "True", "Current limitation of gprbuild2 - need to handle \"-eL\" when resolving source visibility"]
+- [SKIP, "'windows' in env.host.platform", "DEAD on windows"]

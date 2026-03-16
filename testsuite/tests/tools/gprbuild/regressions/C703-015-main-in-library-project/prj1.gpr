@@ -1,0 +1,9 @@
+project Prj1 is
+
+   for Library_Name use "toto";
+   for Library_Dir  use "lib";
+   for Library_Kind use "relocatable";
+   for Library_Interface use ("pkg");
+
+end Prj1;
+

@@ -1,0 +1,5 @@
+description: Regression test for variable visibility accross cascading imports
+driver: python_script
+timeout: 800
+control:
+- [SKIP, "True", "Current limitation of gprbuild2 - Skipping for now instead of XFAIL since the test times out"]

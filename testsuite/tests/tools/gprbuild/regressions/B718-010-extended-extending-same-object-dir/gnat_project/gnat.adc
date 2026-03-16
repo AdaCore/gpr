@@ -1,0 +1,15 @@
+pragma Extend_System(Aux_DEC);
+
+pragma Source_File_Name (
+  Spec_File_Name  => "*_.adc",
+  Casing          => MixedCase,
+  Dot_Replacement => "__");
+
+pragma Source_File_Name (
+  Body_File_Name  => "*.adc",
+  Casing          => MixedCase,
+  Dot_Replacement => "__");
+
+pragma External_Name_Casing (Uppercase, Uppercase);
+-- The above is ignored when this file is referenced
+-- via Builder.Global_Configuration_Pragmas

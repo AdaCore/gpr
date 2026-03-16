@@ -1,0 +1,4 @@
+project Prj2 is
+   for Source_List_File use "sources.list";
+end Prj2;
+

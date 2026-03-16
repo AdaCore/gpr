@@ -1,0 +1,26 @@
+project Common is
+
+  package Naming is
+    for Casing                        use "LowerCase";
+    for Dot_Replacement               use "__";
+    for Specification_Suffix ("Ada")  use "_.adc";
+    for Implementation_Suffix ("Ada") use ".adc";
+  end Naming;
+
+  package Builder is
+--    for Global_Configuration_Pragmas use "gnat.adc";
+    for Global_Configuration_Pragmas use "/home/celier/bugs/B718-010/gnat_project/gnat.adc";
+  end Builder;
+
+  package Compiler is
+-- The contents of the .adc file referenced below should be merged into
+-- the file referenced by Builder.Global_Configuration_Pragmas above,
+-- or possibly just scrapped.
+    for Local_Configuration_Pragmas use "/home/celier/bugs/B718-010/gnat_project/gnat_temp.adc";
+--    for Default_Switches ("Ada") use ("/verbose");
+    for Default_Switches ("Ada") use ("-v", "-v");
+  end Compiler;
+
+  for Source_Dirs use ();
+
+end Common;

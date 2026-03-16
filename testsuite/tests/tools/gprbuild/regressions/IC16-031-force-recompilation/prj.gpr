@@ -1,0 +1,5 @@
+project Prj is
+   for Source_Files use ("pkg.ads");
+   for Externally_Built use "true";
+end Prj;
+

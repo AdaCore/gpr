@@ -1,0 +1,9 @@
+project Gnat1 is 
+
+   Architecture : "i686-pc-linux-gnu";
+   Architecture : Toto := "i686-pc-linux-gnu";
+   for Main use ("gnat1"); 
+   for Source_Dirs use ("../../../" & Architecture);      
+
+end Gnat1; 
+

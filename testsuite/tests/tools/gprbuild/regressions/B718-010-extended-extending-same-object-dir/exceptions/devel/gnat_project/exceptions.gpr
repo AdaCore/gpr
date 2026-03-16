@@ -1,0 +1,14 @@
+with "../../../gnat_project/common";
+project EXCEPTIONS extends "exceptions_root" is
+
+  package Naming   renames Common.Naming;
+  package Compiler renames Common.Compiler;
+  package Builder  renames Common.Builder;
+
+  for Source_Dirs use ("../gnat_source");
+
+  for Object_Dir  use "../gnat_object";
+
+  for Exec_Dir    use "../gnat_runtime";
+
+end EXCEPTIONS;

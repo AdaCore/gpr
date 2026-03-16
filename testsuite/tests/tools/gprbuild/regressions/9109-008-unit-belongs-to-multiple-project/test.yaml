@@ -1,0 +1,5 @@
+description: Regression test for unit belonging to multiple projects
+driver: python_script
+timeout: 800
+control:
+- [XFAIL, "True", "Current limitation of gprbuild2"]
