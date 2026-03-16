@@ -377,23 +377,27 @@ package GPR2.Project.Tree is
    --  Invalidates the sources for all views in the tree
 
    procedure Update_Sources
-     (Self     : Object;
-      Option   : Source_Info_Option := Sources_Units;
-      No_Error : Boolean := False)
+     (Self           : Object;
+      Option         : Source_Info_Option := Sources_Units;
+      No_Error       : Boolean := False;
+      Matching_Units : Boolean := True)
      with Pre => Self.Is_Defined;
    --  Ensures that all views' sources are up-to-date.
    --  Option selects the information that will be gathered on the sources. The
    --   more information is requested, the slower is the update operation.
    --  No_Error: when set prevents the update of sources to generate errors
    --   The errors are then replaced by warnings.
+   --  Matching_Units: when enabled, verifies that source filenames correspond
+   --   to their unit names.
    --
    --  Used by the Load function when its Artifacts_Info_Level is set
    --  to fetch sources.
 
    function Update_Sources
-     (Self     : Object;
-      Option   : Source_Info_Option := Sources_Units;
-      No_Error : Boolean := False) return Boolean
+     (Self           : Object;
+      Option         : Source_Info_Option := Sources_Units;
+      No_Error       : Boolean := False;
+      Matching_Units : Boolean := True) return Boolean
      with Pre => Self.Is_Defined;
    --  Same as above, and returns False upon error detected
 

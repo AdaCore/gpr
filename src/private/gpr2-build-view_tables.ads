@@ -237,8 +237,9 @@ private package GPR2.Build.View_Tables is
      with Inline;
 
    procedure Refresh
-     (Data     : View_Data_Ref;
-      Messages : in out GPR2.Log.Object);
+     (Data           : View_Data_Ref;
+      Messages       : in out GPR2.Log.Object;
+      Matching_Units : Boolean := True);
 
    View_Base_For : access function
                      (Data : View_Data) return View_Db.Object;

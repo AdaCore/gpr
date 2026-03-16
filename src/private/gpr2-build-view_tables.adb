@@ -84,9 +84,10 @@ package body GPR2.Build.View_Tables is
 
    package Update_Sources_List is
       procedure Process
-        (Data          : View_Data_Ref;
-         Stop_On_Error : Boolean;
-         Messages      : in out GPR2.Log.Object);
+        (Data           : View_Data_Ref;
+         Stop_On_Error  : Boolean;
+         Messages       : in out GPR2.Log.Object;
+         Matching_Units : Boolean := True);
       --  Update the list of sources
    end Update_Sources_List;
 
@@ -801,12 +802,13 @@ package body GPR2.Build.View_Tables is
    -------------
 
    procedure Refresh
-     (Data     : View_Data_Ref;
-      Messages : in out GPR2.Log.Object)
+     (Data           : View_Data_Ref;
+      Messages       : in out GPR2.Log.Object;
+      Matching_Units : Boolean := True)
    is
       Sources : Filename_Source_Maps.Map;
    begin
-      Update_Sources_List.Process (Data, False, Messages);
+      Update_Sources_List.Process (Data, False, Messages, Matching_Units);
 
       --  Disambiguate unit kind for Ada bodies
 

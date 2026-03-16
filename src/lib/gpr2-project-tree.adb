@@ -1237,24 +1237,29 @@ package body GPR2.Project.Tree is
    --------------------
 
    procedure Update_Sources
-     (Self     : Object;
-      Option   : Source_Info_Option := Sources_Units;
-      No_Error : Boolean := False)
+     (Self           : Object;
+      Option         : Source_Info_Option := Sources_Units;
+      No_Error       : Boolean := False;
+      Matching_Units : Boolean := True)
    is
       Dead : Boolean with Unreferenced;
    begin
-      Dead := Self.Update_Sources (Option, No_Error);
+      Dead := Self.Update_Sources (Option, No_Error, Matching_Units);
    end Update_Sources;
 
    function Update_Sources
-     (Self     : Object;
-      Option   : Source_Info_Option := Sources_Units;
-      No_Error : Boolean := False) return Boolean
+     (Self           : Object;
+      Option         : Source_Info_Option := Sources_Units;
+      No_Error       : Boolean := False;
+      Matching_Units : Boolean := True) return Boolean
    is
       Log     : GPR2.Log.Object;
       Success : Boolean;
    begin
-      Self.Tree.Update_Sources (Option => Option, Messages => Log);
+      Self.Tree.Update_Sources
+        (Option         => Option,
+         Messages       => Log,
+         Matching_Units => Matching_Units);
 
       if No_Error then
          for Msg of Log loop

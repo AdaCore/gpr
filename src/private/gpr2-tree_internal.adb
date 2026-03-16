@@ -3882,11 +3882,12 @@ package body GPR2.Tree_Internal is
    --------------------
 
    procedure Update_Sources
-     (Self     : Object;
-      Option   : Source_Info_Option := Sources_Units;
-      Messages : out GPR2.Log.Object) is
+     (Self           : Object;
+      Option         : Source_Info_Option := Sources_Units;
+      Messages       : out GPR2.Log.Object;
+      Matching_Units : Boolean := True) is
    begin
-      Self.Tree_Db.Ref.Refresh (Option, Messages);
+      Self.Tree_Db.Ref.Refresh (Option, Messages, Matching_Units);
    end Update_Sources;
 
    -------------

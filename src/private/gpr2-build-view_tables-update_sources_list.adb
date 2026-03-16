@@ -567,9 +567,10 @@ package body Update_Sources_List is
    -------------
 
    procedure Process
-     (Data          : View_Data_Ref;
-      Stop_On_Error : Boolean;
-      Messages      : in out GPR2.Log.Object)
+     (Data           : View_Data_Ref;
+      Stop_On_Error  : Boolean;
+      Messages       : in out GPR2.Log.Object;
+      Matching_Units : Boolean := True)
    is
       function Data_Has_Basename (BN : Simple_Name) return Boolean;
       --  Whether Data.Sources contains a source whose simple name is BN.
@@ -1035,7 +1036,7 @@ package body Update_Sources_List is
                            --  part of the runtime library.
                            return False;
 
-                        else
+                        elsif Matching_Units then
                            Messages.Append
                              (Message.Create
                                 (Message.Warning,
