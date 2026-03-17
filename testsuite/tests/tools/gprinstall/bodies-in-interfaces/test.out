@@ -1,0 +1,38 @@
+===== inst
+library project Mylib is
+   type BUILD_KIND is ("default");
+   BUILD : BUILD_KIND := external("MYLIB_BUILD", "default");
+
+   for Languages use ("Ada");
+
+   case BUILD is
+      when "default" =>
+         for Source_Dirs use ("../../include/mylib");
+         for Library_Dir use "../../lib/mylib";
+         for Library_Kind use "static";
+         for Interfaces use ("mylib.ads");
+   end case;
+
+   for Library_Name use "mylib";
+
+   package Naming is
+      case BUILD is
+         when "default" =>
+            null;
+      end case;
+   end Naming;
+
+   package Linker is
+      case BUILD is
+         when "default" =>
+            null;
+      end case;
+   end Linker;
+
+   package Install is
+      for Active use "False";
+   end Install;
+
+   for Externally_Built use "True";
+
+end Mylib;
