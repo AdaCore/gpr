@@ -1,11 +1,23 @@
-a.gpr: error: circular dependency detected
-a.gpr: error: depends on /b.gpr
-b.gpr: error: depends on /d.gpr
-d.gpr: error: depends on /a.gpr
-e.gpr: error: circular dependency detected
-agg2.gpr: error: depends on /e.gpr
-e.gpr: error: depends on /agg2.gpr
-multi.gpr: error: circular dependency detected
-multi.gpr: error: depends on /multib.gpr
-multib.gpr: error: depends on /multic.gpr
-multic.gpr: error: depends on /multi.gpr
+a.gpr:1:01: error: circular dependency detected
+a.gpr:1:01: error: /a.gpr:1:01 depends on /b.gpr
+a.gpr:1:01: error: /b.gpr:1:01 depends on /d.gpr
+a.gpr:1:01: error: /d.gpr:1:01 depends on /a.gpr
+e.gpr:1:01: error: circular dependency detected
+e.gpr:1:01: error: /e.gpr:1:01 depends on /agg2.gpr
+e.gpr:1:01: error: /agg2.gpr:1:01 depends on /e.gpr
+multi.gpr:1:01: error: circular dependency detected
+multi.gpr:1:01: error: /multi.gpr:1:01 depends on /multib.gpr
+multi.gpr:1:01: error: /multib.gpr:1:01 depends on /multic.gpr
+multi.gpr:1:01: error: /multic.gpr:1:01 depends on /multi.gpr
+first.gpr:1:01: error: circular dependency detected
+first.gpr:1:01: error: /9110-004/first.gpr:1:01 depends on /9110-004/second.gpr
+first.gpr:1:01: error: /9110-004/second.gpr:1:01 depends on /9110-004/third.gpr
+first.gpr:1:01: error: /9110-004/third.gpr:1:01 depends on /9110-004/fifth.gpr
+first.gpr:1:01: error: /9110-004/fifth.gpr:1:01 depends on /9110-004/sixth.gpr
+first.gpr:1:01: error: /9110-004/sixth.gpr:1:01 depends on /9110-004/first.gpr
+fifth.gpr:1:01: error: circular dependency detected
+fifth.gpr:1:01: error: /9110-004/fifth.gpr:1:01 depends on /9110-004/sixth.gpr
+fifth.gpr:1:01: error: /9110-004/sixth.gpr:1:01 depends on /9110-004/first.gpr
+fifth.gpr:1:01: error: /9110-004/first.gpr:1:01 depends on /9110-004/second.gpr
+fifth.gpr:1:01: error: /9110-004/second.gpr:1:01 depends on /9110-004/third.gpr
+fifth.gpr:1:01: error: /9110-004/third.gpr:1:01 depends on /9110-004/fifth.gpr
