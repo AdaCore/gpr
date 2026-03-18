@@ -1974,38 +1974,70 @@ package body GPR2.Tree_Internal is
          --  level handling)
 
          declare
-            Cycle       : GPR2.View_Ids.Vector.Vector;
-            Prev        : View.Object;
-            Current     : View.Object;
-            Circularity : Boolean;
+            use type GPR2.View_Ids.View_Id;
+
+            Cycle          : GPR2.View_Ids.Vector.Vector;
+            Circularity    : Boolean;
+            Result_Index   : Natural := 0;
+            Index          : Natural;
+            Previous_Index : Natural;
          begin
             Self.View_DAG.Update (Circularity);
 
             if Circularity then
                Cycle := Self.View_DAG.Shortest_Circle;
 
-               Self.Messages.Append
-                 (Message.Create
-                    (Message.Error, "circular dependency detected",
-                     Source_Reference.Create
-                       (Result.Path_Name.Value, 0, 0)));
+               Cycle.Delete_Last;
+               --  First and last elements of the vector are same, remove last
+               --  element.
 
-               Prev := View.Undefined;
+               for J in Cycle.First_Index .. Cycle.Last_Index loop
+                  if Cycle (J) = Result.Id then
+                     Result_Index := J;
 
-               for Id of reverse Cycle loop
-                  Current := Self.Instance_Of (Id);
+                     exit;
+                  end if;
+               end loop;
 
-                  if Prev.Is_Defined then
+               Index :=
+                 (if Result_Index = 0
+                  then Cycle.First_Index else Result_Index);
+               --  Start from the result project then it is in the cycle to
+               --  improve ordering, otherwise starts from the first element.
+
+               declare
+                  Report_Sloc : constant GPR2.Source_Reference.Object'Class :=
+                    Source_Reference.Create
+                      (Self.Instance_Of (Cycle (Index)).Path_Name.Value, 1, 1);
+               begin
+                  Self.Messages.Append
+                    (Message.Create
+                       (Message.Error, "circular dependency detected",
+                        Report_Sloc));
+
+                  loop
+                     Previous_Index :=
+                       (if Index = Cycle.First_Index
+                        then Cycle.Last_Index else Index - 1);
+
                      Self.Messages.Append
                        (Message.Create
                           (Message.Error,
-                           "depends on " & Current.Path_Name.String_Value,
                            Source_Reference.Create
-                             (Prev.Path_Name.Value, 0, 0)));
-                  end if;
+                             (Self.Instance_Of (Cycle (Index)).Path_Name.Value,
+                              1, 1).Format (Full_Path_Name => True)
+                           & " depends on "
+                           & Self.Instance_Of (Cycle (Previous_Index))
+                           .Path_Name.String_Value,
+                           Report_Sloc));
+                     Index := Previous_Index;
 
-                  Prev := Current;
-               end loop;
+                     exit when
+                       (if Result_Index = 0
+                        then Index = Cycle.First_Index
+                        else Index = Result_Index);
+                  end loop;
+               end;
             end if;
          end;
 
