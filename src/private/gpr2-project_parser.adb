@@ -758,25 +758,21 @@ package body GPR2.Project_Parser is
                         Sloc    => Get_Source_Reference (Filename, N),
                         Message =>
                           "missing parameters for external_as_list"
-                        & " built-in"));
+                          & " built-in"));
 
                elsif Exprs.Children_Count < 2 then
-                     Project.Messages.Append
-                       (GPR2.Message.Create
-                          (Level   => Message.Error,
-                           Sloc    =>
-                             Get_Source_Reference (Filename, Exprs),
-                           Message =>
-                             "external_as_list requires two "
-                           & "parameters"));
+                  Project.Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, Exprs),
+                        Message =>
+                          "external_as_list requires two " & "parameters"));
 
                elsif Exprs.Children_Count > 2 then
                   Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
-                        Sloc    =>
-                          Get_Source_Reference
-                            (Filename, Exprs),
+                        Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message =>
                           "external_as_list accepts only two parameters"));
 
@@ -799,7 +795,7 @@ package body GPR2.Project_Parser is
                                 Get_Source_Reference (Filename, Var_Node),
                               Message =>
                                 "external_as_list first parameter must be "
-                              & "a simple string"));
+                                & "a simple string"));
 
                      elsif Var = "" then
                         Project.Messages.Append
@@ -809,7 +805,7 @@ package body GPR2.Project_Parser is
                                 Get_Source_Reference (Filename, Var_Node),
                               Message =>
                                 "external_as_list variable name must not "
-                              & "be empty"));
+                                & "be empty"));
                      end if;
                   end;
 
@@ -827,8 +823,7 @@ package body GPR2.Project_Parser is
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
-                                Get_Source_Reference
-                                  (Filename, Sep_Node),
+                                Get_Source_Reference (Filename, Sep_Node),
                               Message =>
                                 "external_as_list second parameter must "
                                 & "be a simple string"));
@@ -838,11 +833,10 @@ package body GPR2.Project_Parser is
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
-                                Get_Source_Reference
-                                  (Filename, Sep_Node),
+                                Get_Source_Reference (Filename, Sep_Node),
                               Message =>
                                 "external_as_list separator must not "
-                              & "be empty"));
+                                & "be empty"));
                      end if;
                   end;
                end if;
@@ -861,18 +855,16 @@ package body GPR2.Project_Parser is
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, N),
-                        Message =>
-                          "missing parameter for external built-in"));
+                        Message => "missing parameter for external built-in"));
 
                elsif Exprs.Children_Count > 3 then
-                     Project.Messages.Append
-                       (GPR2.Message.Create
-                          (Level   => Message.Error,
-                           Sloc    =>
-                             Get_Source_Reference (Filename, Exprs),
-                           Message =>
-                             "external built-in accepts at most three "
-                             & "parameters"));
+                  Project.Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, Exprs),
+                        Message =>
+                          "external built-in accepts at most three "
+                          & "parameters"));
 
                else
                   --  We have External ([TYPE, ]"VAR" [, "VALUE"]), get the
@@ -893,7 +885,7 @@ package body GPR2.Project_Parser is
                                 Get_Source_Reference (Filename, Exprs),
                               Message =>
                                 "external variable name must be a "
-                              & "simple string"));
+                                & "simple string"));
 
                      elsif Var = "" then
                         Project.Messages.Append
@@ -903,7 +895,7 @@ package body GPR2.Project_Parser is
                                 Get_Source_Reference (Filename, Exprs),
                               Message =>
                                 "external variable name must not be "
-                              & "empty"));
+                                & "empty"));
                      elsif Typ = No_Identifier_List
                        and then Exprs.Children_Count = 3
                      then
@@ -921,8 +913,8 @@ package body GPR2.Project_Parser is
                                  (External_Name_Type (Var))
                         then
                            Project.Externals.Insert
-                           (Key      => External_Name_Type (Var),
-                            New_Item => External_List_Package.Empty_Vector);
+                             (Key      => External_Name_Type (Var),
+                              New_Item => External_List_Package.Empty_Vector);
                         end if;
 
                         declare
@@ -933,8 +925,8 @@ package body GPR2.Project_Parser is
                         begin
                            Ext.Append
                              ((Type_Node  => Typ,
-                               Source_Ref => Get_Source_Reference
-                                 (Filename, Exprs)));
+                               Source_Ref =>
+                                 Get_Source_Reference (Filename, Exprs)));
                         end;
 
                         declare
@@ -987,8 +979,7 @@ package body GPR2.Project_Parser is
                   Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
-                        Sloc    =>
-                          Get_Source_Reference (Filename, Exprs),
+                        Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message =>
                           "match accepts a maximum of three parameters"));
                end if;
@@ -1013,7 +1004,7 @@ package body GPR2.Project_Parser is
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, N),
                         Message => "missing parameters for "
-                                    & String (Name) & "  built-in"));
+                                   & String (Name) & "  built-in"));
 
                --  Check that we don't have more than two parameters
 
@@ -1021,8 +1012,7 @@ package body GPR2.Project_Parser is
                   Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
-                        Sloc    =>
-                          Get_Source_Reference (Filename, Exprs),
+                        Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message =>
                           String (Name) & " accepts only one parameter"));
                end if;
@@ -1060,10 +1050,8 @@ package body GPR2.Project_Parser is
                   Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
-                        Sloc    =>
-                          Get_Source_Reference (Filename, Exprs),
-                        Message =>
-                          "split accepts only two parameters"));
+                        Sloc    => Get_Source_Reference (Filename, Exprs),
+                        Message => "split accepts only two parameters"));
                end if;
             end Parse_Split_Reference;
 
@@ -1086,7 +1074,7 @@ package body GPR2.Project_Parser is
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, N),
                         Message => "missing parameters for "
-                                    & String (Name) & "  built-in"));
+                                   & String (Name) & "  built-in"));
 
                --  Check that we don't have more than two parameters
 
@@ -1094,8 +1082,7 @@ package body GPR2.Project_Parser is
                   Project.Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
-                        Sloc    =>
-                          Get_Source_Reference (Filename, Exprs),
+                        Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message =>
                           String (Name) & " accepts only two parameters"));
                end if;
@@ -1146,8 +1133,7 @@ package body GPR2.Project_Parser is
                     (Level   => Message.Error,
                      Sloc    => Get_Source_Reference (Filename, N),
                      Message =>
-                       "unknown built-in """
-                     & String (Function_Name) & '"'));
+                       "unknown built-in """ & String (Function_Name) & '"'));
             end if;
          end Parse_Builtin;
 
