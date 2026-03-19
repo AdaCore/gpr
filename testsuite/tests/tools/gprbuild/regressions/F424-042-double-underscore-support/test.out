@@ -1,0 +1,7 @@
+$ gprbuild -P prj.gpr
+[Ada Compile]     a.ads
+[Ada Compile]     a__child.ads
+[Ada Compile]     main.adb
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
