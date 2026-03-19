@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2025, AdaCore
+--  Copyright (C) 2019-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -15,6 +15,7 @@ with GNAT.Regpat;
 
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.Path_Name;
 with GPR2.Source_Reference.Value;
 
 package GPR2.Builtin is
@@ -45,6 +46,14 @@ package GPR2.Builtin is
       Separator : Value_Not_Empty) return Containers.Value_List;
    --  The External_As_List built-in. Returns a list of values corresponding
    --  to the data found in context's Variable split using the given separator.
+
+   function File_As_List
+     (Context : GPR2.Context.Object;
+      File    : GPR2.Path_Name.Object) return Containers.Value_List
+      with Pre => File.Is_Defined and then File.Exists;
+   --  The File_As_List built-in. Returns a list of values
+   --  corresponding to the data found in the file specified by File split
+   --  using newlines.
 
    function Split
      (Value     : Value_Type;
