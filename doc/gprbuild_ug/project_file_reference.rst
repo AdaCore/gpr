@@ -58,7 +58,9 @@ The additional project file reserved words are:
 
   ::
 
-     extends external external_as_list project
+     extends external external_as_list file_as_list project
+     alternative default filter_out item_at lower match
+     remove_prefix remove_suffix split upper
 
 Note that ``aggregate`` and ``library`` are qualifiers that may appear before
 the keyword ``project``, but they are not themselves keywords.
