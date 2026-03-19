@@ -720,6 +720,10 @@ package body GPR2.Project_Parser is
               (N : Builtin_Function_Call);
             --  Put the name of the external into the Externals list
 
+            procedure Parse_File_As_List_Reference
+              (N : Builtin_Function_Call);
+            --  Put the name of the external into the Externals list
+
             procedure Parse_Split_Reference (N : Builtin_Function_Call);
             --  Check that split parameters has the proper type
 
@@ -947,6 +951,74 @@ package body GPR2.Project_Parser is
                end if;
             end Parse_External_Reference;
 
+            ----------------------------------
+            -- Parse_File_As_List_Reference --
+            ----------------------------------
+
+            procedure Parse_File_As_List_Reference
+              (N : Builtin_Function_Call)
+            is
+               Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
+            begin
+               --  Note that this routine is only validating the syntax
+               --  of the external_as_list built-in. It does not add the
+               --  variable referenced by the built-in as dependencies
+               --  as an external_as_list result cannot be used in a
+               --  case statement.
+
+               if Exprs.Is_Null or else Exprs.Children_Count = 0 then
+                  Project.Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, N),
+                        Message =>
+                          "missing parameters for file_as_list"
+                          & " built-in"));
+
+               elsif Exprs.Children_Count /= 1 then
+                  Project.Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, Exprs),
+                        Message =>
+                          "file_as_list requires one "
+                          & "parameters"));
+
+               else
+                  --  We have File_As_List ("filename"), check the
+                  --  filename name.
+
+                  declare
+                     Var_Node : constant Term_List :=
+                                  Exprs.Child (1).As_Term_List;
+                     Error    : Boolean;
+                     Var      : constant Value_Type :=
+                                  Get_String_Literal (Var_Node, Error);
+                  begin
+                     if Error then
+                        Project.Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Filename, Var_Node),
+                              Message =>
+                                "file_as_list parameter must be "
+                                & "a simple string"));
+
+                     elsif Var = "" then
+                        Project.Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Filename, Var_Node),
+                              Message =>
+                                "file_as_list parameter must not "
+                                & "be empty"));
+                     end if;
+                  end;
+               end if;
+            end Parse_File_As_List_Reference;
+
             ---------------------------
             -- Parse_Match_Reference --
             ---------------------------
@@ -1096,6 +1168,9 @@ package body GPR2.Project_Parser is
 
             elsif Function_Name = "external_as_list" then
                Parse_External_As_List_Reference (N);
+
+            elsif Function_Name = "file_as_list" then
+               Parse_File_As_List_Reference (N);
 
             elsif Function_Name = "split" then
                Parse_Split_Reference (N);
@@ -1890,6 +1965,11 @@ package body GPR2.Project_Parser is
                --  An external_as_list variable :
                --    External_As_List ("VAR", "SEP")
 
+               procedure Handle_File_As_List
+                 (Node : Builtin_Function_Call);
+               --  An file_as_list :
+               --    File_As_List ("FILENAME")
+
                procedure Handle_Split (Node : Builtin_Function_Call);
                --  Handle the Split built-in : Split ("STR1", "SEP")
 
@@ -2089,6 +2169,68 @@ package body GPR2.Project_Parser is
                           ("", Get_Source_Reference (Self.File, Parameters)));
                      Status := Over;
                end Handle_External_Variable;
+
+               -------------------------
+               -- Handle_File_As_List --
+               -------------------------
+
+               procedure Handle_File_As_List
+                 (Node : Builtin_Function_Call)
+               is
+                  function Get_Parameter (Index : Positive) return Value_Type;
+                  --  Returns parameter by Index
+
+                  Parameters : constant Term_List_List :=
+                    F_Terms (F_Parameters (Node));
+
+                  -------------------
+                  -- Get_Parameter --
+                  -------------------
+
+                  function Get_Parameter (Index : Positive) return Value_Type
+                  is
+                     Ignore : Boolean;
+                  begin
+                     return
+                       Get_String_Literal
+                         (Child (Parameters, Index), Error => Ignore);
+                  end Get_Parameter;
+
+                  Filename : constant Filename_Type :=
+                               Filename_Type (Get_Parameter (1));
+                  File     : constant GPR2.Path_Name.Object :=
+                               GPR2.Path_Name.Create_File
+                                 (Filename,
+                                  Directory => View.Dir_Name.Value);
+               begin
+                  Result.Single := False;
+
+                  if File.Exists then
+                     for V of
+                       Builtin.File_As_List (Context, File)
+                     loop
+                        New_Item := True;
+                        Record_Value
+                        (Get_Value_Reference
+                           (V, Get_Source_Reference (Self.File, Parameters)));
+                     end loop;
+
+                  else
+                     Tree.Log_Messages.Append
+                       (GPR2.Message.Create
+                          (Level   => Message.Warning,
+                           Sloc    =>
+                             Get_Source_Reference (Self.File, Parameters),
+                           Message =>
+                             "external file """ & String (Filename)
+                             & """ cannot be found"));
+                  end if;
+
+                  --  Skip all child nodes, we do not want to parse a second
+                  --  time the string_literal.
+
+                  Status := Over;
+               end Handle_File_As_List;
 
                -----------------------
                -- Handle_Filter_Out --
@@ -2640,6 +2782,10 @@ package body GPR2.Project_Parser is
                elsif Function_Name = "external_as_list" then
                   Result.Single := False;
                   Handle_External_As_List_Variable (Node);
+
+               elsif Function_Name = "file_as_list" then
+                  Result.Single := False;
+                  Handle_File_As_List (Node);
 
                elsif Function_Name = "split" then
                   Result.Single := False;

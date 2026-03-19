@@ -1,9 +1,10 @@
 --
---  Copyright (C) 2019-2025, AdaCore
+--  Copyright (C) 2019-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Text_IO;
 with GNAT.String_Split;
 
 package body GPR2.Builtin is
@@ -108,6 +109,35 @@ package body GPR2.Builtin is
 
       return Result;
    end External_As_List;
+
+   ------------------
+   -- File_As_List --
+   ------------------
+
+   function File_As_List
+     (Context : GPR2.Context.Object;
+      File    : GPR2.Path_Name.Object)
+      return Containers.Value_List
+   is
+      pragma Unreferenced (Context);
+
+      Result : Containers.Value_List;
+      F      : Text_IO.File_Type;
+   begin
+      Text_IO.Open (F, Text_IO.In_File, File.String_Value);
+
+      while not Text_IO.End_Of_File (F) loop
+         declare
+            Line : constant String := Text_IO.Get_Line (F);
+         begin
+            Result.Append (Line);
+         end;
+      end loop;
+
+      Text_IO.Close (F);
+
+      return Result;
+   end File_As_List;
 
    ----------------
    -- Filter_Out --

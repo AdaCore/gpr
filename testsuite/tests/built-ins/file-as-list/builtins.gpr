@@ -1,0 +1,9 @@
+
+project Builtins is
+   L := File_As_List ("list.txt");
+
+   for Source_Dirs use File_As_List ("src/dirs.txt");
+   for Object_Dir use "obj";
+   for Exec_Dir use ".";
+   for Main use File_As_List ("mains.txt");
+end Builtins;
