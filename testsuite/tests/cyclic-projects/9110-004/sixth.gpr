@@ -1,0 +1,5 @@
+with "seventh";
+with "first";
+project Sixth is
+end Sixth;
+

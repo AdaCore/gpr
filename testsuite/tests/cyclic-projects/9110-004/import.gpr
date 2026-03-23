@@ -1,0 +1,4 @@
+with "first.gpr";
+
+project Import is
+end Import;

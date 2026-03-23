@@ -1,0 +1,4 @@
+with "third";
+project Second is
+end Second;
+

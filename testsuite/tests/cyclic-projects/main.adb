@@ -25,4 +25,6 @@ begin
    Load ("agg.gpr");   --  no circularity
    Load ("agg2.gpr");  --  agg2 -> f -> agg2
    Load ("multi.gpr"); --  multiple circularities
+   Load ("9110-004/first.gpr");
+   Load ("9110-004/import.gpr");
 end Main;
