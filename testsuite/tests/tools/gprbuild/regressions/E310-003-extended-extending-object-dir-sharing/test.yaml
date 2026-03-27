@@ -1,0 +1,5 @@
+description: Regression test for checking extended and extending project not sharing the same object dir
+driver: python_script
+timeout: 800
+control:
+- [XFAIL, "True", "Current limitation of gprbuild2"]

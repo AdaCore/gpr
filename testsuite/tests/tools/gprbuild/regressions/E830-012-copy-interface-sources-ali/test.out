@@ -1,0 +1,4 @@
+$ gprbuild -P lib.gpr -q
+$ ls -l lib/toto*
+toto.ads
+toto.ali

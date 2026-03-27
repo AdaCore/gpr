@@ -183,14 +183,24 @@ package body Update_Sources_List is
          declare
             S1 : constant Character := Element (Result, 1);
             S2 : constant Character := Element (Result, 2);
+            S3 : constant Character := Element (Result, 3);
 
          begin
             if S1 in 'a' | 'g' | 'i' | 's' then
                --  Children or separates of packages A, G, I or S. These
-               --  names are x~... (where x is a, g, i, or s).
+               --  names are x~... (where x is a, g, i, or s) or x__...
 
                if S2 = '~' then
                   Replace_Element (Result, 2, '.');
+               elsif S2 = S3 and then S2 = '_' then
+                  declare
+                     Tmp : String := To_String (Result);
+                  begin
+                     Tmp (2) := '.';
+                     Tmp (3 .. Tmp'Last - 1) := Tmp (4 .. Tmp'Last);
+                     Result :=
+                       To_Unbounded_String (Tmp (Tmp'First .. Tmp'Last - 1));
+                  end;
                end if;
 
                --  We do nothing with S2 = '.' case here because it can

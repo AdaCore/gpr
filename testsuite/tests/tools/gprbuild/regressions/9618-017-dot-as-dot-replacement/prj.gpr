@@ -1,0 +1,10 @@
+project Prj is
+
+  package Naming is
+     for Specification_Suffix ("Ada")  use ".s.ada";
+     for Implementation_Suffix ("Ada") use ".b.ada";
+     for Separate_Suffix use ".S.ada";
+     for Dot_Replacement use ".";
+  end Naming;
+
+end Prj;

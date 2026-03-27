@@ -1,0 +1,5 @@
+$ gprbuild -P badbindwarning.gpr badbindwarning.adb
+[Ada Compile]     badbindwarning.adb
+[Ada Bind]        badbindwarning
+[Ada Post-Bind]   b__badbindwarning.adb
+[Link]            badbindwarning

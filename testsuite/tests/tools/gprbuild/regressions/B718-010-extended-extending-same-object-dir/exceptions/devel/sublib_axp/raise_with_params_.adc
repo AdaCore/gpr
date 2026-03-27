@@ -1,0 +1,54 @@
+--
+-- Copyright © 1992, 1993, 1995, 2001
+-- Paranor AG, CH-3046 Wahlendorf, Switzerland
+--
+-- ++
+--------------------------------------------------------------------------------
+
+-- File:        KUDA_EXCEPTIONS:[EXCEPTIONS_CTRL_SHR.SOURCE]RAISE_WITH_PARAM_.ADA
+
+-- Beschreibung:	Package with procedures to raise several
+-- -------------	global exceptions with a supplementary error parameter.
+
+-- Autor:       Peter Wannheden  20.12.1992
+
+-- Änderungen:
+-- -----------
+-- Alan Paterson /  2-Mar-95 / Change pragmas to suit latest Create_Int_Shr
+-- Alan Paterson / 23-Jan-01 / New procedures Input_Underflow and Bad_Checkdigit
+--------------------------------------------------------------------------------
+package Raise_With_Param is
+
+   procedure Null_Error(Param      : in STRING;
+		        Param_2    : in STRING := "");
+
+   procedure Input_Overflow(Param  : in STRING);
+
+   procedure Input_Underflow(Param : in STRING);
+
+   procedure Bad_Checkdigit(Param  : in STRING);
+
+   procedure Output_Overflow(Param : in STRING);
+
+   procedure Syntax_Error(Param    : in STRING);
+
+   procedure Illegal_Operation(Param    : in STRING;
+		               Param_2  : in STRING := "");
+private
+
+   pragma Interface(ADA, NULL_ERROR);
+   pragma IMPORT_PROCEDURE (NULL_ERROR, "RPARAM_NULL_ERROR");
+   pragma Interface(ADA, INPUT_OVERFLOW);
+   pragma IMPORT_PROCEDURE (INPUT_OVERFLOW, "RPARAM_INPUT_OVERFLOW");
+   pragma Interface(ADA, INPUT_UNDERFLOW);
+   pragma IMPORT_PROCEDURE (INPUT_UNDERFLOW, "RPARAM_INPUT_UNDERFLOW");
+   pragma Interface(ADA, BAD_CHECKDIGIT);
+   pragma IMPORT_PROCEDURE (BAD_CHECKDIGIT, "RPARAM_BAD_CHECKDIGIT");
+   pragma Interface(ADA, OUTPUT_OVERFLOW);
+   pragma IMPORT_PROCEDURE (OUTPUT_OVERFLOW, "RPARAM_OUTPUT_OVERFLOW");
+   pragma Interface(ADA, SYNTAX_ERROR);
+   pragma IMPORT_PROCEDURE (SYNTAX_ERROR, "RPARAM_SYNTAX_ERROR");
+   pragma Interface(ADA, ILLEGAL_OPERATION);
+   pragma IMPORT_PROCEDURE (ILLEGAL_OPERATION, "RPARAM_ILLEGAL_OPERATION");
+
+end Raise_With_Param;

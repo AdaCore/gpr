@@ -1,0 +1,9 @@
+project Multiple2 is 
+   for Main use ("toto.adb", "titi"); 
+
+   package Builder is 
+      for Default_Switches ("Ada") use ("-g", "-q"); 
+      for Switches ("toto.adb") use ("-f");
+   end Builder; 
+end Multiple2; 
+

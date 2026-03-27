@@ -1,0 +1,5 @@
+$ gprbuild -P prj.gpr
+prj.gpr:4:10: error: ".s.ada" is illegal for Spec_Suffix: ambiguous prefix when Dot_Replacement is a dot
+prj.gpr:5:10: error: ".b.ada" is illegal for Body_Suffix: ambiguous prefix when Dot_Replacement is a dot
+prj.gpr:6:10: error: ".S.ada" is illegal for Separate_Suffix: ambiguous prefix when Dot_Replacement is a dot
+gprbuild: "prj.gpr" processing failed

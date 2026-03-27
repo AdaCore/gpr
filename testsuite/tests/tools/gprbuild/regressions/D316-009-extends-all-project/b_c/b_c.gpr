@@ -1,0 +1,5 @@
+with "../e/e";
+project B_C is
+   for Object_Dir use "../b";
+end B_C;
+

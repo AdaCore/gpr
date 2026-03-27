@@ -1,0 +1,11 @@
+Compile
+   [Ada]          main.adb
+Bind
+   [gprbind]      main.bexch
+   [Ada]          main.ali
+Link
+   [link]         main.adb
+Compile
+   [Ada]          pkg.ads
+pkg.ads:1:01: error: incorrect spelling of keyword "package"
+gprbuild: *** compilation phase failed

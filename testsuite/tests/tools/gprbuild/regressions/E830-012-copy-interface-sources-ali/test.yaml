@@ -1,0 +1,3 @@
+description: Regression test for copying sources of the interface in the correct directory
+driver: python_script
+timeout: 800

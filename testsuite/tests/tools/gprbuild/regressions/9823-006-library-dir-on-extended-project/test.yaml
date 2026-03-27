@@ -1,0 +1,6 @@
+description: Regression test for the usage of Library_Dir attribute on extended projects
+driver: python_script
+timeout: 800
+control:
+- [SKIP, "'windows' in env.host.platform", "DEAD on windows"]
+

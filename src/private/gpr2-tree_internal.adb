@@ -2795,24 +2795,28 @@ package body GPR2.Tree_Internal is
                   --  project while Library_Dir has to be defined in the
                   --  project.
 
-                  if P_Data.Trees.Project.Explicit_Qualifier then
-                     Self.Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "a standard project cannot be a library project",
-                           Tmp_Attr));
+                  --  If the project is an implicit library but the project is
+                  --  explicitely declared as a standard project.
+                  if P_Data.Trees.Project.Explicit_Qualifier
+                  then
+                     --  If the standard project isn't extending a library
+                     --  project that makes it an implicit library, then raise
+                     --  an error.
+                     --  Otherwise allow that construction but keep it as a
+                     --  standard project.
+                     if not (View.Is_Extending
+                             and then View.Extended_Root.Is_Library)
+                     then
+                        Self.Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "a standard project cannot be a library project",
+                              Tmp_Attr));
+                     end if;
+
                   else
                      P_Data.Kind := K_Library;
                   end if;
-
-               elsif View.Is_Extending and then View.Extended_Root.Is_Library
-                 and then P_Data.Trees.Project.Explicit_Qualifier
-               then
-                  Self.Messages.Append
-                    (Message.Create
-                       (Message.Error,
-                        "a standard project cannot extend a library project",
-                        P_Data.Trees.Project.Extended));
                end if;
 
             elsif P_Data.Kind = K_Abstract then

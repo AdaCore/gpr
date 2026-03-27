@@ -1,0 +1,3 @@
+description: Regression test for unit duplication when project shares the same source dirs and excluded those units
+driver: python_script
+timeout: 800

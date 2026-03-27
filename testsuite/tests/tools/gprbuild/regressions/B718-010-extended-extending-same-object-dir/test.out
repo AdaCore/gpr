@@ -1,0 +1,3 @@
+exceptions.gpr:2:09: project "EXCEPTIONS" cannot extend project "EXCEPTIONS_ROOT"
+exceptions.gpr:2:09: they share the same object directory
+gprbuild: "exceptions/devel/gnat_project/exceptions" processing failed

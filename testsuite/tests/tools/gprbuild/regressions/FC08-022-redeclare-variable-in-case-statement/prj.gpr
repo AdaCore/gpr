@@ -1,0 +1,22 @@
+project Prj is
+   type Kind_Type is ("debug", "release");
+   Kind : Kind_Type := external ("KIND", "debug");
+
+   for Exec_Dir use ".";
+
+   Obj_Dir := "obj";
+
+   case Kind is
+      when "debug" =>
+        Obj_Dir := "debug_obj";
+      when "release" =>
+        null;
+   end case;
+
+   for Object_Dir use Obj_Dir;
+
+   for Main use ("main.adb");
+
+end Prj;
+
+

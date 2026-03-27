@@ -1,0 +1,4 @@
+pragma External_Name_Casing (Uppercase, Uppercase);
+-- This is a temporary file that will either become obsolete altogether
+-- or included in the common gnat.adc referenced by
+-- Builder.Global_Configuration_Pragmas.

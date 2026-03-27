@@ -1,0 +1,13 @@
+V "GNAT Lib v3.15"
+A -gnatA
+A -gnatO
+P ZX
+R nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnvnn
+
+U dummy%s		dummy_.adc		0ba3d281 NE PK
+
+D dummy_.adc		20020706020756 0ba3d281
+D system.ads		20020131210933 ae6a8460
+X 1 dummy_.adc
+1K9*Dummy 2l5 2e10
+

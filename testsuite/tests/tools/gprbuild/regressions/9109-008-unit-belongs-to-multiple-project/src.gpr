@@ -1,0 +1,7 @@
+with "common/common.gpr";
+project src is
+
+   for Source_Dirs use ("src");
+
+end src;
+

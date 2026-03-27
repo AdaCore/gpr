@@ -1,0 +1,4 @@
+project B_D extends "b/b" is 
+   for Object_Dir use "b_d"; 
+end B_D; 
+

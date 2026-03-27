@@ -1,0 +1,14 @@
+project Prj is
+
+   for Main use ("driver");
+
+   package Naming is
+     for Body ("driver") use "driver.ada";
+     for Spec ("Procedure") use "proc.ada";
+     for Spec ("pkg")    use "pkg_.ada";
+     for Body ("pkg")    use "pkg.ada";
+     for Spec ("project") use "project.ada";
+   end Naming;
+
+end Prj;
+

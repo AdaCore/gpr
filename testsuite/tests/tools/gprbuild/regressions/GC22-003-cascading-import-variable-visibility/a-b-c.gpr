@@ -1,0 +1,5 @@
+with "a-b.gpr";
+Project a.b.c is
+   for Source_Files use ();
+   type Boolean is ("true", "false");
+end a.b.c;

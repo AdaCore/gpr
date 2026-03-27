@@ -1,0 +1,3 @@
+$ gprbuild -P gnat1.gpr
+gnat1.gpr:3:19: error: Expected Identifier, got String
+gprbuild: "gnat1.gpr" processing failed

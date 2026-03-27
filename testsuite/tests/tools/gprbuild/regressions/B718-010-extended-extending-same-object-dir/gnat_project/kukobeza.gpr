@@ -1,0 +1,14 @@
+with "common";
+project Kukobeza is
+
+  package Naming renames Common.Naming;
+  package Compiler renames Common.Compiler;
+  package Builder renames Common.Builder;
+
+--  for Source_Dirs use ("../GNAT_Source");
+  for Source_Dirs use ("../gnat_source");
+
+--  for Object_Dir use "../GNAT_Object";
+  for Object_Dir use "../gnat_object";
+
+end Kukobeza;

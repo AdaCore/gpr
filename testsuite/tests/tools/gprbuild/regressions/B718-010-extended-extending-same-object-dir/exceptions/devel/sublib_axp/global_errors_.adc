@@ -1,0 +1,88 @@
+--
+-- Copyright © 1992, 1993, 1995
+-- Paranor AG, CH-3046 Wahlendorf, Switzerland
+--
+-- ++
+--------------------------------------------------------------------------------
+
+-- File:        KUDA_EXCEPTIONS:[EXCEPTIONS_CTRL_SHR.SOURCE]GLOBAL_ERRORS_.ADA
+
+-- Beschreibung:	Package to administer the Error-Parameter block
+-- -------------	which is used to pass information about exceptions to
+--			the exception handler (possibly via RPC)
+--			(This replaces the inbuilt code previously in package
+--			AUX_IO)
+
+-- Autor:       Alan Paterson  12-Dec-1992
+
+-- Änderungen:
+-- -----------
+-- 30-Mar-1993 Peter Wannheden
+--	Add procedures UNRES_REL_RETRY, SET_UNRES_REL_RETRY, CALL_ID,
+--	expand SET(STRING) to include the parameter Call_Id.
+-- Alan Paterson / 10-Jan-95 / Addition of SEND_KOBE_OPER_MSG
+
+--------------------------------------------------------------------------------
+with Condition_Handling;
+package Global_Errors is
+
+   package CH renames Condition_Handling;
+
+   Max_Error_Text_Len : constant := 64;
+   type T_ERROR_PARAMETERS is record
+      Cond_Value : INTEGER;
+      Text_Len   : SHORT_SHORT_INTEGER;
+      Text       : STRING(1 .. MAX_ERROR_TEXT_LEN);
+   end record;
+
+   procedure Set(Error_Params : in T_ERROR_PARAMETERS);
+   procedure Set(Text    : in STRING;
+	         Call_Id : in INTEGER := 1);
+
+   procedure Get(Error_Params : out T_ERROR_PARAMETERS);
+
+   procedure Put(Description : in STRING;
+                 Condition   : in Condition_Handling.COND_VALUE_TYPE);
+
+   function Text return STRING;
+
+   function Cond_Value return CH.COND_VALUE_TYPE;
+
+   function Call_Id return INTEGER;
+
+   procedure Set_Unres_Rel_Retry(Value: in BOOLEAN);
+
+   function Unres_Rel_Retry return BOOLEAN;
+
+------------------------------------------------------------------------
+-- SEND_KUDA_OPER_MSG
+--
+-- Sends a message to the central operator. The message consists
+-- of a supplied text plus the text corresponding to a condition value.
+
+   procedure Send_Kuda_Oper_Msg(Text       : in STRING := "";
+                                Cond_Value : in CH.COND_VALUE_TYPE := 0);
+
+private
+   pragma Interface(ADA, SET);
+   pragma IMPORT_PROCEDURE (SET, "GLOBAL_ERRORS_Set__1",
+                           Parameter_Types => (T_ERROR_PARAMETERS));
+   pragma IMPORT_PROCEDURE (SET, "GLOBAL_ERRORS_Set__2",
+                           Parameter_Types => (STRING, INTEGER));
+   pragma Interface(ADA, GET);
+   pragma IMPORT_PROCEDURE (GET, "GLOBAL_ERRORS_GET");
+   pragma Interface(ADA, PUT);
+   pragma IMPORT_PROCEDURE (PUT, "GLOBAL_ERRORS_PUT");
+   pragma Interface(ADA, TEXT);
+   pragma IMPORT_FUNCTION (TEXT, "GLOBAL_ERRORS_TEXT");
+   pragma Interface(ADA, COND_VALUE);
+   pragma IMPORT_FUNCTION (COND_VALUE, "GLOBAL_ERRORS_COND_VALUE");
+   pragma Interface(ADA, CALL_ID);
+   pragma IMPORT_FUNCTION (CALL_ID, "GLOBAL_ERRORS_CALL_ID");
+   pragma Interface(ADA, SET_UNRES_REL_RETRY);
+   pragma IMPORT_PROCEDURE (SET_UNRES_REL_RETRY, "GLOBAL_ERRORS_SET_UR_RETRY");
+   pragma Interface(ADA, UNRES_REL_RETRY);
+   pragma IMPORT_FUNCTION (UNRES_REL_RETRY, "GLOBAL_ERRORS_UNRES_REL_RETRY");
+   pragma Interface(ADA, SEND_KUDA_OPER_MSG);
+   pragma IMPORT_PROCEDURE (SEND_KUDA_OPER_MSG, "GLOBAL_ERRORS_SEND_KU_OP_MSG");
+end Global_Errors;
