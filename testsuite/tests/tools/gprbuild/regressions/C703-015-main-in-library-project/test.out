@@ -1,0 +1,4 @@
+$ gprbuild -P prj.gpr -q
+$ gprbuild -P prj1.gpr main
+prj1.gpr: error: main cannot be a source of a library project: "main"
+gprbuild: processing failed

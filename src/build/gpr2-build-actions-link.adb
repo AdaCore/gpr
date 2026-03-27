@@ -1547,6 +1547,11 @@ package body GPR2.Build.Actions.Link is
          return True;
       end if;
 
+      --  If no object was added to the link action, do not run the action.
+      if Self.Embedded_Objects.Is_Empty then
+         return True;
+      end if;
+
       if (Object'Class (Self).Is_Static_Library
          and then not Self.Check_Archive_Driver)
          or else not Self.Check_Linker_Driver

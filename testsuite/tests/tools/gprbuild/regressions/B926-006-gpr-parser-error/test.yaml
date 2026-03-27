@@ -1,0 +1,3 @@
+description: Regression test gpr parsing errors
+driver: python_script
+timeout: 800

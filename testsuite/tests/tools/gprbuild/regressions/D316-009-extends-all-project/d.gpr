@@ -1,0 +1,5 @@
+with "b_d";
+with "b_c_d";
+project D extends all "a/a" is
+end D;
+

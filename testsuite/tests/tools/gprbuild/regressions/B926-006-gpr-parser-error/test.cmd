@@ -1,0 +1,2 @@
+gprbuild -q "-Pgnat1"
+

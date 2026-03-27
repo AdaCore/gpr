@@ -1,0 +1,8 @@
+with "prj2.gpr";
+project Prj3 is
+   for Source_Dirs use ("sources", "sources2");
+   for Main use ("main.adb");
+   for Object_Dir use "obj3";
+   for Source_Files use ("pkg.ads", "pkg.adb", "main.adb");
+end Prj3;
+

@@ -1,0 +1,11 @@
+with "a-b-c-d.gpr";
+Project a.b.C.D.E is
+   for Source_Files use ();
+   case Fix is -- is vissible from a.b.C.D
+      when "true" =>
+         null;
+      when "false" =>
+         null;
+   end case;
+
+end a.b.C.D.E;

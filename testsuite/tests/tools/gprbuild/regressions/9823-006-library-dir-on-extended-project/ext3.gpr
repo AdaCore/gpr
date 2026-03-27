@@ -1,0 +1,3 @@
+project Ext3 extends "root/root" is
+end Ext3;
+

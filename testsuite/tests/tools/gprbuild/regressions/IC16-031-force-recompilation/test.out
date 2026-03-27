@@ -1,0 +1,10 @@
+gprbuild -f -u -P prj.gpr
+gprbuild -f -u -P prj.gpr pkg.ads
+Compile
+   [Ada]          pkg.ads
+gprbuild -f -u -P prj2.gpr
+Compile
+   [Ada]          main.adb
+gprbuild -f -u -P prj2.gpr main.adb
+Compile
+   [Ada]          main.adb

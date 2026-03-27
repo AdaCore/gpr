@@ -1,0 +1,19 @@
+$ gprbuild -P empty_ext.gpr
+empty_ext.gpr:3:08: warning: attribute "Library_Dir" cannot be used in standard projects
+empty_ext.gpr: warning: there are no sources of language "Ada" in this project
+$ gprbuild -P ext.gpr
+ext.gpr:2:08: warning: attribute "Library_Dir" cannot be used in standard projects
+[Ada Compile]     ext.adb
+[Ada Compile]     root.adb
+$ gprbuild -P ext2.gpr -f
+"lib" created
+[Ada Compile]     ext.adb
+[Ada Compile]     root.adb
+[Archive]         libroot.a
+$ gprbuild -P ext3.gpr -f
+[Ada Compile]     ext.adb
+[Ada Compile]     root.adb
+[Archive]         libroot.a
+$ gprbuild -P ext4.gpr -f
+[Ada Compile]     ext.adb
+[Ada Compile]     root.adb

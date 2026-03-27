@@ -1,0 +1,11 @@
+$ gprbuild -P prj.gpr
+"debug_obj" created
+[Ada Compile]     main.adb
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ gprbuild -P bad.gpr
+"main" up to date
+$ gprbuild -P bad.gpr -XKIND=release
+bad.gpr:14:23: error: undefined variable "Obj_Dir"
+gprbuild: "bad.gpr" processing failed

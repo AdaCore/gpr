@@ -1,0 +1,4 @@
+project Prj is
+   for Source_Files use ("toto.txt");
+end Prj;
+

@@ -1,0 +1,15 @@
+project Prj is
+   for Main use ("main");
+
+   type P_Type is ("CROSS", "NATIVE");
+   Platform : P_Type := external ("PLATFORM", "CROSS");
+
+   case Platform is
+      when "CROSS" =>
+         for Source_Dirs use (".", "cross");
+      when "NATIVE" =>
+         for Source_Dirs use (".", "native", "cross");
+   end case;
+
+end Prj;
+

@@ -1,0 +1,7 @@
+project Prj is
+   for Source_Dirs use (".");
+   package Naming is
+     for Spec ("C250002_["C1"]") use "c250002_aa.ads";
+     for Body ("C250002_["C1"]") use "c250002_aa.adb";
+   end Naming;
+end Prj;

@@ -1,0 +1,4 @@
+project Ext extends "root/root" is
+   for Library_Dir use "";
+end Ext;
+

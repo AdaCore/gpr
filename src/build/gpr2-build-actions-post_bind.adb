@@ -5,7 +5,6 @@
 --
 
 with GPR2.Build.ALI_Parser;
-with GPR2.Build.External_Options;
 with GPR2.Build.Tree_Db;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
@@ -73,17 +72,6 @@ package body GPR2.Build.Actions.Post_Bind is
       Cmd_Line.Add_Argument ("-gnatiw");
       Cmd_Line.Add_Argument ("-gnatws");
       Cmd_Line.Add_Argument ("-gnatWb");
-
-      --  Add -cargs and -cargs:<lang>
-      for Arg of Self.Tree.External_Options.Fetch
-                   (External_Options.Compiler, Ada_Language)
-      loop
-         if Arg /= "-gnatg"
-           and then not GNATCOLL.Utils.Starts_With (Arg, "-gnaty")
-         then
-            Cmd_Line.Add_Argument (Arg);
-         end if;
-      end loop;
 
       --  Get the command line used for the first ALI given as input and
       --  add some of its switches

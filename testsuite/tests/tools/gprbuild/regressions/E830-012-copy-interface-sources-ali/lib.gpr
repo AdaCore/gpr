@@ -1,0 +1,11 @@
+project Lib extends "src/base.gpr" is
+   for Source_Dirs use ();
+   for Library_Name use "toto";
+   for Library_Dir  use "lib";
+   for Library_Kind use "relocatable";
+
+   for Library_Interface use ("toto");
+
+   for Library_Src_Dir use "lib";
+end Lib;
+
