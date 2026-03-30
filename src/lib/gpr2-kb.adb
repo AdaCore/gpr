@@ -1728,12 +1728,28 @@ package body GPR2.KB is
                                     Comp,
                                     Error_Sloc,
                                     Messages);
+                     Locale_Msg_Save : constant String :=
+                        (if Ada.Environment_Variables.Exists ("LC_MESSAGES")
+                         then Ada.Environment_Variables.Value ("LC_MESSAGES")
+                         else "");
                   begin
+                     --  use C locale for gathering toolchain information to
+                     --  get consistent results
+                     --  Fixes gprconfig_kb#23 and similar cases
+                     Ada.Environment_Variables.Set ("LC_MESSAGES", "C");
+
                      Tmp_Result := Null_Unbounded_String;
                      Tmp_Result :=
                        Get_Command_Output_Cache
                          (Comp.Path.String_Value, Command);
                      Used_Env := Environment;
+
+                     if Locale_Msg_Save'Length /= 0 then
+                        Ada.Environment_Variables.Set
+                           ("LC_MESSAGES", Locale_Msg_Save);
+                     else
+                        Ada.Environment_Variables.Clear ("LC_MESSAGES");
+                     end if;
 
                      Trace (Main_Trace,
                             Attribute & ": executing """ & Command
@@ -1742,6 +1758,15 @@ package body GPR2.KB is
                   exception
                      when GNATCOLL.OS.OS_Error =>
                         Trace (Main_Trace, "Spawn failed for " & Command);
+
+                        --  restore messages locale
+                        if Locale_Msg_Save'Length /= 0 then
+                           Ada.Environment_Variables.Set
+                              ("LC_MESSAGES", Locale_Msg_Save);
+                        else
+                           Ada.Environment_Variables.Clear ("LC_MESSAGES");
+                        end if;
+
                   end;
 
                when Value_Directory =>
