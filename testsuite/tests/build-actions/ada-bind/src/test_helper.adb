@@ -71,9 +71,9 @@ package body Test_Helper is
    --------------------------
 
    function Create_Binder_Action
-     (Tree   : GPR2.Project.Tree.Object) return GBA.Ada_Bind.Object
+     (Tree   : GPR2.Project.Tree.Object) return GBA.Process.Ada_Bind.Object
    is
-      Action : GBA.Ada_Bind.Object;
+      Action : GBA.Process.Ada_Bind.Object;
    begin
       for Root of Tree.Namespace_Root_Projects loop
          for Main of Root.Mains loop

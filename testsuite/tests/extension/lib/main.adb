@@ -1,6 +1,6 @@
 with Ada.Text_IO;
 
-with GPR2.Build.Actions.Compile;
+with GPR2.Build.Actions.Process.Compile;
 with GPR2.Build.Actions_Population;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Options;
@@ -35,10 +35,10 @@ procedure Main is
       for A of Prj.Tree.Artifacts_Database.All_Actions loop
          if A.View = Prj then
             Text_IO.Put ("   ");
-            if A in Actions.Compile.Object'Class then
+            if A in Actions.Process.Compile.Object'Class then
                Text_IO.Put_Line
                  (String
-                      (Actions.Compile.Object (A).Input.Path_Name.Base_Name));
+                      (Actions.Process.Compile.Object (A).Input.Path_Name.Base_Name));
             else
                Text_IO.Put_Line (A.UID.Action_Class);
             end if;

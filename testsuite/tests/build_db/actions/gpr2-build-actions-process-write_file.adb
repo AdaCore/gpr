@@ -8,7 +8,7 @@ with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
 
-package body GPR2.Build.Actions.Write_File is
+package body GPR2.Build.Actions.Process.Write_File is
 
    function Output_File (Index : Integer) return Artifacts.Files.Object;
    --  Return output file "<index>.txt"
@@ -107,4 +107,4 @@ package body GPR2.Build.Actions.Write_File is
    begin
       return Result;
    end UID;
-end GPR2.Build.Actions.Write_File;
+end GPR2.Build.Actions.Process.Write_File;

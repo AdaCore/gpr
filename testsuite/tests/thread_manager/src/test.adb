@@ -8,8 +8,8 @@ with Ada.Command_Line;
 with Ada.Directories;
 with Ada.Text_IO;
 
-with GPR2.Build.Actions.Process.Write_File;
-with GPR2.Build.Actions_Scheduler.JSON;
+with GPR2.Build.Actions.Thread.Write_File;
+with GPR2.Build.Actions_Scheduler;
 
 with GPR2.Options;
 with GPR2.Path_Name;
@@ -19,16 +19,17 @@ with GPR2.Project.View;
 with GPR2.Reporter.Console;
 
 with GNATCOLL.VFS; use GNATCOLL.VFS;
+with GNATCOLL.Traces;
 
 use GPR2, GPR2.Reporter;
 
 function Test return Integer is
-   Tree      : GPR2.Project.Tree.Object;
-   Opts      : GPR2.Options.Object;
-   Project   : constant String := "tree/main.gpr";
-   Scheduler : GPR2.Build.Actions_Scheduler.JSON.Object;
-   Root_View : GPR2.Project.View.Object;
-   Exec_Opts : GPR2.Build.Actions_Scheduler.Options;
+   Tree        : GPR2.Project.Tree.Object;
+   Opts        : GPR2.Options.Object;
+   Project     : constant String := "tree/main.gpr";
+   Scheduler   : GPR2.Build.Actions_Scheduler.Object;
+   Root_View   : GPR2.Project.View.Object;
+   Exec_Opts   : GPR2.Build.Actions_Scheduler.Options;
 
    Scenario_Idx : Integer := Integer'Value (Ada.Command_Line.Argument (1));
    --  To ease the testing, this file contains all the tests scenarios.
@@ -38,9 +39,12 @@ function Test return Integer is
 
    use type GPR2.Build.Actions_Scheduler.Execution_Status;
 begin
+
+   GNATCOLL.Traces.Parse_Config_File;
+
    Opts.Add_Switch (GPR2.Options.P, Project);
 
-   if not Tree.Load (Opts, True, Console.Create (Quiet))
+   if not Tree.Load (Opts, True)
      or else not Tree.Update_Sources (GPR2.Sources_Units_Artifacts)
    then
       return 1;
@@ -49,7 +53,7 @@ begin
    Root_View := Tree.Namespace_Root_Projects.First_Element;
 
    case Scenario_Idx is
-      when 1 =>
+      when 1      =>
          ----
          --  Scenario 1
          --
@@ -58,12 +62,12 @@ begin
 
          for Action_Index in 1 .. 3 loop
             declare
-               A          : GBA.Process.Write_File.Object;
-               Ret_Code   : Integer               := 0;
-               With_Deps  : Boolean               := True;
+               A          : GBA.Thread.Write_File.Object;
+               Ret_Code   : Integer := 0;
+               With_Deps  : Boolean := True;
                Executable : GPR2.Path_Name.Object :=
-                              GPR2.Path_Name.Create_File
-                                (Name => "write_file", Directory => "write_file");
+                 GPR2.Path_Name.Create_File
+                   (Name => "write_file", Directory => "write_file");
             begin
                A.Initialize
                  (Root_View, Action_Index, Executable, Ret_Code, With_Deps);
@@ -73,7 +77,7 @@ begin
             end;
          end loop;
 
-      when 2 =>
+      when 2      =>
          ----
          --  Scenario 2
          --
@@ -82,12 +86,12 @@ begin
 
          for Action_Index in 1 .. 3 loop
             declare
-               A          : GBA.Process.Write_File.Object;
+               A          : GBA.Thread.Write_File.Object;
                Ret_Code   : Integer;
-               With_Deps  : Boolean               := True;
+               With_Deps  : Boolean := True;
                Executable : GPR2.Path_Name.Object :=
-                              GPR2.Path_Name.Create_File
-                                (Name => "write_file", Directory => "write_file");
+                 GPR2.Path_Name.Create_File
+                   (Name => "write_file", Directory => "write_file");
             begin
                if Action_Index = 2 then
                   Ret_Code := 1;
@@ -104,7 +108,7 @@ begin
             end;
          end loop;
 
-      when 3 =>
+               when 3 =>
          ----
          --  Scenario 3
          --
@@ -115,7 +119,7 @@ begin
          --  other instances to be finished before actually executing.
 
          declare
-            A          : GBA.Process.Write_File.Object;
+            A          : GBA.Thread.Write_File.Object;
             Ret_Code   : Integer               := 0;
             With_Deps  : Boolean;
             Executable : GPR2.Path_Name.Object :=
@@ -162,7 +166,7 @@ begin
 
          for Action_Index in 1 .. 5 loop
             declare
-               A                  : GBA.Process.Write_File.Object;
+               A                  : GBA.Thread.Write_File.Object;
                Ret_Code           : Integer               := 0;
                With_Deps          : Boolean               := True;
                Valid_Executable   : GPR2.Path_Name.Object :=
@@ -197,8 +201,8 @@ begin
          ----
 
             declare
-               A1                 : GBA.Process.Write_File.Object;
-               A2                 : GBA.Process.Write_File.Object;
+               A1                 : GBA.Thread.Write_File.Object;
+               A2                 : GBA.Thread.Write_File.Object;
                Ret_Code           : Integer               := 0;
                With_Deps          : Boolean               := True;
                Valid_Executable   : GPR2.Path_Name.Object :=
@@ -232,8 +236,8 @@ begin
          ----
 
             declare
-               A1                 : GBA.Process.Write_File.Object;
-               A2                 : GBA.Process.Write_File.Object;
+               A1                 : GBA.Thread.Write_File.Object;
+               A2                 : GBA.Thread.Write_File.Object;
                Ret_Code           : Integer               := 0;
                With_Deps          : Boolean               := True;
                Valid_Executable   : GPR2.Path_Name.Object :=
@@ -262,7 +266,7 @@ begin
          ----
 
             declare
-               A                  : GBA.Process.Write_File.Object;
+               A                  : GBA.Thread.Write_File.Object;
                Valid_Executable   : GPR2.Path_Name.Object :=
                                       GPR2.Path_Name.Create_File
                                         (Name      => "write_file",
@@ -285,8 +289,8 @@ begin
          ----
 
             declare
-               A1                 : GBA.Process.Write_File.Object;
-               A2                 : GBA.Process.Write_File.Object;
+               A1                 : GBA.Thread.Write_File.Object;
+               A2                 : GBA.Thread.Write_File.Object;
                Ret_Code           : Integer               := 0;
                With_Deps          : Boolean               := True;
                Valid_Executable   : GPR2.Path_Name.Object :=
@@ -306,16 +310,15 @@ begin
                   return 1;
                end if;
             end;
+
       when others =>
          null;
    end case;
 
-   Scheduler.Set_JSON_File (Path_Name.Create_File ("jobs.json"));
-
-   Exec_Opts.Jobs := 2;
-
-   if Tree.Artifacts_Database.Execute (Scheduler, Exec_Opts) /= GPR2.Build.Actions_Scheduler.Success then
-      Ada.Text_IO.Put_Line ("execute detected errors");
+   if Tree.Artifacts_Database.Execute (Scheduler, Exec_Opts)
+     /= GPR2.Build.Actions_Scheduler.Success
+   then
+      Ada.Text_IO.Put_Line ("Error detected during thread manager execution.");
    end if;
 
    return 0;

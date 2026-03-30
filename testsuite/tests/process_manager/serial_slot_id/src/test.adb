@@ -7,8 +7,8 @@
 with Ada.Directories;
 with Ada.Text_IO;
 
-with GPR2.Build.Actions.Write_File;
-with GPR2.Build.Process_Manager.JSON;
+with GPR2.Build.Actions.Process.Write_File;
+with GPR2.Build.Actions_Scheduler.JSON;
 
 with GPR2.Options;
 with GPR2.Path_Name;
@@ -25,12 +25,12 @@ function Test return Integer is
    Tree      : GPR2.Project.Tree.Object;
    Opts      : GPR2.Options.Object;
    Project   : constant String := "tree/main.gpr";
-   Process_M : GPR2.Build.Process_Manager.JSON.Object;
+   Scheduler : GPR2.Build.Actions_Scheduler.JSON.Object;
    Root_View : GPR2.Project.View.Object;
-   Exec_Opts : GPR2.Build.Process_Manager.PM_Options;
+   Exec_Opts : GPR2.Build.Actions_Scheduler.Options;
 
    package GBA renames GPR2.Build.Actions;
-   use type GPR2.Build.Process_Manager.Execution_Status;
+   use type GPR2.Build.Actions_Scheduler.Execution_Status;
 begin
    Opts.Add_Switch (GPR2.Options.P, Project);
 
@@ -53,12 +53,12 @@ begin
       --  To have repeatable output, we artificially make
       --  6 wait for 5.txt
       --  5 wait for 10.txt
-      --  so tat we artificially block CPU slot 2 while CPU slot 1 executes
+      --  so that we artificially block CPU slot 2 while CPU slot 1 executes
       --  almost all of its pipeline, then blocks on the last action to have
       --  the pipeline of slot 2 actually executed there.
 
       declare
-         A          : GBA.Write_File.Object;
+         A          : GBA.Process.Write_File.Object;
          Ret_Code   : Integer               := 0;
          With_Deps  : Boolean               := Action_Index not in 1 | 6;
          with_Wait  : Natural               := (if Action_Index = 6 then 5
@@ -82,12 +82,12 @@ begin
       end;
    end loop;
 
-   Process_M.Set_JSON_File (Path_Name.Create_File ("jobs.json"));
+   Scheduler.Set_JSON_File (Path_Name.Create_File ("jobs.json"));
 
    Exec_Opts.Jobs := 2;
 
-   if Tree.Artifacts_Database.Execute (Process_M, Exec_Opts) /=
-     GPR2.Build.Process_Manager.Success
+   if Tree.Artifacts_Database.Execute (Scheduler, Exec_Opts) /=
+     GPR2.Build.Actions_Scheduler.Success
    then
       return 1;
    else

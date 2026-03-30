@@ -43,7 +43,7 @@ OK
 
 === [LIB] faulty static_standalone importing static ===
 faulty_lib_with_library_options.gpr:6:48: error: unknown object file "-g3"
-Command '[Archive] liblib.a (faulty_lib_with_library_options.gpr)' failed.
+[Archive] liblib.a (faulty_lib_with_library_options.gpr) failed.
 
 
 === [LIB] static importing static ===
@@ -51,7 +51,7 @@ OK
 
 === [LIB] faulty static importing static ===
 faulty_lib_with_library_options.gpr:6:48: error: unknown object file "-g3"
-Command '[Archive] liblib.a (faulty_lib_with_library_options.gpr)' failed.
+[Archive] liblib.a (faulty_lib_with_library_options.gpr) failed.
 
 
 === [MAIN] importing relocatable_standalone ===
@@ -71,6 +71,6 @@ OK
 
 === [MAIN] Faulty importing static ===
 faulty_lib_with_library_options.gpr:6:48: error: unknown object file "-g3"
-Command '[Archive] liblib.a (faulty_lib_with_library_options.gpr)' failed.
+[Archive] liblib.a (faulty_lib_with_library_options.gpr) failed.
 
 

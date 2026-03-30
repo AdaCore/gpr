@@ -4,8 +4,8 @@ with Ada.Containers;
 use Ada;
 use Ada.Containers;
 with GPR2.Build.Actions;    use GPR2.Build.Actions;
-with GPR2.Build.Actions.Link_Options_Extract;
-with GPR2.Build.Actions.Link;
+with GPR2.Build.Actions.Process.Link_Options_Extract;
+with GPR2.Build.Actions.Process.Link;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
@@ -20,9 +20,9 @@ procedure Test is
    Opts    : GPR2.Options.Object;
    Project : constant String := "tree/lib.gpr";
 
-   Link_Extract : GBA.Link_Options_Extract.Object :=
-     GBA.Link_Options_Extract.Undefined;
-   Link         : GBA.Link.Object := GBA.Link.Undefined;
+   Link_Extract : GBA.Process.Link_Options_Extract.Object :=
+     GBA.Process.Link_Options_Extract.Undefined;
+   Link         : GBA.Process.Link.Object := GBA.Process.Link.Undefined;
    -----------------
    -- Init_Action --
    -----------------
@@ -38,7 +38,7 @@ procedure Test is
          end if;
 
          Link.Initialize
-           (Kind    => GBA.Link.Library,
+           (Kind    => GBA.Process.Link.Library,
             Context => Root);
 
          if not (Tree.Artifacts_Database.Add_Action (Link)) then
@@ -114,7 +114,7 @@ begin
             Ada.Text_IO.Put_Line ("Failed action post-command");
          end if;
 
-         if GPR2.Build.Actions.Link.Object'Class
+         if GBA.Process.Link.Object'Class
               (Tree.Artifacts_Database.Action_Id_To_Reference (Link.UID)
                  .Element.all)
               .Options_From_Binder

@@ -2,15 +2,15 @@ with Ada.Command_Line;
 with Ada.Directories;
 with Ada.Text_IO;
 
-with GPR2.Build.Actions.Ada_Bind;
+with GPR2.Build.Actions.Process.Ada_Bind;
 with GPR2.Build.Actions.Ada_Compile.Post_Bind;
 with GPR2.Build.Actions.Ada_Compile.Pre_Bind;
-with GPR2.Build.Actions.Compile;
-with GPR2.Build.Actions.Link;
+with GPR2.Build.Actions.Process.Compile;
+with GPR2.Build.Actions.Process.Link;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.File_Part;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
-with GPR2.Build.Process_Manager.JSON;
+with GPR2.Build.Actions_Scheduler.Processes.JSON;
 with GPR2.Build.Source;
 with GPR2.Build.Source.Sets;
 with GPR2.Build.Unit_Info.List;
@@ -168,7 +168,7 @@ begin
       Ada.Command_Line.Argument (1) = "--json"
    then
       declare
-         Process_M : GPR2.Build.Process_Manager.JSON.Object;
+         Process_M : GPR2.Build.Actions_Scheduler.Processes.JSON.Object;
       begin
          --  Use as much core as possible for JSON mode. We want to have
          --  the job list as fast as possible.
@@ -177,7 +177,7 @@ begin
       end;
    else
       declare
-         Process_M : GPR2.Build.Process_Manager.Object;
+         Process_M : GPR2.Build.Actions_Scheduler.Processes.Object;
       begin
          Process_M.Execute (Tree.Artifacts_Database, 1);
       end;

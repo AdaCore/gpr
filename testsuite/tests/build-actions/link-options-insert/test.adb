@@ -1,6 +1,6 @@
 with Ada.Text_IO;
 with GPR2.Containers;
-with GPR2.Build.Actions.Link_Options_Insert;
+with GPR2.Build.Actions.Process.Link_Options_Insert;
 with GPR2.Build.Artifacts.Object_File;
 with GPR2.Options;
 with GPR2.Path_Name;
@@ -16,8 +16,8 @@ procedure Test is
    Opts    : GPR2.Options.Object;
    Project : constant String := "tree/lib.gpr";
 
-   Action : GBA.Link_Options_Insert.Object :=
-     GBA.Link_Options_Insert.Undefined;
+   Action : GBA.Process.Link_Options_Insert.Object :=
+     GBA.Process.Link_Options_Insert.Undefined;
 
    -----------------
    -- Init_Action --

@@ -14,13 +14,13 @@ private with GPR2.View_Ids;
 private with Ada.Strings;
 private with Ada.Strings.Fixed;
 
-package GPR2.Build.Actions.Write_File is
+package GPR2.Build.Actions.Process.Write_File is
 
    package PRA renames GPR2.Project.Registry.Attribute;
 
    type Write_File_Id (<>) is new Actions.Action_Id with private;
 
-   type Object is new Actions.Object with private;
+   type Object is new Actions.Process.Object with private;
    --  Action that writes its index in a file named <index>.txt thanks
    --  to the executable contained in the "write_file" directory.
 
@@ -81,7 +81,7 @@ private
      (Self : Write_File_Id) return Value_Type is
      (Self.Index'Image (2 .. Self.Index'Image'Last));
 
-   type Object is new Actions.Object with record
+   type Object is new Actions.Process.Object with record
       Index      : Integer;
       Ret_Code   : Integer;
       With_Deps  : Boolean;
@@ -93,4 +93,4 @@ private
      (Self : Object) return Path_Name.Object
    is (Path_Name.Create_Directory ("."));
 
-end GPR2.Build.Actions.Write_File;
+end GPR2.Build.Actions.Process.Write_File;

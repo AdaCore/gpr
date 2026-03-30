@@ -43,11 +43,11 @@ print("bin:")
 found = False
 for job in cntbin:
     if job["status"] != "SKIPPED":
-        if "libdemo.a" in job["command"]:
+        if "libdemo.a" in job.get("command", ""):
             found = True
-            if "pkg.o" in job["command"]:
+            if "pkg.o" in job.get("command", ""):
                 print("ERROR: found both libdemo.a and pkg.o in the link command")
-                print(job["command"])
+                print(job.get("command", ""))
 if not found:
     print("ERROR: cannot find libdemo.a in any command issued to build the app")
 else:

@@ -40,25 +40,25 @@ error = False
 
 for job in cntlib:
     if job["status"] != "SKIPPED":
-        if "pkg1.o" in job["command"] and "pkg2.o" in job["command"]:
+        if "pkg1.o" in job.get("command", "") and "pkg2.o" in job.get("command", ""):
             print("ERROR: Found both pkg1/2.o in the same command")
             error = True
-        if "pkg1.o" in job["command"] and "pkg3.o" in job["command"]:
+        if "pkg1.o" in job.get("command", "") and "pkg3.o" in job.get("command", ""):
             print("ERROR: Found both pkg1/3.o in the same command")
             error = True
-        if "pkg2.o" in job["command"] and "pkg3.o" in job["command"]:
+        if "pkg2.o" in job.get("command", "") and "pkg3.o" in job.get("command", ""):
             print("ERROR: Found both pkg2/3.o in the same command")
             error = True
 
 for job in cntbin:
     if job["status"] != "SKIPPED":
-        if all(lib in job["command"] for lib in ["mylib1.a","mylib2.a", "mylib3.a"]):
+        if all(lib in job.get("command", "") for lib in ["mylib1.a","mylib2.a", "mylib3.a"]):
             found = True
 
-            if any(object_file in job["command"] for object_file in ["pkg1.o", "pkg2.o", "pkg3.o"]):
+            if any(object_file in job.get("command", "") for object_file in ["pkg1.o", "pkg2.o", "pkg3.o"]):
                 print("ERROR: found both mylib1/2.a and pkg1/2.o in the link command")
                 error = True
-        if any(lib in job["command"] for lib in ["-lmylib1", "-lmylib2", "-lmylib3"]):
+        if any(lib in job.get("command", "") for lib in ["-lmylib1", "-lmylib2", "-lmylib3"]):
             print("ERROR: mylib1, mylib2 and mylib3 should be static")
             error = True
 

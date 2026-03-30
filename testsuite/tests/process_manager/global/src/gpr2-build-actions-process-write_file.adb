@@ -11,7 +11,7 @@ with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.View.Set;
 
-package body GPR2.Build.Actions.Write_File is
+package body GPR2.Build.Actions.Process.Write_File is
 
    function Output_File (Index : Integer) return Artifacts.Files.Object;
    --  Return output file "<index>.txt"
@@ -123,4 +123,4 @@ package body GPR2.Build.Actions.Write_File is
    begin
       return Result;
    end UID;
-end GPR2.Build.Actions.Write_File;
+end GPR2.Build.Actions.Process.Write_File;

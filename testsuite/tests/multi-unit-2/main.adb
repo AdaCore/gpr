@@ -5,7 +5,7 @@ with Ada.Text_IO;
 
 with GPR2; use GPR2;
 with GPR2.Build; use GPR2.Build;
-with GPR2.Build.Actions.Compile.Ada;
+with GPR2.Build.Actions.Process.Compile.Ada;
 with GPR2.Build.Actions_Population;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Options;
@@ -62,13 +62,13 @@ procedure Main is
             declare
                Unit : GPR2.Build.COmpilation_Unit.Object :=
                  View_Db.Compilation_Unit (CU.Name);
-               C_ID : constant GPR2.Build.Actions.Compile.Ada.Ada_Compile_Id :=
-                 GPR2.Build.Actions.Compile.Ada.Create (Unit);
-               Comp : GPR2.Build.Actions.Compile.Ada.Object;
+               C_ID : constant GPR2.Build.Actions.Process.Compile.Ada.Ada_Compile_Id :=
+                 GPR2.Build.Actions.Process.Compile.Ada.Create (Unit);
+               Comp : GPR2.Build.Actions.Process.Compile.Ada.Object;
             begin
                if Tree.Artifacts_Database.Has_Action (C_Id) then
                   Comp :=
-                    Build.Actions.Compile.Ada.Object
+                    Build.Actions.Process.Compile.Ada.Object
                       (Tree.Artifacts_Database.Action (C_Id));
                   Text_IO.Put_Line
                     ("    object file  = "

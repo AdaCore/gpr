@@ -74,30 +74,30 @@ def test(test_dir):
     found = False
     for job in cntlib:
         if job["status"] != "SKIPPED":
-            if "gnatbind" in job["command"]:
+            if "gnatbind" in job.get("command", ""):
                 found = True
-                if "sub.ali" not in job["command"]:
+                if "sub.ali" not in job.get("command", ""):
                     print("ERROR: sub.ali missing from gnatbind command")
-                    print(job["command"])
-                if "add.ali" not in job["command"]:
+                    print(job.get("command", ""))
+                if "add.ali" not in job.get("command", ""):
                     print("ERROR: add.ali missing from gnatbind command")
-                    print(job["command"])
-                if "mult.ali" in job["command"]:
+                    print(job.get("command", ""))
+                if "mult.ali" in job.get("command", ""):
                     print(
                         "ERROR: mult.ali should not be in gnatbind command as it is not part of the interface"
                     )
-                    print(job["command"])
-                if "foo.ali" not in job["command"]:
+                    print(job.get("command", ""))
+                if "foo.ali" not in job.get("command", ""):
                     print(
                         "ERROR: missing foo.ali, not in interface but should be given to gnatbind"
                     )
-                    print(job["command"])
-            elif "ar csr" in job["command"]:
-                if "p__demo.o" not in job["command"]:
+                    print(job.get("command", ""))
+            elif "ar csr" in job.get("command", ""):
+                if "p__demo.o" not in job.get("command", ""):
                     print(
                         "ERROR: p__demo.o is missing for the ar csr command"
                     )
-                if "o__demo.o" not in job["command"]:
+                if "o__demo.o" not in job.get("command", ""):
                     print(
                         "ERROR: o__demo.o is missing from the ar csr command"
                     )

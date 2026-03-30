@@ -38,19 +38,19 @@ found = False
 error = False
 for job in cntbin:
     if job["status"] != "SKIPPED":
-        if "mylib1.a" in job["command"] and "-lmylib2" in job["command"]:
+        if "mylib1.a" in job.get("command", "") and "-lmylib2" in job.get("command", ""):
             found = True
 
-            if "pkg1.o" in job["command"] or "pkg2.o" in job["command"]:
+            if "pkg1.o" in job.get("command", "") or "pkg2.o" in job.get("command", ""):
                 print(
                     "ERROR: found both mylib1.a , -lmylib2 and pkg1/2.o in the link command"
                 )
                 error = True
-        if "-lmylib1" in job["command"] or "mylib2.a" in job["command"]:
+        if "-lmylib1" in job.get("command", "") or "mylib2.a" in job.get("command", ""):
             print("ERROR: mylib1 should be static, and mylib2 shared")
             error = True
 
-        if "mylib2" + shared_lib_ext in job["command"]:
+        if "mylib2" + shared_lib_ext in job.get("command", ""):
             print(
                 "ERROR: mylib2 " + shared_lib_ext + " should not be explicitly added to the command line. Instead, -L and -l option should be used."
             )

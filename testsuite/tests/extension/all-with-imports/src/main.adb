@@ -5,7 +5,7 @@ with GNATCOLL.OS.Process;
 
 with GPR2.Build.Actions_Population;
 with GPR2.Build.Options;
-with GPR2.Build.Process_Manager;
+with GPR2.Build.Actions_Scheduler;
 with GPR2.Build.Source.Sets;
 with GPR2.Options;
 with GPR2.Project.Tree;
@@ -17,15 +17,17 @@ procedure Main is
    procedure Test (Gpr : String) is
       use Ada.Text_IO;
       use GPR2;
-      use GPR2.Build.Process_Manager;
+      use GPR2.Build.Actions_Scheduler;
+      use type GPR2.Build.Actions_Scheduler.Execution_Status;
+
       use GPR2.Options;
       use GPR2.Reporter;
 
       Tree       : GPR2.Project.Tree.Object;
       Opts       : GPR2.Options.Object;
       Build_Opts : constant GPR2.Build.Options.Build_Options := (others => <>);
-      Exec_Opts  : constant GPR2.Build.Process_Manager.PM_Options := (others => <>);
-      PM         : GPR2.Build.Process_Manager.Object;
+      Exec_Opts  : constant GPR2.Build.Actions_Scheduler.Options := (others => <>);
+      Scheduler  : GPR2.Build.Actions_Scheduler.Object;
       Reporter   : GPR2.Reporter.Console.Object :=
                      GPR2.Reporter.Console.Create
                        (Regular,
@@ -61,7 +63,7 @@ procedure Main is
 
       --  Tree.Set_Reporter (GPR2.Reporter.Console.Create (Quiet));
 
-      if Tree.Artifacts_Database.Execute (PM, Exec_Opts) /= Success then
+      if Tree.Artifacts_Database.Execute (Scheduler, Exec_Opts) /= GPR2.Build.Actions_Scheduler.Success then
          return;
       end if;
 

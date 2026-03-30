@@ -2,7 +2,7 @@ with Ada.Directories;
 with Ada.Containers;
 with Ada.Environment_Variables;
 
-with GPR2.Build.Actions.Link;
+with GPR2.Build.Actions.Process.Link;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source;
@@ -40,7 +40,7 @@ function Test return Integer is
    Project     : constant String := "tree/main.gpr";
 
 
-   Action : GBA.Link.Object := GBA.Link.Undefined;
+   Action : GBA.Process.Link.Object := GBA.Process.Link.Undefined;
 
    -----------------
    -- Init_Action --
@@ -53,7 +53,7 @@ function Test return Integer is
       for Root of Tree.Namespace_Root_Projects loop
          for Main of Root.Mains loop
             Action.Initialize
-              (Kind     => GBA.Link.Executable,
+              (Kind     => GBA.Process.Link.Executable,
                Src      => Main,
                No_Rpath => False);
             Assert

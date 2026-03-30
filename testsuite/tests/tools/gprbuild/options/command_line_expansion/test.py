@@ -22,7 +22,7 @@ def run(cmd):
 def check(root, pattern, switch, filter_out=None):
     with open (os.path.join(root, "jobs.json")) as fp:
         cnt = json.load (fp)
-    cmds = dict((job['uid'], job['command']) for job in cnt)
+    cmds = dict((job['uid'], job.get("command", "")) for job in cnt)
 
     for uid in sorted(cmds.keys()):
         if pattern in uid:

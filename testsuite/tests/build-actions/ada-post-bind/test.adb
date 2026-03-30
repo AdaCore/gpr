@@ -1,7 +1,7 @@
 with Ada.Directories;
 
-with GPR2.Build.Actions.Ada_Bind;
-with GPR2.Build.Actions.Post_Bind;
+with GPR2.Build.Actions.Process.Ada_Bind;
+with GPR2.Build.Actions.Process.Post_Bind;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source;
@@ -29,8 +29,8 @@ function Test return Integer is
    Project     : constant String := "tree/main.gpr";
    Ali_Path    : GPR2.Path_Name.Object;
 
-   Bind_Action : GBA.Ada_Bind.Object;
-   Action      : GBA.Post_Bind.Object;
+   Bind_Action : GBA.Process.Ada_Bind.Object;
+   Action      : GBA.Process.Post_Bind.Object;
 
    procedure Init_Action
    is
