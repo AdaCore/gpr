@@ -26,8 +26,8 @@ with Ada.Strings.Unbounded;
 with GPR2;
 with GPR2.Build.Actions;
 with GPR2.Build.Actions_Population;
-with GPR2.Build.Actions.Compile;
-with GPR2.Build.Actions.Compile.Ada;
+with GPR2.Build.Actions.Process.Compile;
+with GPR2.Build.Actions.Process.Compile.Ada;
 with GPR2.Build.Artifacts;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.Source_Files;
@@ -59,6 +59,7 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
    use Ada.Exceptions;
 
    use GPR2;
+   use GPR2.Build;
    use GPRtools.Program_Termination;
    use GPR2.Path_Name;
 
@@ -85,7 +86,7 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
    --    instead of the full path.
 
    procedure Print_Action
-     (Action           : GPR2.Build.Actions.Compile.Object'Class;
+     (Action           : Actions.Process.Compile.Object'Class;
       Runtime_Deps     : GPR2.Path_Name.Set.Object;
       Non_Runtime_Deps : GPR2.Path_Name.Set.Object;
       Signature        : GPR2.Build.Signature.Object);
@@ -106,14 +107,14 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
 
    function Unit_Name_To_Ada_Compile_Action
      (Tree : GPR2.Project.Tree.Object; Unit_Name : Name_Type)
-      return GPR2.Build.Actions.Compile.Ada.Object;
+      return Actions.Process.Compile.Ada.Object;
    --  Return the Ada compile action corresponding to the unit name in the
    --  given project tree.
    --  If not found, returns an undefined action.
 
    function Source_To_Ada_Compile_Action
      (Tree : GPR2.Project.Tree.Object; Source_Name : Filename_Type)
-      return GPR2.Build.Actions.Compile.Ada.Object;
+      return Actions.Process.Compile.Ada.Object;
    --  Return the Ada compile action corresponding to the source file name in
    --  the given project tree.
    --  If not found, returns an undefined action.
@@ -138,7 +139,7 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
       To_Process  : GPR2.Build.Tree_Db.Action_Sets.Set;
       Inserted    : Boolean := False;
       Unused_Curs : GPR2.Build.Tree_Db.Action_Sets.Cursor;
-      Comp_Action : GPR2.Build.Actions.Compile.Ada.Object :=
+      Comp_Action : Actions.Process.Compile.Ada.Object :=
         Source_To_Ada_Compile_Action (Tree, Source_Name);
    begin
       Traces.Trace ("Computing Closure for " & String (Source_Name) & ":");
@@ -153,8 +154,8 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
             Action     : constant GPR2.Build.Actions.Object'Class :=
               Opt.Tree.Artifacts_Database.Action_Id_To_Reference (Action_UID);
          begin
-            if Action in GPR2.Build.Actions.Compile.Ada.Object'Class then
-               Comp_Action := GPR2.Build.Actions.Compile.Ada.Object (Action);
+            if Action in Actions.Process.Compile.Ada.Object'Class then
+               Comp_Action := Actions.Process.Compile.Ada.Object (Action);
             end if;
          end;
 
@@ -188,7 +189,7 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
    ------------------
 
    procedure Print_Action
-     (Action           : GPR2.Build.Actions.Compile.Object'Class;
+     (Action           : Actions.Process.Compile.Object'Class;
       Runtime_Deps     : GPR2.Path_Name.Set.Object;
       Non_Runtime_Deps : GPR2.Path_Name.Set.Object;
       Signature        : GPR2.Build.Signature.Object)
@@ -203,11 +204,11 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
       end if;
 
       if Opt.Print_Units then
-         if Action in GPR2.Build.Actions.Compile.Ada.Object'Class then
+         if Action in Actions.Process.Compile.Ada.Object'Class then
             declare
                Compile_Action :
-                 constant GPR2.Build.Actions.Compile.Ada.Object :=
-                   GPR2.Build.Actions.Compile.Ada.Object (Action);
+                 constant Actions.Process.Compile.Ada.Object :=
+                   Actions.Process.Compile.Ada.Object (Action);
             begin
                Print_Line (String (Compile_Action.Unit.Name), Offset);
                Offset := Offset + 1;
@@ -309,9 +310,9 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
 
    function Source_To_Ada_Compile_Action
      (Tree : GPR2.Project.Tree.Object; Source_Name : Filename_Type)
-      return GPR2.Build.Actions.Compile.Ada.Object
+      return Actions.Process.Compile.Ada.Object
    is
-      use GPR2.Build.Actions.Compile.Ada;
+      use Actions.Process.Compile.Ada;
       Source_Path : constant GPR2.Path_Name.Object :=
         GPR2.Path_Name.Create_File (Source_Name);
    begin
@@ -320,10 +321,10 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
          & String (Source_Name));
 
       for Action of Tree.Artifacts_Database.All_Actions loop
-         if Action in GPR2.Build.Actions.Compile.Ada.Object'Class then
+         if Action in Actions.Process.Compile.Ada.Object'Class then
             declare
-               Act : constant GPR2.Build.Actions.Compile.Ada.Object :=
-                 GPR2.Build.Actions.Compile.Ada.Object (Action);
+               Act : constant Actions.Process.Compile.Ada.Object :=
+                 Actions.Process.Compile.Ada.Object (Action);
             begin
                for Input of Tree.Artifacts_Database.Inputs (Act.UID) loop
                   if Input in GPR2.Build.Artifacts.Source_Files.Object'Class
@@ -351,7 +352,7 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
       Traces.Trace
         ("Did not find any Ada compile action related to "
          & String (Source_Name));
-      return GPR2.Build.Actions.Compile.Ada.Undefined;
+      return Actions.Process.Compile.Ada.Undefined;
    end Source_To_Ada_Compile_Action;
 
    -------------------------------------
@@ -360,9 +361,9 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
 
    function Unit_Name_To_Ada_Compile_Action
      (Tree : GPR2.Project.Tree.Object; Unit_Name : Name_Type)
-      return GPR2.Build.Actions.Compile.Ada.Object
+      return Actions.Process.Compile.Ada.Object
    is
-      use GPR2.Build.Actions.Compile.Ada;
+      use Actions.Process.Compile.Ada;
       use GPR2.Build.Compilation_Unit;
       CU : constant GPR2.Build.Compilation_Unit.Object :=
         Unit_Name_To_Unit (Tree, Unit_Name);
@@ -372,10 +373,10 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
         (" Searching the compile action for unit " & String (Unit_Name));
       if CU.Is_Defined then
          for Action of Tree.Artifacts_Database.All_Actions loop
-            if Action in GPR2.Build.Actions.Compile.Ada.Object'Class then
+            if Action in Actions.Process.Compile.Ada.Object'Class then
                declare
-                  Act : constant GPR2.Build.Actions.Compile.Ada.Object :=
-                    GPR2.Build.Actions.Compile.Ada.Object (Action);
+                  Act : constant Actions.Process.Compile.Ada.Object :=
+                    Actions.Process.Compile.Ada.Object (Action);
                begin
                   if Act.Unit = CU then
                      Traces.Trace (" Found : " & Act.UID.Image);
@@ -389,7 +390,7 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
       Traces.Trace
         ("Did not find any Ada compile action related to the unit "
          & String (Unit_Name));
-      return GPR2.Build.Actions.Compile.Ada.Undefined;
+      return Actions.Process.Compile.Ada.Undefined;
    end Unit_Name_To_Ada_Compile_Action;
 
    -----------------------
@@ -468,7 +469,7 @@ begin
                Compute_Closure (Opt.Tree, Filename_Type (File)));
          else
             declare
-               Act : constant GPR2.Build.Actions.Compile.Ada.Object :=
+               Act : constant Actions.Process.Compile.Ada.Object :=
                  Source_To_Ada_Compile_Action (Opt.Tree, Filename_Type (File));
             begin
                if not Act.Is_Defined then
@@ -490,11 +491,11 @@ begin
           and then Actions_Of_Interest.Contains (Action.UID))
         or else (Opt.Files.Is_Empty
                  and then Action
-                          in GPR2.Build.Actions.Compile.Ada.Object'Class)
+                          in Actions.Process.Compile.Ada.Object'Class)
       then
          declare
-            Act : GPR2.Build.Actions.Compile.Ada.Object'Class :=
-              GPR2.Build.Actions.Compile.Ada.Object'Class (Action);
+            Act : Actions.Process.Compile.Ada.Object'Class :=
+              Actions.Process.Compile.Ada.Object'Class (Action);
             --  The action must be modifiable, so that its signature can be
             --  updated.
 
@@ -510,7 +511,7 @@ begin
 
                --  Fetch the dependencies of the compilation action if needed
                if Opt.With_Predefined_Units or else Opt.Dependency_Mode then
-                  if Act in GPR2.Build.Actions.Compile.Object'Class then
+                  if Act in Actions.Process.Compile.Object'Class then
                      for Dep of Act.Dependencies loop
                         for View of Opt.Tree.Ordered_Views loop
                            Source_Path :=
