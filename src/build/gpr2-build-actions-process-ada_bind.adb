@@ -1211,12 +1211,12 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
       return Actions.Process.Post_Bind.Undefined;
    end Post_Bind;
 
-   ------------------
-   -- Post_Command --
-   ------------------
+   --------------------
+   -- Post_Execution --
+   --------------------
 
    overriding
-   function Post_Command
+   function Post_Execution
      (Self   : in out Object;
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;
@@ -1491,7 +1491,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
       end if;
 
       return True;
-   end Post_Command;
+   end Post_Execution;
 
    ---------
    -- UID --

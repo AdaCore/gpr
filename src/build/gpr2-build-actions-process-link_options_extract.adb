@@ -81,12 +81,12 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
       return True;
    end On_Tree_Insertion;
 
-   ------------------
-   -- Post_Command --
-   ------------------
+   --------------------
+   -- Post_Execution --
+   --------------------
 
    overriding
-   function Post_Command
+   function Post_Execution
      (Self   : in out Object;
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;
@@ -246,7 +246,7 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
       Pass_Options_To_Linkers (Decode_Stdout);
 
       return True;
-   end Post_Command;
+   end Post_Execution;
 
    ---------
    -- UID --

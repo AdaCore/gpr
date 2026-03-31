@@ -721,11 +721,11 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
       return True;
    end On_Tree_Insertion;
 
-   ------------------
-   -- Post_Command --
-   ------------------
+   --------------------
+   -- Post_Execution --
+   --------------------
 
-   overriding function Post_Command
+   overriding function Post_Execution
      (Self   : in out Object;
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;
@@ -820,7 +820,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
       end loop;
 
       return Result;
-   end Post_Command;
+   end Post_Execution;
 
    ---------------------------
    -- Update_Binds_From_ALI --

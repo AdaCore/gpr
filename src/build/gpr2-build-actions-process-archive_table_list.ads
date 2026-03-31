@@ -47,7 +47,7 @@ package GPR2.Build.Actions.Process.Archive_Table_List is
       Signature_Only : Boolean);
 
    overriding
-   function Post_Command
+   function Post_Execution
      (Self   : in out Object;
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;

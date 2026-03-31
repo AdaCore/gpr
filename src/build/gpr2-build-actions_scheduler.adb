@@ -184,7 +184,7 @@ package body GPR2.Build.Actions_Scheduler is
              (Handler.Status = Deactivated and then Action.Valid_Signature)
          then
 
-            if not Action.Post_Command
+            if not Action.Post_Execution
                      ((if Handler.Status in Skipped | Deactivated
                        then Skipped
                        else Success),
@@ -1163,7 +1163,7 @@ package body GPR2.Build.Actions_Scheduler is
                      Act_Ref : constant Build.Tree_Db.Action_Reference_Type :=
                        Tree_Db.Action_Id_To_Reference (UID);
                   begin
-                     if Act_Ref.Pre_Command then
+                     if Act_Ref.Pre_Execution then
                         if Is_Proc_Action then
                            Execute_Process_Runner (Action_Slot, UID);
                         else

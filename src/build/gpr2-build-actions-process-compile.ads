@@ -129,7 +129,7 @@ private
       --  Global_Configuration_Pragmas attribute
    end record;
 
-   overriding function Post_Command
+   overriding function Post_Execution
      (Self   : in out Object;
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;

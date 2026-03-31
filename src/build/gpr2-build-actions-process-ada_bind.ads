@@ -145,7 +145,7 @@ private
    procedure Compute_Signature
      (Self : in out Object; Check_Checksums : Boolean);
 
-   overriding function Post_Command
+   overriding function Post_Execution
      (Self   : in out Object;
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;

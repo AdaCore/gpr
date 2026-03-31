@@ -1779,11 +1779,11 @@ package body GPR2.Build.Actions.Process.Link is
       return True;
    end On_Tree_Insertion;
 
-   ------------------
-   -- Post_Command --
-   ------------------
+   --------------------
+   -- Post_Execution --
+   --------------------
 
-   overriding function Post_Command
+   overriding function Post_Execution
      (Self   : in out Object;
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;
@@ -1882,13 +1882,13 @@ package body GPR2.Build.Actions.Process.Link is
       end if;
 
       return True;
-   end Post_Command;
+   end Post_Execution;
 
-   -----------------
-   -- Pre_Command --
-   -----------------
+   -------------------
+   -- Pre_Execution --
+   -------------------
 
-   overriding function Pre_Command (Self : in out Object) return Boolean is
+   overriding function Pre_Execution (Self : in out Object) return Boolean is
    begin
       if Self.Is_Static_Library and then Self.Output.Path.Exists then
          --  Remove the old .a since otherwise ar will just accumulate the
@@ -2246,7 +2246,7 @@ package body GPR2.Build.Actions.Process.Link is
       end;
 
       return True;
-   end Pre_Command;
+   end Pre_Execution;
 
    -----------------------------
    -- Process_Library_Options --

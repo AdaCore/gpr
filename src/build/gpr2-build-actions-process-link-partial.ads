@@ -36,13 +36,13 @@ package GPR2.Build.Actions.Process.Link.Partial is
    overriding function Output
      (Self : Object) return Artifacts.Files.Object'Class;
 
-   overriding function Post_Command
+   overriding function Post_Execution
      (Self   : in out Object;
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;
       Stderr : Unbounded_String := Null_Unbounded_String) return Boolean;
 
-   overriding function Pre_Command (Self : in out Object) return Boolean;
+   overriding function Pre_Execution (Self : in out Object) return Boolean;
 
 private
 
@@ -78,14 +78,14 @@ private
      (Self : Object) return Artifacts.Files.Object'Class is
      (Self.Partial_Object);
 
-   overriding function Post_Command
+   overriding function Post_Execution
      (Self   : in out Object;
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;
       Stderr : Unbounded_String := Null_Unbounded_String) return Boolean is
      (True);
 
-   overriding function Pre_Command
+   overriding function Pre_Execution
      (Self : in out Object) return Boolean is (True);
 
 end GPR2.Build.Actions.Process.Link.Partial;

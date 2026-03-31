@@ -124,9 +124,10 @@ package GPR2.Build.Actions is
    --    Ada program is complete in order to compute the elaboration.
    --  - Compute_Command: this computes the command line. This is called just
    --    before actually executing the action.
-   --  - Pre_Command: called just before the process is actually executed. This
-   --    is thus not called if the signature is valid and the action skipped.
-   --  - Post_Command: called after the process is finished or the action is
+   --  - Pre_Execution: called just before the process is actually executed.
+   --    This is thus not called if the signature is valid and the action
+   --    skipped.
+   --  - Post_Execution: called after the process is finished or the action is
    --    skipped or an error occurred.
    --
    --  If the actions are not meant to be executed, such as when populating
@@ -160,22 +161,22 @@ package GPR2.Build.Actions is
    --  the signature may be incorrect.
    --  Returns True on success.
 
-   function Pre_Command
+   function Pre_Execution
      (Self : in out Object) return Boolean;
-   --  Pre-processing that should occur before executing the command
+   --  Pre-processing that should occur before executing the action
 
    type Execution_Status is (Skipped, Success);
 
    SUCCESS_RETURN_CODE : constant Integer := 0;
 
-   function Post_Command
+   function Post_Execution
      (Self   : in out Object;
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;
       Stderr : Unbounded_String := Null_Unbounded_String) return Boolean;
-   --  Post-processing that should occur after executing the command.
-   --  Called when the command has been executed (even after reporting a
-   --  failure) or when the command is disabled or skipped but the signature
+   --  Post-processing that should occur after executing the action.
+   --  Called when the action has been executed (even after reporting a
+   --  failure) or when the action is disabled or skipped but the signature
    --  is valid.
 
    procedure Compute_Signature
@@ -317,11 +318,11 @@ private
      (Self : in out Object) return Boolean is
      (True);
 
-   function Pre_Command
+   function Pre_Execution
      (Self : in out Object) return Boolean is
      (True);
 
-   function Post_Command
+   function Post_Execution
      (Self   : in out Object;
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;

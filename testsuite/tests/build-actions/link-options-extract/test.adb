@@ -110,7 +110,7 @@ begin
          Number_Of_Options : constant Count_Type :=
            Link.Options_From_Binder.Length;
       begin
-         if not Link_Extract.Post_Command (Success, Stdout) then
+         if not Link_Extract.Post_Execution (Success, Stdout) then
             Ada.Text_IO.Put_Line ("Failed action post-command");
          end if;
 
