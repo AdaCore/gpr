@@ -128,7 +128,7 @@ procedure Main is
                if V.Is_Aggregated_In_Library then
                   First := True;
 
-                  for Agg of V.Aggregate_Libraries loop
+                  for Agg of V.Aggregated_By loop
                      if First then
                         Ada.Text_IO.Put_Line ("- Aggregated in library:");
                         First := False;
