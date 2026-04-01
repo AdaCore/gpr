@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2025, AdaCore
+--  Copyright (C) 2019-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -174,11 +174,15 @@ package GPR2.Path_Name is
      (Self      : Object;
       Name      : Filename_Type;
       Directory : Boolean := False) return Object
-     with Pre  => Self.Is_Defined,
-          Post => Compose'Result.Is_Defined;
-   --  If Directory = True then returns Name as sub-directory of Self :
-   --  Self & '/' & Name
-   --  If Directory = False use Name as simple filename in directory of Self.
+     with
+       Pre  => Self.Is_Defined,
+       Post => Compose'Result.Is_Defined
+                 and then Compose'Result.Is_Directory = Directory;
+   --  Returns a new path composed of Self's directory part followed by Name.
+   --  If Self is a directory, its full path is used as the base; if Self is a
+   --  file, its containing directory is used instead.
+   --  If Directory is True, the result is created as a directory; otherwise it
+   --  is created as a file.
 
    function Exists (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
