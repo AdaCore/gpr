@@ -577,7 +577,7 @@ package body GPR2.Build.Actions.Compile.Ada is
       --  Identify the copies of the ali file in libraries
 
       if Self.Ctxt.Is_Aggregated_In_Library then
-         Closure := Self.Ctxt.Aggregate_Libraries;
+         Closure := Self.Ctxt.Aggregated_By;
       elsif Self.Ctxt.Is_Library then
          Closure.Include (Self.Ctxt);
       end if;
