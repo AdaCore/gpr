@@ -58,7 +58,9 @@ The additional project file reserved words are:
 
   ::
 
-     extends external external_as_list project
+     extends external external_as_list file_as_list project
+     alternative default filter_out item_at lower match
+     remove_prefix remove_suffix split upper
 
 Note that ``aggregate`` and ``library`` are qualifiers that may appear before
 the keyword ``project``, but they are not themselves keywords.
@@ -620,6 +622,37 @@ If the external value is ``",,"``, the result is (``""``).
 
 If the external value is ``","``, the result is ``()``, the empty string list.
 
+.. index:: Built-in function; File_As_List
+
+The function ``File_As_List``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The File_As_List function returns a list containing the element read
+on a file. Each line in the file will be added as an element of the
+list.
+
+The syntax for a list based on a file is::
+
+    list ::= 'file_as_list' ( string_literal )
+
+The first string_literal is the name of the file to be read. If the
+file does not exist, then the function returns an empty list. An empty
+list is also returned if the file exists but is empty.
+
+Here is an example of the ``File_As_List`` function:
+
+  ::
+
+      File_As_List ("dirs.txt")
+
+If the file content is:
+
+  ::
+
+      src1
+      src2
+
+Then result is ``("src1", "src2")``.
 
 .. index:: Built-in function; Filter_Out
 

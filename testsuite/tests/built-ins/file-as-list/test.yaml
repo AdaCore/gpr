@@ -1,0 +1,5 @@
+description:
+    Check the File_As_List built-in
+driver: build_and_run
+project_file: builtins
+main: main
