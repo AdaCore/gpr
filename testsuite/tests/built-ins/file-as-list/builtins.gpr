@@ -1,4 +1,6 @@
 
+with "gpr2";
+
 project Builtins is
    L := File_As_List ("list.txt");
 
