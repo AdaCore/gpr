@@ -1,0 +1,5 @@
+description: Regression test for properly displaying the change the CWD to the object directory when compiling
+driver: python_script
+timeout: 800
+control:
+- [XFAIL, "True", "Current limitation of gprbuild2 - the PM doesn't print \"changing to object dir bla\", find a way with gnatcoll traces to replicate"]

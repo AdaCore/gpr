@@ -1,0 +1,5 @@
+description: Regression test for raising warnings when case construction is incomplete
+driver: python_script
+timeout: 800
+control:
+- [XFAIL, "True", "Current limitation of gprbuild2 - We are not raising warnings when the case construction is incomplete"]

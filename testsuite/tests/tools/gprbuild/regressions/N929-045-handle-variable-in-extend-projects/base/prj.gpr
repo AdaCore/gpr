@@ -1,0 +1,5 @@
+with "../gcoll/gcoll.gpr";
+with "../gcollsq/gcoll_sqlite.gpr";
+project Prj is
+end Prj;
+

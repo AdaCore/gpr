@@ -1,0 +1,5 @@
+project Test_B extends "b.gpr" is
+   for Source_Dirs use ("srctb");
+   for Object_Dir use "objtb";
+end Test_B;
+

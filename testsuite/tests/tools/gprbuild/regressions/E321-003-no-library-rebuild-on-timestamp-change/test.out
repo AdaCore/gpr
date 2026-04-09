@@ -1,0 +1,4 @@
+$ gprbuild -P b.gpr -q
+$ touch imp/lib/liba.so
+
+$ gprbuild -P b.gpr

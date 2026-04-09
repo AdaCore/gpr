@@ -1,0 +1,3 @@
+$ gprbuild -f -P badprj.gpr -q -j1
+gnat1: cannot find configuration pragmas file /titi.adc
+badprj.gpr: error: [Ada Compile] driver.adb (badprj.gpr) failed with status 1

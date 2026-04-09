@@ -1,0 +1,9 @@
+project a_ext extends "a" is
+
+   for Source_Dirs use ("../ext",
+                        "../ext/a");
+   for Object_Dir use "../../obj/ext";
+   for Exec_dir use "../..";
+
+   for Main use ("a.adb");
+end a_ext;

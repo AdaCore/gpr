@@ -1,0 +1,6 @@
+limited with "b.gpr";
+project A is
+   for Source_Dirs use ("srca");
+   for Object_Dir use "obja";
+end A;
+

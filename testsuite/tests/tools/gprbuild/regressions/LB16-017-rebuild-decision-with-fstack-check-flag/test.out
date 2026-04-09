@@ -1,0 +1,3 @@
+$ gprbuild -P main.gpr -q
+$ gprbuild -P main.gpr
+"main" up to date

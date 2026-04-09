@@ -1,0 +1,7 @@
+project Badprj is
+
+   package Builder is
+      for Global_Configuration_Pragmas use "titi.adc";
+   end Builder;
+
+end Badprj;

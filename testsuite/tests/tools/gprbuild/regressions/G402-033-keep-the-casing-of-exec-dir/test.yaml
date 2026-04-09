@@ -1,0 +1,5 @@
+description: Regression test for preserving the casing of the exec dir
+driver: python_script
+timeout: 800
+control:
+- [SKIP, "True", "GPRbuild test that should be turned into a GPRinspect one to check the project Exec Directory"]

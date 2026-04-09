@@ -1,0 +1,3 @@
+$ gprbuild -P incorrect.gpr
+incorrect.gpr:3:01: error: End of input expected, got "Identifier"
+gprbuild: "incorrect.gpr" processing failed

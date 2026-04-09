@@ -1,0 +1,5 @@
+with "gcoll_ext.gpr";
+with "gcoll_sqlite_ext.gpr";
+project Ext extends all "base/prj.gpr" is
+end Ext;
+

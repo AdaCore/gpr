@@ -1,0 +1,16 @@
+from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.tools import GPRBUILD, GPRCLEAN
+
+bnr = BuilderAndRunner()
+
+def run(cmd):
+    print("$ " + " ".join(cmd))
+    if cmd[0] in (GPRBUILD, GPRCLEAN):
+        bnr.call(cmd)
+    else:
+        print(bnr.simple_run([cmd], catch_error=True).out)
+
+run([GPRBUILD, "-P", "prj.gpr", "-q"])
+run([GPRBUILD, "-P", "prj2.gpr", "-q"])
+run([GPRBUILD, "-P", "prj3.gpr", "-q"])
+run([GPRBUILD, "-P", "prj4.gpr", "-q"])

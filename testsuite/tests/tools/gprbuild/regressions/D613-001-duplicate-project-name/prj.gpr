@@ -1,0 +1,4 @@
+with "imp/prj";
+project Prj is
+end Prj;
+

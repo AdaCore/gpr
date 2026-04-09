@@ -1,0 +1,6 @@
+library project Toto is
+   for Library_Name use "toto";
+   for Library_Dir  use "lib";
+   for Source_Dirs use ("src_toto");
+end Toto;
+

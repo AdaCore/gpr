@@ -1,0 +1,13 @@
+project Prj3 is
+   type A_Type is ("A", "B", "C");
+
+   A : A_Type := external ("A value", "A");
+
+   package Builder is
+      case A is
+         when "A" | "C" =>
+	    for Default_Switches ("Ada") use ("-O0");
+	 when others =>
+      end case;
+   end Builder;
+end Prj3;
