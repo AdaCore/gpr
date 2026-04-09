@@ -1,0 +1,6 @@
+project Prj3 is
+   for Library_Name use "prj__toto";
+   for Library_Dir  use "lib";
+   for Library_Interface use ("pkg");
+end Prj3;
+

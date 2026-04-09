@@ -1,0 +1,6 @@
+description: Regression test correctly handling --lto and --lfto switches when linking
+driver: python_script
+timeout: 800
+control:
+- [XFAIL, "True", "Current limitation of gprbuild2 - We are currently just passing through those switches which is wrong"]
+

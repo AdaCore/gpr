@@ -1,0 +1,9 @@
+with "test_b.gpr";
+with "test_a.gpr";
+project Test_Unit is
+   for Source_Dirs use ("srctu");
+   for Object_Dir  use "objtu";
+   for Exec_Dir    use ".";
+   for Main use ("main.adb");
+end Test_Unit;
+

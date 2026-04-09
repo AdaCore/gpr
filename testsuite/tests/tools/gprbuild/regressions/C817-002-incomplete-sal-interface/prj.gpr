@@ -1,0 +1,8 @@
+project Prj is
+
+   for Library_Name use "sal";
+   for Library_dir  use "lib";
+   for Library_Kind use "relocatable";
+   for Library_Interface use ("pkg");
+
+end Prj;

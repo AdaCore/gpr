@@ -1,0 +1,17 @@
+with "toto/toto.gpr";
+project Prj is
+   for Main use ("sources.ada" at 1);
+   for Source_Files use ("sources.ada");
+   for Object_Dir use "obj";
+   for Exec_Dir   use "bin";
+
+   package Naming is
+      for Spec ("pkg2") use "sources.ada" at 2;
+      for Body ("main") use "sources.ada" at 1;
+   end Naming;
+
+   package Builder is
+      for Executable ("sources.ada" at 1) use "main";
+   end Builder;
+end Prj;
+

@@ -1,0 +1,4 @@
+description: Regression test the handling of a bad configuration pragma file
+driver: python_script
+timeout: 800
+

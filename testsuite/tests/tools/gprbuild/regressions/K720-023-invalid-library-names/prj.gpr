@@ -1,0 +1,6 @@
+project Prj is
+   for Library_Name use "BSE-Frame";
+   for Library_Dir  use "lib";
+   for Library_Interface use ("pkg");
+end Prj;
+

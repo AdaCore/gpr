@@ -1,0 +1,9 @@
+project Prj is
+   for Main use ("a", "b", "c", "d");
+
+   package Linker is
+--      For Default_Switches ("Ada") use ("-ltoto");
+   end Linker;
+
+end Prj;
+

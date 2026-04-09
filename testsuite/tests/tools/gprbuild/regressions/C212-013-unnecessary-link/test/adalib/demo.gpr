@@ -1,0 +1,8 @@
+project demo extends "common.gpr" is
+
+   package Compiler is
+      for Switches( "demo" ) use ("-O2");
+   end Compiler;
+
+   for Exec_Dir use "..";
+end demo;

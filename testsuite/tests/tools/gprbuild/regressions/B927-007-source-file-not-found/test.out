@@ -1,0 +1,5 @@
+$ gprbuild -Ptest -q
+test.gpr:6:13: error: source file "hello.adb" not found
+test.gpr: warning: there are no sources of language "Ada" in this project
+test.gpr:5:23: error: "hello" is not a source of project Test
+gprbuild: processing failed

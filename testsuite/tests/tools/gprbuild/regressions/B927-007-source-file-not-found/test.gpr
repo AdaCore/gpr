@@ -1,0 +1,9 @@
+project Test is 
+
+        Source_Files := ("hello.adb"); 
+
+        for Main use ("hello"); 
+        for Source_Files use Source_Files; 
+
+end Test; 
+

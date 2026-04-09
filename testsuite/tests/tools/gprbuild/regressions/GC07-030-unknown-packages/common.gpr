@@ -1,0 +1,6 @@
+project common is
+   for Source_Files use ();
+   package Language_Processing is
+   end Language_Processing;
+end common;
+

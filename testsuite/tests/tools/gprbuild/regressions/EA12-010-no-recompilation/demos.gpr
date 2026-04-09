@@ -1,0 +1,6 @@
+with "sax/sax";
+project Demos is
+  for Main use ("demo.adb");
+end Demos;
+
+

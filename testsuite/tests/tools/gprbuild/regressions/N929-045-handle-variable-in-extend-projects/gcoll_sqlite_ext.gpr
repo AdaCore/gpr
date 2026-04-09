@@ -1,0 +1,3 @@
+with "gcoll_ext.gpr";
+project Gcoll_Sqlite_Ext extends "gcollsq/gcoll_sqlite.gpr" is
+end Gcoll_Sqlite_Ext;

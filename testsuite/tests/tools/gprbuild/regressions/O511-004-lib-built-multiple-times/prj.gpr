@@ -1,0 +1,6 @@
+with "toto.gpr";
+project Prj is
+   for Main use ("main.adb");
+   for Source_Dirs use ("src_prj");
+end Prj;
+
