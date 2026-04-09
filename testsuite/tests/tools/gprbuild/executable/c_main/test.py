@@ -13,3 +13,4 @@ def run(cmd):
 
 run([GPRBUILD, "-q", "-P", os.path.join("tree", "demo.gpr"), "-p"])
 run(["./tree/main"])
+run(["./tree/main2"])

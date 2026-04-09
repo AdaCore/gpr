@@ -3168,7 +3168,6 @@ package body GPR2.Project.View is
       Name : String;
       Lang : Language_Id := Ada_Language) return Simple_Name
    is
-      Default_Ada_MU_BS : constant String := ".ada";
       Index             : constant Attribute_Index.Object :=
                             Attribute_Index.Create (Lang);
       Attr              : constant Project.Attribute.Object :=
@@ -3180,6 +3179,9 @@ package body GPR2.Project.View is
       function Is_An_Exception (Name : String) return Boolean;
       --  Check if Name is an exception and should not be matched
       --  with classical language naming convention.
+
+      function Has_Default_Body_Suffix (Name : String) return Boolean;
+      --  Check if Name has an body suffix and try to match to known default
 
       ----------------------------
       -- Ends_With_One_Language --
@@ -3199,6 +3201,44 @@ package body GPR2.Project.View is
                     and then GPR2.Path_Name.Ends_With
                       (Filename_Optional (Name), Spec_Attr.Value.Text));
       end Ends_With_One_Language;
+
+      -----------------------------
+      -- Has_Default_Body_Suffix --
+      -----------------------------
+
+      function Has_Default_Body_Suffix (Name : String) return Boolean is
+         Default_Ada_MU_BS : constant String := ".ada";
+         Default_Ada_BS    : constant String := ".adb";
+         Default_C_BS      : constant String := ".c";
+         Default_CC_BS     : constant String := ".cc";
+         Default_CPP_BS    : constant String := ".cpp";
+      begin
+         if Lang = Ada_Language then
+            if GPR2.Path_Name.Ends_With
+              (Filename_Optional (Name), Default_Ada_MU_BS)
+              or else GPR2.Path_Name.Ends_With
+                (Filename_Optional (Name), Default_Ada_BS)
+            then
+               return True;
+            end if;
+         elsif Lang = C_Language then
+            if GPR2.Path_Name.Ends_With
+              (Filename_Optional (Name), Default_C_BS)
+            then
+               return True;
+            end if;
+         elsif Lang = CPP_Language then
+            if GPR2.Path_Name.Ends_With
+              (Filename_Optional (Name), Default_CC_BS)
+              or else GPR2.Path_Name.Ends_With
+                (Filename_Optional (Name), Default_CPP_BS)
+            then
+               return True;
+            end if;
+         end if;
+
+         return False;
+      end Has_Default_Body_Suffix;
 
       ---------------------
       -- Is_An_Exception --
@@ -3255,8 +3295,7 @@ package body GPR2.Project.View is
    begin
       if Is_An_Exception (Name)
         or else Ends_With_One_Language (Name)
-        or else GPR2.Path_Name.Ends_With
-                  (Filename_Optional (Name), Default_Ada_MU_BS)
+        or else Has_Default_Body_Suffix (Name)
       then
          return Simple_Name (Name);
       else
