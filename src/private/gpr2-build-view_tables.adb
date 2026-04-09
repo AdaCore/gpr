@@ -184,7 +184,7 @@ package body GPR2.Build.View_Tables is
       end if;
 
       if not To.View.Is_Extended then
-         for NS of To.View.Aggregate_Libraries loop
+         for NS of To.View.Aggregated_By loop
             if NS.Namespace_Roots.Contains (Root.View) then
                Add_Unit_Ownership (Get_Data (To.Tree_Db, NS), CU, Root);
             end if;
@@ -950,7 +950,7 @@ package body GPR2.Build.View_Tables is
       end if;
 
       if not From.View.Is_Extended then
-         for NS of From.View.Aggregate_Libraries loop
+         for NS of From.View.Aggregated_By loop
             if NS.Namespace_Roots.Contains (Root.View) then
                Remove_Unit_Ownership (Get_Data (From.Tree_Db, NS), CU, Root);
             end if;

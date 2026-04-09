@@ -108,7 +108,7 @@ package body GPR2.View_Internal is
    begin
       for V of Tree.Ordered_Views loop
          if V.Is_Aggregated_In_Library then
-            for View of V.Aggregate_Libraries loop
+            for View of V.Aggregated_By loop
                if V.Kind in With_Object_Dir_Kind
                  and then View.Library_Directory = V.Object_Directory
                then

@@ -701,7 +701,7 @@ package body GPR2.Build.Actions.Compile is
             --  Try to comply with the aggregating library, but detect
             --  incoherences.
 
-            for V of Self.View.Aggregate_Libraries loop
+            for V of Self.View.Aggregated_By loop
                if V.Library_Kind /= "static" then
                   if Use_Fpic = Undefined then
                      Use_Fpic := With_Fpic;

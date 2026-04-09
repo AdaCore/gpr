@@ -1,0 +1,14 @@
+aggregate library project Agg_Esal is
+
+   for Project_Files use ("static.gpr");
+
+   for Library_Name use "agg_esal";
+   for Library_Dir use "agg_lib";
+   for Object_Dir use "obj";
+
+   for Library_Kind use "dynamic";
+   for Library_Standalone use "encapsulated";
+
+   for Library_Interface use ("Toto");
+
+end Agg_Esal;

@@ -160,7 +160,7 @@ package GPR2.Project.View is
    --  its aggregated views are also returned.
    --  In case Self is an aggregate library, this parameter has no effect.
 
-   function Aggregate_Libraries (Self : Object) return Set.Object
+   function Aggregated_By (Self : Object) return Set.Object
      with Pre => Self.Is_Defined;
    --  Returns the list of aggregate library projects that contain Self
 
