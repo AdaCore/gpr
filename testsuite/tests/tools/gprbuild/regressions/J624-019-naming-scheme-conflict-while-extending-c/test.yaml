@@ -1,0 +1,4 @@
+description: Regression test naming scheme clashing with extended sources (main) with a different naming scheme for c and cpp 
+driver: python_script
+timeout: 800
+

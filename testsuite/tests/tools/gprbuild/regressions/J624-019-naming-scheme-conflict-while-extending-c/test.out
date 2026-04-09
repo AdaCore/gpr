@@ -1,0 +1,10 @@
+$ gprbuild -P sys.gpr -q
+$ gprbuild -P user_sys.gpr -q
+$ ./main
+New
+Pkg2: New
+
+$ ./main2
+New
+Pkg2: New
+
