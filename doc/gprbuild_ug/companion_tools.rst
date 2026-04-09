@@ -2024,6 +2024,9 @@ Furthermore, we can note that GPRinstall handles the preprocessed
 sources. So it installs the correct variant of the source after resolving
 the preprocessing directives.
 
+For convenience, GPRinstall automatically installs GNATprove artifacts
+if they are found in the build library directory.
+
 The parts of a project that can be installed are:
 
 * sources of a project
