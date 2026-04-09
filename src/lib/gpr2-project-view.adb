@@ -105,20 +105,6 @@ package body GPR2.Project.View is
       Data : Build.Source.Sets.Filter_Data'Class) return Boolean;
    --  Function used to filter the sources in the Sources subprogram
 
-   -------------------------
-   -- Aggregate_Libraries --
-   -------------------------
-
-   function Aggregate_Libraries (Self : Object) return Set.Object is
-      Result : Set.Object;
-   begin
-      for Id of View_Internal.Get_RO (Self).Agg_Libraries loop
-         Result.Include (Self.Tree_Int.Instance_Of (Id));
-      end loop;
-
-      return Result;
-   end Aggregate_Libraries;
-
    ----------------
    -- Aggregated --
    ----------------
@@ -142,6 +128,20 @@ package body GPR2.Project.View is
          end loop;
       end return;
    end Aggregated;
+
+   -------------------------
+   -- Aggregate_Libraries --
+   -------------------------
+
+   function Aggregated_By (Self : Object) return Set.Object is
+      Result : Set.Object;
+   begin
+      for Id of View_Internal.Get_RO (Self).Agg_Libraries loop
+         Result.Include (Self.Tree_Int.Instance_Of (Id));
+      end loop;
+
+      return Result;
+   end Aggregated_By;
 
    ----------------------------
    -- Apply_Root_And_Subdirs --
@@ -1905,7 +1905,7 @@ package body GPR2.Project.View is
                if Self.Kind /= K_Aggregate_Library then
                   Closure.Insert (Self);
                else
-                  Closure := Self.Aggregate_Libraries;
+                  Closure := Self.Aggregated;
                end if;
 
                for V of Closure loop

@@ -1358,7 +1358,7 @@ package body GPR2.Tree_Internal is
                      if not Parent.Is_Aggregated_In_Library then
                         Data.Agg_Libraries.Include (Parent.Id);
                      else
-                        for V of Parent.Aggregate_Libraries loop
+                        for V of Parent.Aggregated_By loop
                            Data.Agg_Libraries.Include (V.Id);
                         end loop;
                      end if;
@@ -1554,7 +1554,7 @@ package body GPR2.Tree_Internal is
                   View_Internal.Get_RW (View).Agg_Libraries.Include
                     (Parent.Id);
                else
-                  for V of Parent.Aggregate_Libraries loop
+                  for V of Parent.Aggregated_By loop
                      View_Internal.Get_RW (View).Agg_Libraries.Include (V.Id);
                   end loop;
                end if;
