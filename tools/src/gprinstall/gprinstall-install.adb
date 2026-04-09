@@ -1274,7 +1274,11 @@ package body GPRinstall.Install is
 
          procedure Copy_Project_Library
            (Project      : GPR2.Project.View.Object;
-            Library_Name : Path_Name.Object) is
+            Library_Name : Path_Name.Object)
+         is
+            Gnatprove_Dir : constant Path_Name.Object :=
+                              Library_Name.Compose ("gnatprove",
+                                                    Directory => False);
          begin
             if not Project.Is_Static_Library
               and then Project.Has_Library_Version
@@ -1339,6 +1343,16 @@ package body GPRinstall.Install is
                   Executable    => not Project.Is_Static_Library,
                   Extract_Debug => Side_Debug
                                      and then not Project.Is_Static_Library);
+            end if;
+
+            --  If artifacts for gnatprove exists next to the library, copy
+            --  them as well.
+
+            if Gnatprove_Dir.Exists then
+               Copy_Artifacts
+                 (Pathname    => Gnatprove_Dir,
+                  Destination => Lib_Dir,
+                  Required    => False);
             end if;
 
             --  On Windows copy the shared libraries into the bin
