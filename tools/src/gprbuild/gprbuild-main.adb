@@ -216,6 +216,27 @@ begin
                     (GPR2.Value_Type (Source_Part.Source.Simple_Name),
                      Case_Sensitive => GPR2.File_Names_Case_Sensitive),
                   At_Pos => Source_Part.Index);
+
+               --  Also check for Builder.Switches for the unit itself
+               if not Sw_Attr.Is_Defined then
+                  declare
+                     Src : constant GPR2.Build.Source.Object :=
+                             Opt.Tree.Root_Project.Visible_Source
+                               (Mains.First_Element.Source.Simple_Name);
+                  begin
+                     if Src.Is_Defined
+                       and then Src.Has_Units
+                       and then Src.Has_Unit_At (Source_Part.Index)
+                     then
+                        Sw_Attr := Opt.Tree.Root_Project.Attribute
+                          (Name   => PRA.Builder.Switches,
+                           Index  => Project.Attribute_Index.Create
+                             (GPR2.Value_Type
+                                  (Src.Unit (Source_Part.Index).Name)),
+                           At_Pos => Source_Part.Index);
+                     end if;
+                  end;
+               end if;
             end;
          end if;
 
