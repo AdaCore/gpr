@@ -1,0 +1,5 @@
+description: Regression test for the handling of dangling simlinks
+driver: python_script
+timeout: 800
+control:
+- [SKIP, "'windows' in env.host.platform", "DEAD on windows"]
