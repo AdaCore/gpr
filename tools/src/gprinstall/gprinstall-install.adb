@@ -1281,40 +1281,34 @@ package body GPRinstall.Install is
               and then Project.Library_Filename (Without_Version => True).Name
                         /= Project.Library_Version_Filename.Name
             then
-               if Windows_Target then
-                  --  No support for version, do a simple copy
+               --  First copy the library itself without the version in the
+               --  name.
 
+               begin
                   Copy_File
                     (From          => Library_Name,
                      To            => Lib_Dir,
                      Executable    => True,
                      Extract_Debug => Side_Debug);
-
-               elsif Is_Windows_Host then
-                  --  On cross-windows, Library_Filename is generated.
-
-                  begin
+               exception
+                  when GPRinstall_Error =>
+                     --  ??? To be removed when gpr1build is fully phased
+                     --  out.
+                     --  GPR1Build on windows ignores Library_Version for
+                     --  cross targets, so may differ from what gpr2
+                     --  expects as output for the link action. To remain
+                     --  compatible with GPR1Build we thus need to try
+                     --  copying the base library variant in case of error
+                     --  here
                      Copy_File
-                       (From          => Library_Name,
-                        To            => Lib_Dir,
-                        Executable    => True,
-                        Extract_Debug => Side_Debug);
-                  exception
-                     when GPRinstall_Error =>
-                        --  ??? To be removed when gpr1build is fully phased
-                        --  out.
-                        --  GPR1Build on windows ignores Library_Version for
-                        --  cross targets, so may differ from what gpr2
-                        --  expects as output for the link action. To remain
-                        --  compatible with GPR1Build we thus need to try
-                        --  copying the base library variant in case of error
-                        --  here
-                        Copy_File
-                          (From => Project.Library_Filename
-                             (Without_Version => True),
-                           To => Lib_Dir.Compose (Library_Name.Simple_Name));
-                  end;
+                       (From =>
+                          Project.Library_Filename (Without_Version => True),
+                        To   => Lib_Dir.Compose (Library_Name.Simple_Name));
+               end;
 
+               --  And now copy the versioned libraries
+
+               if Is_Windows_Host then
                   --  And copy variants, no sym-link supported
 
                   for L_Name of Project.Library_Filename_Variants loop
@@ -1327,13 +1321,7 @@ package body GPRinstall.Install is
                           Path_Name.Compose (Lib_Dir, L_Name).Simple_Name);
                   end loop;
 
-               else
-                  Copy_File
-                    (From          => Library_Name,
-                     To            => Lib_Dir,
-                     Executable    => True,
-                     Extract_Debug => Side_Debug);
-
+               elsif not Windows_Target then
                   for L_Name of Project.Library_Filename_Variants loop
                      Copy_File
                        (From     => Path_Name.Compose (Lib_Dir, L_Name),
