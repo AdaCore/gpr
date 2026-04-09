@@ -1014,9 +1014,7 @@ package body GPRinstall.Install is
                      To         => Destination,
                      Executable => OS_Lib.Is_Executable_File (Fullname));
 
-                  if Required then
-                     Something_Copied := True;
-                  end if;
+                  Something_Copied := True;
                end if;
             end Copy_Entry;
 
