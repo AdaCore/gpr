@@ -4,7 +4,7 @@ $ gprbuild -P static.gpr --src-subdirs=src2
 [Ada Compile]     toto.ads
 [Archive]         libstatic.a
 $ nm lib/libstatic.a | grep "pkg"
-pkg_E
+pkg_E symbol was found.
 $ gprbuild -P esal.gpr --src-subdirs=src2 -f
 [Ada Compile]     pkg.ads
 [Ada Compile]     toto.ads
@@ -12,8 +12,7 @@ $ gprbuild -P esal.gpr --src-subdirs=src2 -f
 [Ada Post-Bind]   b__esal.adb
 [Link]            libesal.so
 $ nm lib/libesal.so | grep "pkg"
-pkgS
-pkg_E
+pkg_E, pkgS symbols were found.
 $ gprbuild -P agg_esal.gpr --src-subdirs=src2 -f
 "agg_lib" created
 [Ada Compile]     pkg.ads
@@ -22,5 +21,4 @@ $ gprbuild -P agg_esal.gpr --src-subdirs=src2 -f
 [Ada Post-Bind]   b__agg_esal.adb
 [Link]            libagg_esal.so
 $ nm agg_lib/libagg_esal.so | grep "pkg"
-pkgS
-pkg_E
+pkg_E, pkgS symbols were found.

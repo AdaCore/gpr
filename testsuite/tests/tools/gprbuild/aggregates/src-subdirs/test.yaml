@@ -1,5 +1,3 @@
 description: Testing the extension of library interfaces with --src-subdirs
 driver: python_script
 timeout: 800
-output:
-- ["test.out.win", "'windows' in env.host.platform"]
