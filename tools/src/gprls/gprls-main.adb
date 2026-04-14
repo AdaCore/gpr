@@ -290,9 +290,13 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
       Displayed_Paths.Insert (Artifact.Path, Position, Inserted);
       if Inserted then
          if With_Status then
-            Status :=
-              To_Unbounded_String
-               (if Signature.Valid (Artifact) then "OK " else "DIF ");
+            if not Artifact.Path.Exists then
+               Status := To_Unbounded_String ("MISSING ");
+            else
+               Status :=
+                 To_Unbounded_String
+                   (if Signature.Valid (Artifact) then "OK " else "DIF ");
+            end if;
          end if;
 
          if Simple_Name then
