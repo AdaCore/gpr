@@ -344,7 +344,7 @@ package body GPR2.Build.Actions.Compile.Ada is
                      end if;
 
                   elsif not Self.Signature.Add_Input
-                              (Artifacts.Files.Create (Src.Path_Name),
+                              (Artifacts.Source_Files.Create (Src.Path_Name),
                                Check_Checksums)
                   then
                      return;
