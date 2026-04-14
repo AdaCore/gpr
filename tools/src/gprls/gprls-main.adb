@@ -17,6 +17,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Command_Line;
+with Ada.Containers.Ordered_Sets;
 with Ada.Exceptions;
 
 with Ada.Text_IO;
@@ -63,24 +64,30 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
    use GPRtools.Program_Termination;
    use GPR2.Path_Name;
 
+   package Path_Sets is new Ada.Containers.Ordered_Sets
+     (Element_Type => GPR2.Path_Name.Object);
+
    Opt    : GPRls.Options.Object;
    Parser : GPRtools.Options.Command_Line_Parser;
 
    procedure Print_Line (Str : String; Offset : Integer := 0);
    --  Print a line with an optional offset (for indentation)
 
-   procedure Print_Artifact
-     (Artifact    : GPR2.Build.Artifacts.Object'Class;
-      Signature   : GPR2.Build.Signature.Object;
-      With_Status : Boolean;
-      Offset      : Integer := 0;
-      Simple_Name : Boolean := False);
+   procedure Print_File_Artifact
+     (Artifact        : GPR2.Build.Artifacts.Files.Object'Class;
+      Signature       : GPR2.Build.Signature.Object;
+      With_Status     : Boolean;
+      Displayed_Paths : in out Path_Sets.Set;
+      Offset          : Integer := 0;
+      Simple_Name     : Boolean := False);
    --  Print the artifact.
    --  @param Artifact The artifact to print.
    --  @param Signature The signature to use to check the artifact status if
    --     the status needs to be printed.
    --  @param With_Status If True, print the status (OK or DIF) of the
    --     artifact.
+   --  @param Displayed_Paths Contains the paths already displayed. It is used
+   --    to avoid duplicated outputs.
    --  @param Offset The Print_Line offset to use when printing the artifact.
    --  @param Simple_Name If True, print only the simple name of the artifact
    --    instead of the full path.
@@ -194,12 +201,17 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
       Non_Runtime_Deps : GPR2.Path_Name.Set.Object;
       Signature        : GPR2.Build.Signature.Object)
    is
-      Offset : Integer := 0;
-
+      Offset          : Integer := 0;
+      Displayed_Paths : Path_Sets.Set;
+      --  Used to prevent duplicated paths output
    begin
       if Opt.Print_Object_Files then
-         Print_Artifact
-           (Action.Object_File, Signature, not Opt.Hide_Status, Offset);
+         Print_File_Artifact
+           (Action.Object_File,
+            Signature,
+            not Opt.Hide_Status,
+            Displayed_Paths,
+            Offset);
          Offset := Offset + 1;
       end if;
 
@@ -219,8 +231,12 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
       if Opt.Print_Sources then
          for Artifact of Opt.Tree.Artifacts_Database.Inputs (Action.UID) loop
             if Artifact in GPR2.Build.Artifacts.Source_Files.Object'Class then
-               Print_Artifact
-                 (Artifact, Signature, not Opt.Hide_Status, Offset);
+               Print_File_Artifact
+                 (GPR2.Build.Artifacts.Source_Files.Object (Artifact),
+                  Signature,
+                  not Opt.Hide_Status,
+                  Displayed_Paths,
+                  Offset);
             end if;
          end loop;
       end if;
@@ -228,10 +244,11 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
       if Opt.Dependency_Mode and then Opt.Print_Sources then
          if not Non_Runtime_Deps.Is_Empty then
             for Dep of Non_Runtime_Deps loop
-               Print_Artifact
+               Print_File_Artifact
                  (GPR2.Build.Artifacts.Source_Files.Create (Dep),
                   Signature,
                   not Opt.Hide_Status,
+                  Displayed_Paths,
                   Offset);
             end loop;
          end if;
@@ -240,10 +257,11 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
       if Opt.With_Predefined_Units and then Opt.Print_Sources then
          if not Runtime_Deps.Is_Empty then
             for Dep of Runtime_Deps loop
-               Print_Artifact
+               Print_File_Artifact
                  (GPR2.Build.Artifacts.Source_Files.Create (Dep),
                   Signature,
                   not Opt.Hide_Status,
+                  Displayed_Paths,
                   Offset,
                   Opt.Hide_Runtime_Directory);
             end loop;
@@ -251,48 +269,42 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
       end if;
    end Print_Action;
 
-   --------------------
-   -- Print_Artifact --
-   --------------------
+   -------------------------
+   -- Print_File_Artifact --
+   -------------------------
 
-   procedure Print_Artifact
-     (Artifact    : GPR2.Build.Artifacts.Object'Class;
-      Signature   : GPR2.Build.Signature.Object;
-      With_Status : Boolean;
-      Offset      : Integer := 0;
-      Simple_Name : Boolean := False)
+   procedure Print_File_Artifact
+     (Artifact        : GPR2.Build.Artifacts.Files.Object'Class;
+      Signature       : GPR2.Build.Signature.Object;
+      With_Status     : Boolean;
+      Displayed_Paths : in out Path_Sets.Set;
+      Offset          : Integer := 0;
+      Simple_Name     : Boolean := False)
    is
       use Ada.Strings.Unbounded;
       Status       : Unbounded_String;
       Artifact_Img : Unbounded_String;
+      Position     : Path_Sets.Cursor;
+      Inserted     : Boolean;
    begin
-      if With_Status then
-         Status :=
-           To_Unbounded_String
-             (if Signature.Valid (Artifact) then "OK " else "DIF ");
-      end if;
+      Displayed_Paths.Insert (Artifact.Path, Position, Inserted);
+      if Inserted then
+         if With_Status then
+            Status :=
+              To_Unbounded_String
+               (if Signature.Valid (Artifact) then "OK " else "DIF ");
+         end if;
 
-      if Artifact in GPR2.Build.Artifacts.Files.Object'Class then
          if Simple_Name then
             Artifact_Img :=
-              To_Unbounded_String
-                (String
-                   (GPR2.Build.Artifacts.Files.Object (Artifact)
-                      .Path
-                      .Simple_Name));
+              To_Unbounded_String (String (Artifact.Path.Simple_Name));
          else
-            Artifact_Img :=
-              To_Unbounded_String
-                (GPR2.Build.Artifacts.Files.Object (Artifact)
-                   .Path
-                   .String_Value);
+            Artifact_Img := To_Unbounded_String (Artifact.Path.String_Value);
          end if;
-      else
-         Artifact_Img := To_Unbounded_String (Artifact.Image);
-      end if;
 
-      Print_Line (To_String (Status) & To_String (Artifact_Img), Offset);
-   end Print_Artifact;
+         Print_Line (To_String (Status) & To_String (Artifact_Img), Offset);
+      end if;
+   end Print_File_Artifact;
 
    ----------------
    -- Print_Line --
