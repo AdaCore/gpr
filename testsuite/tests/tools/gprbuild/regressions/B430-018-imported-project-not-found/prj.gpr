@@ -1,0 +1,4 @@
+with "/import/import";
+project Prj is
+   for Main use ("driver");
+end Prj;
