@@ -1,0 +1,10 @@
+project Prj is
+   for Library_Name use "prj";
+   for Library_Dir  use "lib";
+   for Library_Kind use "relocatable";
+
+   package Linker is
+      for Default_Switches ("Ada") use ("-M");
+   end Linker;
+end Prj;
+
