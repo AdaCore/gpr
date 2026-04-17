@@ -1,0 +1,3 @@
+description: Regression test for imported project not found
+driver: python_script
+timeout: 800
