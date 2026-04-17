@@ -5223,7 +5223,7 @@
               "aggregate": false,
               "aggregate_library": false,
               "configuration": true,
-              "library": true,
+              "library": false,
               "standard": true
             },
             "is_toolchain_config": false,
@@ -5319,7 +5319,7 @@
               "aggregate": false,
               "aggregate_library": false,
               "configuration": true,
-              "library": true,
+              "library": false,
               "standard": true
             },
             "is_toolchain_config": false,
