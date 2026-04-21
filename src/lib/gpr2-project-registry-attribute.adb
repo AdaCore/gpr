@@ -31,7 +31,7 @@ package body GPR2.Project.Registry.Attribute is
                                others         => True);
 
    No_Aggregates_No_Lib   : constant Allowed_In :=
-                               (Aggregate_Kind => False,
+                              (Aggregate_Kind => False,
                                K_Library => False,
                                others         => True);
 

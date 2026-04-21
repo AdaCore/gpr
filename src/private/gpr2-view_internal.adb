@@ -689,7 +689,7 @@ package body GPR2.View_Internal is
                            Directory => True),
                         Is_Root_Dir => False);
                   elsif not Exists (Stat) then
-                     --  Most likely a simlink leads to a non-existing file or
+                     --  Most likely a symlink leads to a non-existing file or
                      --  directory.
 
                      Messages.Append

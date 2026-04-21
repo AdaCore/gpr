@@ -3181,7 +3181,7 @@ package body GPR2.Project.View is
       --  with classical language naming convention.
 
       function Has_Default_Body_Suffix (Name : String) return Boolean;
-      --  Check if Name has an body suffix and try to match to known default
+      --  Check if Name has a body suffix and try to match to known default
 
       ----------------------------
       -- Ends_With_One_Language --
@@ -3210,7 +3210,6 @@ package body GPR2.Project.View is
          Default_Ada_MU_BS : constant String := ".ada";
          Default_Ada_BS    : constant String := ".adb";
          Default_C_BS      : constant String := ".c";
-         Default_CC_BS     : constant String := ".cc";
          Default_CPP_BS    : constant String := ".cpp";
       begin
          if Lang = Ada_Language then
@@ -3229,9 +3228,7 @@ package body GPR2.Project.View is
             end if;
          elsif Lang = CPP_Language then
             if GPR2.Path_Name.Ends_With
-              (Filename_Optional (Name), Default_CC_BS)
-              or else GPR2.Path_Name.Ends_With
-                (Filename_Optional (Name), Default_CPP_BS)
+              (Filename_Optional (Name), Default_CPP_BS)
             then
                return True;
             end if;
