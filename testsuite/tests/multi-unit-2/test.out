@@ -37,7 +37,6 @@ few_units.ada
     depends on a-unccon.ads
     depends on ada.ads
     depends on few_units.ada
-    depends on g-io.adb
     depends on g-io.ads
     depends on gnat.ads
     depends on s-exctab.ads
@@ -51,7 +50,6 @@ few_units.ada
     depends on a-unccon.ads
     depends on ada.ads
     depends on few_units.ada
-    depends on g-io.adb
     depends on g-io.ads
     depends on gnat.ads
     depends on s-exctab.ads
@@ -77,9 +75,7 @@ main.adb
     object file  = main.o
     dep file     = main.ali
     depends on main.adb
-    depends on pkg1.adb
     depends on pkg1.ads
-    depends on pkg2.adb
     depends on pkg2.ads
     depends on system.ads
 pkg.adb

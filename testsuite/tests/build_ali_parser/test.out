@@ -3,28 +3,24 @@ main.adb
 multi.ada
 system.ads
 this is foo with a long name.1.ada
-this is foo with a long name.2.ada
 
 == ALI file: ali_files/7.2.2/main.ali
 main.adb
 multi.ada
 system.ads
 this is foo with a long name.1.ada
-this is foo with a long name.2.ada
 
 == ALI file: ali_files/7.3.2/main.ali
 main.adb
 multi.ada
 system.ads
 this is foo with a long name.1.ada
-this is foo with a long name.2.ada
 
 == ALI file: ali_files/wave/main.ali
 main.adb
 multi.ada
 system.ads
 this is foo with a long name.1.ada
-this is foo with a long name.2.ada
 
 == ALI file: ali_files/name_with_quote.ali
 anotherquote".ada
@@ -53,7 +49,6 @@ main.adb
 multi.ada
 system.ads
 this is foo with a long name.1.ada
-this is foo with a long name.2.ada
 
 == ALI file: ali_files/invalid/dependency_concatenated.ali
 [GPR.BUILD.ALI_PARSER] ALI parser error: space expected after the 'D' dependency character

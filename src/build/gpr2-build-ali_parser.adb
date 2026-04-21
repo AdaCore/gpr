@@ -354,8 +354,6 @@ package body GPR2.Build.ALI_Parser is
 
          declare
             Unit_Name : constant String := IO.Get_Token (Reader, EOL);
-            Filename  : constant String :=
-              (if not EOL then IO.Get_Token (Reader, EOL) else "");
          begin
             if Unit_Name = "" then
                raise Scan_ALI_Error with "missed withed unit name";
@@ -377,10 +375,6 @@ package body GPR2.Build.ALI_Parser is
             else
                raise Scan_ALI_Error
                  with "withed unit name does not end with '%s'";
-            end if;
-
-            if Filename /= "" then
-               Self.Dependencies.Include (Filename_Type (Filename));
             end if;
          end;
       end Parse_With;
