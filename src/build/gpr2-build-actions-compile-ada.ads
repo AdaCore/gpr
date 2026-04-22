@@ -75,7 +75,7 @@ package GPR2.Build.Actions.Compile.Ada is
    procedure Parse_Ali (Self : in out Object);
 
    overriding function Dependencies
-     (Self : Object) return GPR2.Containers.Filename_Set;
+     (Self : in out Object) return GPR2.Containers.Filename_Set;
    --  Fetch dependencies from a .ali dependency file with an ALI parser
 
    overriding function Extended (Self : Object) return Object;
