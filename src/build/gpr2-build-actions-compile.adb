@@ -1056,7 +1056,7 @@ package body GPR2.Build.Actions.Compile is
    ------------------
 
    function Dependencies
-     (Self : Object) return Containers.Filename_Set
+     (Self : in out Object) return Containers.Filename_Set
    is
       All_Deps : GPR2.Containers.Filename_Set;
    begin

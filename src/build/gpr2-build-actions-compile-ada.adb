@@ -403,7 +403,7 @@ package body GPR2.Build.Actions.Compile.Ada is
    ------------------
 
    overriding function Dependencies
-     (Self : Object) return Containers.Filename_Set
+     (Self : in out Object) return Containers.Filename_Set
    is
       UID    : constant Actions.Action_Id'Class := Object'Class (Self).UID;
 
@@ -416,11 +416,14 @@ package body GPR2.Build.Actions.Compile.Ada is
       end if;
 
       if not Self.ALI_Object.Is_Parsed then
-         Traces.Trace
-           ("Failed to parse dependencies from the ALI file " &
-              Self.Dep_File.Path.String_Value);
+         Self.ALI_Object.Parse;
+         if not Self.ALI_Object.Is_Parsed then
+            Traces.Trace
+              ("Failed to parse dependencies from the ALI file " &
+                Self.Dep_File.Path.String_Value);
 
-         return Containers.Empty_Filename_Set;
+            return Containers.Empty_Filename_Set;
+         end if;
       end if;
 
       return Self.ALI_Object.Dependencies;

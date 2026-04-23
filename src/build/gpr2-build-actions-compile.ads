@@ -60,7 +60,7 @@ package GPR2.Build.Actions.Compile is
       Cmd_Line       : in out GPR2.Build.Command_Line.Object);
 
    function Dependencies
-     (Self : Object) return GPR2.Containers.Filename_Set;
+     (Self : in out Object) return GPR2.Containers.Filename_Set;
    --  Fetch dependencies from a .d dependency file with a makefile parser
 
    overriding function Is_Deactivated (Self : Object) return Boolean;
