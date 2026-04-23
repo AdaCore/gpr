@@ -1,0 +1,24 @@
+project Prj is
+
+   package Naming is
+      for Implementation_Suffix ("Ada") use ".2.ada";
+      for Specification_Suffix  ("Ada") use ".1.ada";
+   end Naming;
+
+   package Builder is
+
+     for Switches ("main") use ("-q");
+
+     for Switches ("main2.2.ada") use ("-q");
+
+   end Builder;
+
+   package Compiler is
+
+      for Switches ("main2") use ("-gnata");
+
+      for Switches ("main.2.ada") use ("-gnatwa");
+
+   end Compiler;
+
+end Prj;

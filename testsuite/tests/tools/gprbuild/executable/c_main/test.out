@@ -2,3 +2,6 @@ $ gprbuild -q -P tree/demo.gpr -p
 $ ./tree/main
 Hi from Ada
 
+$ ./tree/main2
+Hi from Ada
+

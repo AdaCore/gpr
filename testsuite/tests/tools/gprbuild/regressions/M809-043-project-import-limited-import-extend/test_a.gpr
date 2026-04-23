@@ -1,0 +1,5 @@
+project Test_A extends "a.gpr" is
+   for Source_Dirs use ("srcta");
+   for Object_Dir use "objta";
+end Test_A;
+

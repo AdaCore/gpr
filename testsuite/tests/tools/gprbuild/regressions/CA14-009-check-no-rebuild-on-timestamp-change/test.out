@@ -1,0 +1,10 @@
+$ gprbuild -P build_all.gpr -U
+"unicode/obj" created
+"unicode/lib" created
+[Ada Compile]     a.adb
+[Ada Compile]     unicode.ads
+$ gprbuild -P build_all.gpr -U
+$ touch unicode/a.adb
+
+$ gprbuild -P build_all.gpr -U
+$ gprbuild -P build_all.gpr -U

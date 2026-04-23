@@ -1,0 +1,17 @@
+project User_Sys extends "sys.gpr" is
+   for Languages use ("Ada", "C", "C++");
+   for Main use ("main.c", "main2.cpp");
+   for Object_Dir use "obj_usr";
+   for Exec_Dir use ".";
+
+   package Naming is
+      for Specification_Suffix ("C") use ".cspc";
+      for Implementation_Suffix ("C") use ".cbdy";
+      for Specification_Suffix ("C++") use ".cppspc";
+      for Implementation_Suffix ("C++") use ".cppbdy";      
+      for Specification_Suffix ("ada") use ".spc";
+      for Implementation_Suffix ("ada") use ".bdy";
+      for Separate_Suffix use ".bdy";
+   end Naming;
+end User_Sys;
+

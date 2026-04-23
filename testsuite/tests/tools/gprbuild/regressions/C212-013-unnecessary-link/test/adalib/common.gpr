@@ -1,0 +1,10 @@
+project Common is
+
+   for Source_Dirs use ();
+
+   package Builder is
+      for Default_Switches( "ada" ) use ("-g", "-m" );
+      for Default_Switches( "c" ) use ("-g", "-C" );
+   end Builder;
+end Common;
+

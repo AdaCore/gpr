@@ -1,0 +1,3 @@
+description: Regression test for better handling rebuild decision when -fstack-check is used
+driver: python_script
+timeout: 800

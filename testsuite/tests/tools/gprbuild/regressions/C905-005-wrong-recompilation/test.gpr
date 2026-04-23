@@ -1,0 +1,9 @@
+project Test is
+
+   for Source_Dirs use ("source/vss");
+   for Object_Dir use "obj/org/";
+   for Exec_dir use ".";
+
+   for Main use ("a.adb");
+
+end Test;

@@ -1,0 +1,9 @@
+$ gprbuild -P source/vss/test_ext.gpr -q
+$ gprbuild -P source/vss/a_ext.gpr -q
+$ touch source/vss/global_version.ads
+
+$ gprbuild -P source/vss/a_ext.gpr
+"a" up to date
+$ gprbuild -P source/vss/test_ext.gpr
+"b" up to date
+"c" up to date

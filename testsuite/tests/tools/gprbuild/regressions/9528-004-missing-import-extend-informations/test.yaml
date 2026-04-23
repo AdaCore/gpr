@@ -1,0 +1,5 @@
+description: Regression test for forcing recompilation of units
+driver: python_script
+timeout: 800
+control:
+- [XFAIL, "True", "Current limitation of gprbuild2 - we are missing information about which project imported/extended the missing project"]

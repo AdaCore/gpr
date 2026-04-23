@@ -1,0 +1,8 @@
+with "prj";
+project Import is
+
+   package Naming is
+   end Naming;
+
+end Import;
+

@@ -1,0 +1,2 @@
+project Gcoll_Ext extends "gcoll/gcoll.gpr" is
+end Gcoll_Ext;

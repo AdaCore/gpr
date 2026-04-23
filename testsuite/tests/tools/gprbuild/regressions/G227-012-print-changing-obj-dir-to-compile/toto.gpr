@@ -1,0 +1,3 @@
+project Toto is
+   for Object_Dir use "obj";
+end Toto;

@@ -1,0 +1,14 @@
+with "../gcoll/gcoll.gpr";
+project Gcoll_Sqlite is
+   for Source_Files use ();
+   package Linker is
+     case GColl.With_Sqlite is
+        when "yes" =>
+          for Linker_Options use ("-lsqlite3");
+        when "no" | "embedded" =>
+          null;
+     end case;
+   end Linker;
+
+end Gcoll_Sqlite;
+

@@ -1,0 +1,7 @@
+with "imp/a.gpr";
+project B is
+   for Library_Name use "b";
+   for Library_Dir  use "lib";
+   for Library_Kind use "relocatable";
+end B;
+

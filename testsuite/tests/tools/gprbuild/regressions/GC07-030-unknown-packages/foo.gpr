@@ -1,0 +1,9 @@
+with "common";
+
+project foo is
+   for Source_Files use ();
+
+   package Language_Processing renames Common.Language_Processing;
+
+end foo;
+

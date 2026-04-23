@@ -1,0 +1,6 @@
+project Prj2 is
+   for Library_Name use "prj_";
+   for Library_Dir  use "lib";
+   for Library_Interface use ("pkg");
+end Prj2;
+

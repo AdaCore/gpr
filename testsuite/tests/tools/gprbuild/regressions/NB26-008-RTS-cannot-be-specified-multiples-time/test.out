@@ -1,0 +1,4 @@
+$ gprbuild -f -P prj.gpr -q -c -cargs --RTS=sjlj
+$ gprbuild -f -P prj.gpr -q -c -cargs --RTS=zcx
+gnat1: --RTS cannot be specified multiple times
+prj.gpr: error: [Ada Compile] main.adb (prj.gpr) failed with status 1

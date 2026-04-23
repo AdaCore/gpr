@@ -1,0 +1,5 @@
+description: Regression test for handling multiple use of --RTS
+driver: python_script
+timeout: 800
+control:
+- [SKIP, "'windows' in env.host.platform", "DEAD on windows"]

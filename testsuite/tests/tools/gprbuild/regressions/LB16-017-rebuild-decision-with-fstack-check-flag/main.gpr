@@ -1,0 +1,26 @@
+project Main is
+
+   for Main use ("main.adb");
+
+   package Ide is
+      for Vcs_Kind use "ClearCase Native";
+   end Ide;
+
+   package Builder is
+      for Default_Switches ("ada") use ("-s", "-j4");
+   end Builder;
+
+   package Compiler is
+      for Default_Switches ("ada") use ("-gnatf", "-gnato", "-g", "-gnat05", "-fstack-check");
+   end Compiler;
+
+   package Binder is
+      for Default_Switches ("ada") use ("-E");
+   end Binder;
+
+   package Linker is
+      for Default_Switches ("ada") use ("-g");
+   end Linker;
+
+end Main;
+

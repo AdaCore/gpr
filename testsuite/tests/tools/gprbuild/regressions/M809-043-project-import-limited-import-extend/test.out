@@ -1,0 +1,6 @@
+test_a.gpr:1:24: cannot extend an already imported project file
+gprbuild: "test_bad1.gpr" processing failed
+test_bad2.gpr:4:19: cannot import an already extended project file
+gprbuild: "test_bad2.gpr" processing failed
+testing Pkga.Execute
+testing Pkgb.Execute

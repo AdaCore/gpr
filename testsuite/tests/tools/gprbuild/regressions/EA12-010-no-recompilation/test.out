@@ -1,0 +1,8 @@
+$ gprbuild -P sax/sax_build.gpr -q
+$ gprbuild -P demos.gpr
+[Ada Compile]     demo.adb
+[Ada Bind]        demo
+[Ada Post-Bind]   b__demo.adb
+[Link]            demo
+$ gprbuild -P demos.gpr
+"demo" up to date

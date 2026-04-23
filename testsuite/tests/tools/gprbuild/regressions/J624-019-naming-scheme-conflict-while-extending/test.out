@@ -1,0 +1,20 @@
+$ gprbuild -P sys.gpr
+"obj" created
+[Ada Compile]     main.adb
+[Ada Compile]     pkg.adb
+[Ada Compile]     pkg2.adb
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ gprbuild -P user_sys.gpr
+"obj_usr" created
+[Ada Compile]     main.adb
+[Ada Compile]     pkg.adb
+[Ada Compile]     pkg2.adb
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ ./main
+New
+Pkg2: New
+

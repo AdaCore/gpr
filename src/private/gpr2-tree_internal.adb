@@ -1703,7 +1703,7 @@ package body GPR2.Tree_Internal is
                return
                  Message_Prefix
                  & "project file """
-                 & String (Filename.Name)
+                 & String (File.Name)
                  & """ not found";
             else
                return

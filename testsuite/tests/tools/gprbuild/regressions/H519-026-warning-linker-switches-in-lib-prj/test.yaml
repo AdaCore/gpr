@@ -1,0 +1,3 @@
+description: Regression test for emitting a warning when Linker.Default_Switches/Switches are used in a library project
+driver: python_script
+timeout: 800

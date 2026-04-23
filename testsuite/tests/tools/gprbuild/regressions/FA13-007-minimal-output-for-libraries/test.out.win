@@ -1,0 +1,17 @@
+$ gprbuild -f -P prj.gpr
+"lib" created
+[Ada Compile]     pkg1.ads
+[Ada Compile]     pkg2.ads
+[Ada Compile]     pkg3.ads
+[Ada Compile]     pkg4.ads
+[Ada Compile]     pkg5.ads
+[Ada Compile]     pkg6.ads
+[Archive]         libprj.a
+$ gprbuild -f -P prj.gpr -XLKIND=relocatable
+[Ada Compile]     pkg1.ads
+[Ada Compile]     pkg2.ads
+[Ada Compile]     pkg3.ads
+[Ada Compile]     pkg4.ads
+[Ada Compile]     pkg5.ads
+[Ada Compile]     pkg6.ads
+[Link]            libprj.dll

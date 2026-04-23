@@ -1,0 +1,8 @@
+$ gprbuild -P aggr.gpr
+"lib" created
+[Ada Compile]     main.adb
+[Ada Compile]     pkg.ads
+[Archive]         libtoto.a
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main

@@ -1,0 +1,7 @@
+$ gprbuild -P test/adalib/demo.gpr demo -o demo
+[Ada Compile]     demo.adb
+[Ada Bind]        demo
+[Ada Post-Bind]   b__demo.adb
+[Link]            demo
+$ gprbuild -P test/adalib/demo.gpr demo -o demo
+"demo" up to date

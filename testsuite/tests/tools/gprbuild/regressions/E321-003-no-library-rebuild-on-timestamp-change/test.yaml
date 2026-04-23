@@ -1,0 +1,3 @@
+description: Regression test for no rebuilding a library if one of its component is more recent than itself
+driver: python_script
+timeout: 800

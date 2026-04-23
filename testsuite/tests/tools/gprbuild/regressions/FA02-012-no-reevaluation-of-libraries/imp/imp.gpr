@@ -1,0 +1,4 @@
+project Imp is
+   for Externally_Built use external ("EXTERNALLY_BUILT", "false");
+end Imp;
+

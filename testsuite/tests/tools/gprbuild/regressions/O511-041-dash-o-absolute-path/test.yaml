@@ -1,0 +1,4 @@
+description: Regression test for handling absolute path with -o
+driver: python_script
+timeout: 800
+

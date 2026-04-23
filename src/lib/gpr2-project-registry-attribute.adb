@@ -16,18 +16,23 @@ package body GPR2.Project.Registry.Attribute is
    Defaults : Pack_Defaults.Map;
    Aliases  : Attribute_Aliases.Map;
 
-   In_Library            : constant Allowed_In :=
-                             (K_Library
-                              | K_Aggregate_Library
-                              | K_Abstract => True,
-                              others       => False);
+   In_Library             : constant Allowed_In :=
+                              (K_Library
+                               | K_Aggregate_Library
+                               | K_Abstract => True,
+                               others       => False);
 
-   In_Aggregates         : constant Allowed_In :=
-                             (Aggregate_Kind => True,
-                              others         => False);
+   In_Aggregates          : constant Allowed_In :=
+                              (Aggregate_Kind => True,
+                               others         => False);
 
    No_Aggregates          : constant Allowed_In :=
                               (Aggregate_Kind => False,
+                               others         => True);
+
+   No_Aggregates_No_Lib   : constant Allowed_In :=
+                              (Aggregate_Kind => False,
+                               K_Library => False,
                                others         => True);
 
    In_Configuration       : constant Allowed_In :=
@@ -1768,7 +1773,7 @@ begin
       Index_Optional       => True,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => No_Aggregates,
+      Is_Allowed_In        => No_Aggregates_No_Lib,
       Config_Concatenable  => True);
    Add_Alias (Name => Linker.Default_Switches, Alias_Of => Linker.Switches);
 

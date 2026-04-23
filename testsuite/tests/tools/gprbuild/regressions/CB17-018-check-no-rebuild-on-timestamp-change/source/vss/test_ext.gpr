@@ -1,0 +1,8 @@
+project test_ext extends "test" is
+
+   for Source_Dirs use ("../ext");
+   for Object_Dir use "../../obj/ext";
+   for Exec_dir use "../..";
+
+   for Main use ("b.adb", "c.adb");
+end test_ext;

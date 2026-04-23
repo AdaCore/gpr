@@ -1,0 +1,3 @@
+description: Regression test for properly taking into account builder switches for main files or main units
+driver: python_script
+timeout: 800

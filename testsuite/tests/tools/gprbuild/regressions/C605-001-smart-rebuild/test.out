@@ -1,0 +1,29 @@
+$ gprbuild -P prj.gpr -j1
+[Ada Compile]     a.adb
+[Ada Compile]     b.adb
+[Ada Bind]        b
+[Ada Compile]     c.adb
+[Ada Compile]     d.adb
+[Ada Compile]     pkg.adb
+[Ada Bind]        a
+[Ada Bind]        c
+[Ada Bind]        d
+[Ada Post-Bind]   b__a.adb
+[Link]            a
+[Ada Post-Bind]   b__b.adb
+[Link]            b
+[Ada Post-Bind]   b__c.adb
+[Link]            c
+[Ada Post-Bind]   b__d.adb
+[Link]            d
+$ cp pkg.adbnew pkg.adb
+
+$ gprbuild -P prj.gpr -j1
+[Ada Compile]     pkg.adb
+[Ada Bind]        a
+[Ada Bind]        c
+[Ada Bind]        d
+[Link]            a
+"b" up to date
+[Link]            c
+[Link]            d
