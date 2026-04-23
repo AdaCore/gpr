@@ -1,0 +1,3 @@
+description: Regression test for rebuilding only when necessary
+driver: python_script
+timeout: 800

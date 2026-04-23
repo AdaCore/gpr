@@ -1,0 +1,3 @@
+description: Regression test for detecting the end of a project when parsing the GPR
+driver: python_script
+timeout: 800

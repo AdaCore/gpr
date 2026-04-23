@@ -1,0 +1,10 @@
+
+
+project test is
+
+   for Source_Dirs use ("../vss");
+   for Object_Dir use "../../obj/org";
+   for Exec_dir use "../..";
+
+   for Main use ("b.adb", "c.adb");
+end test;

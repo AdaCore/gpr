@@ -1,0 +1,7 @@
+with "import";
+project Prj is
+
+   package Naming renames Import.Naming;
+
+end Prj;
+

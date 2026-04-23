@@ -1,0 +1,12 @@
+project User_Sys extends "sys.gpr" is
+   for Object_Dir use "obj_usr";
+   for Exec_Dir use ".";
+   for Main use ("main.adb");
+
+   package Naming is
+      for Specification_Suffix ("ada") use ".spc";
+      for Implementation_Suffix ("ada") use ".bdy";
+      for Separate_Suffix use ".bdy";
+   end Naming;
+end User_Sys;
+

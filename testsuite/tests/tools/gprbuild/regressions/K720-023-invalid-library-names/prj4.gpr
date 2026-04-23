@@ -1,0 +1,6 @@
+project Prj4 is
+   for Library_Name use "PRJ";
+   for Library_Dir  use "lib";
+   for Library_Interface use ("pkg");
+end Prj4;
+

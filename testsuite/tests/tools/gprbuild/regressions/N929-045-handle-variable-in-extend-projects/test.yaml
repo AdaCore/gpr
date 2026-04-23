@@ -1,0 +1,3 @@
+description: Regression test for handling variables in an extending/extended context
+driver: python_script
+timeout: 800

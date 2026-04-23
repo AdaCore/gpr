@@ -1,0 +1,3 @@
+description: Regression test for testing the warning when a SAL interface is incomplete
+driver: python_script
+timeout: 800

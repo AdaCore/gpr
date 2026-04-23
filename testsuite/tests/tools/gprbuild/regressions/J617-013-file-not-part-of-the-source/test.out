@@ -1,0 +1,3 @@
+$ gprbuild -P prj.gpr
+prj.gpr:2:30: error: "junk.adb" is not a source of project Prj
+gprbuild: processing failed

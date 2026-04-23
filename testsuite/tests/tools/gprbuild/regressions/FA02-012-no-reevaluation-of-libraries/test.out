@@ -1,0 +1,3 @@
+$ gprbuild -P prj.gpr -XEXTERNALLY_BUILT=false -q
+$ gprbuild -P prj.gpr -XEXTERNALLY_BUILT=true
+"main" up to date

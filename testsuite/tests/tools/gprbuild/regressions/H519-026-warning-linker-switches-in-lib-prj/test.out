@@ -1,0 +1,2 @@
+$ gprbuild -f -P prj.gpr -q
+prj.gpr:7:11: warning: attribute "Linker'Default_Switches" cannot be used in library project

@@ -1,0 +1,6 @@
+description: Regression test for the handling of imported, limited import and extended projects
+driver: python_script
+timeout: 800
+control:
+- [XFAIL, "True", "Current limitation of gprbuild2 - We do not properly handle the error message and we do not concider limited with project"]
+

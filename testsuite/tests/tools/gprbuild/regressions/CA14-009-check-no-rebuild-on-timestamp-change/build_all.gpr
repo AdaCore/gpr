@@ -1,0 +1,5 @@
+with "unicode/unicode";
+project Build_All is
+--   for Main use ("build_all");
+   for Source_Files use ();
+end Build_All;

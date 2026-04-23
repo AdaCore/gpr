@@ -514,11 +514,12 @@ package body GPR2.Build.View_Tables is
                        "' as it is not used anymore");
                end if;
 
+               --  We need to resolve the visibility of the now ignored source
                Remove_Source (View_Db,
                               Other_Loc.View,
                               Other_Loc.Path_Name,
                               Other_Loc.Inh_From,
-                              False,
+                              True,
                               Messages);
             end;
          end if;

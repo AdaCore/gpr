@@ -1,0 +1,3 @@
+project Prj is
+   for Exec_Dir use "bin";
+end Prj;

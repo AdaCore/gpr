@@ -1,0 +1,11 @@
+$ gprbuild -P test_ext.gpr source/vss/a.adb
+"obj/ext" created
+[Ada Compile]     a.adb
+[Ada Compile]     test.adb
+[Ada Bind]        a
+[Ada Post-Bind]   b__a.adb
+[Link]            a
+$ gprbuild -P test_ext.gpr source/vss/a.adb
+"a" up to date
+$ gprbuild -P test_ext.gpr a.adb
+"a" up to date

@@ -1,0 +1,11 @@
+b.gpr:1:06: imported project file "d" not found
+b.gpr:1:06: imported by "b.gpr"
+b.gpr:1:06: imported by "f.gpr"
+gprbuild: "f" processing failed
+b.gpr:1:06: imported project file "d" not found
+b.gpr:1:06: imported by "b.gpr"
+b.gpr:1:06: imported by "a.gpr"
+c.gpr:1:19: extended project file "e" not found
+c.gpr:1:19: extended by "c.gpr"
+c.gpr:1:19: imported by "a.gpr"
+gprbuild: "a" processing failed

@@ -1,0 +1,14 @@
+prj.gpr:1:09: warning: there are no sources of language "Ada" in this project
+gprbuild: no sources to compile
+prj1.gpr:1:09: warning: there are no sources of language "Ada" in this project
+prj1.gpr:7:07: warning: value "B" is not used as label
+prj1.gpr:1:09: warning: there are no sources of language "Ada" in this project
+gprbuild: no sources to compile
+prj2.gpr:7:07: warning: the following values are not used as labels:
+prj2.gpr:7:07: warning: "B"
+prj2.gpr:7:07: warning: "C"
+prj2.gpr:1:09: warning: there are no sources of language "Ada" in this project
+gprbuild: no sources to compile
+prj2.gpr:1:09: warning: there are no sources of language "Ada" in this project
+prj3.gpr:1:09: warning: there are no sources of language "Ada" in this project
+gprbuild: no sources to compile

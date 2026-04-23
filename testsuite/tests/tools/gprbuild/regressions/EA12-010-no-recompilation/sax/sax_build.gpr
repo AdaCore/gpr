@@ -1,0 +1,7 @@
+project Sax_Build is
+   for Object_Dir use "obj";
+   for Library_Name use "sax";
+   for Library_Dir  use "lib";
+   for Library_Kind use "relocatable";
+end Sax_Build;
+

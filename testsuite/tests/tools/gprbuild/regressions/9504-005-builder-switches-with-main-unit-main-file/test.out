@@ -1,0 +1,9 @@
+$ gprbuild -f -P prj.gpr main
+$ gprbuild -f -P prj.gpr main.2.ada
+$ gprbuild -f -P prj.gpr main2
+$ gprbuild -f -P prj.gpr main2.2.ada
+$ gprbuild -f -c -P prj.gpr main3
+[Ada Compile]     main3.2.ada
+$ gprbuild -f -b -P prj.gpr main3
+[Ada Bind]        main3.2
+[Ada Post-Bind]   b__main3.2.adb

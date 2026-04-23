@@ -1,0 +1,4 @@
+with "d";
+project B is
+end B;
+

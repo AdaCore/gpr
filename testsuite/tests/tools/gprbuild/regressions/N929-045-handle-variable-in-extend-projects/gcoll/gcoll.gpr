@@ -1,0 +1,6 @@
+project Gcoll is
+   for Source_Files use ();
+   type Sqlite_Inclusion is ("yes", "no", "embedded");
+   With_Sqlite : Sqlite_Inclusion := "no";
+end Gcoll;
+

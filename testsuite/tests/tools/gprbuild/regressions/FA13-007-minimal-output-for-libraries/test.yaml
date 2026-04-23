@@ -1,0 +1,5 @@
+description: Regression test for to having to much verbose when building libraries
+driver: python_script
+timeout: 800
+output:
+- ["test.out.win", "'windows' in env.host.platform"]

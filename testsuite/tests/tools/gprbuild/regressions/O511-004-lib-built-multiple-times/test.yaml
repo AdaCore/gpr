@@ -1,0 +1,3 @@
+description: Regression test for library being built multiple times leading to a bind error
+driver: python_script
+timeout: 800

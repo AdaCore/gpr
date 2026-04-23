@@ -1,0 +1,7 @@
+$ gprbuild -f -P prj.gpr -o /main
+"obj" created
+[Ada Compile]     main.adb
+[Ada Compile]     pkg.adb
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main

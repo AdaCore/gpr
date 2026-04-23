@@ -1,0 +1,5 @@
+$ gprbuild -P import.gpr -q
+import.gpr:1:01: error: circular dependency detected
+import.gpr:1:01: error: /import.gpr:1:01 depends on /prj.gpr
+import.gpr:1:01: error: /prj.gpr:1:01 depends on /import.gpr
+gprbuild: "import.gpr" processing failed

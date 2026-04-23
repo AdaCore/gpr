@@ -1,0 +1,4 @@
+$ gprbuild -P prj.gpr
+"obj" created
+prj.gpr: warning: "simlink.adb" does not exist and will be ignored
+[Ada Compile]     pkg.ads

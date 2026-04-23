@@ -1,0 +1,6 @@
+prj.gpr:2:25: Incorrect library name for a Stand-Alone Library
+gprbuild: "prj.gpr" processing failed
+prj2.gpr:2:25: Incorrect library name for a Stand-Alone Library
+gprbuild: "prj2.gpr" processing failed
+prj3.gpr:2:25: Incorrect library name for a Stand-Alone Library
+gprbuild: "prj3.gpr" processing failed
