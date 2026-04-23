@@ -70,7 +70,6 @@ Hello from Dep_Two
 
 ================================================================
 Case 6 - Missing pkg.adb
-[Ada Compile]     main.adb
 [Ada Compile]     pkg.ads
 cannot generate code for file pkg.ads (package spec)
 main.gpr: error: [Ada Compile] pkg.ads (main.gpr) failed with status 1
@@ -128,13 +127,12 @@ Test return value: 4
 ================================================================
 Case 11 - Modified dep_two.adb (comments only)
 [Ada Compile]     dep_two.adb
-[Ada Compile]     pkg.adb
 [Ada Bind]        main
 "main" up to date
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
@@ -244,13 +242,12 @@ Hello from Dep_Two
 
 ================================================================
 Case 19 - Modified pkg.adb without dep_two dependency
-[Ada Compile]     main.adb
 [Ada Compile]     pkg.adb
 [Ada Bind]        main
 [Ada Post-Bind]   b__main.adb
 [Link]            main
 == Content of jobs.json:
-uid: '[Ada Compile] main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : '0', stdout: '', stderr: ''
@@ -261,13 +258,12 @@ Hello from Pkg
 ================================================================
 Case 20 - Modified dep_two.adb (new output)
 [Ada Compile]     dep_two.adb
-[Ada Compile]     pkg.adb
 [Ada Bind]        main
 [Link]            main
 == Content of jobs.json:
 uid: '[Ada Compile] dep_two.adb (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Compile] main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
-uid: '[Ada Compile] pkg.adb (main.gpr)', status : '0', stdout: '', stderr: ''
+uid: '[Ada Compile] pkg.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Ada Bind] main (main.gpr)', status : '0', stdout: '', stderr: ''
 uid: '[Ada Post-Bind] b__main.adb (main.gpr)', status : 'SKIPPED', stdout: '', stderr: ''
 uid: '[Link] main (main.gpr)', status : '0', stdout: '', stderr: ''

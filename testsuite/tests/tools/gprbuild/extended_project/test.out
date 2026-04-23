@@ -9,7 +9,6 @@ $ gprbuild -p -Pprj -j1
 $ gprbuild -p -Pext -j1
 "obj/ext" created
 [Ada Bind]        main
-[Ada Compile]     main.adb
 [Ada Compile]     pkg.adb
 [Ada Post-Bind]   b__main.adb
 [Link]            main
