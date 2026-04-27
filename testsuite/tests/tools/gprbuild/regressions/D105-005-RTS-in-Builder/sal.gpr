@@ -1,0 +1,10 @@
+project SAL is
+   for Library_Name use "simple";
+   for Library_Dir  use "lib";
+   for Library_Interface use ("simple");
+
+   package Builder is
+      for Default_Switches ("Ada") use ("--RTS=sjlj");
+   end Builder;
+
+end SAL;
