@@ -46,6 +46,12 @@ package GPR2.Build.Signature is
 
    Undefined : constant Object;
 
+   function Hash
+     (Item : Artifacts.Object'Class) return Ada.Containers.Hash_Type;
+
+   package Artifact_Sets is new Ada.Containers.Indefinite_Hashed_Sets
+     (Artifacts.Object'Class, Hash, Artifacts."=", Artifacts."=");
+
    procedure Initialize
      (Self : in out Object; Indexer : access GPR2.Utils.Hash.Object);
 
@@ -99,6 +105,9 @@ package GPR2.Build.Signature is
    function Is_Empty (Self : Object) return Boolean;
    --  True if no input or output is in the signature
 
+   function Get_Artifacts (Self : Object) return Artifact_Sets.Set;
+   --  Return the set of all artifacts in the signature, both input and output
+
 private
 
    TEXT_INPUTS    : constant String := "inputs";
@@ -116,9 +125,6 @@ private
      (Item : Artifacts.Object'Class) return Ada.Containers.Hash_Type
    is (Item.Hash);
 
-   package Artifact_Sets is new Ada.Containers.Indefinite_Hashed_Sets
-     (Artifacts.Object'Class, Hash, Artifacts."=", Artifacts."=");
-
    type IO_Type is (Input, Output);
 
    type Checksums_Type is array (IO_Type) of Checksum_Maps.Map;
@@ -133,6 +139,9 @@ private
    end record;
 
    Undefined : constant Object := (others => <>);
+
+   function Get_Artifacts (Self : Object) return Artifact_Sets.Set is
+     (Self.Artifacts (Input).Union (Self.Artifacts (Output)));
 
    function Was_Saved (Self : Object) return Boolean is
      (not Self.Checksums (Input).Is_Empty

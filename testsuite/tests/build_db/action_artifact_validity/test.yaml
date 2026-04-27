@@ -1,0 +1,2 @@
+description: Check that each artifact of an action can be fetched and checked individually
+driver: basic
