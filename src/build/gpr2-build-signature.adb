@@ -77,7 +77,11 @@ package body GPR2.Build.Signature is
          return True;
 
       elsif not Added then
-         Traces.Trace ("Signature has already been invalidated");
+         if Self.Checksums (IO).Is_Empty then
+            Traces.Trace ("Signature has already been invalidated");
+         else
+            Traces.Trace ("Artifact was already present in the signature");
+         end if;
 
          --  Already there, so return False if the signature is already
          --  invalidated.
