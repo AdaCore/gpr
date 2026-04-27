@@ -88,6 +88,9 @@ package GPR2.Build.Actions is
    --  view is used to retrieve the switches for the tool, and to know where
    --  the output is stored (the Object_Dir attribute).
 
+   procedure Set_View (Self : in out Object; View : GPR2.Project.View.Object);
+   --  Set the view of the action
+
    function Working_Directory
      (Self : Object) return Path_Name.Object is abstract;
    --  The working directory used in the context of the action's execution
