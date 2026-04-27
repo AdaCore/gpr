@@ -260,6 +260,16 @@ package body GPR2.Build.Actions is
       return -Res;
    end Serialize;
 
+   --------------
+   -- Set_View --
+   --------------
+
+   procedure Set_View (Self : in out Object; View : GPR2.Project.View.Object)
+   is
+   begin
+      Self.Ctxt := View;
+   end Set_View;
+
    -------------------------
    -- Update_Command_Line --
    -------------------------
