@@ -1,0 +1,3 @@
+description: Error reported when `--RTS` is used in `Builder.Switches`
+driver: python_script
+timeout: 800

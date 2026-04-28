@@ -1,0 +1,3 @@
+$ gprbuild -P sal.gpr -q
+gprbuild: option '--RTS=sjlj' not available in package Builder
+try "gprbuild --help" for more information.
