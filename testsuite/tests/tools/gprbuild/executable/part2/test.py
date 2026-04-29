@@ -9,67 +9,138 @@ from testsuite_support.tools import GPRBUILD
 bnr = BuilderAndRunner()
 test_number = 1
 
+COMPILE_MAIN = "[Ada Compile] main.adb"
+COMPILE_PKG = "[Ada Compile] pkg.adb"
+COMPILE_DEP_TWO = "[Ada Compile] dep_two.adb"
+BIND_MAIN = "[Ada Bind] main"
+POST_BIND_MAIN = "[Ada Post-Bind] b__main.adb"
+LINK_MAIN = "[Link] main"
 
-def test(header):
+# Expected job statuses per artifact for testsuite() calls.
+# "missing": used for the "missing" part of the tests. None means build failure
+#   expected, otherwise set of active job uid patterns.
+# "modified": used for the "modified" part of the tests. Set of active job uid
+#   patterns (all others should be SKIPPED).
+EXPECTATIONS = {
+    "main": {
+        "missing": {LINK_MAIN},
+        "modified": {LINK_MAIN},
+    },
+    "main.exe": {
+        "missing": {LINK_MAIN},
+        "modified": {LINK_MAIN},
+    },
+    "main.adb": {
+        "missing": None,
+        "modified": {COMPILE_MAIN, BIND_MAIN},
+    },
+    "pkg.adb": {
+        "missing": None,
+        "modified": {COMPILE_PKG, BIND_MAIN},
+    },
+    "pkg.ads": {
+        "missing": None,
+        "modified": {COMPILE_MAIN, COMPILE_PKG, BIND_MAIN},
+    },
+    "dep_two.adb": {
+        "missing": None,
+        "modified": {COMPILE_DEP_TWO, BIND_MAIN},
+    },
+    "dep_two.ads": {
+        "missing": None,
+        "modified": {COMPILE_DEP_TWO, COMPILE_PKG, BIND_MAIN},
+    },
+    "b__main.ads": {
+        "missing": {BIND_MAIN},
+        "modified": {BIND_MAIN},
+    },
+    "b__main.adb": {
+        "missing": {BIND_MAIN},
+        "modified": {BIND_MAIN},
+    },
+}
+
+
+def test(header, expected_active=None, expected_failure=False):
+    """Run gprbuild and check job statuses.
+
+    expected_active: set of uid substrings for jobs expected to run (status '0').
+                     If None, all jobs should have status '0'.
+    expected_failure: if True, the build is expected to fail (non-zero status).
+    """
     global test_number
-    print("================================================================")
-    print("Case " + str(test_number) + " - " + header)
-    proc = bnr.call([GPRBUILD, "-P", os.path.join("tree", "main.gpr"), "-p", "--json-summary", "-j1"])
+    ok = True
+    proc = bnr.call(
+        [GPRBUILD, "-P", os.path.join("tree", "main.gpr"), "-p", "--json-summary", "-j1", "-q"], quiet=True)
 
-    if proc.status:
-        print("Test return value: " + str(proc.status))
+    if expected_failure:
+        if proc.status == 0:
+            print("  expected build failure but build succeeded")
+            ok = False
+    elif proc.status:
+        print("  unexpected build failure (status " + str(proc.status) + ")")
+        ok = False
     else:
-        print("== Content of jobs.json:")
-        json_file = open(os.path.join("tree", "jobs.json"))
-        jobs = json.load(json_file)
-        error = False
+        with open(os.path.join("tree", "jobs.json")) as json_file:
+            jobs = json.load(json_file)
 
         for job in jobs:
-            print(
-                "uid: '"
-                + job["uid"]
-                + "', status : '"
-                + job["status"]
-                + "', stdout: '"
-                + job["stdout"]
-                + "', stderr: '"
-                + job["stderr"]
-                + "'"
-            )
-            if job["status"] != "SKIPPED" and job["status"] != "0":
-                error = True
+            uid = job["uid"]
+            status = job["status"]
+            if expected_active is None:
+                if status != "0":
+                    print("  job '" + uid + "' has status '" + status
+                          + "', expected '0'")
+                    ok = False
+                    break
+            else:
+                is_active = any(pat in uid for pat in expected_active)
+                expected_status = "0" if is_active else "SKIPPED"
+                if status != expected_status:
+                    print("  job '" + uid + "' has status '" + status
+                          + "', expected '" + expected_status + "'")
+                    ok = False
+                    break
 
-        if error:
-            print("Error detected in jobs.json")
-        else:
-            print("== Executable output:")
-            print(Run([os.path.join("tree", "obj", "main")]).out.strip())
-
-    print("")
+    print(header + ": " + ("OK" if ok else "KO"))
     test_number += 1
 
 
 def testsuite(file_path):
+    """Test rebuild behavior when a build artifact is missing or modified.
+
+    Removes file_path and checks that gprbuild triggers the expected actions,
+    then restores it, appends a comment, and checks that only the expected
+    recompilations occur. Expected actions are looked up from EXPECTATIONS
+    based on the file basename.
+    """
+    basename = os.path.basename(file_path)
+    expect = EXPECTATIONS[basename]
+
     with open(file_path, "rb") as file:
         file_content = file.read()
 
     os.remove(file_path)
-    test("Missing " + os.path.basename(file_path))
+    if expect["missing"] is None:
+        test("Missing " + basename, expected_failure=True)
+    else:
+        test("Missing " + basename, expected_active=expect["missing"])
 
     if not os.path.exists(file_path):
         with open(file_path, "wb") as file:
             file.write(file_content)
 
     # Restore state of the project after a correct compilation
-    Run([GPRBUILD, "-P", os.path.join("tree", "main.gpr"), "-p", "-j1"])
+    Run([GPRBUILD, "-P", os.path.join("tree", "main.gpr"), "-p", "-j1", "-q"])
 
     with open(file_path, "a") as file:
         file.write("--  Comment that will not prevent a compilation for Ada files")
 
-    test("Modified " + os.path.basename(file_path) + " (comments only)")
+    test("Modified " + basename + " (comments only)",
+         expected_active=expect["modified"])
 
     # Restore state of the project after a correct compilation
-    Run([GPRBUILD, "-P", os.path.join("tree", "main.gpr"), "-p", "-j1"])
+    Run([GPRBUILD, "-P", os.path.join("tree", "main.gpr"), "-p", "-j1", "-q"])
 
 
 test("Build from scratch")
@@ -100,7 +171,8 @@ end Main;
 """
     )
 
-test("Modified main.adb with different return code")
+test("Modified main.adb with different return code",
+     expected_active={COMPILE_MAIN, BIND_MAIN, LINK_MAIN})
 
 file_path = os.path.join("tree", "src", "pkg.adb")
 with open(file_path, "r") as file:
@@ -120,7 +192,8 @@ package body Pkg is
 end Pkg;"""
     )
 
-test("Modified pkg.adb without dep_two dependency")
+test("Modified pkg.adb without dep_two dependency",
+     expected_active={COMPILE_PKG, BIND_MAIN, POST_BIND_MAIN, LINK_MAIN})
 
 # Restore state of the project after a correct compilation
 with open(file_path, "w") as file:
@@ -145,7 +218,8 @@ package body Dep_Two is
 end Dep_Two;"""
     )
 
-test("Modified dep_two.adb (new output)")
+test("Modified dep_two.adb (new output)",
+     expected_active={COMPILE_DEP_TWO, BIND_MAIN, LINK_MAIN})
 
 # Restore state of the project after a correct compilation
 with open(file_path, "w") as file:
