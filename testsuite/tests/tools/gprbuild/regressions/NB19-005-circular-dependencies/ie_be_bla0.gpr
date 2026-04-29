@@ -1,0 +1,27 @@
+with "c.gpr";
+with "k_bla4.gpr";
+with "k_bla0.gpr";
+with "s_lib_bla4.gpr";
+with "s_lib_bla0.gpr";
+with "ie_bla4.gpr";
+limited with "ie_be_bla4.gpr";
+
+library project IE_BE_BLA0 is
+
+   for Languages   use ("Ada");
+
+   for Object_Dir  use  "obj/BLA0";
+   for Exec_Dir    use  "./exe/";
+   for Source_Dirs use ("dir_bla0");
+   for Library_Name use "libIE_BE_bla0";
+   for Library_Dir use "lib";
+   
+   package Compiler is
+      for Default_Switches ("ada") use C.Compiler'Default_Switches ("Ada");
+   end Compiler;
+
+   package Binder is
+      for Default_Switches use C.Binder'Default_Switches;
+   end Binder;
+   
+end IE_BE_BLA0;

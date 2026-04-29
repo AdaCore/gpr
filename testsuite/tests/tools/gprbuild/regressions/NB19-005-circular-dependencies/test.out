@@ -1,0 +1,4 @@
+$ gprbuild -q -P ie_agg.gpr
+*.gpr: warning: circular library dependency detected
+1.gpr: warning: <lib1>.a depends on <lib2>.a
+2.gpr: warning: <lib2>.a depends on <lib1>.a

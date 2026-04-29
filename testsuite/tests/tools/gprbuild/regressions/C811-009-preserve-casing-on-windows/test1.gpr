@@ -1,0 +1,27 @@
+project Test1 is
+
+   for Languages use ("ada");
+   for Source_Dirs use (".", "DiR1", "DiR2");
+
+   for Main use ("test_main.adb");
+
+   package Builder is
+      for Default_Switches ("ada") use ("-g", "-gnatws",  "-O0");
+   end Builder;
+
+   package Compiler is
+      for Default_Switches ("ada") use ("-g");
+      for Default_Switches ("c") use ("-g");
+      for Default_Switches ("c++") use ("-g");
+   end Compiler;
+
+   package Linker is
+      for Default_Switches ("ada") use ("-g");
+   end Linker;
+
+   package Binder is
+      for Default_Switches ("ada") use ("");
+   end Binder;
+
+end Test1;
+

@@ -1,0 +1,26 @@
+project Foo is
+
+   for Languages use ("Ada");
+   for Source_Dirs use (".");
+   for Object_Dir use "";
+   for Exec_Dir use ".";
+   for Main use ();
+
+   package Compiler is
+      for Default_Switches ("ada") use ("-O3", "-gnatn", "-gnatwcijklmruv", "-gnatybefhnp");
+   end Compiler;
+
+   package Linker is
+      for Default_Switches ("ada") use ("-s", "-lzdll");
+   end Linker;
+
+   package Naming is
+      for Casing use "MixedCase";
+   end Naming;
+
+   package Pretty_Printer is
+      for Default_Switches ("ada") use ("-A1", "-A2", "-A3", "-A4");
+   end Pretty_Printer;
+
+end Foo;
+

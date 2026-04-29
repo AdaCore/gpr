@@ -1,0 +1,3 @@
+aggregate project IE_AGG is
+    for Project_Files use ("ie.gpr" ,"ie_bla4.gpr" ,"ie_bla0.gpr");
+end IE_AGG;

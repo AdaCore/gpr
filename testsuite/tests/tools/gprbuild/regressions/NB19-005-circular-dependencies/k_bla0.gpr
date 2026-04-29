@@ -1,0 +1,23 @@
+with "c.gpr";
+with "k_bla4.gpr";
+
+with "foo.gpr";
+with "ble.gpr";
+
+Library project K_Bla0 is
+
+   for Source_Dirs use ("k_bla0");
+   for Library_Name use "k_bla0";
+   for Library_Dir use "lib";
+   for Object_Dir use "obj";
+
+   package Compiler is
+      for Default_Switches ("ada") use C.Compiler'Default_Switches("Ada");
+      for Default_Switches ("C") use C.Compiler'Default_Switches("C");
+   end Compiler;
+
+   package Binder is
+      for Default_Switches use C.Binder'Default_Switches;
+   end Binder;
+
+end K_Bla0;

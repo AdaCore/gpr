@@ -1,0 +1,7 @@
+$ gprbuild -f -P test1.gpr
+[Ada Compile]     Src1.adb
+[Ada Compile]     Test_Main.ADB
+[Ada Compile]     src2.adb
+[Ada Bind]        Test_Main
+[Ada Post-Bind]   b__Test_Main.adb
+[Link]            Test_Main

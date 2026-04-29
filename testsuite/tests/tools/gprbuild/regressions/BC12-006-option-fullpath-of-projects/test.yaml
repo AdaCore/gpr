@@ -1,0 +1,3 @@
+description: Regression test for options to have fullpath for projects
+driver: python_script
+timeout: 800
