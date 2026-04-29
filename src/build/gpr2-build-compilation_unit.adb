@@ -17,7 +17,13 @@ with GPR2.Project.Tree;
 with GPR2.Tree_Internal;
 with GPR2.View_Internal;
 
+with GNATCOLL.Traces;
+
 package body GPR2.Build.Compilation_Unit is
+
+   Traces : constant GNATCOLL.Traces.Trace_Handle :=
+              GNATCOLL.Traces.Create
+                ("GPR.BUILD.COMPILATION_UNIT", GNATCOLL.Traces.Off);
 
    function Ada_Compile_Action
      (Self : Object) return GPR2.Build.Actions.Compile.Ada.Object;
@@ -343,16 +349,14 @@ package body GPR2.Build.Compilation_Unit is
    function Is_Body_Needed_For_SAL (Self : Object) return Boolean is
       Comp : Actions.Compile.Ada.Object := Self.Ada_Compile_Action;
    begin
-      if not Comp.ALI.Is_Parsed then
-         Comp.Parse_Ali;
-      end if;
-
-      if Comp.ALI.Is_Parsed then
-         return Comp.ALI.Spec_Needs_Body;
-      else
-         --  either non-existing ALI or mal-formatted case
+      if not Comp.Parse_Ali then
+         Traces.Trace
+           ("Failed to parse " & String (Comp.ALI.Path_Name.Simple_Name) &
+            " produced by " & Comp.UID.Image);
          return False;
       end if;
+
+      return Comp.ALI.Spec_Needs_Body;
    end Is_Body_Needed_For_SAL;
 
    ------------------------

@@ -126,6 +126,14 @@ package GPR2.Build.Actions is
    --    is thus not called if the signature is valid and the action skipped.
    --  - Post_Command: called after the process is finished or the action is
    --    skipped or an error occurred.
+   --
+   --  If the actions are not meant to be executed, such as when populating
+   --  actions for tools like gprinstall, then the Pre_Command and
+   --  Post_Command, which are usually responsible for ensuring that all
+   --  actions have their dependencies and parameters set correctly, are no
+   --  longer executed. Instead, the On_Static_Completion function can be
+   --  called. This function, unlike Pre_Command and Post_Command, must not
+   --  modify artifacts, since the signature will not be updated afterward.
 
    function On_Tree_Insertion
      (Self : Object;
@@ -139,11 +147,16 @@ package GPR2.Build.Actions is
    --  Called after an initial population of the Build database has been done.
    --  This allows to propagate dependencies among the actions.
 
-   function On_Ready_State
+   function On_Static_Completion
      (Self : in out Object) return Boolean;
-   --  Called when all predecessor actions have a valid signature. Used when
-   --  an action has specific activities to perform such as completeness
-   --  checks.
+   --  Called when actions are not meant to be executed, but still need to be
+   --  as complete as possible. This check replaces the usual one performed by
+   --  Pre_Command and Post_Command, which are only called when an action is
+   --  executed. Unlike Pre_Command and Post_Command, this function must not
+   --  modify artifacts, since the signature will not be updated afterward.
+   --  Moreover, this function should be resilient to missing artifacts, since
+   --  the signature may be incorrect.
+   --  Returns True on success.
 
    procedure Compute_Command
      (Self           : in out Object;
@@ -319,7 +332,7 @@ private
      (Self : in out Object) return Boolean is
      (True);
 
-   function On_Ready_State
+   function On_Static_Completion
      (Self : in out Object) return Boolean is
      (True);
 

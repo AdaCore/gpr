@@ -249,8 +249,8 @@ begin
       if not GPR2.Build.Actions_Population.Populate_Actions
         (Options.Tree,
          Options.Build_Options,
-         Static_Actions        => True,
-         With_Externally_Built => True)
+         With_Static_Completion => True,
+         With_Externally_Built  => True)
       then
          raise GPRinstall_Error;
       end if;

@@ -20,10 +20,11 @@ package GPR2.Build.ALI_Parser is
 
    function Is_Defined (Self : Object) return Boolean;
 
-   procedure Parse (Self : in out Object);
+   function Parse (Self : in out Object) return Boolean;
    --  Tries to parse the .ali file pointed to by Self. Note that Is_Parsed
    --  won't necessarily return True after this call, if the .ali file could
    --  not be found or contains errors.
+   --  Return true if the file was successfully parsed, false otherwise.
 
    function Is_Parsed (Self : Object) return Boolean;
    --  Returns true when a valid ali file has been parsed.

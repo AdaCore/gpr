@@ -545,11 +545,11 @@ package body GPR2.Build.Actions_Population is
    ----------------------
 
    function Populate_Actions
-     (Tree                  : GPR2.Project.Tree.Object;
-      Options               : GPR2.Build.Options.Build_Options;
-      Static_Actions        : Boolean;
-      With_Externally_Built : Boolean := False;
-      Populate_Mains_Only   : Boolean := False) return Boolean
+     (Tree                   : GPR2.Project.Tree.Object;
+      Options                : GPR2.Build.Options.Build_Options;
+      With_Static_Completion : Boolean := False;
+      With_Externally_Built  : Boolean := False;
+      Populate_Mains_Only    : Boolean := False) return Boolean
 
    is
       Tree_Db     : GPR2.Build.Tree_Db.Object_Access renames
@@ -808,7 +808,7 @@ package body GPR2.Build.Actions_Population is
          Tree_Db.Action_Id_To_Reference (A.UID).Deactivate;
       end loop;
 
-      if Static_Actions then
+      if With_Static_Completion then
          --  This action tree is amended when executed by the Action's post
          --  command. In the case the tree is not executed, but need a complete
          --  tree, we thus need to manually iterate on the actions to allow
@@ -842,8 +842,12 @@ package body GPR2.Build.Actions_Population is
                      Action : Build.Actions.Object'Class :=
                                 Tree_Db.Action (UID);
                   begin
-                     if not Action.On_Ready_State then
-                        return False;
+                     if not Action.On_Static_Completion
+                     then
+                        Traces.Trace
+                           ("Static completion of action " &
+                             Action.UID.Image & " failed. Dependent actions " &
+                             " may have an incomplete state");
                      end if;
 
                      Tree_Db.Action_Id_To_Reference (UID) := Action;

@@ -72,7 +72,9 @@ package GPR2.Build.Actions.Compile.Ada is
    --  ALI_Parser object containing the necessary parsed information about
    --  the ali produced by this action.
 
-   procedure Parse_Ali (Self : in out Object);
+   function Parse_Ali (Self : in out Object) return Boolean;
+   --  Parse the ALI file and store the result in the ALI_Parser object.
+   --  Returns True if parsing succeeded, False otherwise.
 
    overriding function Dependencies
      (Self : in out Object) return GPR2.Containers.Filename_Set;
@@ -145,7 +147,7 @@ private
      (Self            : in out Object;
       Check_Checksums : Boolean);
 
-   overriding function On_Ready_State
+   overriding function On_Static_Completion
      (Self : in out Object) return Boolean;
 
    Undefined : constant Object := (others => <>);
@@ -181,5 +183,8 @@ private
 
    function Spec_Needs_Body (Self : Object) return Boolean is
      (Self.ALI_Object.Spec_Needs_Body);
+
+   function Parse_Ali (Self : in out Object) return Boolean is
+     (Self.ALI_Object.Parse);
 
 end GPR2.Build.Actions.Compile.Ada;

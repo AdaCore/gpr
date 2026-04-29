@@ -306,7 +306,7 @@ package body GPR2.Build.ALI_Parser is
    -- Parse --
    -----------
 
-   procedure Parse (Self : in out Object) is
+   function Parse (Self : in out Object) return Boolean is
       procedure Parse_Dep (Reader : in out GB.Reader);
       --  Parse a D line to extract the source
 
@@ -379,93 +379,102 @@ package body GPR2.Build.ALI_Parser is
          end;
       end Parse_With;
 
-      Reader : GB.Reader := GB.Open (Self.Path.String_Value);
-      Word   : Character := ASCII.NUL;
-      Flags  : Unit_Flags_Part;
-
    begin
-      --  Clear the object, to remove potential obsolete values
-      Self := (Path => Self.Path, others => <>);
+      if Self.Is_Parsed then
+         return True;
+      end if;
 
-      --  Only the dependencies lines "D" are of interest, as they contain
-      --  dependencies source names.
+      declare
+         Reader : GB.Reader := GB.Open (Self.Path.String_Value);
+         Word   : Character := ASCII.NUL;
+         Flags  : Unit_Flags_Part;
+      begin
 
-      loop
-         if not EOL then
-            IO.Next_Line (Reader, Word);
-         elsif not GB.Next (Reader, Word) then
-            Self.Is_Parsed := True;
+         --  Clear the object, to remove potential obsolete values
+         Self := (Path => Self.Path, others => <>);
 
-            return;
-         end if;
+         --  Only the dependencies lines "D" are of interest, as they contain
+         --  dependencies source names.
 
-         EOL := False;
-
-         case Word is
-            when ASCII.NUL =>
+         loop
+            if not EOL then
+               IO.Next_Line (Reader, Word);
+            elsif not GB.Next (Reader, Word) then
                exit;
+            end if;
 
-            when 'D' =>
-               Parse_Dep (Reader);
+            EOL := False;
 
-            when 'L' =>
-               declare
-                  Value : constant String := IO.Get_Token (Reader, EOL);
-               begin
-                  Self.Linker_Options.Append (Value);
-               end;
+            case Word is
+               when ASCII.NUL =>
+                  exit;
 
-            when 'U' =>
-               Flags := Parse_Flags (Reader, EOL);
-               Cur_SB := Flags.SB;
+               when 'D' =>
+                  Parse_Dep (Reader);
 
-               if Cur_SB = U_Spec then
-                  Self.Needs_Body := Flags.Flags (Body_Needed_For_SAL);
-               end if;
+               when 'L' =>
+                  declare
+                     Value : constant String := IO.Get_Token (Reader, EOL);
+                  begin
+                     Self.Linker_Options.Append (Value);
+                  end;
 
-            when 'V' =>
-               declare
-                  Version : constant String := IO.Get_Token (Reader, EOL);
-                  Start   : Natural;
-               begin
-                  for J in Version'Range loop
-                     if Version (J) = 'v' then
-                        Start := J;
-                     elsif J = Version'Last then
-                        Self.Version := +Version (Start .. J);
-                        exit;
-                     elsif Version (J) = '"' then
-                        Self.Version := +Version (Start .. J - 1);
-                        exit;
-                     end if;
-                  end loop;
-               end;
+               when 'U' =>
+                  Flags := Parse_Flags (Reader, EOL);
+                  Cur_SB := Flags.SB;
 
-            when 'W' | 'Y' =>
-               Parse_With (Reader);
+                  if Cur_SB = U_Spec then
+                     Self.Needs_Body := Flags.Flags (Body_Needed_For_SAL);
+                  end if;
 
-            when 'X' =>
-               --  nothing to do after the first X line: internal cross
-               --  references
-               exit;
+               when 'V' =>
+                  declare
+                     Version : constant String := IO.Get_Token (Reader, EOL);
+                     Start   : Natural;
+                  begin
+                     for J in Version'Range loop
+                        if Version (J) = 'v' then
+                           Start := J;
+                        elsif J = Version'Last then
+                           Self.Version := +Version (Start .. J);
+                           exit;
+                        elsif Version (J) = '"' then
+                           Self.Version := +Version (Start .. J - 1);
+                           exit;
+                        end if;
+                     end loop;
+                  end;
 
-            when others =>
-               null;
-         end case;
-      end loop;
+               when 'W' | 'Y' =>
+                  Parse_With (Reader);
 
-      GB.Finalize (Reader);
-      Self.Is_Parsed := True;
+               when 'X' =>
+                  --  nothing to do after the first X line: internal cross
+                  --  references
+                  exit;
 
-   exception
-      when E : others =>
-         GNATCOLL.Traces.Trace
-           (Traces,
-            "ALI parser error: " & Ada.Exceptions.Exception_Message (E));
+               when others =>
+                  null;
+            end case;
+         end loop;
+
          GB.Finalize (Reader);
-
-         Self.Is_Parsed := False;
-         return;
+         Self.Is_Parsed := True;
+         return True;
+      exception
+         when E : others =>
+            GNATCOLL.Traces.Trace
+            (Traces,
+               "ALI parser error: " & Ada.Exceptions.Exception_Message (E));
+            GB.Finalize (Reader);
+            return False;
+      end;
+   exception
+      when GB.Invalid_Reader =>
+         GNATCOLL.Traces.Trace
+              (Traces, "File " & Self.Path.String_Value & " is invalid," &
+               " aborting parsing");
+         return False;
    end Parse;
 
    -----------------

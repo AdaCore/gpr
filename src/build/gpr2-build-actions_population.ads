@@ -28,23 +28,27 @@ package GPR2.Build.Actions_Population is
    --  main.
 
    function Populate_Actions
-     (Tree                  : GPR2.Project.Tree.Object;
-      Options               : GPR2.Build.Options.Build_Options;
-      Static_Actions        : Boolean;
-      With_Externally_Built : Boolean := False;
-      Populate_Mains_Only   : Boolean := False) return Boolean;
+     (Tree                   : GPR2.Project.Tree.Object;
+      Options                : GPR2.Build.Options.Build_Options;
+      With_Static_Completion : Boolean := False;
+      With_Externally_Built  : Boolean := False;
+      Populate_Mains_Only    : Boolean := False) return Boolean;
    --  Populate all the actions of the tree.
    --  @param Tree
    --    the current project tree
    --  @Param Options
    --    the options used to amend the population of actions
-   --  @Param Static_Actions
-   --    if unset, then the actions are to be executed by the process manager,
-   --    else the population is performed so that all validated actions have
-   --    their proper pre and post commands executed (and thus have all the
-   --    output analysis performed) when their signature is valid.
+   --  @Param With_Static_Completion
+   --    For actions that will not be executed, but must be complete
+   --    (all dependencies resolved, all parameters set, etc.), set this
+   --    parameter to True. This ensures that those actions are fully
+   --    populated by calling On_Static_Completion on all actions instead of
+   --    the Pre_Command and Post_Command entry points, which are dedicated to
+   --    executed actions.
    --  @Param Populate_Mains_Only
    --    if set, then only the actions required to build the mains specified in
    --    Options are populated.
+   --  @Return
+   --    True if population succeeded, False otherwise.
 
 end GPR2.Build.Actions_Population;

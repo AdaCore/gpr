@@ -90,7 +90,7 @@ package GPR2.Build.Actions.Link is
       Db   : in out GPR2.Build.Tree_Db.Object) return Boolean
      with Pre => Self.Is_Defined;
 
-   overriding function On_Ready_State
+   overriding function On_Static_Completion
      (Self : in out Object) return Boolean
      with Pre => Self.Is_Defined;
 
