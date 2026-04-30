@@ -18,7 +18,7 @@
 				{
 					"category_name": "Directories",
 					"category_to_display": true,
-					"attributes" : [{"attribute_name": "Object_Dir"},{"attribute_name": "Exec_Dir"},{"attribute_name": "Create_Missing_Dirs"},{"attribute_name": "Source_Dirs"},{"attribute_name": "Inherit_Source_Path"},{"attribute_name": "Exclude_Source_Dirs"},{"attribute_name": "Ignore_Source_Sub_Dirs"}]
+				    "attributes" : [{"attribute_name": "Object_Dir"},{"attribute_name": "Exec_Dir"},{"attribute_name": "Create_Missing_Dirs"},{"attribute_name": "Source_Dirs"},{"attribute_name": "Inherit_Source_Path"},{"attribute_name": "Exclude_Source_Dirs"},{"attribute_name": "Ignore_Source_Sub_Dirs"},{"attribute_name": "Gpr_Registry_Dirs"}]
 				},
 				{
 					"category_name": "Source Files",

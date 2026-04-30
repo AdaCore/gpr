@@ -17,6 +17,12 @@ Project processing can be affected by environment variables.
 
   Path where to look for a non empty runtime directory.
 
+* **GPR_REGISTRY_DIRS**
+
+  The paths where to look for the registry files. Each path is separated by a
+  colon (``:``) in Unix and a semicolon (``;``) in Windows. All files with a
+  ``.json`` extension in these directories are considered as registry files.
+
 * **PATH**
 
   The path, that may be modified to add the directories related to the

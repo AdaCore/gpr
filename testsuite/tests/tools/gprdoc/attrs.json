@@ -564,6 +564,38 @@
             "inherit_from_extended": "NOT_INHERITED",
             "is_allowed_in": {
               "abstract": true,
+              "aggregate": false,
+              "aggregate_library": false,
+              "configuration": true,
+              "library": true,
+              "standard": true
+            },
+            "is_toolchain_config": false,
+            "value": "LIST",
+            "value_case_sensitive": true,
+            "value_is_set": false
+          },
+          "attribute_descr": "List a set of directories to look for enhanced project definitions.The JSON files containing packages and attributes definitions in the target directories are loaded.",
+          "attribute_name": "Gpr_Registry_Dirs"
+        },
+        {
+          "attribute_def": {
+            "builtin": false,
+            "config_concatenable": false,
+            "empty_value": "ALLOW",
+            "has_default_in": {
+              "abstract": false,
+              "aggregate": false,
+              "aggregate_library": false,
+              "configuration": false,
+              "library": false,
+              "standard": false
+            },
+            "index_optional": false,
+            "index_type": "NO_INDEX",
+            "inherit_from_extended": "NOT_INHERITED",
+            "is_allowed_in": {
+              "abstract": true,
               "aggregate": true,
               "aggregate_library": true,
               "configuration": true,

@@ -432,6 +432,15 @@ begin
       Is_Builtin            => True,
       Inherit_From_Extended => Not_Inherited);
 
+   --  gpr_registry_dirs
+   Add
+     (Name                  => GPR_Registry_Dirs,
+      Index_Type            => No_Index,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Is_Allowed_In         => No_Aggregates,
+      Inherit_From_Extended => Not_Inherited);
+
    --  main
    Add
      (Name                 => Main,

@@ -7,12 +7,17 @@
 with Ada.Characters.Conversions;
 with Ada.Characters.Handling;
 with Ada.Containers;
+with Ada.Environment_Variables;
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps.Constants;
 with Ada.Strings.Wide_Wide_Unbounded;
 
+with GNAT.OS_Lib;
 with GNAT.Regpat;
+
+with GNATCOLL.Strings;
+with GNATCOLL.VFS;
 
 with Gpr_Parser_Support.Diagnostics;
 with Gpr_Parser_Support.Slocs;
@@ -27,6 +32,7 @@ with GPR2.Project.Attribute.Set;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project_Parser.Registry;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Registry.Exchange;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
@@ -852,7 +858,6 @@ package body GPR2.Project_Parser is
             ------------------------------
 
             procedure Parse_External_Reference (N : Builtin_Function_Call) is
-
                Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
             begin
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
@@ -1466,6 +1471,11 @@ package body GPR2.Project_Parser is
 
       function Parser (Node : Gpr_Node'Class) return Visit_Status;
       --  Actual parser callback for the project
+
+      procedure Setup_GPR_Registry;
+      --  Setup the GPR registry with the directories set in the environment
+      --  variables and in standard locations (<prefix>/share/gpr/registry and
+      --  $HOME/local/share/gpr/registry).
 
       function Get_Variable_Values
         (Node : Variable_Reference) return Item_Values;
@@ -3463,6 +3473,45 @@ package body GPR2.Project_Parser is
          procedure Visit_Child (Child : Gpr_Node);
          --  Recursive call to the Parser if the Child is not null
 
+         procedure Handle_GPR_Registry_Dirs (Node : Attribute_Decl);
+         --  Handle the special case of GPR registry dirs attribute that is
+         --  used to record the directories where the gpr registry is looking
+         --  for projects.
+
+         ------------------------------
+         -- Handle_GPR_Registry_Dirs --
+         ------------------------------
+
+         procedure Handle_GPR_Registry_Dirs (Node : Attribute_Decl) is
+            Sloc   : constant Source_Reference.Object :=
+                       Get_Source_Reference (Self.File, Node);
+            Expr   : constant Term_List := Node.F_Expr;
+            Values : constant Item_Values := Get_Term_List (Expr);
+
+         begin
+            if Expr = No_Term_List then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => Sloc,
+                     Message =>
+                       "gpr_registry_dirs attribute must have a value"));
+
+            else
+               for T of Values.Values loop
+                  declare
+                     Dir   : constant Filename_Type := Filename_Type (T.Text);
+                     R_Dir : constant GPR2.Path_Name.Object :=
+                               GPR2.Path_Name.Create_Directory (Dir);
+                  begin
+                     if R_Dir.Exists then
+                        GPR2.Project.Registry.Exchange.Import (R_Dir);
+                     end if;
+                  end;
+               end loop;
+            end if;
+         end Handle_GPR_Registry_Dirs;
+
          --------------------------
          -- Parse_Attribute_Decl --
          --------------------------
@@ -3833,6 +3882,15 @@ package body GPR2.Project_Parser is
                  (Index  => I_Sloc,
                   Values => Values.Values,
                   Single => Values.Single);
+            end if;
+
+            --  Check for GPR_Registry_Dirs as we need to do special handling
+            --  for it. Must be done now as this will enhance definitions in
+            --  the GPR registry which may be used in the rest of the project.
+
+
+            if Get_Name_Type (Name) = "gpr_registry_dirs" then
+               Handle_GPR_Registry_Dirs (Node);
             end if;
          end Parse_Attribute_Decl;
 
@@ -4680,6 +4738,91 @@ package body GPR2.Project_Parser is
          end if;
       end Record_Attribute;
 
+      ------------------------
+      -- Setup_GPR_Registry --
+      ------------------------
+
+      procedure Setup_GPR_Registry is
+         use GNAT;
+      begin
+         --  1. Check for envrionment variable GPR_REGISTRY_DIRS and import
+         --     the JSON in specified directories.
+
+         if Environment_Variables.Exists ("GPR_REGISTRY_DIRS") then
+            declare
+               use GNATCOLL.Strings;
+
+               Dirs : constant XString :=
+                        To_XString
+                          (Environment_Variables.Value ("GPR_REGISTRY_DIRS"));
+            begin
+               --  Load the registry from each directory specified in
+               --  GPR_REGISTRY_DIRS. We ignore empty entries in the list to
+               --  allow trailing path separator.
+
+               for Dir of
+                 GNATCOLL.Strings.Split (Dirs, OS_Lib.Path_Separator)
+               loop
+                  if Dir /= "" then
+                     declare
+                        R_Dir : constant GPR2.Path_Name.Object :=
+                                  GPR2.Path_Name.Create_Directory
+                                    (Filename_Type (Dir.To_String));
+                     begin
+                        if R_Dir.Exists then
+                           GPR2.Project.Registry.Exchange.Import (R_Dir);
+                        end if;
+                     end;
+                  end if;
+               end loop;
+            end;
+         end if;
+
+         --  2. Check for default GPR regisry directory in
+         --     <prefix/>share/gpr/registry.
+
+         declare
+            R_Dir : constant GPR2.Path_Name.Object :=
+                      GPR2.Path_Name.Create_Directory
+                        (Filename_Type
+                           (Get_Tools_Directory
+                            & OS_Lib.Directory_Separator
+                            & "share"
+                            & OS_Lib.Directory_Separator
+                            & "gpr"
+                            & OS_Lib.Directory_Separator
+                            & "registry"));
+         begin
+            if R_Dir.Exists then
+               GPR2.Project.Registry.Exchange.Import (R_Dir);
+            end if;
+         end;
+
+         --  3. Check for GPR registry in user's
+         --     $HOME/.local/share/gpr/registry.
+
+         declare
+            Home  : constant GNATCOLL.VFS.Filesystem_String :=
+                      GNATCOLL.VFS.Get_Home_Directory.Full_Name;
+            R_Dir : constant GPR2.Path_Name.Object :=
+                      GPR2.Path_Name.Create_Directory
+                        (Filename_Type
+                           (String (Home)
+                            & OS_Lib.Directory_Separator
+                            & ".local"
+                            & OS_Lib.Directory_Separator
+                            & "share"
+                            & OS_Lib.Directory_Separator
+                            & "gpr"
+                            & OS_Lib.Directory_Separator
+                            & "registry"));
+         begin
+            if R_Dir.Exists then
+               GPR2.Project.Registry.Exchange.Import (R_Dir);
+            end if;
+         end;
+      end Setup_GPR_Registry;
+
       ------------
       -- To_Set --
       ------------
@@ -4734,6 +4877,10 @@ package body GPR2.Project_Parser is
                             (String (Self.File.Dir_Name), Sloc),
                Default => True));
       end;
+
+      --  Setup GPR registry with standard location and environment
+
+      Setup_GPR_Registry;
 
       if Is_Parsed_Project then
          View_Internal.Get (View).Disable_Cache;

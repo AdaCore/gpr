@@ -306,6 +306,9 @@ package GPR2.Project.Registry.Attribute is
    Externally_Built                 : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"externally_built");
+   GPR_Registry_Dirs                : constant Q_Attribute_Id :=
+                                        (Project_Level_Scope,
+                                         +"gpr_registry_dirs");
    Ignore_Source_Sub_Dirs           : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"ignore_source_sub_dirs");

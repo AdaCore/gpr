@@ -156,6 +156,14 @@ begin
 
    --  Ignore_Source_Sub_Dirs
    Set_Attribute_Description
+     (Key         => PRA.GPR_Registry_Dirs,
+      Description =>
+        "List a set of directories to look for enhanced project definitions."
+      & "The JSON files containing packages and attributes definitions in"
+      & " the target directories are loaded.");
+
+   --  Ignore_Source_Sub_Dirs
+   Set_Attribute_Description
      (Key          => PRA.Ignore_Source_Sub_Dirs,
       Description  =>
         "Value is a list of simple names or patterns for subdirectories that"
