@@ -8,8 +8,6 @@ with GPR2.Path_Name;
 
 private package GPR2.Project_Parser.Registry is
 
-   use type GPR2.Path_Name.Object;
-
    function Exists (Pathname : GPR2.Path_Name.Object) return Boolean
      with Pre  => Pathname.Is_Defined;
    --  Returns True if the project file given by its full path-name is known in

@@ -8,6 +8,8 @@ with Ada.Containers.Ordered_Maps;
 
 package body GPR2.Project_Parser.Registry is
 
+   use type GPR2.Path_Name.Object;
+
    package Project_Store is new Ada.Containers.Ordered_Maps
      (GPR2.Path_Name.Object, Object);
 

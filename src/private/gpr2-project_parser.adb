@@ -207,8 +207,9 @@ package body GPR2.Project_Parser is
    -- External_Explicit_Type --
    ----------------------------
 
-   function External_Explicit_Type (Node : External_Builtin_Function_Call)
-   return Identifier_List is
+   function External_Explicit_Type
+     (Node : External_Builtin_Function_Call) return Identifier_List
+   is
       Exprs : constant Term_List_List := F_Terms (F_Parameters (Node));
    begin
 
@@ -236,8 +237,8 @@ package body GPR2.Project_Parser is
    -- External_Value_Node --
    -------------------------
 
-   function External_Value_Node (Node : External_Builtin_Function_Call)
-   return Term_List
+   function External_Value_Node
+     (Node : External_Builtin_Function_Call) return Term_List
    is
       Exprs : constant Term_List_List := F_Terms (F_Parameters (Node));
       Value_Index : Natural;
@@ -912,7 +913,6 @@ package body GPR2.Project_Parser is
                                 "external type must be a type reference"));
 
                      else
-
                         if not Project.Externals.Contains
                                  (External_Name_Type (Var))
                         then
@@ -3504,11 +3504,11 @@ package body GPR2.Project_Parser is
             use PRA;
 
             Is_Name_Exception : constant Boolean :=
-                                  N_Id in
-                                    Naming.Spec.Attr
-                                    | Naming.Specification.Attr
-                                    | Naming.Body_N.Attr
-                                    | Naming.Implementation.Attr;
+              N_Id
+              in Naming.Spec.Attr
+               | Naming.Specification.Attr
+               | Naming.Body_N.Attr
+               | Naming.Implementation.Attr;
 
             -----------------------------------
             -- Create_And_Register_Attribute --
@@ -3525,37 +3525,36 @@ package body GPR2.Project_Parser is
                if Single then
                   pragma Assert (Expr.Children_Count >= 1);
 
-                  if Q_Name in PRA.Builder.Global_Configuration_Pragmas |
-                               PRA.Compiler.Local_Configuration_Pragmas
+                  if Q_Name
+                     in PRA.Builder.Global_Configuration_Pragmas
+                      | PRA.Compiler.Local_Configuration_Pragmas
                     and then Values.First_Element.Text'Length > 0
                   then
                      --  Unlike other attributes, those ones need the value
                      --  to be expanded to a full path.
 
                      declare
-                        Filtered : Source_Reference.Value.Object;
+                        Filtered : constant Source_Reference.Value.Object :=
+                                     Source_Reference.Value.Object
+                                       (Source_Reference.Value.Create
+                                          (Values.First_Element.Filename,
+                                           Values.First_Element.Line,
+                                           Values.First_Element.Column,
+                                           GPR2.Path_Name.Create_File
+                                             (Filename_Type
+                                                (Values.First_Element.Text),
+                                              View.Dir_Name.Value)
+                                             .String_Value));
                      begin
-                        Filtered :=
-                          Source_Reference.Value.Object
-                            (Source_Reference.Value.Create
-                               (Values.First_Element.Filename,
-                                Values.First_Element.Line,
-                                Values.First_Element.Column,
-                                GPR2.Path_Name.Create_File
-                                  (Filename_Type (Values.First_Element.Text),
-                                   View.Dir_Name.Value).String_Value));
-
                         A := PA.Create
-                          (Name  => Id,
-                           Index => Index,
-                           Value => Filtered);
+                               (Name => Id, Index => Index, Value => Filtered);
                      end;
 
                   else
                      A := PA.Create
-                       (Name  => Id,
-                        Index => Index,
-                        Value => Values.First_Element);
+                           (Name  => Id,
+                            Index => Index,
+                            Value => Values.First_Element);
                   end if;
 
                else
@@ -3581,8 +3580,8 @@ package body GPR2.Project_Parser is
                                                 Sloc    => Sloc,
                                                 Message =>
                                                   "empty value in attribute """
-                                                & Image (Q_Name)
-                                                & """ not allowed."));
+                                                  & Image (Q_Name)
+                                                  & """ not allowed."));
                                        else
                                           Tree.Log_Messages.Append
                                             (Message.Create
@@ -3590,16 +3589,17 @@ package body GPR2.Project_Parser is
                                                 Sloc    => Sloc,
                                                 Message =>
                                                   "empty value in attribute """
-                                                & Image (Q_Name)
-                                                & """ ignored."));
+                                                  & Image (Q_Name)
+                                                  & """ ignored."));
                                        end if;
                                     end if;
                                  end loop;
 
-                                 A := PA.Create
-                                   (Name   => Id,
-                                    Index  => Index,
-                                    Values => Filtered);
+                                 A :=
+                                   PA.Create
+                                     (Name   => Id,
+                                      Index  => Index,
+                                      Values => Filtered);
                                  Created := True;
                               end;
                            end if;
@@ -3607,10 +3607,9 @@ package body GPR2.Project_Parser is
                      end if;
 
                      if not Created then
-                        A := PA.Create
-                          (Name   => Id,
-                           Index  => Index,
-                           Values => Values);
+                        A :=
+                          PA.Create
+                            (Name => Id, Index => Index, Values => Values);
                      end if;
                   end;
                end if;
@@ -3626,9 +3625,10 @@ package body GPR2.Project_Parser is
                           (Message.Create
                              (Level   => Message.Error,
                               Sloc    => Sloc,
-                              Message => "builtin attribute """
-                                          & Image (Q_Name)
-                                          & """ is read-only"));
+                              Message =>
+                                "builtin attribute """
+                                & Image (Q_Name)
+                                & """ is read-only"));
                      end if;
 
                      A.Set_Case
@@ -3660,23 +3660,25 @@ package body GPR2.Project_Parser is
 
                      begin
                         if not Base.Is_Defined then
-                           Base := GPR2.KB.Create_Default
-                             (GPR2.KB.Targetset_Only_Flags,
-                              Tree.Environment);
+                           Base :=
+                             GPR2.KB.Create_Default
+                               (GPR2.KB.Targetset_Only_Flags,
+                                Tree.Environment);
                         end if;
 
-                        if Base.Normalized_Target (T_Conf) /=
-                          Base.Normalized_Target (T_Attr)
+                        if Base.Normalized_Target (T_Conf)
+                          /= Base.Normalized_Target (T_Attr)
                         then
                            Tree.Log_Messages.Append
                              (Message.Create
                                 (Level   => Message.Warning,
                                  Sloc    => Sloc,
-                                 Message => "target attribute '"
-                                            & String (T_Attr)
-                                            & "' not used, overridden by the "
-                                            & "configuration's target: "
-                                            & String (T_Conf)));
+                                 Message =>
+                                   "target attribute '"
+                                   & String (T_Attr)
+                                   & "' not used, overridden by the "
+                                   & "configuration's target: "
+                                   & String (T_Conf)));
                         end if;
                      end;
                   end if;
@@ -3697,8 +3699,11 @@ package body GPR2.Project_Parser is
                              (Message.Create
                                 (Level   => Message.Error,
                                  Sloc    => Sloc,
-                                 Message => "empty filename not allowed for "
-                                 & "attribute """ & Image (Q_Name) & """"));
+                                 Message =>
+                                   "empty filename not allowed for "
+                                   & "attribute """
+                                   & Image (Q_Name)
+                                   & """"));
 
                         else
                            Record_Attribute (Pack_Ref.Attrs, A);
@@ -3727,8 +3732,10 @@ package body GPR2.Project_Parser is
 
                elsif Is_Name_Exception then
                   Self.Skip_Src.Insert
-                    (Filename_Type (A.Value.Text), A.Value,
-                     Position, Inserted);
+                    (Filename_Type (A.Value.Text),
+                     A.Value,
+                     Position,
+                     Inserted);
                end if;
             end Create_And_Register_Attribute;
 
@@ -3741,26 +3748,29 @@ package body GPR2.Project_Parser is
                At_Lit  : Num_Literal;
             begin
                if Index.Kind = Gpr_Others_Designator then
-                  return PAI.Create
-                    (Get_Value_Reference
-                       (Self.Path_Name, Sloc_Range (Index), "others"),
-                     Is_Others      => True,
-                     Case_Sensitive => False);
+                  return
+                    PAI.Create
+                      (Get_Value_Reference
+                         (Self.Path_Name, Sloc_Range (Index), "others"),
+                       Is_Others      => True,
+                       Case_Sensitive => False);
 
                else
                   Str_Lit := Index.As_String_Literal_At;
-                  At_Lit  := Str_Lit.F_At_Lit;
+                  At_Lit := Str_Lit.F_At_Lit;
 
-                  return PAI.Create
-                    (Get_Value_Reference
-                       (Self.Path_Name, Sloc_Range (Index),
-                        Get_Value_Type (Str_Lit.F_Str_Lit),
-                        At_Pos =>
-                          (if At_Lit = No_Gpr_Node
-                           then 0
-                           else Unit_Index'Wide_Wide_Value (At_Lit.Text))),
-                     Is_Others      => False,
-                     Case_Sensitive => False);
+                  return
+                    PAI.Create
+                      (Get_Value_Reference
+                         (Self.Path_Name,
+                          Sloc_Range (Index),
+                          Get_Value_Type (Str_Lit.F_Str_Lit),
+                          At_Pos =>
+                            (if At_Lit = No_Gpr_Node
+                             then 0
+                             else Unit_Index'Wide_Wide_Value (At_Lit.Text))),
+                       Is_Others      => False,
+                       Case_Sensitive => False);
                end if;
             end Create_Index;
 
@@ -3779,27 +3789,29 @@ package body GPR2.Project_Parser is
                     (Message.Create
                        (Level   => Message.Error,
                         Sloc    => Sloc,
-                        Message => "full associative array expression "
+                        Message =>
+                          "full associative array expression "
                           & "requires simple attribute reference"));
 
-               elsif
-                 Values.Indexed_Values.Attribute_Name.Pack /= Pack_Name
+               elsif Values.Indexed_Values.Attribute_Name.Pack /= Pack_Name
                then
                   Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
                         Sloc    => Sloc,
-                        Message => "not the same package as "
-                          & Image (Pack_Name)));
+                        Message =>
+                          "not the same package as " & Image (Pack_Name)));
 
                elsif Values.Indexed_Values.Attribute_Name.Attr /= N_Id then
                   Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
                         Sloc    => Sloc,
-                        Message => "full associative array expression "
+                        Message =>
+                          "full associative array expression "
                           & "must reference the same attribute """
-                          & Image (N_Id) & '"'));
+                          & Image (N_Id)
+                          & '"'));
 
                else
                   for V of Values.Indexed_Values.Values loop
@@ -4413,16 +4425,18 @@ package body GPR2.Project_Parser is
                      use PRA;
 
                      Name              : constant Identifier :=
-                       F_Attr_Name (Node.As_Attribute_Decl);
+                                           F_Attr_Name
+                                             (Node.As_Attribute_Decl);
                      N_Str             : constant Name_Type :=
-                       Get_Name_Type (Name.As_Single_Tok_Node);
+                                           Get_Name_Type
+                                             (Name.As_Single_Tok_Node);
                      N_Id              : constant Attribute_Id := +N_Str;
                      Is_Name_Exception : constant Boolean :=
-                       N_Id
-                       in Naming.Spec.Attr
-                        | Naming.Specification.Attr
-                        | Naming.Body_N.Attr
-                        | Naming.Implementation.Attr;
+                                           N_Id
+                                           in Naming.Spec.Attr
+                                            | Naming.Specification.Attr
+                                            | Naming.Body_N.Attr
+                                            | Naming.Implementation.Attr;
                   begin
                      if Is_Name_Exception then
                         Parse_Attribute_Decl (Node.As_Attribute_Decl);
