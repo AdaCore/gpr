@@ -49,10 +49,10 @@ package GPR2.Project.Registry.Exchange is
    --  Raise GNATCOLL.JSON.Invalid_JSON_Stream exception if Definitions is an
    --  invalid JSON string.
 
-   procedure Import (File : GPR2.Path_Name.Object)
-     with Pre => File.Is_Defined and then File.Exists;
-   --  Import in registry definitions from File (in JSON format).
-   --  Raise GNATCOLL.JSON.Invalid_JSON_Stream exception if File content is an
-   --  invalid JSON string.
+   procedure Import (Path : GPR2.Path_Name.Object)
+     with Pre => Path.Is_Defined and then Path.Exists;
+   --  Import in registry definitions from File (in JSON format) or all JSON in
+   --  Path if it is a directory. Raise GNATCOLL.JSON.Invalid_JSON_Stream
+   --  exception if File content is an invalid JSON string.
 
 end GPR2.Project.Registry.Exchange;
