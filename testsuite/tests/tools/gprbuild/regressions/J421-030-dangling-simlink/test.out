@@ -1,4 +1,4 @@
 $ gprbuild -P prj.gpr
 "obj" created
-prj.gpr: warning: "simlink.adb" does not exist and will be ignored
+prj.gpr: warning: symbolic link "simlink.adb" points to a non-existent target, file will be ignored
 [Ada Compile]     pkg.ads

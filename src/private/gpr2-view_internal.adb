@@ -689,14 +689,12 @@ package body GPR2.View_Internal is
                            Directory => True),
                         Is_Root_Dir => False);
                   elsif not Exists (Stat) then
-                     --  Most likely a symlink leads to a non-existing file or
-                     --  directory.
-
                      Messages.Append
                        (Message.Create
                           (Message.Warning,
-                           """" & Name (D_Entry) & """ does not exist "
-                           & "and will be ignored",
+                           "symbolic link """ & Name (D_Entry) &
+                           """ points to a non-existent target, " &
+                           "file will be ignored",
                            Source));
                   end if;
                end loop;
