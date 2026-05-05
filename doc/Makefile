@@ -1,73 +1,52 @@
 # Makefile for Sphinx documentation
 
-# You can set these variables from the command line.
-SPHINXOPTS    =
-SPHINXBUILD   = sphinx-build
-PAPER         =
-BUILDDIR      = .
-SOURCEDIR     = .
-
-# Internal variables.
-PAPEROPT_a4     = -D latex_paper_size=a4
-PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) \
-		  -c $(SOURCEDIR)/share \
-		  -d $(BUILDDIR)/$*/doctrees \
-		  $(SOURCEDIR)
-FMT_LIST=html txt info pdf
-DOC_NAME=gprbuild_ug
 CP=cp
 
 WORK_DIR=__python__
 GPRDOC_FILE=
-OUT_FILE=gprbuild_ug/attributes.rst
+OUT_FILE=gpr_reference/source/attributes.rst
+
+HTML_DIR = html
+PDF_DIR  = pdf
 
 -include ../makefile.setup
 
-.PHONY: help clean
+# Sphinx sub-documents with their own Makefiles
+SPHINX_SUBDOCS = gpr_reference gpr_user_guide
 
-all: $(foreach fmt, $(FMT_LIST), $(fmt))
+.PHONY: help clean all html pdf
+
+all: $(SPHINX_SUBDOCS:%=subdoc-all-%)
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
-	@echo "  html       to make standalone HTML files"
-	@echo "  pdf        to make LaTeX files and run them through pdflatex"
-	@echo "  txt        to make text files"
-	@echo "  texinfo    to make Texinfo files"
-	@echo "  info       to make info files"
-	@echo "  all                 to build documentation in all formats"
-	@echo ""
-	@echo "source and location can be overriden using SOURCEDIR and BUILDDIR variables"
+	@echo "  html       to make standalone HTML files (all docs)"
+	@echo "  pdf        to make PDF files (all docs)"
+	@echo "  all        to build all docs in all formats"
 
 clean:
-	-rm -rf $(BUILDDIR)/html \
-		$(BUILDDIR)/pdf \
-		$(BUILDDIR)/txt \
-		$(BUILDDIR)/info \
-		$(BUILDDIR)/doctrees \
-		${WORK_DIR}/metadata/__pycache__ \
-		${GPRDOC_FILE} \
-		share/__pycache__
+	for d in $(SPHINX_SUBDOCS); do $(MAKE) -C $$d clean; done
+	rm -rf $(HTML_DIR) $(PDF_DIR)
 
-html: force
-	PAGEFIND_SITE=$(BUILDDIR)/html $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+html: $(SPHINX_SUBDOCS:%=subdoc-html-%)
 
-pdf: force
-	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/pdf
-	$(MAKE) -C $(BUILDDIR)/pdf all-pdf LATEXOPTS="-interaction=nonstopmode"
+pdf: $(SPHINX_SUBDOCS:%=subdoc-pdf-%)
 
-txt: force
-	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/$*/txt
-	$(MAKE) -C $(BUILDDIR)/txt plaintext
+subdoc-html-%:
+	$(MAKE) -C $* html
+	mkdir -p $(HTML_DIR)/$*
+	cp -r $*/build/html/. $(HTML_DIR)/$*/
 
-info: force
-	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/$*/info
-	$(MAKE) -C $(BUILDDIR)/info info
+subdoc-pdf-%:
+	$(MAKE) -C $* pdf
+	mkdir -p $(PDF_DIR)
+	cp $*/build/latex/*.pdf $(PDF_DIR)/$*.pdf
 
-texinfo:
-	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/$*/texinfo
+subdoc-all-%:
+	$(MAKE) -C $* all
+	mkdir -p $(HTML_DIR)/$* $(PDF_DIR)
+	cp -r $*/build/html/. $(HTML_DIR)/$*/
+	cp $*/build/latex/*.pdf $(PDF_DIR)/$*.pdf
 
 gen:
 	python3 ${WORK_DIR}/generate_gpr2_documentation.py --input=${GPRDOC_FILE} --output=${OUT_FILE}
-
-force:
