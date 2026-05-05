@@ -1,0 +1,16 @@
+project M is
+   for Languages use ();
+
+   package Compiler is
+      for Default_Switches ("Ada") use ("-g");
+      for Default_Switches ("C") use ("-g");
+   end Compiler;
+
+   package Binder is
+      for Default_Switches ("ada") use ("");
+   end Binder;
+
+   package Linker is
+      for Linker_Options use ("-Wl,--gpsize=0");
+   end Linker;
+end M;

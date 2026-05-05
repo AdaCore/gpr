@@ -1,0 +1,23 @@
+with "c.gpr";
+with "k_bla4.gpr";
+with "k_bla0.gpr";
+limited with "ie_bla4.gpr";
+with "s.gpr";
+
+Library project V_Lib_Bla4 is
+
+   for Source_Dirs use ("v_lib_bla4");
+   for Library_Name use "v_lib_bla4";
+   for Library_Dir use "lib";
+   for Object_Dir use "obj";
+
+   package Compiler is
+      for Default_Switches ("ada") use C.Compiler'Default_Switches("Ada");
+      for Default_Switches ("C") use C.Compiler'Default_Switches("C");
+   end Compiler;
+
+   package Binder is
+      for Default_Switches use C.Binder'Default_Switches;
+   end Binder;
+
+end V_Lib_Bla4;

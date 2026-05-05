@@ -1,0 +1,21 @@
+with "foo\foo.gpr";
+
+project Test is
+
+   for Languages use ("Ada");
+   for Source_Dirs use (".");
+   for Object_Dir use ".";
+   for Exec_Dir use ".";
+
+   package Linker is
+      for Default_Switches ("ada") use ("-s");
+   end Linker;
+
+   package Compiler is
+      for Default_Switches ("ada") use ("-O3", "-gnatwcijklmruv", "-gnatyfh", "-gnatn");
+   end Compiler;
+
+   for Main use ("A.adb");
+
+end Test;
+

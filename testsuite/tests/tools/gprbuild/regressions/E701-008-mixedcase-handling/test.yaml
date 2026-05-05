@@ -1,0 +1,5 @@
+description: Regression test for MixedCase handling
+driver: python_script
+timeout: 800
+control:
+- [SKIP, "'windows' not in env.host.platform", "DEAD on non windows"]

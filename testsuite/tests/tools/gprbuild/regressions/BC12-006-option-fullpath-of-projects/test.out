@@ -1,0 +1,6 @@
+$ gprbuild -P prj.gpr
+prj.gpr:2:04: error: Expected Identifier, got ';'
+gprbuild: "prj.gpr" processing failed
+$ gprbuild -P prj.gpr -F
+/prj.gpr:2:04: error: Expected Identifier, got ';'
+gprbuild: "prj.gpr" processing failed

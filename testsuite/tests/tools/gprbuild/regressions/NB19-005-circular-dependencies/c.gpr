@@ -1,0 +1,15 @@
+with "m.gpr";
+
+project C is
+   for Languages use ();
+
+   package Compiler is
+      for Default_Switches ("ada") use M.Compiler'Default_Switches("Ada");
+
+      for Default_Switches ("C") use M.Compiler'Default_Switches("C");
+   end Compiler;
+
+   package Binder is
+      for Default_Switches use M.Binder'Default_Switches;
+   end Binder;
+end C;

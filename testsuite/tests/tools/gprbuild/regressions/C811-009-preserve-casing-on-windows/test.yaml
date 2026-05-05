@@ -1,0 +1,5 @@
+description: Regression test for preserving casing on windows
+driver: python_script
+timeout: 800
+control:
+- [SKIP, "'windows' not in env.host.platform", "DEAD on non windows"]

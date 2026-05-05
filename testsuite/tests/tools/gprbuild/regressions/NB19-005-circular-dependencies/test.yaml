@@ -1,0 +1,3 @@
+description: Regression test for handling circular dependencies with mimited withs
+driver: python_script
+timeout: 800
