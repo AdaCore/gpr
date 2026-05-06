@@ -57,14 +57,6 @@ Project processing can be affected by environment variables.
   Value for the quiet mode or the verbosity level.
   Overriden with switches ``-q``, ``-v`` and ``-vP?``
 
-* **USER**
-
-  Used to communicate with a slave in distributed gprbuild.
-
-* **USERNAME**
-
-  Used to communicate with a slave in distributed gprbuild.
-
 * **GPRBIND_DEBUG**
 
   When value is "TRUE", keep a copy of the binder exchange file sent to
