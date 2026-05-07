@@ -16,7 +16,9 @@ with GPR2.Build.Actions.Process.Link;
 with GPR2.Build.Actions.Process.Link_Options_Insert;
 with GPR2.Build.Actions.Process.Link.Partial;
 with GPR2.Build.Actions.Process.Post_Bind;
+with GPR2.Build.Actions.Thread.Lib_Copy;
 use GPR2.Build.Actions.Process;
+use GPR2.Build.Actions.Thread;
 with GPR2.Build.Actions.Sets;
 with GPR2.Build.Artifacts;
 with GPR2.Build.Artifacts.Library;
@@ -776,12 +778,22 @@ package body GPR2.Build.Actions_Population is
                  and then
                    (A in Ada_Bind.Object'Class
                     or else A in Post_Bind.Object'Class
-                    or else (A in Link.Object'Class
-                             and then Link.Object (A).Is_Library));
+                    or else
+                      (A in Link.Object'Class
+                       and then Link.Object (A).Is_Library)
+                    or else A in Lib_Copy.Object'Class);
 
-               Link_Phase_En := Options.Link_Phase_Mandated
-                 and then A in Link.Object'Class
-                 and then not Link.Object (A).Is_Library;
+               Link_Phase_En :=
+                 Options.Link_Phase_Mandated
+                 and then
+                   ((A in Link.Object'Class
+                     and then not Link.Object (A).Is_Library)
+                    or else A in Lib_Copy.Object'Class);
+               --  Lib_Copy is gated by Link_Phase_Mandated like regular link
+               --  actions: the ALI files it copies may be needed by the
+               --  binder (Ada_Bind) of a dependent executable, where
+               --  Ada_Bind is required by Post_Bind, which is itself
+               --  required by the link phase.
 
                if not
                  (Compile_Phase_En
@@ -1002,6 +1014,22 @@ package body GPR2.Build.Actions_Population is
          end if;
 
          Tree_Db.Add_Input (Self.Main_Link.UID, Self.Partial_Link.Output);
+      end if;
+
+      --  Add lib copy action. Dependencies towards the compile actions are
+      --  generated during the tree insertion, and during ALI parsing of the
+      --  binder if any.
+
+      if Lib_Copy.Needed_For_View (View) then
+         declare
+            Lib_Copy_Action : Lib_Copy.Object;
+         begin
+            Lib_Copy_Action.Initialize (View);
+
+            if not Tree_Db.Add_Action (Lib_Copy_Action) then
+               return False;
+            end if;
+         end;
       end if;
 
       --  Add the lib now to prevent infinite recursion in case of
@@ -1228,15 +1256,6 @@ package body GPR2.Build.Actions_Population is
                Tree_Db.Add_Input
                  (Self.Initial_Link_Action.UID,
                   Sublib.Final_Link_Action.Output);
-            end if;
-
-            --  Make sure the libraries dependencies are bounded before the
-            --  binder is called, as it's the bind action that copies the ali
-            --  files to the library directory.
-
-            if Self.Bind.Is_Defined then
-               Tree_Db.Add_Input
-                 (Self.Bind.UID, Sublib.Final_Link_Action.Output);
             end if;
          end;
       end loop;
@@ -1605,15 +1624,6 @@ package body GPR2.Build.Actions_Population is
                for Lib of Sorted_Libs loop
                   Tree_Db.Add_Input
                     (Link (Idx).UID, Lib.Final_Link_Action.Output);
-
-                  --  Make sure the bind action is executed after the
-                  --  libraries are linked, to have access to the ALI files
-                  --  in the lib directory.
-
-                  if Bind (Idx).Is_Defined then
-                     Tree_Db.Add_Input
-                       (Bind (Idx).UID, Lib.Final_Link_Action.Output);
-                  end if;
 
                   --  For standalone static libraries, linker options must
                   --  be updated to ensure proper elaboration of the library.

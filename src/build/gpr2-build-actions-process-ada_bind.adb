@@ -19,6 +19,7 @@ with GPR2.Build.Actions.Process.Compile.Ada;
 with GPR2.Build.Actions.Process.Link;
 with GPR2.Build.Actions.Process.Link_Options_Insert;
 with GPR2.Build.Actions.Process.Post_Bind;
+with GPR2.Build.Actions.Thread.Lib_Copy;
 with GPR2.Build.ALI_Parser;
 with GPR2.Build.Compilation_Unit;
 pragma Warnings (Off);
@@ -1015,6 +1016,30 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
    is
       Scope      : Containers.Name_Set;
       To_Analyze : Extended_Interface_Map.Map;
+
+      function Find_Lib_Copy
+        return Actions.Thread.Lib_Copy.Object;
+      --  Look for a Lib_Copy action among the successors of Comp's
+      --  Local_Ali_File output.
+
+      -------------------
+      -- Find_Lib_Copy --
+      -------------------
+
+      function Find_Lib_Copy
+        return Actions.Thread.Lib_Copy.Object is
+      begin
+         for Action of Self.Tree.Successors (Comp.Local_Ali_File) loop
+            if Action in Actions.Thread.Lib_Copy.Object'Class then
+               return Actions.Thread.Lib_Copy.Object (Action);
+            end if;
+         end loop;
+
+         return Actions.Thread.Lib_Copy.Undefined;
+      end Find_Lib_Copy;
+
+      Lib_Copy : Actions.Thread.Lib_Copy.Object :=
+        Actions.Thread.Lib_Copy.Undefined;
    begin
       --  First pass: adjust the Db dependencies to take into account potential
       --  new dependencies between From_CU and the list of imports
@@ -1096,10 +1121,24 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
                if Add_Intf then
                   Self.Extra_Intf.Insert (CU, From, C, Inserted);
 
-                  if Inserted
-                    and then Self.Tree.Has_Action (UID)
-                  then
+                  if Inserted then
+                    --  All imported actions must have been created and added
+                    --  by On_Ada_Dependencies.
+                     pragma Assert (Self.Tree.Has_Action (UID));
+
                      New_Comp := Compile.Ada.Object (Self.Tree.Action (UID));
+
+                     --  Ensure that Lib_Copy is executed after the new compile
+                     --  action is executed.
+
+                     Lib_Copy := Find_Lib_Copy;
+
+                     if Lib_Copy.Is_Defined then
+                        Actions.Thread.Lib_Copy.Object'Class
+                          (Self.Tree.Action_Id_To_Reference
+                             (Lib_Copy.UID).Element.all)
+                          .Add_Unit_To_Lib_Interface (CU);
+                     end if;
                   end if;
 
                   if New_Comp.Is_Defined

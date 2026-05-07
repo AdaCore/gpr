@@ -7,6 +7,7 @@ $ gprbuild -f -P prj.gpr
 [Ada Compile]     pkg5.ads
 [Ada Compile]     pkg6.ads
 [Archive]         libprj.a
+[Library-Files-Copy] Prj
 $ gprbuild -f -P prj.gpr -XLKIND=relocatable
 [Ada Compile]     pkg1.ads
 [Ada Compile]     pkg2.ads
@@ -14,4 +15,5 @@ $ gprbuild -f -P prj.gpr -XLKIND=relocatable
 [Ada Compile]     pkg4.ads
 [Ada Compile]     pkg5.ads
 [Ada Compile]     pkg6.ads
+[Library-Files-Copy] Prj
 [Link]            libprj.so

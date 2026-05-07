@@ -21,6 +21,7 @@ $ gprbuild -Plib -XPRJ_RO=True -p -j1 --temp-dir=obj
 "lib/lib" created
 [Ada Compile]     pkg2.ads
 [Ada Bind]        lib
+[Library-Files-Copy] Lib
 [Ada Post-Bind]   b__lib.adb
 [Link-Options-Insert] o__lib.o
 [Partial Link]    p__lib.o
@@ -34,18 +35,15 @@ $ gprclean -Plib -r -q
 $ chmod 0x555 lib/lib
 $ gprbuild -Plib -j1 --temp-dir=obj
 [Ada Compile]     pkg2.ads
-[Ada Compile]     pkg.ads
-[Ada Bind]        lib
-[Ada Post-Bind]   b__lib.adb
-[Link-Options-Insert] o__lib.o
-[Partial Link]    p__lib.o
+[Library-Files-Copy] Lib
 lib.gpr: error: could not create the ali file "pkg2.ali"
-[Archive] liblib.a (lib.gpr) failed.
+[Library-Files-Copy] Lib (lib.gpr) failed.
 $ chmod 0x777 lib/lib
 $ gprbuild -Plib -q --temp-dir=obj
 $ chmod 0x555 lib/lib
 $ gprbuild -Plib -f -j1 --temp-dir=obj
 [Ada Compile]     pkg2.ads
+[Library-Files-Copy] Lib
 [Ada Compile]     pkg.ads
 [Ada Bind]        lib
 [Ada Post-Bind]   b__lib.adb

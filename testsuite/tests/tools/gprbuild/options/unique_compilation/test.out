@@ -26,6 +26,8 @@ $ gprbuild -P demo.gpr -q -p --json-summary -j1 main.adb -c
 [Ada Compile] pkg2.ads (lib2.gpr)
 [C Compile] hello.c (lib2.gpr)
 $ gprbuild -P demo.gpr -q -p --json-summary -j1 main.adb -l
+[Library-Files-Copy] Lib1 (lib1.gpr)
+[Library-Files-Copy] Lib2 (lib2.gpr)
 $ gprbuild -P demo.gpr -q -p --json-summary -j1 main.adb -b
 [Ada Bind] main (demo.gpr)
 [Ada Post-Bind] b__main.adb (demo.gpr)
@@ -42,11 +44,11 @@ $ gprbuild -P demo.gpr -p -j1 main.adb -b
 Action [Ada Compile] main.adb (demo.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
    * [Ada Bind] main (demo.gpr)
 Action [Ada Compile] pkg.ads (lib1.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
-   * [Ada Bind] main (demo.gpr)
    * [Archive] liblib1.a (lib1.gpr)
+   * [Library-Files-Copy] Lib1 (lib1.gpr)
 Action [Ada Compile] pkg2.ads (lib2.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
-   * [Ada Bind] main (demo.gpr)
    * [Archive] liblib2.a (lib2.gpr)
+   * [Library-Files-Copy] Lib2 (lib2.gpr)
 Action [C Compile] hello.c (lib2.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
    * [Archive] liblib2.a (lib2.gpr)
 $ gprbuild -P demo.gpr -p -j1 main.adb -l
@@ -54,8 +56,10 @@ Action [Ada Compile] main.adb (demo.gpr) has been deactivated, but its signature
    * [Link] main (demo.gpr)
 Action [Ada Compile] pkg.ads (lib1.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
    * [Link] main (demo.gpr)
+   * [Library-Files-Copy] Lib1 (lib1.gpr)
 Action [Ada Compile] pkg2.ads (lib2.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
    * [Link] main (demo.gpr)
+   * [Library-Files-Copy] Lib2 (lib2.gpr)
 Action [C Compile] hello.c (lib2.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
    * [Link] main (demo.gpr)
 $ gprbuild -P demo.gpr -p -j1 main.adb -c
@@ -66,11 +70,12 @@ $ gprbuild -P demo.gpr -p -j1 main.adb -c
 $ gprbuild -P demo.gpr -p -j1 main.adb -l
 Action [Archive] liblib1.a (lib1.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
    * [Link] main (demo.gpr)
+[Library-Files-Copy] Lib1
 Action [Archive] liblib2.a (lib2.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
    * [Link] main (demo.gpr)
+[Library-Files-Copy] Lib2
 $ gprbuild -P demo.gpr -p -j1 main.adb -b
 [Archive]         liblib1.a
 [Archive]         liblib2.a
-[Ada Bind]        main
 $ gprbuild -P demo.gpr -p -j1 main.adb -l
 [Link]            main

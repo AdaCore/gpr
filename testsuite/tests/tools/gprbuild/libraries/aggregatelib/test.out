@@ -6,6 +6,7 @@ $ gprbuild -q -Pagglib.gpr -p --json-summary -XAGG_LIBRARY_KIND=static
 [Ada Compile] pkg4_1.ads (prj4_1.gpr)
 [Ada Compile] pkg4_2.ads (prj4_2.gpr)
 [Archive] libdemo.a (agglib.gpr)
+[Library-Files-Copy] Agglib (agglib.gpr)
 $ gprbuild -q -Pdemo.gpr -p --json-summary -XAGG_LIBRARY_KIND=static
 Ok: linking with libdemo.a
 Ok: not linking with individual .o's
@@ -16,6 +17,7 @@ $ gprbuild -q -Pagglib.gpr -p --json-summary -XAGG_LIBRARY_KIND=relocatable
 [Ada Compile] pkg3.ads (prj3.gpr)
 [Ada Compile] pkg4_1.ads (prj4_1.gpr)
 [Ada Compile] pkg4_2.ads (prj4_2.gpr)
+[Library-Files-Copy] Agglib (agglib.gpr)
 [Link] libdemo<shared-lib-suffix> (agglib.gpr)
 $ gprbuild -q -Pdemo.gpr -p --json-summary -XAGG_LIBRARY_KIND=relocatable
 Ok: linking with libdemo

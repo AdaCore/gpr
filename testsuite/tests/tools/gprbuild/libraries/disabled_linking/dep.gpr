@@ -1,0 +1,10 @@
+library project Dep is
+
+   for Source_Dirs use ("src_dep");
+   for Object_Dir use "obj_dep";
+   for Library_Name use "dep";
+   for Library_Kind use "static";
+   for Library_Dir use "lib_dep";
+   for Disable_Linking use "true";
+
+end Dep;

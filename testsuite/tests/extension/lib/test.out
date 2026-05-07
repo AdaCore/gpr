@@ -5,12 +5,13 @@ Demo     K_LIBRARY
    code
       e-obj/code.o
       e-obj/code.ali
-      e-lib/code.ali
    pcka
       e-obj/pcka.o
       e-obj/pcka.ali
-      e-lib/pcka.ali
    repl
       e-obj/repl.o
       e-obj/repl.ali
+   Library-Files-Copy
+      e-lib/code.ali
+      e-lib/pcka.ali
       e-lib/repl.ali
