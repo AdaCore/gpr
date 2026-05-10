@@ -255,6 +255,14 @@ Project Level Attributes
     Indicates the exec directory for the project, that is the directory where the
     executables are.
 
+  .. index:: Attributes - Project Level Attributes; Gpr_Registry_Dirs
+
+  * **Gpr_Registry_Dirs**: list value, not inherited from extended project
+
+    List a set of directories to look for enhanced project definitions.The JSON
+    files containing packages and attributes definitions in the target directories
+    are loaded.
+
   .. index:: Attributes - Project Level Attributes; Ignore_Source_Sub_Dirs
 
   * **Ignore_Source_Sub_Dirs**: list value, not inherited from extended project

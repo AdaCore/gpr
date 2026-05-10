@@ -5,6 +5,7 @@
 --
 
 with Ada.Characters.Handling;
+with Ada.Directories;
 with Ada.Exceptions;
 
 with GNATCOLL;
@@ -1249,29 +1250,80 @@ package body GPR2.Project.Registry.Exchange is
    -- Import --
    ------------
 
-   procedure Import (File : GPR2.Path_Name.Object) is
-      use Ada.Exceptions;
-      Definitions : Unbounded_String;
-      F           : Text_IO.File_Type;
+   procedure Import (Path : GPR2.Path_Name.Object) is
+
+      procedure Import_File (File : GPR2.Path_Name.Object);
+      --  Impport registry definitions from a file containing JSON definitions
+
+      procedure Import_Dir (Dir : GPR2.Path_Name.Object);
+      --  Import registry definitions from all JSON files in 'File' directory
+
+      ----------------
+      -- Import_Dir --
+      ----------------
+
+      procedure Import_Dir (Dir : GPR2.Path_Name.Object) is
+         use Ada.Directories;
+
+         procedure Load_Entry (E : Directory_Entry_Type);
+         --  Load the given entry if it is a JSON file
+
+         ----------------
+         -- Load_Entry --
+         ----------------
+
+         procedure Load_Entry (E : Directory_Entry_Type) is
+            Fullname : constant Filename_Type := Filename_Type (Full_Name (E));
+            File     : constant GPR2.Path_Name.Object :=
+                         GPR2.Path_Name.Create_File (Fullname);
+         begin
+            if Kind (E) = Ordinary_File then
+               Import_File (File);
+            end if;
+         end Load_Entry;
+
+      begin
+         Ada.Directories.Search
+           (Directory => Dir.String_Value,
+            Pattern   => "*.json",
+            Process   => Load_Entry'Access);
+      end Import_Dir;
+
+      -----------------
+      -- Import_File --
+      -----------------
+
+      procedure Import_File (File : GPR2.Path_Name.Object) is
+         use Ada.Exceptions;
+         Definitions : Unbounded_String;
+         F           : Text_IO.File_Type;
+      begin
+         Text_IO.Open (F, Text_IO.In_File, File.String_Value);
+
+         while not Text_IO.End_Of_File (F) loop
+            Append (Definitions, Text_IO.Get_Line (F) & ASCII.LF);
+         end loop;
+
+         Text_IO.Close (F);
+
+         Import (Definitions);
+      exception
+         when E : others =>
+            if Text_IO.Is_Open (F) then
+               Text_IO.Close (F);
+            end if;
+
+            Text_IO.Put_Line
+              ("Warning: Cannot import attribute registry from file: "
+               & Exception_Information (E));
+      end Import_File;
+
    begin
-      Text_IO.Open (F, Text_IO.In_File, File.String_Value);
-
-      while not Text_IO.End_Of_File (F) loop
-         Append (Definitions, Text_IO.Get_Line (F) & ASCII.LF);
-      end loop;
-
-      Text_IO.Close (F);
-
-      Import (Definitions);
-   exception
-      when E : others =>
-         if Text_IO.Is_Open (F) then
-            Text_IO.Close (F);
-         end if;
-
-         Text_IO.Put_Line
-           ("Warning: Cannot import attribute registry from file: "
-            & Exception_Information (E));
+      if Path.Is_Directory then
+         Import_Dir (Path);
+      else
+         Import_File (Path);
+      end if;
    end Import;
 
 end GPR2.Project.Registry.Exchange;

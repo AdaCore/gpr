@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2019-2025, AdaCore
+--  Copyright (C) 2019-2026, AdaCore
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
@@ -40,14 +40,14 @@ package body GPR2.KB is
    --  configuration.
 
    procedure Complete_Command_Line_Compilers
-     (Self             : in out Object;
-      On_Target        : Name_Type;
-      Filters          : Compiler_Lists.List;
-      Compilers        : in out Compiler_Lists.List;
-      Selected_Target  : in out Unbounded_String;
-      Fallback         : Boolean;
-      Errors           : out Log.Object;
-      Environment      : GPR2.Environment.Object);
+     (Self            : in out Object;
+      On_Target       : Name_Type;
+      Filters         : Compiler_Lists.List;
+      Compilers       : in out Compiler_Lists.List;
+      Selected_Target : in out Unbounded_String;
+      Fallback        : Boolean;
+      Errors          : out Log.Object;
+      Environment     : GPR2.Environment.Object);
    --  In batch mode, the configuration descriptions indicate what compilers
    --  should be selected. Each of these descriptions selects the first
    --  matching compiler available, and all descriptions must match a compiler.
@@ -2098,8 +2098,7 @@ package body GPR2.KB is
    -- GPR_Executable_Prefix_Path --
    --------------------------------
 
-   function GPR_Executable_Prefix_Path return String
-   is
+   function GPR_Executable_Prefix_Path return String is
       use Ada.Directories;
       use Ada.Strings.Fixed;
       use GNAT.OS_Lib;
@@ -2109,7 +2108,6 @@ package body GPR2.KB is
                     Normalize_Pathname (Ada.Command_Line.Command_Name,
                                         Resolve_Links => True);
    begin
-
       if Has_Directory_Separator (Exec_Name)
         and then Head (Base_Name (Exec_Name), 3) = "gpr"
         and then Base_Name (Containing_Directory (Exec_Name)) = "bin"
@@ -2131,7 +2129,6 @@ package body GPR2.KB is
       else
          return Tools_Dir & GNAT.OS_Lib.Directory_Separator;
       end if;
-
    end GPR_Executable_Prefix_Path;
 
    ----------------------------------

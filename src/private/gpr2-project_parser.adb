@@ -7,12 +7,17 @@
 with Ada.Characters.Conversions;
 with Ada.Characters.Handling;
 with Ada.Containers;
+with Ada.Environment_Variables;
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps.Constants;
 with Ada.Strings.Wide_Wide_Unbounded;
 
+with GNAT.OS_Lib;
 with GNAT.Regpat;
+
+with GNATCOLL.Strings;
+with GNATCOLL.VFS;
 
 with Gpr_Parser_Support.Diagnostics;
 with Gpr_Parser_Support.Slocs;
@@ -27,6 +32,7 @@ with GPR2.Project.Attribute.Set;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project_Parser.Registry;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Registry.Exchange;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
@@ -207,8 +213,9 @@ package body GPR2.Project_Parser is
    -- External_Explicit_Type --
    ----------------------------
 
-   function External_Explicit_Type (Node : External_Builtin_Function_Call)
-   return Identifier_List is
+   function External_Explicit_Type
+     (Node : External_Builtin_Function_Call) return Identifier_List
+   is
       Exprs : constant Term_List_List := F_Terms (F_Parameters (Node));
    begin
 
@@ -236,8 +243,8 @@ package body GPR2.Project_Parser is
    -- External_Value_Node --
    -------------------------
 
-   function External_Value_Node (Node : External_Builtin_Function_Call)
-   return Term_List
+   function External_Value_Node
+     (Node : External_Builtin_Function_Call) return Term_List
    is
       Exprs : constant Term_List_List := F_Terms (F_Parameters (Node));
       Value_Index : Natural;
@@ -851,7 +858,6 @@ package body GPR2.Project_Parser is
             ------------------------------
 
             procedure Parse_External_Reference (N : Builtin_Function_Call) is
-
                Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
             begin
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
@@ -912,7 +918,6 @@ package body GPR2.Project_Parser is
                                 "external type must be a type reference"));
 
                      else
-
                         if not Project.Externals.Contains
                                  (External_Name_Type (Var))
                         then
@@ -1466,6 +1471,11 @@ package body GPR2.Project_Parser is
 
       function Parser (Node : Gpr_Node'Class) return Visit_Status;
       --  Actual parser callback for the project
+
+      procedure Setup_GPR_Registry;
+      --  Setup the GPR registry with the directories set in the environment
+      --  variables and in standard locations (<prefix>/share/gpr/registry and
+      --  $HOME/local/share/gpr/registry).
 
       function Get_Variable_Values
         (Node : Variable_Reference) return Item_Values;
@@ -3463,6 +3473,45 @@ package body GPR2.Project_Parser is
          procedure Visit_Child (Child : Gpr_Node);
          --  Recursive call to the Parser if the Child is not null
 
+         procedure Handle_GPR_Registry_Dirs (Node : Attribute_Decl);
+         --  Handle the special case of GPR registry dirs attribute that is
+         --  used to record the directories where the gpr registry is looking
+         --  for projects.
+
+         ------------------------------
+         -- Handle_GPR_Registry_Dirs --
+         ------------------------------
+
+         procedure Handle_GPR_Registry_Dirs (Node : Attribute_Decl) is
+            Sloc   : constant Source_Reference.Object :=
+                       Get_Source_Reference (Self.File, Node);
+            Expr   : constant Term_List := Node.F_Expr;
+            Values : constant Item_Values := Get_Term_List (Expr);
+
+         begin
+            if Expr = No_Term_List then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => Sloc,
+                     Message =>
+                       "gpr_registry_dirs attribute must have a value"));
+
+            else
+               for T of Values.Values loop
+                  declare
+                     Dir   : constant Filename_Type := Filename_Type (T.Text);
+                     R_Dir : constant GPR2.Path_Name.Object :=
+                               GPR2.Path_Name.Create_Directory (Dir);
+                  begin
+                     if R_Dir.Exists then
+                        GPR2.Project.Registry.Exchange.Import (R_Dir);
+                     end if;
+                  end;
+               end loop;
+            end if;
+         end Handle_GPR_Registry_Dirs;
+
          --------------------------
          -- Parse_Attribute_Decl --
          --------------------------
@@ -3504,11 +3553,11 @@ package body GPR2.Project_Parser is
             use PRA;
 
             Is_Name_Exception : constant Boolean :=
-                                  N_Id in
-                                    Naming.Spec.Attr
-                                    | Naming.Specification.Attr
-                                    | Naming.Body_N.Attr
-                                    | Naming.Implementation.Attr;
+              N_Id
+              in Naming.Spec.Attr
+               | Naming.Specification.Attr
+               | Naming.Body_N.Attr
+               | Naming.Implementation.Attr;
 
             -----------------------------------
             -- Create_And_Register_Attribute --
@@ -3525,37 +3574,36 @@ package body GPR2.Project_Parser is
                if Single then
                   pragma Assert (Expr.Children_Count >= 1);
 
-                  if Q_Name in PRA.Builder.Global_Configuration_Pragmas |
-                               PRA.Compiler.Local_Configuration_Pragmas
+                  if Q_Name
+                     in PRA.Builder.Global_Configuration_Pragmas
+                      | PRA.Compiler.Local_Configuration_Pragmas
                     and then Values.First_Element.Text'Length > 0
                   then
                      --  Unlike other attributes, those ones need the value
                      --  to be expanded to a full path.
 
                      declare
-                        Filtered : Source_Reference.Value.Object;
+                        Filtered : constant Source_Reference.Value.Object :=
+                                     Source_Reference.Value.Object
+                                       (Source_Reference.Value.Create
+                                          (Values.First_Element.Filename,
+                                           Values.First_Element.Line,
+                                           Values.First_Element.Column,
+                                           GPR2.Path_Name.Create_File
+                                             (Filename_Type
+                                                (Values.First_Element.Text),
+                                              View.Dir_Name.Value)
+                                             .String_Value));
                      begin
-                        Filtered :=
-                          Source_Reference.Value.Object
-                            (Source_Reference.Value.Create
-                               (Values.First_Element.Filename,
-                                Values.First_Element.Line,
-                                Values.First_Element.Column,
-                                GPR2.Path_Name.Create_File
-                                  (Filename_Type (Values.First_Element.Text),
-                                   View.Dir_Name.Value).String_Value));
-
                         A := PA.Create
-                          (Name  => Id,
-                           Index => Index,
-                           Value => Filtered);
+                               (Name => Id, Index => Index, Value => Filtered);
                      end;
 
                   else
                      A := PA.Create
-                       (Name  => Id,
-                        Index => Index,
-                        Value => Values.First_Element);
+                           (Name  => Id,
+                            Index => Index,
+                            Value => Values.First_Element);
                   end if;
 
                else
@@ -3581,8 +3629,8 @@ package body GPR2.Project_Parser is
                                                 Sloc    => Sloc,
                                                 Message =>
                                                   "empty value in attribute """
-                                                & Image (Q_Name)
-                                                & """ not allowed."));
+                                                  & Image (Q_Name)
+                                                  & """ not allowed."));
                                        else
                                           Tree.Log_Messages.Append
                                             (Message.Create
@@ -3590,16 +3638,17 @@ package body GPR2.Project_Parser is
                                                 Sloc    => Sloc,
                                                 Message =>
                                                   "empty value in attribute """
-                                                & Image (Q_Name)
-                                                & """ ignored."));
+                                                  & Image (Q_Name)
+                                                  & """ ignored."));
                                        end if;
                                     end if;
                                  end loop;
 
-                                 A := PA.Create
-                                   (Name   => Id,
-                                    Index  => Index,
-                                    Values => Filtered);
+                                 A :=
+                                   PA.Create
+                                     (Name   => Id,
+                                      Index  => Index,
+                                      Values => Filtered);
                                  Created := True;
                               end;
                            end if;
@@ -3607,10 +3656,9 @@ package body GPR2.Project_Parser is
                      end if;
 
                      if not Created then
-                        A := PA.Create
-                          (Name   => Id,
-                           Index  => Index,
-                           Values => Values);
+                        A :=
+                          PA.Create
+                            (Name => Id, Index => Index, Values => Values);
                      end if;
                   end;
                end if;
@@ -3626,9 +3674,10 @@ package body GPR2.Project_Parser is
                           (Message.Create
                              (Level   => Message.Error,
                               Sloc    => Sloc,
-                              Message => "builtin attribute """
-                                          & Image (Q_Name)
-                                          & """ is read-only"));
+                              Message =>
+                                "builtin attribute """
+                                & Image (Q_Name)
+                                & """ is read-only"));
                      end if;
 
                      A.Set_Case
@@ -3660,23 +3709,25 @@ package body GPR2.Project_Parser is
 
                      begin
                         if not Base.Is_Defined then
-                           Base := GPR2.KB.Create_Default
-                             (GPR2.KB.Targetset_Only_Flags,
-                              Tree.Environment);
+                           Base :=
+                             GPR2.KB.Create_Default
+                               (GPR2.KB.Targetset_Only_Flags,
+                                Tree.Environment);
                         end if;
 
-                        if Base.Normalized_Target (T_Conf) /=
-                          Base.Normalized_Target (T_Attr)
+                        if Base.Normalized_Target (T_Conf)
+                          /= Base.Normalized_Target (T_Attr)
                         then
                            Tree.Log_Messages.Append
                              (Message.Create
                                 (Level   => Message.Warning,
                                  Sloc    => Sloc,
-                                 Message => "target attribute '"
-                                            & String (T_Attr)
-                                            & "' not used, overridden by the "
-                                            & "configuration's target: "
-                                            & String (T_Conf)));
+                                 Message =>
+                                   "target attribute '"
+                                   & String (T_Attr)
+                                   & "' not used, overridden by the "
+                                   & "configuration's target: "
+                                   & String (T_Conf)));
                         end if;
                      end;
                   end if;
@@ -3697,8 +3748,11 @@ package body GPR2.Project_Parser is
                              (Message.Create
                                 (Level   => Message.Error,
                                  Sloc    => Sloc,
-                                 Message => "empty filename not allowed for "
-                                 & "attribute """ & Image (Q_Name) & """"));
+                                 Message =>
+                                   "empty filename not allowed for "
+                                   & "attribute """
+                                   & Image (Q_Name)
+                                   & """"));
 
                         else
                            Record_Attribute (Pack_Ref.Attrs, A);
@@ -3727,8 +3781,10 @@ package body GPR2.Project_Parser is
 
                elsif Is_Name_Exception then
                   Self.Skip_Src.Insert
-                    (Filename_Type (A.Value.Text), A.Value,
-                     Position, Inserted);
+                    (Filename_Type (A.Value.Text),
+                     A.Value,
+                     Position,
+                     Inserted);
                end if;
             end Create_And_Register_Attribute;
 
@@ -3741,26 +3797,29 @@ package body GPR2.Project_Parser is
                At_Lit  : Num_Literal;
             begin
                if Index.Kind = Gpr_Others_Designator then
-                  return PAI.Create
-                    (Get_Value_Reference
-                       (Self.Path_Name, Sloc_Range (Index), "others"),
-                     Is_Others      => True,
-                     Case_Sensitive => False);
+                  return
+                    PAI.Create
+                      (Get_Value_Reference
+                         (Self.Path_Name, Sloc_Range (Index), "others"),
+                       Is_Others      => True,
+                       Case_Sensitive => False);
 
                else
                   Str_Lit := Index.As_String_Literal_At;
-                  At_Lit  := Str_Lit.F_At_Lit;
+                  At_Lit := Str_Lit.F_At_Lit;
 
-                  return PAI.Create
-                    (Get_Value_Reference
-                       (Self.Path_Name, Sloc_Range (Index),
-                        Get_Value_Type (Str_Lit.F_Str_Lit),
-                        At_Pos =>
-                          (if At_Lit = No_Gpr_Node
-                           then 0
-                           else Unit_Index'Wide_Wide_Value (At_Lit.Text))),
-                     Is_Others      => False,
-                     Case_Sensitive => False);
+                  return
+                    PAI.Create
+                      (Get_Value_Reference
+                         (Self.Path_Name,
+                          Sloc_Range (Index),
+                          Get_Value_Type (Str_Lit.F_Str_Lit),
+                          At_Pos =>
+                            (if At_Lit = No_Gpr_Node
+                             then 0
+                             else Unit_Index'Wide_Wide_Value (At_Lit.Text))),
+                       Is_Others      => False,
+                       Case_Sensitive => False);
                end if;
             end Create_Index;
 
@@ -3779,27 +3838,29 @@ package body GPR2.Project_Parser is
                     (Message.Create
                        (Level   => Message.Error,
                         Sloc    => Sloc,
-                        Message => "full associative array expression "
+                        Message =>
+                          "full associative array expression "
                           & "requires simple attribute reference"));
 
-               elsif
-                 Values.Indexed_Values.Attribute_Name.Pack /= Pack_Name
+               elsif Values.Indexed_Values.Attribute_Name.Pack /= Pack_Name
                then
                   Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
                         Sloc    => Sloc,
-                        Message => "not the same package as "
-                          & Image (Pack_Name)));
+                        Message =>
+                          "not the same package as " & Image (Pack_Name)));
 
                elsif Values.Indexed_Values.Attribute_Name.Attr /= N_Id then
                   Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
                         Sloc    => Sloc,
-                        Message => "full associative array expression "
+                        Message =>
+                          "full associative array expression "
                           & "must reference the same attribute """
-                          & Image (N_Id) & '"'));
+                          & Image (N_Id)
+                          & '"'));
 
                else
                   for V of Values.Indexed_Values.Values loop
@@ -3821,6 +3882,15 @@ package body GPR2.Project_Parser is
                  (Index  => I_Sloc,
                   Values => Values.Values,
                   Single => Values.Single);
+            end if;
+
+            --  Check for GPR_Registry_Dirs as we need to do special handling
+            --  for it. Must be done now as this will enhance definitions in
+            --  the GPR registry which may be used in the rest of the project.
+
+
+            if Get_Name_Type (Name) = "gpr_registry_dirs" then
+               Handle_GPR_Registry_Dirs (Node);
             end if;
          end Parse_Attribute_Decl;
 
@@ -4413,16 +4483,18 @@ package body GPR2.Project_Parser is
                      use PRA;
 
                      Name              : constant Identifier :=
-                       F_Attr_Name (Node.As_Attribute_Decl);
+                                           F_Attr_Name
+                                             (Node.As_Attribute_Decl);
                      N_Str             : constant Name_Type :=
-                       Get_Name_Type (Name.As_Single_Tok_Node);
+                                           Get_Name_Type
+                                             (Name.As_Single_Tok_Node);
                      N_Id              : constant Attribute_Id := +N_Str;
                      Is_Name_Exception : constant Boolean :=
-                       N_Id
-                       in Naming.Spec.Attr
-                        | Naming.Specification.Attr
-                        | Naming.Body_N.Attr
-                        | Naming.Implementation.Attr;
+                                           N_Id
+                                           in Naming.Spec.Attr
+                                            | Naming.Specification.Attr
+                                            | Naming.Body_N.Attr
+                                            | Naming.Implementation.Attr;
                   begin
                      if Is_Name_Exception then
                         Parse_Attribute_Decl (Node.As_Attribute_Decl);
@@ -4666,6 +4738,91 @@ package body GPR2.Project_Parser is
          end if;
       end Record_Attribute;
 
+      ------------------------
+      -- Setup_GPR_Registry --
+      ------------------------
+
+      procedure Setup_GPR_Registry is
+         use GNAT;
+      begin
+         --  1. Check for envrionment variable GPR_REGISTRY_DIRS and import
+         --     the JSON in specified directories.
+
+         if Environment_Variables.Exists ("GPR_REGISTRY_DIRS") then
+            declare
+               use GNATCOLL.Strings;
+
+               Dirs : constant XString :=
+                        To_XString
+                          (Environment_Variables.Value ("GPR_REGISTRY_DIRS"));
+            begin
+               --  Load the registry from each directory specified in
+               --  GPR_REGISTRY_DIRS. We ignore empty entries in the list to
+               --  allow trailing path separator.
+
+               for Dir of
+                 GNATCOLL.Strings.Split (Dirs, OS_Lib.Path_Separator)
+               loop
+                  if Dir /= "" then
+                     declare
+                        R_Dir : constant GPR2.Path_Name.Object :=
+                                  GPR2.Path_Name.Create_Directory
+                                    (Filename_Type (Dir.To_String));
+                     begin
+                        if R_Dir.Exists then
+                           GPR2.Project.Registry.Exchange.Import (R_Dir);
+                        end if;
+                     end;
+                  end if;
+               end loop;
+            end;
+         end if;
+
+         --  2. Check for default GPR regisry directory in
+         --     <prefix/>share/gpr/registry.
+
+         declare
+            R_Dir : constant GPR2.Path_Name.Object :=
+                      GPR2.Path_Name.Create_Directory
+                        (Filename_Type
+                           (Get_Tools_Directory
+                            & OS_Lib.Directory_Separator
+                            & "share"
+                            & OS_Lib.Directory_Separator
+                            & "gpr"
+                            & OS_Lib.Directory_Separator
+                            & "registry"));
+         begin
+            if R_Dir.Exists then
+               GPR2.Project.Registry.Exchange.Import (R_Dir);
+            end if;
+         end;
+
+         --  3. Check for GPR registry in user's
+         --     $HOME/.local/share/gpr/registry.
+
+         declare
+            Home  : constant GNATCOLL.VFS.Filesystem_String :=
+                      GNATCOLL.VFS.Get_Home_Directory.Full_Name;
+            R_Dir : constant GPR2.Path_Name.Object :=
+                      GPR2.Path_Name.Create_Directory
+                        (Filename_Type
+                           (String (Home)
+                            & OS_Lib.Directory_Separator
+                            & ".local"
+                            & OS_Lib.Directory_Separator
+                            & "share"
+                            & OS_Lib.Directory_Separator
+                            & "gpr"
+                            & OS_Lib.Directory_Separator
+                            & "registry"));
+         begin
+            if R_Dir.Exists then
+               GPR2.Project.Registry.Exchange.Import (R_Dir);
+            end if;
+         end;
+      end Setup_GPR_Registry;
+
       ------------
       -- To_Set --
       ------------
@@ -4720,6 +4877,10 @@ package body GPR2.Project_Parser is
                             (String (Self.File.Dir_Name), Sloc),
                Default => True));
       end;
+
+      --  Setup GPR registry with standard location and environment
+
+      Setup_GPR_Registry;
 
       if Is_Parsed_Project then
          View_Internal.Get (View).Disable_Cache;
