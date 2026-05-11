@@ -179,6 +179,10 @@ package GPR2.Build.Actions is
    --  failure) or when the action is disabled or skipped but the signature
    --  is valid.
 
+   function Failure_Message (Self : Object) return String;
+   --  Return the message to display by the action scheduler when the
+   --  action fails during its execution life cycle.
+
    procedure Compute_Signature
      (Self : in out Object; Check_Checksums : Boolean)
    is abstract;
@@ -328,6 +332,9 @@ private
       Stdout : Unbounded_String := Null_Unbounded_String;
       Stderr : Unbounded_String := Null_Unbounded_String) return Boolean is
      (True);
+
+   function Failure_Message (Self : Object) return String
+   is (Object'Class (Self).UID.Image & " failed.");
 
    function Is_Deactivated (Self : Object) return Boolean
    is (Self.Deactivated);

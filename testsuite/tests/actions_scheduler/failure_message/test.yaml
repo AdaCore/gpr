@@ -1,0 +1,2 @@
+description: Test custom Failure_Message through the actions scheduler
+driver: python_script

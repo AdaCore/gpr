@@ -233,10 +233,14 @@ package body GPR2.Build.Actions_Scheduler is
       Result : constant Collect_Status := Internal;
    begin
       if Result = Abort_Execution then
-         Self.Tree_Db.Reporter.Report
-           (Action.UID.Image & " failed.",
-            To_Stderr => True,
-            Level     => GPR2.Message.Important);
+         declare
+            Msg : constant String := Action.Failure_Message;
+         begin
+            if Msg'Length > 0 then
+               Self.Tree_Db.Reporter.Report
+                 (Msg, To_Stderr => True, Level => GPR2.Message.Important);
+            end if;
+         end;
       end if;
 
       return Result;
