@@ -12,7 +12,7 @@ PDF_DIR  = pdf
 -include ../makefile.setup
 
 # Sphinx sub-documents with their own Makefiles
-SPHINX_SUBDOCS = gpr_reference gpr_user_guide
+SPHINX_SUBDOCS = gpr2_library_reference gpr2_quick_start gpr_reference gpr_user_guide
 
 .PHONY: help clean all html pdf
 
