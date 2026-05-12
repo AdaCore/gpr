@@ -31,9 +31,9 @@ The project file ``hello.gpr``:
 
    project Hello is
       for Source_Dirs use ("src");
-      for Object_Dir   use "obj";
-      for Exec_Dir     use ".";
-      for Main         use ("hello.adb");
+      for Object_Dir  use "obj";
+      for Exec_Dir    use "bin";
+      for Main        use ("hello.adb");
    end Hello;
 
 And a minimal source file ``src/hello.adb``:
@@ -138,16 +138,17 @@ Object and executable directories
 .. code-block:: gpr
 
    for Object_Dir use "obj";
-   for Exec_Dir   use ".";
+   for Exec_Dir   use "bin";
 
 ``Object_Dir`` is where compiler-generated files (object files, ALI files,
 dependency files) are placed. GPRbuild creates this directory automatically
 before the first build, as long as the path is relative and located under
 the project directory.
 
-``Exec_Dir`` is where linked executables are placed. Using ``"."`` puts them
-next to the project file, which is convenient for running them from the
-project root.
+``Exec_Dir`` is where linked executables are placed. It defaults to
+``Object_Dir`` when not set. Giving executables their own directory (``"bin"``
+is conventional) keeps them separate from intermediate build artifacts, making
+them easier to find, package, or add to ``PATH``.
 
 Both attributes default to the project directory if omitted. Declaring them
 explicitly is strongly recommended so that build products are kept separate
@@ -164,18 +165,12 @@ Main subprograms
    for Main use ("hello.adb");
 
 ``Main`` lists the source files that contain program entry points: Ada main
-subprograms or C ``main()`` functions. GPRbuild compiles all sources in the
-project tree and then links a separate executable for each entry point.
+subprograms or C ``main()`` functions. For Ada, only the transitive closure
+of units required by the entry point is compiled; for other languages, all
+sources in the project tree are compiled.
 
-The value is a list, so you can declare multiple entry points:
-
-.. code-block:: gpr
-
-   for Main use ("hello.adb", "test_suite.adb");
-
-Each produces its own executable. The executable name is derived from the
-main source file name; it can be overridden with the ``Executable`` attribute
-in the ``Builder`` package.
+See :ref:`Building_Executables` for multiple entry points, executable
+naming, and linker switches.
 
 
 Compiler switches
@@ -190,29 +185,9 @@ To specify compiler switches, declare a ``Compiler`` package:
       for Switches ("C")   use ("-O2", "-Wall");
    end Compiler;
 
-The index selects which sources the switches apply to. For each source,
-GPRbuild looks up ``Switches`` in this order and uses the **first match
-only** - switches do not accumulate:
-
-1. The source file name (exact match or glob pattern).
-2. The source's language name.
-3. ``others`` - the catch-all.
-
-This makes it easy to apply special treatment to individual files while
-keeping a common baseline for everything else:
-
-.. code-block:: gpr
-
-   package Compiler is
-      for Switches ("Ada")             use ("-gnat2022", "-gnatwa");
-      for Switches ("generated_*.adb") use ("-gnat2022");  --  no warnings
-      for Switches ("big_table.adb")   use ("-gnat2022", "-O3");
-      for Switches (others)            use ("-O2");        --  C, C++, ...
-   end Compiler;
-
-Here ``generated_*.adb`` and ``big_table.adb`` each get their own switch
-set; all other Ada sources use the ``"Ada"`` entry; everything else falls
-through to ``others``.
+The index selects which sources the switches apply to: a source file name,
+a language name, or ``others`` as a catch-all. See :ref:`Building_Executables`
+for the full lookup rules and per-file switch overrides.
 
 .. tip::
 
@@ -230,13 +205,14 @@ What GPRbuild does
 When you run ``gprbuild -P hello.gpr``, GPRbuild:
 
 1. Loads ``hello.gpr`` and any projects it depends on (none here).
-2. Determines which sources need (re-)compilation by comparing source
-   content against the recorded build signatures.
+2. Determines which sources need (re-)compilation by comparing a recorded
+   build signature against the current situation: source content, compiler
+   switches, and the source's dependencies.
 3. Compiles each out-of-date source in parallel into ``Object_Dir``.
 4. Links an executable for each ``Main`` source into ``Exec_Dir``.
 
-Subsequent builds skip unchanged sources, so incremental builds are fast
-even in large projects.
+Subsequent builds recompile only what has changed, so incremental builds
+are fast even in large projects.
 
 
 Next steps

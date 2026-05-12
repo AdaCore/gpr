@@ -70,6 +70,52 @@ command line with ``-o``:
 ``-o`` is only valid when exactly one main is being built.
 
 
+.. index:: pair: Compiler; package
+
+Compiler switches
+=================
+
+Compiler switches are declared in the ``Compiler`` package, indexed by
+language name or source file name:
+
+.. code-block:: gpr
+
+   package Compiler is
+      for Switches ("Ada") use ("-gnat2022", "-O1", "-gnatwa");
+      for Switches ("C")   use ("-O2", "-Wall");
+   end Compiler;
+
+For each source, GPRbuild looks up ``Switches`` in this order and uses
+the **first match only** - switches do not accumulate:
+
+1. The source file name (exact match or glob pattern).
+2. The source's language name.
+3. ``others`` - the catch-all.
+
+This makes it straightforward to apply special treatment to individual
+files while keeping a common baseline for everything else:
+
+.. code-block:: gpr
+
+   package Compiler is
+      for Switches ("Ada")             use ("-gnat2022", "-gnatwa");
+      for Switches ("generated_*.adb") use ("-gnat2022", "-gnatws");  --  no warnings
+      for Switches ("big_table.adb")   use ("-gnat2022", "-O3");
+      for Switches (others)            use ("-O2");        --  C, C++, ...
+   end Compiler;
+
+Here ``generated_*.adb`` and ``big_table.adb`` each get their own switch
+set; all other Ada sources use the ``"Ada"`` entry; everything else falls
+through to ``others``.
+
+.. tip::
+
+   During development, ``-gnatwa`` (all Ada warnings) and ``-gnatVa`` (all
+   Ada validity checks) catch many bugs early. Use scenario variables
+   (see :ref:`Scenarios`) to select different switch sets for debug and
+   release builds.
+
+
 .. index:: pair: Linker; package, switches
 
 Linker switches
@@ -102,8 +148,6 @@ linking. Binder switches go in the ``Binder`` package:
    package Binder is
       for Switches ("Ada") use ("-Es");  --  symbolic traceback
    end Binder;
-
-.. index:: pair: Compiler; package
 
 Global build switches
 =====================

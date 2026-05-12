@@ -8,7 +8,7 @@ Introduction
 
 This guide is for engineers who want to build, organize, and manage software
 projects with the **GNAT Project** (GPR) system. It takes a task-oriented
-approach: each chapter introduces a concept through worked examples and
+approach: each chapter introduces a concept through working examples and
 explains the reasoning behind the design choices, so you can adapt the
 patterns to your own projects.
 
@@ -56,12 +56,16 @@ How the tools find a toolchain
 
 GPR tools need to know which compiler to use, what default switches to apply,
 and how library files should be named. This information comes from a
-**configuration project** (a ``.cgpr`` file), generated automatically by
-GPRconfig the first time you build. The configuration records the compilers
-found on your ``PATH`` and caches the result so subsequent builds are fast.
+**configuration project** (a ``.cgpr`` file). Each tool automatically builds
+one in memory by probing the toolchains found on ``PATH``; for most projects
+this is fully transparent.
 
-In most situations this is entirely transparent: run ``gprbuild -P
-my_proj.gpr`` and the right compiler is used. The configuration mechanisms
-only become visible when you need to target a different platform, select a
-specific runtime, or work in a cross-compilation environment - topics covered
-in :ref:`Working_With_Tools`.
+The in-memory configuration can be persisted to disk - either by calling
+GPRconfig directly, or by passing ``--autoconf=my.cgpr`` to a GPR tool. On
+subsequent invocations ``--autoconf=my.cgpr`` reuses the file instead of
+re-probing. Passing ``--config=my.cgpr`` uses an existing file but will not
+create one if it is missing. Configuration files can also be written by hand.
+
+Explicit configuration management can be useful when targeting a different
+platform, selecting a specific runtime, or working with non-default toolchain
+layouts - topics covered in :ref:`Working_With_Tools`.
