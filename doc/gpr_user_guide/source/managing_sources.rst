@@ -15,7 +15,7 @@ particular directory layout.
 How source discovery works
 ==========================
 
-When a project is loaded, GPRbuild scans every directory listed in
+When a project is loaded, GPR tools scan every directory listed in
 ``Source_Dirs`` and collects all files whose extensions match the active
 languages. For Ada, the default extensions are ``.ads`` (specs) and ``.adb``
 (bodies); for C, ``.c`` and ``.h``; and so on.
@@ -72,8 +72,8 @@ projects.
 .. tip::
 
    Avoid overlapping ``Source_Dirs`` between two projects in the same tree.
-   If the same source file is visible to two projects, GPRbuild reports a
-   duplicate-unit error at load time.
+   If the same source file is visible to two projects, a duplicate-unit
+   error is reported at load time.
 
 
 .. index:: Source_Files
