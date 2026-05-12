@@ -198,3 +198,22 @@ Common GPRbuild options
 ``-k``
   Keep going after a compilation error: compile as many sources as
   possible before stopping.
+
+
+.. index:: out-of-tree build, pair: switch; --relocate-build-tree
+
+Out-of-tree builds
+==================
+
+By default, build artifacts are written to the directories declared in
+the project file. To redirect all artifacts to a separate directory
+without modifying the project file, use ``--relocate-build-tree``:
+
+.. code-block:: shell
+
+   $ gprbuild -P my_proj.gpr --relocate-build-tree=/tmp/build
+
+Each artifact directory is mirrored under the given path, keeping the
+source tree untouched. See the *GPR Reference Manual*
+(:ref:`RM_Out_Of_Tree_Builds`) for the full description, including the
+``--root-dir`` option for project trees that span multiple directories.

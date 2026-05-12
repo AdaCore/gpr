@@ -33,6 +33,11 @@ Never place generated artifacts (object files, libraries, executables) inside
 the source tree. Mixing them with sources complicates version control, as
 generated files appear as untracked changes and require explicit exclusion.
 
+To keep the source repository completely free of generated files,
+``--relocate-build-tree`` redirects all build artifacts to a directory
+outside the repository at invocation time, regardless of the relative
+paths declared in the project file (see :ref:`Building_Executables`).
+
 
 Scenario variables
 ==================
