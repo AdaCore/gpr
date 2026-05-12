@@ -28,6 +28,7 @@ GPR Reference Manual
 
    knowledge_base
    common_options
+   out_of_tree_builds
    gprbuild
    gprconfig
    gprclean

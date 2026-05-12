@@ -78,11 +78,12 @@ Project and configuration switches
 
 ``--relocate-build-tree[=``\ *dir*\ ``]``
   Relocate all object, library, and executable directories under the current
-  working directory (or *dir*).
+  working directory (or *dir*). See :ref:`RM_Out_Of_Tree_Builds`.
 
 ``--root-dir=``\ *dir*
   Root directory for ``--relocate-build-tree`` relocation. Defaults to the
   main project directory; override when artifact directories lie outside it.
+  See :ref:`RM_Out_Of_Tree_Builds`.
 
 ``--subdirs=``\ *dir*
   Append *dir* to all object, library, and executable directories, creating
