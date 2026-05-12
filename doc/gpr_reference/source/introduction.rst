@@ -96,7 +96,7 @@ Related documents
 **GPR User Guide**
   Task-oriented companion to this manual. Where this manual specifies the
   project file language and tool options precisely, the User Guide explains
-  how to apply them: setting up a project from scratch, organising sources,
+  how to apply them: setting up a project from scratch, organizing sources,
   handling scenarios, working with libraries, and more. Readers new to GPR
   should start there.
 

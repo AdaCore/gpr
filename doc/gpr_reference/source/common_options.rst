@@ -114,4 +114,4 @@ Output and diagnostics
   Suppress project-file warnings. Does not affect compiler warnings.
 
 ``-wn``
-  Restore default warning behaviour (cancels ``-we`` or ``-ws``).
+  Restore default warning behavior (cancels ``-we`` or ``-ws``).

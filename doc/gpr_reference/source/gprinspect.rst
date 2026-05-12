@@ -92,7 +92,7 @@ Registry
 
 ``--gpr-registry-file=``\ *file*
   Load additional attribute definitions from *file* before loading the
-  project tree. Use this to recognise attributes defined by external tools
+  project tree. Use this to recognize attributes defined by external tools
   (such as GNATcheck or GNATprove) when inspecting projects that use them.
 
 

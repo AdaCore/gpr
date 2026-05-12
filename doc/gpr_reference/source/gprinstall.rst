@@ -91,7 +91,7 @@ Installation paths
   :file:`{<prefix>}/{target}/{runtime}/`.
 
 
-Install behaviour
+Install behavior
 -----------------
 
 ``-r`` / ``--recursive``

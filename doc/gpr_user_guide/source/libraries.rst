@@ -81,7 +81,7 @@ Stand-alone libraries
 =====================
 
 A *stand-alone library* (SAL) bundles its own Ada elaboration code so that
-it can be loaded and initialised independently of the main program's
+it can be loaded and initialized independently of the main program's
 elaboration sequence. This is required for plugins and shared libraries
 loaded at runtime.
 
@@ -137,7 +137,7 @@ Example - encapsulated SAL (fully self-contained plugin):
 
    Because an encapsulated library includes the Ada runtime, loading two
    encapsulated libraries in the same process results in duplicate runtime
-   state, which leads to undefined behaviour. A program should load at most
+   state, which leads to undefined behavior. A program should load at most
    one encapsulated library at a time.
 
 
@@ -166,7 +166,7 @@ all other symbols are kept internal to the library.
 ``Interfaces`` and ``Library_Interface`` serve different purposes and can
 be used together: ``Interfaces`` controls source-level visibility and symbol
 export for shared libraries, while ``Library_Interface`` declares the Ada
-units forming the public API and drives standalone elaboration behaviour via
+units forming the public API and drives standalone elaboration behavior via
 ``Library_Standalone``.
 
 

@@ -6,7 +6,7 @@
 Introduction
 ************
 
-This guide is for engineers who want to build, organise, and manage software
+This guide is for engineers who want to build, organize, and manage software
 projects with the **GNAT Project** (GPR) system. It takes a task-oriented
 approach: each chapter introduces a concept through worked examples and
 explains the reasoning behind the design choices, so you can adapt the
@@ -45,7 +45,7 @@ GPRbuild to compile, GPRclean to remove build results, GPRinstall to deploy,
 GPRls to inspect sources, and more. You describe the project once; the tools
 share that description.
 
-GPR is **hierarchical**: complex systems are modelled as a graph of project
+GPR is **hierarchical**: complex systems are modeled as a graph of project
 files, each responsible for one component. Dependencies are expressed as
 ``with`` clauses - the same concept as Ada's context clauses. A build of the
 root project automatically builds everything it depends on.

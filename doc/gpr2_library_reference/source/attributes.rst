@@ -21,7 +21,7 @@ The attribute API is spread across four packages:
 Attribute registry
 ==================
 
-Every attribute that GPR2 recognises must be registered before the project
+Every attribute that GPR2 recognizes must be registered before the project
 tree is loaded. Registration records the attribute's metadata: whether it
 takes an index, what kind of value it holds, and which project kinds it is
 allowed in.

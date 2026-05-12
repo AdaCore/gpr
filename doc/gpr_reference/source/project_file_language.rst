@@ -328,7 +328,7 @@ the default value. Its value is resolved, in priority order, from:
 
 If none of these sources provides a value, an error is reported.
 
-``External`` is typically used to initialise **typed variables** (see
+``External`` is typically used to initialize **typed variables** (see
 `Typed String Declaration`_), which are then referenced in ``case``
 constructions to vary attribute values across build scenarios. Such variables
 are commonly called *scenario variables*.
@@ -756,7 +756,7 @@ most once per project file.
          { simple_declarative_item }
       'end' package_name ;
 
-The standard packages recognised in all project files are:
+The standard packages recognized in all project files are:
 
 ``Binder``
   Options for the binder (``gnatbind`` / GPRbuild).
@@ -784,7 +784,7 @@ tool's documentation.
 
 .. note::
 
-   Each tool only reads the packages it recognises; unknown package
+   Each tool only reads the packages it recognizes; unknown package
    *declarations* are silently ignored. However, referencing an attribute or
    variable from an unknown package in an expression - for example, reading
    ``Clean'Switches`` inside a project loaded by GPRbuild - will cause a

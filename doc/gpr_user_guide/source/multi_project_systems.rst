@@ -3,7 +3,7 @@
 .. _Multi_Project_Systems:
 
 ********************************
-Organising Multi-Project Systems
+Organizing Multi-Project Systems
 ********************************
 
 Real-world software is rarely a single component. This chapter explains how
@@ -114,7 +114,7 @@ compilation, but its attributes, variables, and packages are not accessible
 from the importing project.
 
 Use ``limited with`` sparingly. A need for it often indicates that the
-components involved should be reorganised into a shared lower-level library
+components involved should be reorganized into a shared lower-level library
 that both can depend on.
 
 

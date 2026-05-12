@@ -105,7 +105,7 @@ Performance
 
 For large project trees with many independent components, use an aggregate
 project as the root. Shared sources are deduplicated across subtrees, and
-GPRbuild maximises parallelism across the whole group in a single invocation
+GPRbuild maximizes parallelism across the whole group in a single invocation
 (see :ref:`Aggregate_Projects_UG`).
 
 Declare ``Object_Dir`` on aggregate projects so that incremental build data is

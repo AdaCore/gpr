@@ -108,7 +108,7 @@ A few things to note:
   it easy to keep debug and release objects in separate directories.
 
 With this project, ``gprbuild -P my_proj.gpr`` builds a debug binary;
-``gprbuild -P my_proj.gpr -XBUILD=release`` builds an optimised one.
+``gprbuild -P my_proj.gpr -XBUILD=release`` builds an optimized one.
 
 Selecting platform-specific sources
 -------------------------------------

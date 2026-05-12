@@ -8,7 +8,7 @@ Managing Sources
 
 This chapter covers how GPR locates source files: directory scanning,
 explicit file lists, exclusions, and naming conventions. Understanding these
-mechanisms lets you organise your source tree freely without forcing a
+mechanisms lets you organize your source tree freely without forcing a
 particular directory layout.
 
 
@@ -149,7 +149,7 @@ silently ignored.
 
 For example, ``my_source__unix.adb`` maps to ``my_source__unix`` - a name
 containing a double underscore, which is not valid in Ada. GPR will not
-recognise this file as an Ada source during directory scanning.
+recognize this file as an Ada source during directory scanning.
 
 .. tip::
 

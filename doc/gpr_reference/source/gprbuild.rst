@@ -35,7 +35,7 @@ variable, or pass ``--gpr=<n>`` on the command line (takes precedence):
    GNAT_GPR_ENGINE=2 gprbuild -P my_proj.gpr
    gprbuild --gpr=2 -P my_proj.gpr
 
-The rest of this chapter documents GPRbuild2 behaviour and switches.
+The rest of this chapter documents GPRbuild2 behavior and switches.
 
 
 Command Line
@@ -129,9 +129,9 @@ Phase selection
   Build without a main subprogram (zero-main mode).
 
 
-.. index:: pair: GPRbuild; build behaviour, pair: switch; -f, pair: switch; -j, pair: switch; -k
+.. index:: pair: GPRbuild; build behavior, pair: switch; -f, pair: switch; -j, pair: switch; -k
 
-Build behaviour
+Build behavior
 ---------------
 
 ``-f``
