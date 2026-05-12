@@ -57,8 +57,8 @@ Overriding sources
 ==================
 
 Place a source file with the same base name in the extending project's source
-directory. GPRbuild uses the extending project's version and ignores the base
-version entirely.
+directory. The extending project's version is used and the base version is
+ignored entirely.
 
 To remove an inherited source without providing a replacement, list it in
 ``Excluded_Source_Files``:
@@ -132,7 +132,7 @@ own purposes:
    project My_App extends "base.gpr" is
       for Source_Dirs use ("src");
       for Object_Dir  use "obj/" & Base.Build;
-      for Exec_Dir    use ".";
+      for Exec_Dir    use "bin/" & Base.Build;
       for Main        use ("main.adb");
    end My_App;
 

@@ -92,8 +92,8 @@ gprls
 -----
 
 ``gprls`` lists the sources, units, objects, and dependencies of a project
-tree. It reads GPRbuild's build database to report the up-to-date status of
-each artifact.
+tree. It reads the build database to report the up-to-date status of each
+artifact.
 
 .. code-block:: shell
 
@@ -169,9 +169,9 @@ gprconfig
 
 ``gprconfig`` probes the host for available compilers and generates a
 configuration project (``.cgpr``) describing the selected toolchains to all
-GPR tools. It is normally invoked automatically by GPRbuild when no
-configuration project is found, but can also be run manually to produce a
-reusable or script-driven configuration.
+GPR tools. It can be run interactively for guided toolchain selection, or in batch
+mode for scripted workflows, producing a persistent configuration project
+as an alternative to passing ``--autoconf`` to a GPR tool.
 
 .. code-block:: shell
 

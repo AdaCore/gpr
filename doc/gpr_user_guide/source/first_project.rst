@@ -23,7 +23,8 @@ Create a directory for your project and add a project file:
    ├── hello.gpr
    ├── src/
    │   └── hello.adb
-   └── obj/        <- created automatically on first build
+   ├── obj/        <- created automatically on first build
+   └── bin/        <- created automatically on first build
 
 The project file ``hello.gpr``:
 
@@ -51,7 +52,7 @@ To build and run:
 .. code-block:: shell
 
    $ gprbuild -P hello.gpr
-   $ ./hello
+   $ ./bin/hello
    Hello, world!
 
 That is the complete workflow. The sections below explain each part of the

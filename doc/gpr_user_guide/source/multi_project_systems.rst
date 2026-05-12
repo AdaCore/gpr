@@ -42,7 +42,7 @@ clauses, one per imported project:
    project My_App is
       for Source_Dirs use ("src");
       for Object_Dir  use "obj";
-      for Exec_Dir    use ".";
+      for Exec_Dir    use "bin";
       for Main        use ("main.adb");
    end My_App;
 
@@ -94,7 +94,7 @@ Limited ``with``
 A plain ``with`` gives the importing project full visibility over the withed
 project's sources, attributes, variables, and packages. Circular plain
 ``with`` dependencies are not allowed: if project A imports B and B imports
-A, GPRbuild reports a load error.
+A, a load error is reported.
 
 When two projects need their sources to be mutually visible - for example,
 two components that are mutually recursive at the Ada unit level - a
@@ -117,8 +117,6 @@ Use ``limited with`` sparingly. A need for it often indicates that the
 components involved should be reorganized into a shared lower-level library
 that both can depend on.
 
-
-.. index:: abstract project
 
 The project tree
 ================

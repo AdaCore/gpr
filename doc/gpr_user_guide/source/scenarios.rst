@@ -65,8 +65,8 @@ declare a string type first:
 
    Build : Build_Type := external ("BUILD", "debug");
 
-If the value passed via ``-X`` is not in the declared type, GPRbuild reports
-a load error. This catches typos early.
+If the value passed via ``-X`` is not in the declared type, a load error
+is reported. This catches typos early.
 
 
 .. index:: case construction
@@ -85,7 +85,7 @@ variable:
 
       for Source_Dirs use ("src");
       for Object_Dir  use "obj/" & Build;
-      for Exec_Dir    use ".";
+      for Exec_Dir    use "bin/" & Build;
       for Main        use ("main.adb");
 
       package Compiler is
