@@ -69,7 +69,7 @@ Project declaration
 
 A project file begins with ``project`` *Name* ``is`` and ends with ``end``
 *Name* ``;``. The name must match the file name (case-insensitively):
-``Hello`` lives in ``hello.gpr``.
+project ``Hello`` lives in ``hello.gpr``.
 
 The ``project`` keyword alone produces a *standard* project - the default
 kind, which can hold sources and produce executables or object files. Other
@@ -112,7 +112,7 @@ itself is used.
 Languages
 =========
 
-GPR is multi-language. By default, only Ada sources are recognised. To add
+GPR is multi-language. By default, only Ada sources are recognized. To add
 other languages, list them explicitly:
 
 .. code-block:: gpr

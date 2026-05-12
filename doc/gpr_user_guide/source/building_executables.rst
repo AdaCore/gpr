@@ -47,7 +47,8 @@ Executable names
 ================
 
 By default the executable name is derived from the main source file name:
-``hello.adb`` produces ``hello`` (or ``hello.exe`` on Windows).
+``hello.adb`` produces ``hello`` (complemented by platform-specific extension,
+such as ``hello.exe`` on Windows).
 
 To override the name permanently, use the ``Executable`` attribute in the
 ``Builder`` package:
@@ -93,7 +94,7 @@ collects these automatically from ALI files.
 Binder switches
 ===============
 
-For Ada programs, GPRbuild invokes the GNAT binder (``gnatbind``) before
+For Ada programs, GPRbuild invokes the binder (``gnatbind``) before
 linking. Binder switches go in the ``Binder`` package:
 
 .. code-block:: gpr
@@ -101,18 +102,6 @@ linking. Binder switches go in the ``Binder`` package:
    package Binder is
       for Switches ("Ada") use ("-Es");  --  symbolic traceback
    end Binder;
-
-Common binder switches:
-
-``-Es``
-  Include symbolic traceback information in the executable.
-
-``-E``
-  Include numeric traceback information.
-
-``-t``
-  Tolerate time-stamp and other consistency errors (use with care).
-
 
 .. index:: pair: Compiler; package
 
