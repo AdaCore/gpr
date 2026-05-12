@@ -1,0 +1,24 @@
+project Simulation is
+
+  type Product is ("A", "B", "C", "D");
+  Selected_Product: Product := external ("Product");
+
+  for Main       use ("main.ada");
+
+    package Naming is
+      for Casing                        use "lowercase";
+      for Dot_Replacement               use "-";
+      for Specification_Suffix  ("ada") use "_.ada";
+      for Implementation_Suffix ("ada") use ".ada";
+      case Selected_Product is
+         when "A" =>
+            null;
+         when "B" =>
+            for Implementation ("pack.proc") use "xyz_pack-proc.ada";
+         when "C" =>
+            for Specification ("pack") use "pack_3.ada";
+         when "D" =>
+            for Implementation ("pack") use "pack.ada2";
+      end case;
+   end Naming;
+end Simulation;

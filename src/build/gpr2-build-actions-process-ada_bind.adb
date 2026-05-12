@@ -980,7 +980,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
    function On_Ali_Parsed
      (Self : in out Object;
-      Comp : Compile.Ada.Object) return Boolean
+      Comp : in out Compile.Ada.Object) return Boolean
    is
       Scope      : Containers.Name_Set;
       To_Analyze : Extended_Interface_Map.Map;

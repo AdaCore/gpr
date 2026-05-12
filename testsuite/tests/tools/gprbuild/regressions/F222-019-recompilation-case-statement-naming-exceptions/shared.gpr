@@ -1,0 +1,10 @@
+
+project Shared is
+
+  for Source_Dirs use ();
+
+  type Version is ("va", "vb");
+
+  Kind : Version := external ("KIND");
+
+end Shared;

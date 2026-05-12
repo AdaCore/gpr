@@ -74,7 +74,7 @@ package GPR2.Build.Actions.Process.Ada_Bind is
 
    function On_Ali_Parsed
      (Self : in out Object;
-      Comp : Compile.Ada.Object) return Boolean;
+      Comp : in out Compile.Ada.Object) return Boolean;
    --  Propagated the Ada imports to the tree and update the current library
    --  interface when needed.
 

@@ -82,10 +82,28 @@ package GPR2.Build.Actions.Process.Compile.Ada is
 
    overriding function Extended (Self : Object) return Object;
 
-   function Withed_Units (Self : Object) return Containers.Name_Set;
-   function Withed_Units_From_Spec (Self : Object) return Containers.Name_Set;
-   function Withed_Units_From_Body (Self : Object) return Containers.Name_Set;
-   function Spec_Needs_Body (Self : Object) return Boolean;
+   function Withed_Units
+     (Self      : in out Object;
+      All_Units : Boolean := True) return Containers.Name_Set;
+   --  Provides the units that are referenced on the 'W' line of the ALI files
+   --  if All_Units is positionned then it is simply the union of the withed
+   --  unit from both the spec and body part of the compilation unit.
+   --  Otherwise only the units withed by the main part of the compilation unit
+   --  are provided.
+
+   function Withed_Units_From_Spec
+     (Self : in out Object) return Containers.Name_Set;
+   --  Provides the units that are referenced on the 'W' line of the ALI files
+   --  only for the spec part of the compilation unit.
+
+   function Withed_Units_From_Body
+     (Self : in out Object) return Containers.Name_Set;
+   --  Provides the units that are referenced on the 'W' line of the ALI files
+   --  only for the body part of the compilation unit.
+
+   function Spec_Needs_Body (Self : in out Object) return Boolean;
+   --  Returns whether or not the associated ALI files mentions importing the
+   --  spec of the unit also necessitate the body.
 
 private
 
@@ -170,19 +188,6 @@ private
 
    function ALI (Self : Object) return GPR2.Build.ALI_Parser.Object
    is (Self.ALI_Object);
-
-   function Withed_Units (Self : Object) return Containers.Name_Set
-   is (Self.ALI_Object.Withed_From_Spec.Union
-         (Self.ALI_Object.Withed_From_Body));
-
-   function Withed_Units_From_Spec (Self : Object) return Containers.Name_Set
-   is (Self.ALI_Object.Withed_From_Spec);
-
-   function Withed_Units_From_Body (Self : Object) return Containers.Name_Set
-   is (Self.ALI_Object.Withed_From_Body);
-
-   function Spec_Needs_Body (Self : Object) return Boolean is
-     (Self.ALI_Object.Spec_Needs_Body);
 
    function Parse_Ali (Self : in out Object) return Boolean is
      (Self.ALI_Object.Parse);
