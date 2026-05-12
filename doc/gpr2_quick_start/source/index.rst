@@ -1,7 +1,7 @@
 .. The GPR2 library Quick Start Guide master file
 
 The GPR2 library Quick Start Guide
-===================================
+==================================
 
 | Version |version|
 | Date: |today|

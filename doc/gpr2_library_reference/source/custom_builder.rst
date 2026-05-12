@@ -50,7 +50,7 @@ skipped on the next run.
 
 
 Populating the standard action graph
-=====================================
+====================================
 
 For standard GPR builds (compile, bind, link), use
 ``GPR2.Build.Actions_Population.Populate_Actions``:
@@ -82,7 +82,7 @@ dependencies (e.g. the Ada binder closure).
 
 
 Executing the graph
-====================
+===================
 
 Pass a process manager and options to ``Db.Execute``:
 
@@ -155,7 +155,7 @@ Built-in concrete actions provided by the library:
   Partial link step used for standalone libraries.
 
 Action lifecycle hooks
------------------------
+----------------------
 
 Each action participates in the build graph via the following hooks, called
 in this order:
@@ -230,7 +230,7 @@ Wiring actions to artifacts is done via the database:
 
 
 Implementing a custom action
-==============================
+============================
 
 Extend ``GPR2.Build.Actions.Object``, implement ``Action_Id``, and
 override the mandatory primitives:

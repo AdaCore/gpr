@@ -2,9 +2,9 @@
 
 .. index:: GPRbuild
 
-********************
+******************
 GPRbuild Reference
-********************
+******************
 
 GPRbuild is a multi-language build tool for GPR project trees. It compiles
 sources, binds Ada programs, builds libraries, and links executables, using
@@ -132,7 +132,7 @@ Phase selection
 .. index:: pair: GPRbuild; build behavior, pair: switch; -f, pair: switch; -j, pair: switch; -k
 
 Build behavior
----------------
+--------------
 
 ``-f``
   Force re-execution of all actions, ignoring stored signatures.
@@ -196,7 +196,7 @@ Build behavior
 
 
 Output and diagnostics
------------------------
+----------------------
 
 See :ref:`RM_Common_Options` for the ``-q``, ``-v``, ``-F``, ``-we``,
 ``-ws``, and ``-wn`` switches.
@@ -224,7 +224,7 @@ Build artifacts
 
 
 Compiler compatibility switches
---------------------------------
+-------------------------------
 
 The following switches are accepted for compatibility with Ada compilers and
 are forwarded to the Ada compiler:

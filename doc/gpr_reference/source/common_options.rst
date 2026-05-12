@@ -36,7 +36,7 @@ project directory per line. :envvar:`GPR_PROJECT_PATH` and
 .. index:: pair: switch; -X, pair: switch; --config, pair: switch; --autoconf, pair: switch; --target, pair: switch; --RTS
 
 Project and configuration switches
-====================================
+==================================
 
 ``-P`` *proj*
   Specify the main project file. The space between ``-P`` and the name is
@@ -96,7 +96,7 @@ Project and configuration switches
 .. index:: pair: switch; -q, pair: switch; -v, pair: switch; -we, pair: switch; -ws
 
 Output and diagnostics
-========================
+======================
 
 ``-q``
   Quiet: display only errors.

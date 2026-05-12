@@ -66,7 +66,7 @@ same importing project. Duplicates are an error.
 
 
 What a plain ``with`` makes visible
--------------------------------------
+-----------------------------------
 
 From within the body of the importing project, a plain ``with`` exposes all
 of the following from the imported project:
@@ -138,7 +138,7 @@ steps 3-5, so they can be imported by bare name without a path:
 .. index:: limited with clause
 
 The ``limited with`` clause
-============================
+===========================
 
 Because attribute evaluation must be acyclic, a cycle formed entirely from
 plain ``with`` edges is an error. The ``limited with`` variant relaxes this

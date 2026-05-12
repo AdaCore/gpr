@@ -1,8 +1,8 @@
 .. index:: project loading, GPR2.Project.Tree, Tree.Load
 
-*******************
+*****************
 Loading a Project
-*******************
+*****************
 
 Loading a project tree is the first step in using the GPR2 library. It parses
 the root ``.gpr`` file, resolves all imports, extensions, and aggregations,
@@ -94,7 +94,7 @@ Common switches:
 
 
 Integrating with GNATCOLL.Opt_Parse
-====================================
+===================================
 
 For tools that use ``GNATCOLL.Opt_Parse`` for command-line parsing, the
 ``GPR2.Options.Opt_Parse`` package provides a generic package that registers

@@ -210,7 +210,7 @@ The SONAME embedded in the library is the major-version form of
 .. index:: stand-alone library, Library_Interface, Library_Standalone
 
 Stand-alone Library Projects
------------------------------
+----------------------------
 
 A **stand-alone library** (SAL) bundles its own elaboration code so that the
 final program does not need to drive elaboration of each unit individually.

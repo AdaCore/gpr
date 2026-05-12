@@ -133,7 +133,7 @@ To build a project that contains only C sources, set ``Languages`` to
 .. index:: Object_Dir
 
 Object and executable directories
-==================================
+=================================
 
 .. code-block:: gpr
 

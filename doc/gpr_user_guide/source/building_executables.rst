@@ -125,7 +125,7 @@ sparingly; prefer ``Compiler'Switches`` for project-local settings.
 
 
 Common GPRbuild options
-========================
+=======================
 
 ``-X``\ *name*\ ``=``\ *value*
   Set the value of an external variable. This is the primary way to select

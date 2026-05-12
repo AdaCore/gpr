@@ -2,9 +2,9 @@
 
 .. index:: GPRclean
 
-*******************
+******************
 GPRclean Reference
-*******************
+******************
 
 GPRclean removes the build artifacts produced by GPRbuild: object files, ALI
 files, libraries, executables, and binder-generated files. It reads the same
@@ -22,7 +22,7 @@ Syntax
    gprclean [-P<proj>.gpr] [switches] [mains]
 
 Project file and common switches
-----------------------------------
+--------------------------------
 
 See :ref:`RM_Common_Options` for project file discovery rules, project and
 configuration switches, and common diagnostic switches.

@@ -14,7 +14,7 @@ a ``with`` clause and link against it automatically.
 .. index:: Library_Name, Library_Dir
 
 Declaring a library project
-============================
+===========================
 
 Add the ``library`` qualifier and the two required library attributes:
 
@@ -142,7 +142,7 @@ Example - encapsulated SAL (fully self-contained plugin):
 
 
 Controlling source visibility
-==============================
+=============================
 
 The ``Interfaces`` attribute restricts which source files of a library
 project are visible to importing projects. It takes a list of source file

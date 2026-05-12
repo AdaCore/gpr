@@ -72,7 +72,7 @@ a load error. This catches typos early.
 .. index:: case construction
 
 ``case`` statements
-====================
+===================
 
 A ``case`` statement selects attribute values based on the current scenario
 variable:
@@ -111,7 +111,7 @@ With this project, ``gprbuild -P my_proj.gpr`` builds a debug binary;
 ``gprbuild -P my_proj.gpr -XBUILD=release`` builds an optimized one.
 
 Selecting platform-specific sources
--------------------------------------
+-----------------------------------
 
 When a ``case`` statement contains Ada naming exceptions (``for Body`` or
 ``for Spec`` clauses in the ``Naming`` package), the source files named in
@@ -172,7 +172,7 @@ the need for per-file exclusions or naming exceptions.
 
 
 Multiple scenario variables
-============================
+===========================
 
 A project can declare any number of scenario variables, each controlling an
 independent dimension of the configuration:
@@ -208,7 +208,7 @@ independent dimension of the configuration:
 
 
 Sharing scenario variables
-===========================
+==========================
 
 When a project tree has multiple projects, all should use the same typed
 variable declaration for a given scenario. The common pattern is to declare

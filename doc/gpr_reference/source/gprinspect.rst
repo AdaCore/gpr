@@ -2,9 +2,9 @@
 
 .. index:: GPRinspect
 
-*********************
+********************
 GPRinspect Reference
-*********************
+********************
 
 GPRinspect loads a GPR project tree and displays its structure and contents:
 project relationships, source directories, attributes, packages, variables,
@@ -23,7 +23,7 @@ Syntax
    gprinspect [-P<proj>.gpr] [switches]
 
 Project file and common switches
-----------------------------------
+--------------------------------
 
 See :ref:`RM_Common_Options` for project file discovery rules, project and
 configuration switches, and common diagnostic switches.

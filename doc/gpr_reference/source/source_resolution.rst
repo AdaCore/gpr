@@ -53,7 +53,7 @@ project:
 .. index:: source shadowing
 
 Extending projects and source shadowing
-========================================
+=======================================
 
 When project *B* extends project *A*, *B* inherits all of *A*'s sources. If
 *B* also declares a source whose basename matches one inherited from *A*,

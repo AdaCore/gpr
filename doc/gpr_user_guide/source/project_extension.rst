@@ -72,7 +72,7 @@ To remove an inherited source without providing a replacement, list it in
 
 
 Overriding attributes and packages
-====================================
+==================================
 
 Attribute values are overridden by simply re-declaring them. Package
 declarations, however, **replace the inherited package entirely** - no
@@ -197,7 +197,7 @@ project, this mechanism can only be used in simple cases. That is where
 .. index:: extends all
 
 ``extends all``
-================
+===============
 
 ``extends all`` implicitly creates an extending project for every project in
 the import closure of the named base and applies import redirection throughout

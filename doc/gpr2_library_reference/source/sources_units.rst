@@ -11,7 +11,7 @@ It must be explicitly requested, either at load time via the
 
 
 Populating source information
-==============================
+=============================
 
 The ``Source_Info_Option`` type controls how much work is done when
 enumerating sources:

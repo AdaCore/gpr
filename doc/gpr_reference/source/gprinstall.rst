@@ -23,7 +23,7 @@ Syntax
    gprinstall [-P<proj>.gpr] [switches]
 
 Project file and common switches
-----------------------------------
+--------------------------------
 
 See :ref:`RM_Common_Options` for project file discovery rules, project and
 configuration switches, and common diagnostic switches.
@@ -92,7 +92,7 @@ Installation paths
 
 
 Install behavior
------------------
+----------------
 
 ``-r`` / ``--recursive``
   Install all projects imported by the main project, not only the main
@@ -144,7 +144,7 @@ Install behavior
 
 
 Source and artifact handling
------------------------------
+----------------------------
 
 ``--sources-only``
   Copy only source files; skip libraries, ALI files, and executables.

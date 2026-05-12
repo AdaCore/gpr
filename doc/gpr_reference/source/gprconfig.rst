@@ -2,9 +2,9 @@
 
 .. index:: GPRconfig
 
-********************
+*******************
 GPRconfig Reference
-********************
+*******************
 
 GPRconfig probes the host for available compilers and generates a
 configuration project (``.cgpr``) that describes the selected toolchains to
@@ -76,7 +76,7 @@ Target and output
 .. index:: pair: GPRconfig; batch mode, pair: switch; --batch, pair: switch; --config
 
 Compiler selection (batch mode)
----------------------------------
+-------------------------------
 
 ``--batch``
   Run in batch (non-interactive) mode. No prompts are displayed. The

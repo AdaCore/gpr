@@ -2,9 +2,9 @@
 
 .. index:: GPRls
 
-****************
+***************
 GPRls Reference
-****************
+***************
 
 GPRls lists the sources, units, objects, and dependencies of a GPR project
 tree. It reads the build database produced by GPRbuild to report the
@@ -22,7 +22,7 @@ Syntax
    gprls [-P<proj>.gpr] [switches] [files]
 
 Project file and common switches
-----------------------------------
+--------------------------------
 
 See :ref:`RM_Common_Options` for project file discovery rules, project and
 configuration switches, and common diagnostic switches.

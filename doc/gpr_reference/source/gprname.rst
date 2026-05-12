@@ -2,9 +2,9 @@
 
 .. index:: GPRname
 
-******************
+*****************
 GPRname Reference
-******************
+*****************
 
 GPRname scans source directories for Ada and non-Ada source files, identifies
 the Ada units they contain, and generates a GPR project file with a ``Naming``

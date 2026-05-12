@@ -161,7 +161,7 @@ If your project uses a different convention, the ``Naming`` package lets
 you override it.
 
 Changing the dot replacement character
----------------------------------------
+--------------------------------------
 
 To use ``__`` instead of ``-`` as the child-unit separator:
 
@@ -175,7 +175,7 @@ With this setting, the body of ``My_Lib.Utils`` is expected in
 ``my_lib__utils.adb``.
 
 Changing the default suffixes
-------------------------------
+-----------------------------
 
 .. code-block:: gpr
 

@@ -175,7 +175,7 @@ View properties
 
 
 Aggregate projects and namespace roots
-=======================================
+======================================
 
 For a non-aggregate tree there is exactly one namespace root, which is the
 root project itself. For an aggregate tree every directly aggregated

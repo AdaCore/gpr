@@ -342,7 +342,7 @@ are commonly called *scenario variables*.
 .. index:: External_As_List (built-in)
 
 The ``External_As_List`` function
-----------------------------------
+---------------------------------
 
 The ``External_As_List`` function retrieves a list of strings from the
 environment by splitting an external variable on a separator.
@@ -396,7 +396,7 @@ exist or is empty.
 .. index:: Split (built-in), Lower (built-in), Upper (built-in), Remove_Prefix (built-in), Remove_Suffix (built-in), Filter_Out (built-in), Match (built-in), Item_At (built-in), Default (built-in), Alternative (built-in)
 
 String Manipulation Functions
-------------------------------
+-----------------------------
 
 .. note::
 
@@ -431,7 +431,7 @@ Accept a string or a list.
    --  Upper (("one","two"))  =>  ("ONE", "TWO")
 
 ``Remove_Prefix`` / ``Remove_Suffix``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Remove a fixed prefix or suffix from a string or from each element of a list,
 if present.
@@ -479,7 +479,7 @@ end (``"-1"`` is the last element).
    --  Item_At (("one","two","three","last"), "-1")  =>  "last"
 
 ``Default`` / ``Alternative``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``Default`` returns its second argument when the first is the empty string;
 otherwise it returns the first argument.

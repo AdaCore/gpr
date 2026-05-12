@@ -61,7 +61,7 @@ one project is rejected by another.
 
 
 Object and output directories
-==============================
+=============================
 
 Never share ``Object_Dir`` or ``Library_Dir`` between two projects. If two
 projects write build artifacts to the same directory, a filename collision is
@@ -82,7 +82,7 @@ present and must be replaced.
 
 
 Multi-project hygiene
-======================
+=====================
 
 Declare shared compiler switches, scenario variables, and naming conventions
 in a single ``abstract`` project and import it from every project in the tree.

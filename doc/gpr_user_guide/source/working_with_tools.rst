@@ -16,10 +16,10 @@ provides a task-oriented overview and the most commonly used options.
 
 
 Tools that operate on project trees
-=====================================
+===================================
 
 gprclean
----------
+--------
 
 ``gprclean`` removes the build artifacts produced by GPRbuild: object files,
 ALI files, libraries, executables, and binder-generated files. It reads the
@@ -50,7 +50,7 @@ reference.
 
 
 gprinstall
------------
+----------
 
 ``gprinstall`` copies build results into a target installation prefix. It
 records every installed file in a manifest, enabling precise uninstall later.
@@ -89,7 +89,7 @@ reference.
 
 
 gprls
-------
+-----
 
 ``gprls`` lists the sources, units, objects, and dependencies of a project
 tree. It reads GPRbuild's build database to report the up-to-date status of
@@ -127,7 +127,7 @@ reference.
 
 
 gprinspect
------------
+----------
 
 ``gprinspect`` is a diagnostic tool that loads a project tree and displays its
 structure: project relationships, source directories, attributes, packages,
@@ -158,14 +158,14 @@ reference.
 
 
 Tools that generate project files
-====================================
+=================================
 
 Unlike the tools above, the following tools produce GPR files as their output
 rather than loading and acting on an existing project tree.
 
 
 gprconfig
-----------
+---------
 
 ``gprconfig`` probes the host for available compilers and generates a
 configuration project (``.cgpr``) describing the selected toolchains to all
@@ -213,7 +213,7 @@ reference.
 
 
 gprname
---------
+-------
 
 ``gprname`` scans source directories for Ada source files, identifies the Ada
 units they contain, and generates a GPR project file with a ``Naming`` package

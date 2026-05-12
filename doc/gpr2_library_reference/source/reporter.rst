@@ -143,7 +143,7 @@ Verbose
 
 
 Reporting messages manually
-============================
+===========================
 
 Any code that has access to a reporter can push messages directly:
 
@@ -192,7 +192,7 @@ enabled, any subsequently created ``Warning``-level message is promoted to
 
 
 Writing a custom reporter
-==========================
+=========================
 
 Extend ``GPR2.Reporter.Object`` and override two primitives:
 

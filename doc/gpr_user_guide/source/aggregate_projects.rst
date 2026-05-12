@@ -75,7 +75,7 @@ Use cases
 =========
 
 Building all outputs from multiple subtrees
---------------------------------------------
+-------------------------------------------
 
 A common situation is a set of independent subtrees - some producing
 executables, some producing libraries - that need to be built together. Without
@@ -96,7 +96,7 @@ compilations, binds, and links in parallel.
 
 
 Setting the build environment
--------------------------------
+-----------------------------
 
 The ``External`` and ``Project_Path`` attributes let an aggregate project fix
 the build environment for all constituent subtrees, replacing a long sequence

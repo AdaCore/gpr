@@ -32,7 +32,7 @@ define their own GPR packages must register those packages and their
 attributes before calling ``Tree.Load``.
 
 Registering a custom package
------------------------------
+----------------------------
 
 Use ``GPR2.Project.Registry.Pack.Add`` to introduce a new package:
 
@@ -60,7 +60,7 @@ Once registered, the package name can be used in ``.gpr`` files:
    end MyTool;
 
 Registering custom attributes
-------------------------------
+-----------------------------
 
 Attributes are registered with ``GPR2.Project.Registry.Attribute.Add``.
 The package the attribute belongs to must already be registered.
@@ -117,7 +117,7 @@ Key parameters of ``Add``:
 
 
 Standard attribute constants
-=============================
+============================
 
 ``GPR2.Project.Registry.Attribute`` exposes a constant of type
 ``Q_Attribute_Id`` for every standard GPR attribute. Top-level attributes use
@@ -164,7 +164,7 @@ a simple name; package attributes are nested under a child package:
 
 
 Reading attributes from a view
-================================
+==============================
 
 Use ``View.Has_Attribute`` before accessing an attribute that may be absent:
 
@@ -184,7 +184,7 @@ optional attributes.
 
 
 Single vs. list attributes
-============================
+==========================
 
 An attribute's ``Kind`` is either ``Single`` or ``List``:
 

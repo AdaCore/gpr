@@ -29,7 +29,7 @@ grows, splitting it into multiple projects brings several benefits:
 .. index:: with clause
 
 Importing a project with ``with``
-==================================
+=================================
 
 A project declares its dependencies at the top of the file using ``with``
 clauses, one per imported project:
@@ -59,7 +59,7 @@ imported by name without a path:
    with "gnatcoll.gpr";
 
 Accessing attributes and variables of a withed project
--------------------------------------------------------
+------------------------------------------------------
 
 After importing a project, you can read its attributes and variables using
 the *Project*\ ``.``\ *Attribute* notation. This is commonly used to reuse
