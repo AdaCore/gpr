@@ -30,8 +30,9 @@ attribute of the root project:
 
 ``Main`` takes simple file names - the base name only, no directory
 component. GPRbuild searches for each main among the sources of the project
-tree. It compiles all sources and then links one executable per entry point,
-placed in ``Exec_Dir``.
+tree. It compiles the transitive closure of sources required by each entry
+point and links one executable per entry point, placed in ``Exec_Dir``.
+Sources not reachable from any entry point are not compiled.
 
 To build only a subset of the declared mains, name them on the command line:
 
