@@ -117,3 +117,9 @@ with ``gprinstall`` (see :ref:`Working_With_Tools`) and referencing them from
 the project search path. Installed projects are treated as *externally built*
 - their sources are considered read-only and their pre-built artifacts are
 consumed directly - which significantly reduces build times for large trees.
+
+Consider using a static configuration project via ``--config`` or
+``--autoconf``. The default automatic configuration probes the host for many
+potential toolchain candidates and this may generate a significant overhead.
+Note that with a static configuration, it must be updated whenever the
+toolchain changes or new languages are used in the project.
