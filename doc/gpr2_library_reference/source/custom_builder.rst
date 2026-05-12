@@ -8,13 +8,13 @@ The GPR2 build infrastructure provides a complete framework for implementing
 incremental builders on top of the project model. It is used by ``gprbuild``
 but is fully available to third-party tools. The key packages are:
 
-* ``GPR2.Build.Tree_Db`` — persistent build database and action DAG.
-* ``GPR2.Build.Actions`` — abstract base type for a single build step.
-* ``GPR2.Build.Artifacts`` — abstract base type for the inputs and outputs
+* ``GPR2.Build.Tree_Db`` - persistent build database and action DAG.
+* ``GPR2.Build.Actions`` - abstract base type for a single build step.
+* ``GPR2.Build.Artifacts`` - abstract base type for the inputs and outputs
   that connect actions to each other.
-* ``GPR2.Build.Actions_Population`` — populates the action graph from a
+* ``GPR2.Build.Actions_Population`` - populates the action graph from a
   project tree using the standard GPR2 build actions.
-* ``GPR2.Build.Process_Manager`` — parallel process execution engine.
+* ``GPR2.Build.Process_Manager`` - parallel process execution engine.
 
 
 Overview
@@ -24,7 +24,7 @@ A build proceeds in four stages:
 
 1. **Load** the project tree (``Tree.Load``).
 2. **Populate sources** (``Tree.Update_Sources``).
-3. **Populate the action graph** — either via
+3. **Populate the action graph** - either via
    ``Actions_Population.Populate_Actions`` for standard GPR builds, or by
    inserting custom actions directly into ``Tree.Artifacts_Database``.
 4. **Execute** the graph (``Tree.Artifacts_Database.Execute``).
@@ -197,7 +197,7 @@ An action's outputs become inputs to downstream actions, establishing the
 DAG edges. Concrete artifact types:
 
 ``Artifacts.Files.Object``
-  A filesystem file (source, object, library, …).
+  A filesystem file (source, object, library, ...).
 
 ``Artifacts.Object_File.Object``
   A compiled object file.

@@ -19,7 +19,7 @@ across several project files, each responsible for one component. The
 connected graph of project files forms the **project tree**.
 
 The project tree is a directed acyclic graph (DAG) rooted at the **root
-project** — the project passed directly to the build tool (for example
+project** - the project passed directly to the build tool (for example
 ``gprbuild -P root.gpr``). Two kinds of edges connect projects in the tree:
 
 **Import** (``with`` clause)
@@ -86,7 +86,7 @@ of the following from the imported project:
   object files and Ada Library Information files (``*.ali``) are made
   available to the importing project's sources.
 
-Example — sharing settings from an abstract project:
+Example - sharing settings from an abstract project:
 
 .. code-block:: gpr
 
@@ -128,7 +128,7 @@ Paths are resolved in the following order:
    are searched.
 
 The first match terminates the search. Installed libraries typically rely on
-steps 3–5, so they can be imported by bare name without a path:
+steps 3-5, so they can be imported by bare name without a path:
 
 .. code-block:: gpr
 

@@ -51,7 +51,7 @@ to the command-line switches that GPR tools accept.
       --    Options.Add_Switch (GPR2.Options.RTS, "light-cortex-m4f");
 
       if not Tree.Load (Options) then
-         Put_Line ("Loading failed — check messages above.");
+         Put_Line ("Loading failed - check messages above.");
       end if;
    end Load_Example;
 
@@ -256,14 +256,14 @@ imported project.
 Each ``GPR2.Build.Source.Object`` (a child of ``GPR2.Build.Source_Base``)
 exposes:
 
-* ``Path_Name`` — full filesystem path (``GPR2.Path_Name.Object``).
-* ``Language`` — a ``Language_Id`` value; compare with
+* ``Path_Name`` - full filesystem path (``GPR2.Path_Name.Object``).
+* ``Language`` - a ``Language_Id`` value; compare with
   ``GPR2.Ada_Language``, or convert with ``GPR2.Image``.
-* ``Kind`` — one of ``S_Spec``, ``S_Body``, ``S_Separate`` (for Ada) or
+* ``Kind`` - one of ``S_Spec``, ``S_Body``, ``S_Separate`` (for Ada) or
   ``S_Body`` for other languages.
-* ``Has_Units`` / ``Units`` — unit information, populated when
+* ``Has_Units`` / ``Units`` - unit information, populated when
   ``Sources_Units`` or higher was requested.
-* ``Owning_View`` — the view that declares this source.
+* ``Owning_View`` - the view that declares this source.
 
 
 .. index:: compilation unit

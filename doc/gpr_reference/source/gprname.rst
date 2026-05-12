@@ -24,7 +24,7 @@ Syntax
    gprname -P<proj>.gpr [switches] [patterns]
 
 GPRname requires a project file name (``-P``). It does not use the common
-project-loading infrastructure — it creates or updates the named file rather
+project-loading infrastructure - it creates or updates the named file rather
 than loading it. The common switches documented in :ref:`RM_Common_Options`
 do not apply, with the exception of ``--target`` and ``--RTS``.
 
@@ -50,7 +50,7 @@ Project
   Create or update *proj* as the main project file. Required.
 
 ``--no-backup``
-  Do not create a numbered backup (``.saved_0``, ``.saved_1``, …) of the
+  Do not create a numbered backup (``.saved_0``, ``.saved_1``, ...) of the
   existing project file before overwriting it.
 
 
@@ -151,9 +151,9 @@ GPRname creates or updates three files named after the project (e.g. for
 :file:`my_proj.gpr`
   The main project file. GPRname inserts or updates:
 
-  - ``with "my_proj_naming.gpr";`` — import of the naming project.
-  - ``for Languages use (…);`` — languages discovered.
-  - ``for Source_Dirs use (…);`` — source directories scanned.
+  - ``with "my_proj_naming.gpr";`` - import of the naming project.
+  - ``for Languages use (...);`` - languages discovered.
+  - ``for Source_Dirs use (...);`` - source directories scanned.
   - ``for Source_List_File use "my_proj_source_list.txt";``
   - ``package Naming renames My_Proj_Naming.Naming;``
 

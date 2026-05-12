@@ -115,5 +115,5 @@ VCS-controlled directory.
 For stable subcomponents that change infrequently, consider installing them
 with ``gprinstall`` (see :ref:`Working_With_Tools`) and referencing them from
 the project search path. Installed projects are treated as *externally built*
-— their sources are considered read-only and their pre-built artifacts are
-consumed directly — which significantly reduces build times for large trees.
+- their sources are considered read-only and their pre-built artifacts are
+consumed directly - which significantly reduces build times for large trees.

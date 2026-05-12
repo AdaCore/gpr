@@ -110,9 +110,9 @@ Output layout
 Entries are grouped by compilation action. Within each group, the default
 indentation is:
 
-- **Objects** — no indentation.
-- **Unit names and sources** — indented by 3 spaces.
-- **Dependencies** (with ``-d``) — indented by 3 spaces.
+- **Objects** - no indentation.
+- **Unit names and sources** - indented by 3 spaces.
+- **Dependencies** (with ``-d``) - indented by 3 spaces.
 
 Example output (all three categories, with status):
 

@@ -264,7 +264,7 @@ The following rules apply:
   typed variable already declared before the ``case`` construct. Inside a case
   arm, only attribute declarations, variable declarations (for variables
   already declared before the ``case``), nested case constructions, and
-  ``null`` are allowed — type and package declarations are forbidden.
+  ``null`` are allowed - type and package declarations are forbidden.
 
 
 .. index:: string value, list value
@@ -588,7 +588,7 @@ Typed Variables
 
 A typed variable must be declared exactly once. Its type restricts the
 values it may hold, and because it can only be set once, all ``case``
-constructions in the file see a consistent value — making it behave
+constructions in the file see a consistent value - making it behave
 effectively as a constant.
 
 ::
@@ -649,7 +649,7 @@ Attribute Declarations
 ======================
 
 Attributes are the primary mechanism for communicating information to build
-tools. An attribute declaration uses the ``for … use`` syntax:
+tools. An attribute declaration uses the ``for ... use`` syntax:
 
 ::
 
@@ -659,7 +659,7 @@ tools. An attribute declaration uses the ``for … use`` syntax:
 
 The optional parenthesised string expression is the **index** of the
 attribute. Indexed attributes associate different values with different
-keys — for example, per-language compiler switches:
+keys - for example, per-language compiler switches:
 
 .. code-block:: gpr
 
@@ -681,7 +681,7 @@ Different attributes accept different kinds of indexes:
   A language identifier such as ``"Ada"`` or ``"C"``. Used by most
   ``Compiler``, ``Binder``, ``Linker``, and ``Naming`` attributes.
 
-  ``for Compiler'Switches ("Ada") use …;``
+  ``for Compiler'Switches ("Ada") use ...;``
 
 **File / Glob** (case-sensitivity host-dependent)
   A source file simple name or a glob pattern (``*``, ``?``, ``[]``).
@@ -691,9 +691,9 @@ Different attributes accept different kinds of indexes:
   specific index in the same project. Whether ``others`` is accepted is
   specified per attribute in :ref:`Attributes`.
 
-  ``for Compiler'Switches ("main.adb") use …;``
+  ``for Compiler'Switches ("main.adb") use ...;``
 
-  ``for Compiler'Switches ("*.c") use …;``
+  ``for Compiler'Switches ("*.c") use ...;``
 
 **File / Glob / Language** (case-sensitivity host-dependent for files, case-insensitive for languages)
   Accepts a source file simple name, a glob pattern, or a language
@@ -743,7 +743,7 @@ to each tool's documentation.
 Packages
 ========
 
-A project file may contain **packages**, which group related attributes —
+A project file may contain **packages**, which group related attributes -
 typically all attributes used by one tool. A given package name may appear at
 most once per project file.
 
@@ -786,8 +786,8 @@ tool's documentation.
 
    Each tool only reads the packages it recognises; unknown package
    *declarations* are silently ignored. However, referencing an attribute or
-   variable from an unknown package in an expression — for example, reading
-   ``Clean'Switches`` inside a project loaded by GPRbuild — will cause a
+   variable from an unknown package in an expression - for example, reading
+   ``Clean'Switches`` inside a project loaded by GPRbuild - will cause a
    parsing error and the project will be rejected. Avoid cross-package
    attribute references unless you can guarantee that every tool loading the
    project knows the referenced package.

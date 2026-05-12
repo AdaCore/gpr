@@ -20,8 +20,8 @@ largely self-contained.
 For a complete specification of the project file language, attributes, and
 tool command-line interfaces, refer to the **GPR Reference Manual**.
 
-To integrate GPR support into Ada tools — loading project trees or
-implementing a custom incremental builder — refer to the **GPR2 Quick Start**
+To integrate GPR support into Ada tools - loading project trees or
+implementing a custom incremental builder - refer to the **GPR2 Quick Start**
 and the **GPR2 Library Reference**, which document the LibGPR2 Ada library.
 
 
@@ -40,14 +40,14 @@ component:
 GPR is **multi-language**: Ada, C, C++, and many other languages can coexist
 in the same project tree, each compiled with its own toolchain and settings.
 
-GPR is **tool-agnostic**: the same project file is used by all GPR tools —
+GPR is **tool-agnostic**: the same project file is used by all GPR tools -
 GPRbuild to compile, GPRclean to remove build results, GPRinstall to deploy,
 GPRls to inspect sources, and more. You describe the project once; the tools
 share that description.
 
 GPR is **hierarchical**: complex systems are modelled as a graph of project
 files, each responsible for one component. Dependencies are expressed as
-``with`` clauses — the same concept as Ada's context clauses. A build of the
+``with`` clauses - the same concept as Ada's context clauses. A build of the
 root project automatically builds everything it depends on.
 
 
@@ -63,5 +63,5 @@ found on your ``PATH`` and caches the result so subsequent builds are fast.
 In most situations this is entirely transparent: run ``gprbuild -P
 my_proj.gpr`` and the right compiler is used. The configuration mechanisms
 only become visible when you need to target a different platform, select a
-specific runtime, or work in a cross-compilation environment — topics covered
+specific runtime, or work in a cross-compilation environment - topics covered
 in :ref:`Working_With_Tools`.

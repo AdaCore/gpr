@@ -6,7 +6,7 @@
 Aggregate Projects
 ******************
 
-This chapter covers *aggregate projects* — a project kind that groups
+This chapter covers *aggregate projects* - a project kind that groups
 independent project subtrees for a single build invocation. The related
 *aggregate library project* kind, which produces a library artifact from
 constituent projects, is covered in :ref:`Libraries`.
@@ -77,8 +77,8 @@ Use cases
 Building all outputs from multiple subtrees
 --------------------------------------------
 
-A common situation is a set of independent subtrees — some producing
-executables, some producing libraries — that need to be built together. Without
+A common situation is a set of independent subtrees - some producing
+executables, some producing libraries - that need to be built together. Without
 an aggregate project, each subtree root requires a separate GPRbuild
 invocation. Grouping them in an aggregate builds everything in a single
 parallel invocation:

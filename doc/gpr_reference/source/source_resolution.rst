@@ -18,10 +18,10 @@ For each non-abstract, non-aggregate project view the build system scans
 every directory listed in ``Source_Dirs`` in declaration order. The resulting
 candidate set is then filtered by:
 
-* ``Source_Files`` / ``Source_List_File`` — restrict to an explicit list.
-* ``Excluded_Source_Files`` / ``Excluded_Source_List_File`` — remove specific
+* ``Source_Files`` / ``Source_List_File`` - restrict to an explicit list.
+* ``Excluded_Source_Files`` / ``Excluded_Source_List_File`` - remove specific
   files.
-* The ``Naming`` package — controls which file name extensions and patterns
+* The ``Naming`` package - controls which file name extensions and patterns
   identify sources of each language.
 
 Sources inherited from an extended project are added to this set before
@@ -33,17 +33,17 @@ filtering.
 Basename uniqueness
 ===================
 
-Every source file is identified by its *basename* — the simple file name
+Every source file is identified by its *basename* - the simple file name
 without directory components. When the same basename appears in more than one
 source directory, the outcome depends on how those directories entered the
 project:
 
-* **Different values in ``Source_Dirs``** — the directory corresponding to the
+* **Different values in ``Source_Dirs``** - the directory corresponding to the
   earlier value takes precedence; no error is reported. For example, if
   ``Source_Dirs`` is ``("src/a", "src/b")`` and both contain ``util.adb``,
   the file from ``src/a`` is used.
 
-* **Same value in ``Source_Dirs``** — an error is reported. This can occur
+* **Same value in ``Source_Dirs``** - an error is reported. This can occur
   when a single value is a recursive pattern such as ``"src/**"``: if two
   subdirectories matched by that pattern both contain a file with the same
   basename, the conflict cannot be resolved by ordering and is flagged as an
@@ -57,7 +57,7 @@ Extending projects and source shadowing
 
 When project *B* extends project *A*, *B* inherits all of *A*'s sources. If
 *B* also declares a source whose basename matches one inherited from *A*,
-*B*'s version shadows the inherited one — the extending project's source
+*B*'s version shadows the inherited one - the extending project's source
 always takes precedence. This is not treated as a basename clash: overloading
 an inherited source is the intended mechanism for selectively replacing
 individual source files in an extension without copying the entire project.

@@ -30,7 +30,7 @@ enumerating sources:
 ``Sources_Units_Artifacts``
   As above, and also loads dependency data from ALI files.
 
-**At load time** — pass ``Artifacts_Info_Level`` to ``Tree.Load``:
+**At load time** - pass ``Artifacts_Info_Level`` to ``Tree.Load``:
 
 .. code-block:: ada
 
@@ -41,7 +41,7 @@ enumerating sources:
       return;
    end if;
 
-**After load** — call ``Tree.Update_Sources`` explicitly:
+**After load** - call ``Tree.Update_Sources`` explicitly:
 
 .. code-block:: ada
 
@@ -52,7 +52,7 @@ enumerating sources:
 
 ``Update_Sources`` can be called multiple times: to upgrade the level of
 information (e.g. from ``Sources_Only`` to ``Sources_Units``), or to
-accommodate filesystem changes — it performs a delta update of the source
+accommodate filesystem changes - it performs a delta update of the source
 base, adding newly appearing files and removing files that no longer exist,
 without re-processing the entire tree.
 
@@ -125,7 +125,7 @@ Compilation units
 =================
 
 ``GPR2.Build.Compilation_Unit.Object`` groups all parts of one Ada
-compilation unit — spec, body, and separates — across the build tree.
+compilation unit - spec, body, and separates - across the build tree.
 Compilation units are Ada-specific; for other languages, source files are
 individually enumerated via ``View.Sources``.
 

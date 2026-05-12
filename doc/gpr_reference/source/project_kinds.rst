@@ -8,7 +8,7 @@ Every GPR project file has a **kind** that determines what the project
 produces, which attributes and packages are valid within it, and how other
 projects may reference it.
 
-The kind is expressed via a **qualifier** — one or two identifiers placed
+The kind is expressed via a **qualifier** - one or two identifiers placed
 immediately before the ``project`` keyword. The qualifier may be omitted, in
 which case the kind is inferred from the attributes declared inside the
 project:
@@ -104,8 +104,8 @@ packages, and typed variable definitions across multiple concrete projects.
 
 **Constraints:**
 
-- Either the ``abstract`` qualifier is present, or — for backward
-  compatibility — at least one of ``Source_Dirs``, ``Source_Files``, or
+- Either the ``abstract`` qualifier is present, or - for backward
+  compatibility - at least one of ``Source_Dirs``, ``Source_Files``, or
   ``Languages`` must be declared empty. Prefer the explicit qualifier in new
   project files.
 - If it extends another project, the base project must also be abstract.
@@ -122,8 +122,8 @@ Library Project
 
 **Qualifier:** ``library``
 
-A library project builds a library — a static archive or a dynamic/shared
-image — rather than executables. It is the primary mechanism for producing
+A library project builds a library - a static archive or a dynamic/shared
+image - rather than executables. It is the primary mechanism for producing
 reusable compiled components.
 
 .. code-block:: gpr
@@ -197,9 +197,9 @@ produces a symlink for every prefix of the version string:
 
    lib/
      libmylib.so.1.2.3   -- the actual shared object (SONAME: libmylib.so.1)
-     libmylib.so.1.2      -- symlink → libmylib.so.1.2.3
-     libmylib.so.1        -- symlink → libmylib.so.1.2
-     libmylib.so          -- symlink → libmylib.so.1
+     libmylib.so.1.2      -- symlink -> libmylib.so.1.2.3
+     libmylib.so.1        -- symlink -> libmylib.so.1.2
+     libmylib.so          -- symlink -> libmylib.so.1
 
 The SONAME embedded in the library is the major-version form of
 ``Library_Version`` (e.g. ``libmylib.so.1`` from ``libmylib.so.1.2.3``).
@@ -219,9 +219,9 @@ automatically at load time or may require an explicit call from the main
 subprogram (see `Auto-initialization`_ below). A library becomes stand-alone
 when at least one of the following attributes is set:
 
-- ``Library_Interface`` — list of Ada unit names that form the public
+- ``Library_Interface`` - list of Ada unit names that form the public
   interface of the library.
-- ``Interfaces`` — list of source file names (language-agnostic alternative
+- ``Interfaces`` - list of source file names (language-agnostic alternative
   to ``Library_Interface``).
 
 Units listed in the interface are visible to importers; other units in the
@@ -286,7 +286,7 @@ deduplicated and built only once.
                              "subsystem_c/c.gpr");
    end All;
 
-**Required attribute:** ``Project_Files`` — a list of paths to constituent
+**Required attribute:** ``Project_Files`` - a list of paths to constituent
 ``.gpr`` files. Paths are relative to the aggregate project file's directory.
 Glob patterns (``*`` and ``**``) are supported. Constituent projects may
 themselves be aggregate projects.
@@ -348,7 +348,7 @@ a library project and an aggregate project: it has ``Library_Name`` and
    ordinary library project that collects object files from its constituents
    into a single library: it can be ``with``-ed by any other project and may
    appear anywhere in the dependency graph. It does not support the
-   ``External`` attribute, and constituent subtrees are not isolated — Ada
+   ``External`` attribute, and constituent subtrees are not isolated - Ada
    unit names must be unique across all constituents.
 
 .. code-block:: gpr
@@ -370,8 +370,8 @@ are used in the form already produced by each constituent project.
 
 Declaring ``Object_Dir`` is strongly recommended. It serves two purposes:
 GPR-aware tools may store per-project metadata there, and when the aggregate
-library's kind differs from its constituents' — for example, building a dynamic
-library from static constituent projects — the toolchain recompiles affected
+library's kind differs from its constituents' - for example, building a dynamic
+library from static constituent projects - the toolchain recompiles affected
 sources with position-independent code (``-fPIC``) and stores the results in
 ``Object_Dir``, keeping constituent directories untouched. If not declared,
 the project directory is used as default.
@@ -399,7 +399,7 @@ Configuration Project
 **Qualifier:** ``configuration``
 
 A configuration project describes the tools available for a given target and
-runtime — compilers, linkers, and so on — as well as the switches required to
+runtime - compilers, linkers, and so on - as well as the switches required to
 invoke each of them. It is used internally by all GPR tools (GPRbuild,
 GPRclean, GPRinstall, GPRls, etc.) and by any tool built on top of the GPR2
 library. Any such tool can generate a configuration project automatically;
@@ -408,8 +408,8 @@ The file extension is ``.cgpr``.
 
 Configuration projects are part of the project tree in a special role: they
 supply the toolchain attributes that all other projects in the tree rely on.
-They can be loaded separately from the user project tree — via ``--config`` or
-``--autoconf`` — and are never referenced by ``with`` clauses in regular
+They can be loaded separately from the user project tree - via ``--config`` or
+``--autoconf`` - and are never referenced by ``with`` clauses in regular
 project files.
 
 For the format and contents of configuration projects, see

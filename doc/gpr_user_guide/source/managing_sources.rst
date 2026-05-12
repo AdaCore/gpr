@@ -55,8 +55,8 @@ single dot:
 
 .. index:: abstract project
 
-To declare a project with no sources — one that exists purely to share
-attributes with other projects — use the ``abstract`` qualifier:
+To declare a project with no sources - one that exists purely to share
+attributes with other projects - use the ``abstract`` qualifier:
 
 .. code-block:: gpr
 
@@ -147,7 +147,7 @@ derives the corresponding unit name by reversing the naming convention
 ``.``, and so on). If the result is not a valid Ada identifier, the file is
 silently ignored.
 
-For example, ``my_source__unix.adb`` maps to ``my_source__unix`` — a name
+For example, ``my_source__unix.adb`` maps to ``my_source__unix`` - a name
 containing a double underscore, which is not valid in Ada. GPR will not
 recognise this file as an Ada source during directory scanning.
 
@@ -206,7 +206,7 @@ Multiple suffixes per language
 
 ``Body_Suffix`` and ``Spec_Suffix`` accept a single value per language. A
 project that contains source files with different suffixes for the same
-language — for example ``.cc`` and ``.cpp`` both for C++ — cannot be
+language - for example ``.cc`` and ``.cpp`` both for C++ - cannot be
 described by a single suffix declaration.
 
 Two options are available:

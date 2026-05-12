@@ -23,7 +23,7 @@ Create a directory for your project and add a project file:
    ├── hello.gpr
    ├── src/
    │   └── hello.adb
-   └── obj/        ← created automatically on first build
+   └── obj/        <- created automatically on first build
 
 The project file ``hello.gpr``:
 
@@ -71,7 +71,7 @@ A project file begins with ``project`` *Name* ``is`` and ends with ``end``
 *Name* ``;``. The name must match the file name (case-insensitively):
 ``Hello`` lives in ``hello.gpr``.
 
-The ``project`` keyword alone produces a *standard* project — the default
+The ``project`` keyword alone produces a *standard* project - the default
 kind, which can hold sources and produce executables or object files. Other
 kinds (``library``, ``abstract``, ``aggregate``) are covered in later
 chapters.
@@ -192,11 +192,11 @@ To specify compiler switches, declare a ``Compiler`` package:
 
 The index selects which sources the switches apply to. For each source,
 GPRbuild looks up ``Switches`` in this order and uses the **first match
-only** — switches do not accumulate:
+only** - switches do not accumulate:
 
 1. The source file name (exact match or glob pattern).
 2. The source's language name.
-3. ``others`` — the catch-all.
+3. ``others`` - the catch-all.
 
 This makes it easy to apply special treatment to individual files while
 keeping a common baseline for everything else:
@@ -207,7 +207,7 @@ keeping a common baseline for everything else:
       for Switches ("Ada")             use ("-gnat2022", "-gnatwa");
       for Switches ("generated_*.adb") use ("-gnat2022");  --  no warnings
       for Switches ("big_table.adb")   use ("-gnat2022", "-O3");
-      for Switches (others)            use ("-O2");        --  C, C++, …
+      for Switches (others)            use ("-O2");        --  C, C++, ...
    end Compiler;
 
 Here ``generated_*.adb`` and ``big_table.adb`` each get their own switch
@@ -242,10 +242,10 @@ even in large projects.
 Next steps
 ==========
 
-- :ref:`Managing_Sources` — source directory patterns, exclusions, and
+- :ref:`Managing_Sources` - source directory patterns, exclusions, and
   language-specific naming conventions.
-- :ref:`Multi_Project_Systems` — splitting a system into multiple project
+- :ref:`Multi_Project_Systems` - splitting a system into multiple project
   files connected by ``with`` clauses.
-- :ref:`Scenarios` — ``type`` declarations and ``case`` statements for
+- :ref:`Scenarios` - ``type`` declarations and ``case`` statements for
   debug/release builds and platform variants.
-- :ref:`Libraries` — the ``library`` project kind.
+- :ref:`Libraries` - the ``library`` project kind.

@@ -28,7 +28,7 @@ attribute of the root project:
       for Main        use ("hello.adb", "gen.adb");
    end Hello;
 
-``Main`` takes simple file names — the base name only, no directory
+``Main`` takes simple file names - the base name only, no directory
 component. GPRbuild searches for each main among the sources of the project
 tree. It compiles all sources and then links one executable per entry point,
 placed in ``Exec_Dir``.
@@ -129,8 +129,8 @@ of language:
       for Global_Compilation_Switches ("C")   use ("-Wall");
    end Builder;
 
-Unlike ``Compiler'Switches``, these are applied globally — including to
-imported projects — and cannot be overridden per source file. Use them
+Unlike ``Compiler'Switches``, these are applied globally - including to
+imported projects - and cannot be overridden per source file. Use them
 sparingly; prefer ``Compiler'Switches`` for project-local settings.
 
 

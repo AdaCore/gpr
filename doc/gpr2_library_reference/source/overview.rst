@@ -13,7 +13,7 @@ Overview
 
 The GPR2 library provides a complete parser and project model for GPR (GNAT
 Project) files. It is the foundation used by all AdaCore build tools
-(``gprbuild``, ``gprclean``, ``gprinstall``, ``gprconfig``, …) and is
+(``gprbuild``, ``gprclean``, ``gprinstall``, ``gprconfig``, ...) and is
 available to third-party tools that need to reason about Ada project structure.
 
 Core capabilities
@@ -33,13 +33,13 @@ Design principles
 =================
 
 **Reference counting.**
-All library objects (``Tree``, ``View``, ``Attribute``, …) use reference
+All library objects (``Tree``, ``View``, ``Attribute``, ...) use reference
 counting internally. There is no manual memory management; objects are safe to
 copy, store in containers, and pass by value.
 
 **No exceptions for expected conditions.**
 Operations that can fail in normal use (missing attribute, source not found,
-…) return an undefined object or a Boolean, rather than raising an exception.
+...) return an undefined object or a Boolean, rather than raising an exception.
 Callers guard calls with ``Has_XXX`` or ``Is_Defined`` checks. Preconditions
 on getters enforce this at runtime when the library is built with
 ``GPR2_BUILD=debug`` or ``GPR2_BUILD=release_checks``.
@@ -54,7 +54,7 @@ strings.
 **Reporter-based diagnostics.**
 Diagnostic messages are automatically forwarded to a ``GPR2.Reporter`` object
 during tree loading and by the incremental builder. Tools configure a reporter
-to control how messages reach the end user — for example routing them to a
+to control how messages reach the end user - for example routing them to a
 console, a GUI panel, or a structured logger. The underlying
 ``GPR2.Log.Object`` is accessible for post-processing purposes, but direct use
 is rarely needed.

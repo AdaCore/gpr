@@ -30,12 +30,12 @@ What is inherited
 
 An extending project inherits:
 
-- **Sources** — all source files from the base are implicitly present. A
+- **Sources** - all source files from the base are implicitly present. A
   source file in the extending project whose *base name* matches a base source
   shadows it.
-- **Attribute values** — project-level attributes not declared in the extending
+- **Attribute values** - project-level attributes not declared in the extending
   project are inherited from the base.
-- **Packages** — any package not declared in the extending project is inherited
+- **Packages** - any package not declared in the extending project is inherited
   in full from the base.
 
 **Exception:** ``Linker'Linker_Options`` is never inherited.
@@ -75,7 +75,7 @@ Overriding attributes and packages
 ====================================
 
 Attribute values are overridden by simply re-declaring them. Package
-declarations, however, **replace the inherited package entirely** — no
+declarations, however, **replace the inherited package entirely** - no
 per-attribute inheritance occurs within a package:
 
 .. code-block:: gpr
@@ -141,7 +141,7 @@ Import redirection
 ==================
 
 When a project *D* extends *A*, and *D* also imports *C* which extends *B*,
-and *A* imports *B* — then within *D*'s project tree, *A*'s import of *B* is
+and *A* imports *B* - then within *D*'s project tree, *A*'s import of *B* is
 automatically redirected to *C*. The build system connects these automatically
 when both extensions are present in the tree.
 
@@ -216,8 +216,8 @@ inherits its base's sources, attributes, and packages with the same semantics
 described above. A source file placed in ``Full_Override``'s source directory
 shadows the matching file wherever it originates in the tree.
 
-To replace a specific constituent — for example to substitute instrumented
-sources for one particular library — import an explicit extending project for
+To replace a specific constituent - for example to substitute instrumented
+sources for one particular library - import an explicit extending project for
 that constituent from within the ``extends all`` project. The explicit
 extension takes the place of the corresponding implicit one, and import
 redirection propagates it consistently across the whole subtree:

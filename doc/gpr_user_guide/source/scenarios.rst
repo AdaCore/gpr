@@ -6,7 +6,7 @@
 Scenarios
 *********
 
-A *scenario* is a named configuration of a project — for example, a debug
+A *scenario* is a named configuration of a project - for example, a debug
 build, a release build, or a platform-specific variant. GPR expresses
 scenarios through *typed string variables* whose values are supplied from
 outside the project file, allowing a single project to describe multiple
@@ -258,9 +258,9 @@ to the whole tree.
 
    External variable names are global to the project tree: two projects that
    both read the same variable name will always receive the same value.
-   If their typed declarations differ — for example one accepts
+   If their typed declarations differ - for example one accepts
    ``("debug", "release")`` and another accepts ``("debug", "release",
-   "release_checks")`` — then passing a value valid for the wider type but
+   "release_checks")`` - then passing a value valid for the wider type but
    not the narrower one causes a load error. To avoid this, share a single
    type declaration (as shown above) so that all projects in the tree agree
    on the set of accepted values.

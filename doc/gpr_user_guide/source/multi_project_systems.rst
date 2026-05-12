@@ -96,8 +96,8 @@ project's sources, attributes, variables, and packages. Circular plain
 ``with`` dependencies are not allowed: if project A imports B and B imports
 A, GPRbuild reports a load error.
 
-When two projects need their sources to be mutually visible — for example,
-two components that are mutually recursive at the Ada unit level — a
+When two projects need their sources to be mutually visible - for example,
+two components that are mutually recursive at the Ada unit level - a
 ``limited with`` can be used:
 
 .. code-block:: gpr
@@ -138,19 +138,19 @@ A common layout for a multi-project system:
 .. code-block:: none
 
    myproject/
-   ├── myproject.gpr          ← root project (executable)
+   ├── myproject.gpr          <- root project (executable)
    ├── src/
    ├── obj/
    ├── libs/
    │   ├── utils/
-   │   │   ├── utils.gpr      ← library project
+   │   │   ├── utils.gpr      <- library project
    │   │   ├── src/
    │   │   └── obj/
    │   └── crypto/
-   │       ├── crypto.gpr     ← library project
+   │       ├── crypto.gpr     <- library project
    │       ├── src/
    │       └── obj/
-   └── common_settings.gpr    ← abstract project (shared settings)
+   └── common_settings.gpr    <- abstract project (shared settings)
 
 Each library has its own project file, source directory, and object
 directory. The root project imports all libraries it needs.

@@ -57,7 +57,7 @@ Project scope
 ``-r`` / ``--recursive``
   Display all projects in the tree, not only the root project.
 
-``--views=``\ *name*\ [,\ *name*\ …]
+``--views=``\ *name*\ [,\ *name*\ ...]
   Restrict display to the named project views (comma-separated). Implies
   ``-r``. Only available with ``--display=textual``.
 

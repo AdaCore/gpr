@@ -30,7 +30,7 @@ Add the ``library`` qualifier and the two required library attributes:
 ``Library_Name``
   The base name of the library. The actual file name produced depends on
   whether the library is an archive or a shared library, and on the
-  target platform — both of which are determined by the active
+  target platform - both of which are determined by the active
   configuration.
 
 ``Library_Dir``
@@ -105,7 +105,7 @@ public API. ``Library_Standalone`` controls the degree of self-containment:
   used only to declare which units form the public API (for
   visibility purposes), without making the library self-elaborating.
 
-Example — standard SAL:
+Example - standard SAL:
 
 .. code-block:: gpr
 
@@ -119,7 +119,7 @@ Example — standard SAL:
       for Library_Standalone use "standard";
    end My_Lib;
 
-Example — encapsulated SAL (fully self-contained plugin):
+Example - encapsulated SAL (fully self-contained plugin):
 
 .. code-block:: gpr
 
@@ -199,7 +199,7 @@ dependency graph.
 
    An aggregate library project is distinct from a regular aggregate project
    (see :ref:`Aggregate_Projects_UG`). In particular, it cannot set external
-   variable values via ``External`` — only plain aggregate projects support
+   variable values via ``External`` - only plain aggregate projects support
    that attribute.
 
 It is advisable to declare ``Object_Dir`` when constituent sources may need

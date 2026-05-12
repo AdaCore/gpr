@@ -74,7 +74,7 @@ the project that was explicitly loaded.
 Iterating the tree
 ==================
 
-``Tree.Iterate`` (or the Ada ``for … of Tree`` loop via the
+``Tree.Iterate`` (or the Ada ``for ... of Tree`` loop via the
 ``Default_Iterator`` aspect) visits views in the tree:
 
 .. code-block:: ada
@@ -88,9 +88,9 @@ The iterator is controlled by three parameters:
 ``Kind : Iterator_Control``
    Which relationship edges to follow. The predefined constants are:
 
-   * ``Default_Iterator`` — follows imported and extended projects,
+   * ``Default_Iterator`` - follows imported and extended projects,
      skips runtime and configuration projects.
-   * ``Full_Iterator`` — follows all edges including runtime and
+   * ``Full_Iterator`` - follows all edges including runtime and
      configuration.
 
    The individual flags are ``I_Imported``, ``I_Extended``,
@@ -105,7 +105,7 @@ The iterator is controlled by three parameters:
    Whether to include or exclude externally-built projects.
    ``Default_Status`` includes them.
 
-Example — iterate only over library projects:
+Example - iterate only over library projects:
 
 .. code-block:: ada
 
@@ -221,7 +221,7 @@ Many attributes are indexed. Use ``View.Attribute`` with an
 
    --  Look up Compiler.Switches for a specific source file.
    --  The index is the concrete filename; the project may define it with a
-   --  pattern such as Compiler.Switches ("autogen-*") — the library matches
+   --  pattern such as Compiler.Switches ("autogen-*") - the library matches
    --  the concrete name against all defined patterns.
    Attr := View.Attribute
      (PRA.Compiler.Switches,

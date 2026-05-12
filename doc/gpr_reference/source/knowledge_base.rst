@@ -8,8 +8,8 @@ Knowledge Base
 
 The **knowledge base** (KB) is a collection of XML files that describe the
 compilers, targets, and runtimes that GPR tools can work with. It supplies the
-toolchain-specific information — compiler driver names, default switches,
-dependency-file formats, library conventions, target normalization rules — that
+toolchain-specific information - compiler driver names, default switches,
+dependency-file formats, library conventions, target normalization rules - that
 all GPR tools need to build, install, and inspect projects.
 
 
@@ -35,15 +35,15 @@ KB structure
 
 The KB is a set of XML files. Each file may contain:
 
-- **Compiler descriptions** (``<compiler_description>``) — identify a
+- **Compiler descriptions** (``<compiler_description>``) - identify a
   compiler by executable name (which may be a regular expression), specify
   how to extract its version and target, and enumerate the languages and
   runtime variants it supports.
-- **Target sets** (``<targetset>``) — group target strings under a canonical
+- **Target sets** (``<targetset>``) - group target strings under a canonical
   name used throughout the project model.
-- **Fallback targets** (``<fallback_targets>``) — define chains of
+- **Fallback targets** (``<fallback_targets>``) - define chains of
   alternative targets tried when no exact match is found.
-- **Configuration blocks** (``<configuration>``) — conditional GPR package
+- **Configuration blocks** (``<configuration>``) - conditional GPR package
   settings (``Compiler``, ``Binder``, ``Linker``, ``Naming``, etc.) emitted
   into the generated configuration project when a matching compiler/target/
   host combination is selected.

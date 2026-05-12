@@ -10,12 +10,12 @@ is either a single string or a list of strings.
 
 The attribute API is spread across four packages:
 
-* ``GPR2.Project.Registry.Pack`` — registers packages (built-in and custom).
-* ``GPR2.Project.Registry.Attribute`` — registers attribute definitions and
+* ``GPR2.Project.Registry.Pack`` - registers packages (built-in and custom).
+* ``GPR2.Project.Registry.Attribute`` - registers attribute definitions and
   provides constants for every standard attribute.
-* ``GPR2.Project.Attribute_Index`` — index values used to look up indexed
+* ``GPR2.Project.Attribute_Index`` - index values used to look up indexed
   attributes.
-* ``GPR2.Project.Attribute`` — the attribute object returned by view queries.
+* ``GPR2.Project.Attribute`` - the attribute object returned by view queries.
 
 
 Attribute registry
@@ -203,7 +203,7 @@ An attribute's ``Kind`` is either ``Single`` or ``List``:
    end case;
 
 In practice the kind of each attribute is fixed by its registration, so you
-rarely need to check ``Kind`` at runtime — just call ``Value`` for single
+rarely need to check ``Kind`` at runtime - just call ``Value`` for single
 attributes and ``Values`` for list attributes.
 
 
@@ -249,7 +249,7 @@ Creating an ``Attribute_Index``:
 **Enumeration vs. lookup**
 
 ``View.Attributes`` returns all entries as they are written in the project
-file — glob patterns appear as-is (e.g. the index value is ``"autogen-*"``
+file - glob patterns appear as-is (e.g. the index value is ``"autogen-*"``
 rather than any resolved filename). Use it to inspect or iterate raw
 definitions.
 

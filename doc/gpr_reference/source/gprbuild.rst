@@ -245,7 +245,7 @@ edges encode execution order: for example, a link action depends on all
 compile actions whose objects it consumes.
 
 After loading the project tree, GPRbuild2 populates the DAG from the project
-configuration and the set of *entry points* — executables declared via the
+configuration and the set of *entry points* - executables declared via the
 ``Main`` attribute or on the command line, libraries, and any additional units
 specified via the ``Roots`` attribute. The process manager then traverses the
 DAG in topological order, running independent actions in parallel up to the
@@ -259,12 +259,12 @@ across invocations.
 
 Action kinds include (non-exhaustive):
 
-- **Compile** — invoke the language compiler on a single source file.
-- **Ada bind** — invoke ``gprbind`` / ``gnatbind`` for an Ada entry point to
+- **Compile** - invoke the language compiler on a single source file.
+- **Ada bind** - invoke ``gprbind`` / ``gnatbind`` for an Ada entry point to
   produce the bind artifacts.
-- **Post-bind** — compile the binder-generated Ada source.
-- **Link** — invoke the linker to produce an executable or shared library.
-- **Archive** — invoke the archive builder (``gprlib``) to produce a static
+- **Post-bind** - compile the binder-generated Ada source.
+- **Link** - invoke the linker to produce an executable or shared library.
+- **Archive** - invoke the archive builder (``gprlib``) to produce a static
   library.
 
 The ``-c``, ``-b``, and ``-l`` switches restrict which action kinds are

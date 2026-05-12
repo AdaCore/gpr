@@ -28,19 +28,19 @@ Simple Extension
 What is inherited
 -----------------
 
-- **Source files** — All source files from the base are implicitly present.
+- **Source files** - All source files from the base are implicitly present.
   A source file in the extending project whose basename matches one from the
   base shadows the base version. See :ref:`Source_Resolution` for the full
   shadowing rules.
 
-- **Attribute values** — Project-level attributes not declared in the
+- **Attribute values** - Project-level attributes not declared in the
   extending project are inherited from the base.
 
-- **Packages** — Any package not declared in the extending project is
+- **Packages** - Any package not declared in the extending project is
   inherited in full from the base. A package that *is* declared in the
   extending project replaces the entire base package; there is no
   per-attribute inheritance within a package. Use package extension
-  (``package Compiler extends Base.Compiler is …``) to inherit a base
+  (``package Compiler extends Base.Compiler is ...``) to inherit a base
   package and add or override individual attributes.
 
 **Exception:** ``Linker'Linker_Options`` is never inherited.
@@ -113,8 +113,8 @@ amendment.
    project Full_Override extends all "original/original.gpr" is
    end Full_Override;
 
-To replace a specific constituent — for example to substitute instrumented
-sources for a particular library — import an explicit extending project for
+To replace a specific constituent - for example to substitute instrumented
+sources for a particular library - import an explicit extending project for
 that constituent from within the ``extends all`` project. The explicit
 extension replaces the corresponding implicit one, and import redirection
 ensures all other projects in the closure consistently reference the new
@@ -134,7 +134,7 @@ that all import paths go through the extending project:
 
 .. code-block:: gpr
 
-   --  b_ext.gpr — bridges the gap so no path reaches the original b.gpr
+   --  b_ext.gpr - bridges the gap so no path reaches the original b.gpr
    with "a_ext.gpr";
    project B_Ext extends "b.gpr" is
    end B_Ext;

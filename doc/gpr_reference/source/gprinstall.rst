@@ -6,8 +6,8 @@
 GPRinstall Reference
 ********************
 
-GPRinstall copies the build results of a project tree — libraries, ALI
-files, sources, executables, and generated project files — into a target
+GPRinstall copies the build results of a project tree - libraries, ALI
+files, sources, executables, and generated project files - into a target
 prefix directory. It records every installed file in a manifest so that
 ``--uninstall`` can later remove them precisely.
 

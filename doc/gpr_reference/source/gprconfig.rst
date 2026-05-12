@@ -96,7 +96,7 @@ Compiler selection (batch mode)
      ada,,zfp
      ada,,zfp,/opt/gnat/bin,gnat
 
-  **Named:** ``key:value[,key:value…]``
+  **Named:** ``key:value[,key:value...]``
 
   .. code-block:: text
 
@@ -108,7 +108,7 @@ Compiler selection (batch mode)
   Available keys/fields:
 
   ``language``
-    Required. Language identifier (``ada``, ``c``, ``c++``, …).
+    Required. Language identifier (``ada``, ``c``, ``c++``, ...).
 
   ``version``
     Optional. Compiler version string (e.g. ``12.1``).
@@ -183,12 +183,12 @@ Configuration file format
 The generated file is a valid GPR configuration project (``configuration``
 qualifier, ``.cgpr`` extension). It defines:
 
-- ``package Compiler`` — compiler driver, default switches, dependency
+- ``package Compiler`` - compiler driver, default switches, dependency
   file format, and naming conventions for each selected language.
-- ``package Linker`` — linker driver and default flags.
-- ``package Binder`` — binder driver (for Ada).
-- ``package Archive_Builder`` — archiver command.
-- Top-level attributes — ``Target``, ``Canonical_Target``,
+- ``package Linker`` - linker driver and default flags.
+- ``package Binder`` - binder driver (for Ada).
+- ``package Archive_Builder`` - archiver command.
+- Top-level attributes - ``Target``, ``Canonical_Target``,
   ``Runtime_Library_Dir``, ``Object_Generated``, ``Library_Support``,
   ``Shared_Library_Prefix``, ``Shared_Library_Suffix``, and related
   platform attributes.
