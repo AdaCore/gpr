@@ -77,13 +77,11 @@ package body GPR2.Build.Actions.Process.Post_Bind is
       --  add some of its switches
 
       declare
-         Ali : GPR2.Build.Artifacts.Files.Object;
+         Binder : constant Ada_Bind.Object :=
+           Ada_Bind.Object (Self.Tree.Action (Self.Binder.UID));
+         Ali    : constant GPR2.Build.Artifacts.Files.Object :=
+           Binder.First_ALI;
       begin
-         for Input of Self.Tree.Inputs (Self.Binder.UID) loop
-            Ali := Artifacts.Files.Object (Input);
-            exit;
-         end loop;
-
          if Ali.Is_Defined and then Ali.Path.Exists then
             for Sw of ALI_Parser.Switches (Ali.Path) loop
                if not GNATCOLL.Utils.Starts_With (Sw, "-I")
@@ -184,7 +182,7 @@ package body GPR2.Build.Actions.Process.Post_Bind is
          return False;
       end if;
 
-      Db.Add_Input (UID, Self.Input, True);
+      Db.Add_Input (UID, Self.Input);
 
       return True;
    end On_Tree_Insertion;

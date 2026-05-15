@@ -47,7 +47,7 @@ procedure Test is
          end if;
 
          Tree.Artifacts_Database.Add_Input
-           (Link.UID, Link_Extract.UID_Artifact, True);
+           (Link.UID, Link_Extract.UID_Artifact);
 
          return;
       end loop;

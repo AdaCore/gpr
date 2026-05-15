@@ -77,7 +77,7 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      Db.Add_Input (UID, Self.Object_File, True);
+      Db.Add_Input (UID, Self.Object_File);
       return True;
    end On_Tree_Insertion;
 

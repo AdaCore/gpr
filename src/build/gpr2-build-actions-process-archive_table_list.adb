@@ -83,7 +83,7 @@ package body GPR2.Build.Actions.Process.Archive_Table_List is
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      Db.Add_Input (UID, Self.Archive, True);
+      Db.Add_Input (UID, Self.Archive);
 
       return True;
    end On_Tree_Insertion;
@@ -146,13 +146,11 @@ package body GPR2.Build.Actions.Process.Archive_Table_List is
                end if;
 
                Self.Tree.Add_Input
-                 (Link_Options_Extract.UID,
-                  Archive_Extract.Extracted_Object,
-                  True);
+                 (Link_Options_Extract.UID, Archive_Extract.Extracted_Object);
 
                for Linker_UID of Linkers_UID loop
                   Self.Tree.Add_Input
-                    (Linker_UID, Link_Options_Extract.UID_Artifact, True);
+                    (Linker_UID, Link_Options_Extract.UID_Artifact);
                end loop;
 
                return True;

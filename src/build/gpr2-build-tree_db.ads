@@ -118,11 +118,12 @@ package GPR2.Build.Tree_Db is
    procedure Add_Input
      (Self     : in out Object;
       Action   : Actions.Action_Id'Class;
-      Artifact : Artifacts.Object'Class;
-      Explicit : Boolean)
-     with Pre => Self.Is_Defined
-                   and then Self.Has_Action (Action)
-                   and then Artifact.Is_Defined;
+      Artifact : Artifacts.Object'Class)
+   with
+     Pre =>
+       Self.Is_Defined
+       and then Self.Has_Action (Action)
+       and then Artifact.Is_Defined;
 
    function Add_Output
      (Self     : in out Object;
@@ -233,9 +234,8 @@ package GPR2.Build.Tree_Db is
    function All_Actions (Self : Object) return Actions_List'Class;
 
    function Inputs
-     (Self          : Object;
-      Action        : Actions.Action_Id'Class;
-      Explicit_Only : Boolean := False) return Artifacts_List'Class;
+     (Self : Object; Action : Actions.Action_Id'Class)
+      return Artifacts_List'Class;
 
    function Outputs
      (Self   : Object;
@@ -361,9 +361,7 @@ private
       New_Actions      : Action_Sets.Set;
 
       Inputs           : Action_Artifacts_Maps.Map;
-      --  Explicit input(s) in the command line
-      Implicit_Inputs  : Action_Artifacts_Maps.Map;
-      --  Implicit input(s): included by the explicit ones
+      --  Input(s) for each action
       Outputs          : Action_Artifacts_Maps.Map;
       --  Artifacts produced by a given action
 
@@ -433,19 +431,13 @@ private
    function File_Indexer (Self : Object) return access GPR2.Utils.Hash.Object
    is (Self.Self.File_Index'Unrestricted_Access);
 
-   type Artifact_List_Kind is (Explicit_Inputs,
-                               Implicit_Inputs,
-                               Inputs,
-                               Outputs);
+   type Artifact_List_Kind is (Inputs, Outputs);
 
    type Artifact_Cursor is record
       Pos     : Artifact_Vectors.Cursor;
       --  Cursor to the artifact vector of an input or output list
       Map_Pos : Action_Artifacts_Maps.Cursor;
       --  Cursor to the action->artifacts map element that contains Pos
-      Current : Artifact_List_Kind := Artifact_List_Kind'First;
-      --  If Kind is Inputs, this field is used to know if we're currently on
-      --  the explicit or implicit list.
    end record;
 
    No_Artifact_Element : constant Artifact_Cursor := (others => <>);
@@ -505,18 +497,12 @@ private
                     Artifact => Artifact_Sets.No_Element));
 
    function Inputs
-     (Self : Object;
-      Action : Actions.Action_Id'Class;
-      Explicit_Only : Boolean := False) return Artifacts_List'Class
-   is ((if Explicit_Only
-        then Artifacts_List'
-          (Kind   => Explicit_Inputs,
-           Db     => Self.Self,
-           Action => Self.Actions.Find (Action))
-        else Artifacts_List'
-          (Kind   => Inputs,
-           Db     => Self.Self,
-           Action => Self.Actions.Find (Action))));
+     (Self : Object; Action : Actions.Action_Id'Class)
+      return Artifacts_List'Class
+   is (Artifacts_List'
+         (Kind   => Inputs,
+          Db     => Self.Self,
+          Action => Self.Actions.Find (Action)));
 
    function Outputs
      (Self   : Object;

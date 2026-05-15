@@ -738,7 +738,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
       is
          pragma Unreferenced (Kind, View, Index, Sep_Name);
       begin
-         Db.Add_Input (UID, Artifacts.Source_Files.Create (Path), True);
+         Db.Add_Input (UID, Artifacts.Source_Files.Create (Path));
       end Add_Input_For;
    begin
       GPR2.Build.Compilation_Unit.For_All_Part (Self.CU, Add_Input_For'Access);

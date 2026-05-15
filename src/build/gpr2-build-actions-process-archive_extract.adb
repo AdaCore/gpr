@@ -86,7 +86,7 @@ package body GPR2.Build.Actions.Process.Archive_Extract is
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      Db.Add_Input (UID, Self.Archive, True);
+      Db.Add_Input (UID, Self.Archive);
 
       if not Db.Add_Output (UID, Self.Extracted_Object) then
          return False;

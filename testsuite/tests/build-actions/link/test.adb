@@ -194,13 +194,13 @@ begin
    Init_Action;
 
    Tree.Artifacts_Database.Add_Input
-     (Action.UID, Artifacts.Files.Create (Obj_Dir.Compose ("main.o")), False);
+     (Action.UID, Artifacts.Files.Create (Obj_Dir.Compose ("main.o")));
    Tree.Artifacts_Database.Add_Input
-     (Action.UID, Artifacts.Files.Create (Obj_Dir.Compose ("pkg.o")), False);
+     (Action.UID, Artifacts.Files.Create (Obj_Dir.Compose ("pkg.o")));
    Tree.Artifacts_Database.Add_Input
-     (Action.UID, Artifacts.Files.Create (Obj_Dir.Compose ("dep_two.o")), False);
+     (Action.UID, Artifacts.Files.Create (Obj_Dir.Compose ("dep_two.o")));
    Tree.Artifacts_Database.Add_Input
-     (Action.UID, Artifacts.Files.Create (Obj_Dir.Compose ("b__main.o")), False);
+     (Action.UID, Artifacts.Files.Create (Obj_Dir.Compose ("b__main.o")));
 
    Update_Linker_Options
      (Obj_Dir.Compose ("b__main.adb").String_Value);

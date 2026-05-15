@@ -1001,8 +1001,7 @@ package body GPR2.Build.Actions_Population is
             return False;
          end if;
 
-         Tree_Db.Add_Input
-           (Self.Main_Link.UID, Self.Partial_Link.Output, True);
+         Tree_Db.Add_Input (Self.Main_Link.UID, Self.Partial_Link.Output);
       end if;
 
       --  Add the lib now to prevent infinite recursion in case of
@@ -1129,15 +1128,12 @@ package body GPR2.Build.Actions_Population is
             --  since it is not referenced.
 
             Tree_Db.Add_Input
-            (Self.Final_Link_Action.UID,
-               Self.Link_Options_Insert.Output_Object_File,
-               True);
+              (Self.Final_Link_Action.UID,
+               Self.Link_Options_Insert.Output_Object_File);
          end if;
 
          Tree_Db.Add_Input
-           (Self.Initial_Link_Action.UID,
-            Self.Bind.Post_Bind.Object_File,
-            True);
+           (Self.Initial_Link_Action.UID, Self.Bind.Post_Bind.Object_File);
 
       else
          --  Non standalone libraries: add all Ada units
@@ -1156,9 +1152,7 @@ package body GPR2.Build.Actions_Population is
 
                      if Comp.Object_File.Is_Defined then
                         Tree_Db.Add_Input
-                          (Self.Initial_Link_Action.UID,
-                           Comp.Object_File,
-                           False);
+                          (Self.Initial_Link_Action.UID, Comp.Object_File);
                      end if;
                   end;
                end loop;
@@ -1177,7 +1171,7 @@ package body GPR2.Build.Actions_Population is
 
                   if Comp.Object_File.Is_Defined then
                      Tree_Db.Add_Input
-                       (Self.Initial_Link_Action.UID, Comp.Object_File, False);
+                       (Self.Initial_Link_Action.UID, Comp.Object_File);
                   end if;
                end;
             end loop;
@@ -1204,7 +1198,7 @@ package body GPR2.Build.Actions_Population is
 
                   if Comp.Object_File.Is_Defined then
                      Tree_Db.Add_Input
-                       (Self.Initial_Link_Action.UID, Comp.Object_File, False);
+                       (Self.Initial_Link_Action.UID, Comp.Object_File);
                   end if;
                end;
             end if;
@@ -1233,8 +1227,7 @@ package body GPR2.Build.Actions_Population is
             then
                Tree_Db.Add_Input
                  (Self.Initial_Link_Action.UID,
-                  Sublib.Final_Link_Action.Output,
-                  Encaps);
+                  Sublib.Final_Link_Action.Output);
             end if;
 
             --  Make sure the libraries dependencies are bounded before the
@@ -1243,7 +1236,7 @@ package body GPR2.Build.Actions_Population is
 
             if Self.Bind.Is_Defined then
                Tree_Db.Add_Input
-                 (Self.Bind.UID, Sublib.Final_Link_Action.Output, False);
+                 (Self.Bind.UID, Sublib.Final_Link_Action.Output);
             end if;
          end;
       end loop;
@@ -1473,21 +1466,28 @@ package body GPR2.Build.Actions_Population is
                         --  Add the overriden unit dependency file to discover
                         --  other potential overriden dependencies.
                         Tree_Db.Add_Input
-                          (Bind (Idx).UID, R_Comp.Local_Ali_File, True);
+                          (Bind (Idx).UID, R_Comp.Local_Ali_File);
+                        Ada_Bind.Object'Class
+                          (Tree_Db.Action_Id_To_Reference (Bind (Idx).UID)
+                             .Element.all)
+                          .Track_ALI_Input (U, R_Comp.Local_Ali_File, True);
 
                         --  Add the resulting object file to the final link to
                         --  resolve their symbols before the runtime for proper
                         --  overriding.
-                        Tree_Db.Add_Input
-                          (Link (Idx).UID, R_Comp.Object_File, True);
+                        Tree_Db.Add_Input (Link (Idx).UID, R_Comp.Object_File);
                      end;
                   end loop;
                end;
 
-               Tree_Db.Add_Input (Bind (Idx).UID, A_Comp.Local_Ali_File, True);
-               Tree_Db.Add_Input (Link (Idx).UID, A_Comp.Object_File, True);
+               Tree_Db.Add_Input (Bind (Idx).UID, A_Comp.Local_Ali_File);
+               Ada_Bind.Object'Class
+                 (Tree_Db.Action_Id_To_Reference (Bind (Idx).UID).Element.all)
+                 .Track_ALI_Input (A_Comp.Unit, A_Comp.Local_Ali_File, True);
+
+               Tree_Db.Add_Input (Link (Idx).UID, A_Comp.Object_File);
                Tree_Db.Add_Input
-                 (Link (Idx).UID, Bind (Idx).Post_Bind.Object_File, True);
+                 (Link (Idx).UID, Bind (Idx).Post_Bind.Object_File);
 
             else
                Comp.Initialize (Source);
@@ -1496,7 +1496,7 @@ package body GPR2.Build.Actions_Population is
                   return False;
                end if;
 
-               Tree_Db.Add_Input (Link (Idx).UID, Comp.Object_File, True);
+               Tree_Db.Add_Input (Link (Idx).UID, Comp.Object_File);
 
                if (for some Lib of Closure =>
                      Lib.Language_Ids.Contains (Ada_Language))
@@ -1542,9 +1542,7 @@ package body GPR2.Build.Actions_Population is
                   end if;
 
                   Tree_Db.Add_Input
-                    (Link (Idx).UID,
-                     Bind (Idx).Post_Bind.Object_File,
-                     True);
+                    (Link (Idx).UID, Bind (Idx).Post_Bind.Object_File);
                end if;
             end if;
 
@@ -1597,19 +1595,16 @@ package body GPR2.Build.Actions_Population is
                   --  in the graph.
 
                   Tree_Db.Add_Input
-                    (Link (Link_Idx).UID,
-                     Archive_Table_List.UID_Artifact,
-                     True);
+                    (Link (Link_Idx).UID, Archive_Table_List.UID_Artifact);
                end Add_Archive_Table_List_Action;
             begin
                if Archive.Is_Defined then
-                  Tree_Db.Add_Input
-                    (Link (Idx).UID, Archive.Output, True);
+                  Tree_Db.Add_Input (Link (Idx).UID, Archive.Output);
                end if;
 
                for Lib of Sorted_Libs loop
                   Tree_Db.Add_Input
-                    (Link (Idx).UID, Lib.Final_Link_Action.Output, True);
+                    (Link (Idx).UID, Lib.Final_Link_Action.Output);
 
                   --  Make sure the bind action is executed after the
                   --  libraries are linked, to have access to the ALI files
@@ -1617,7 +1612,7 @@ package body GPR2.Build.Actions_Population is
 
                   if Bind (Idx).Is_Defined then
                      Tree_Db.Add_Input
-                       (Bind (Idx).UID, Lib.Final_Link_Action.Output, False);
+                       (Bind (Idx).UID, Lib.Final_Link_Action.Output);
                   end if;
 
                   --  For standalone static libraries, linker options must
@@ -1738,12 +1733,10 @@ package body GPR2.Build.Actions_Population is
                   if Comp.Object_File.Is_Defined then
                      if Direct_Import then
                         for J in Link'Range loop
-                           Tree_Db.Add_Input
-                             (Link (J).UID, Comp.Object_File, True);
+                           Tree_Db.Add_Input (Link (J).UID, Comp.Object_File);
                         end loop;
                      else
-                        Tree_Db.Add_Input
-                          (Archive.UID, Comp.Object_File, True);
+                        Tree_Db.Add_Input (Archive.UID, Comp.Object_File);
                      end if;
                   end if;
                end if;
