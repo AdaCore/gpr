@@ -108,38 +108,38 @@ Verbosity levels
 
 ``Verbosity_Level`` controls which diagnostic messages are shown:
 
-Quiet
-  None.
+   Quiet
+     None.
 
-No_Warnings
-  Errors only.
+   No_Warnings
+     Errors only.
 
-Regular
-  Errors and warnings (default).
+   Regular
+     Errors and warnings (default).
 
-Verbose
-  Errors, warnings, hints, and lint messages.
+   Verbose
+     Errors, warnings, hints, and lint messages.
 
-Very_Verbose
-  Same as ``Verbose``; available for subclass use.
+   Very_Verbose
+     Same as ``Verbose``; available for subclass use.
 
 ``User_Verbosity_Level`` provides independent control over ``End_User``
 build-progress messages:
 
-Unset
-  ``End_User`` visibility follows ``Verbosity_Level`` (default).
+   Unset
+     ``End_User`` visibility follows ``Verbosity_Level`` (default).
 
-Quiet
-  Suppress all ``End_User`` messages.
+   Quiet
+     Suppress all ``End_User`` messages.
 
-Important_Only
-  Show only ``Important``-level ``End_User`` messages.
+   Important_Only
+     Show only ``Important``-level ``End_User`` messages.
 
-Regular
-  Show ``Regular`` and ``Important`` ``End_User`` messages.
+   Regular
+     Show ``Regular`` and ``Important`` ``End_User`` messages.
 
-Verbose
-  Show all ``End_User`` messages including ``Optional``-level ones.
+   Verbose
+     Show all ``End_User`` messages including ``Optional``-level ones.
 
 
 Reporting messages manually

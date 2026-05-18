@@ -51,7 +51,7 @@ Use ``GPR2.Project.Registry.Pack.Add`` to introduce a new package:
 ``Everywhere`` allows it in all project kinds; ``No_Aggregates`` excludes
 aggregate projects.
 
-Once registered, the package name can be used in ``.gpr`` files:
+Once registered, packages with this name will be recognized in ``.gpr`` files:
 
 .. code-block:: gpr
 

@@ -45,7 +45,7 @@ automatically when the tree is loaded.
 The database holds a directed acyclic graph of actions connected by
 artifacts. Each action's output artifacts become input artifacts of
 downstream actions, establishing the dependency order for execution.
-Signature checksums are persisted on disk so that unchanged actions are
+Signature checksums persist on disk so that unchanged actions are
 skipped on the next run.
 
 

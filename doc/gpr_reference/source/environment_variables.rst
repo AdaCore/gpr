@@ -87,8 +87,7 @@ Compiler discovery
 .. envvar:: PATH
 
    The standard executable search path. GPRconfig searches :envvar:`PATH`
-   for compiler executables during auto-configuration. Any directory added
-   with ``--db`` that contains compiler wrappers should be on this path.
+   for compiler executables during auto-configuration.
 
 .. index:: pair: environment variable; MAKEFLAGS
 

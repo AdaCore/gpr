@@ -15,6 +15,12 @@ GPRconfig is not covered here: it works directly with the compiler knowledge
 base rather than a project tree and has its own independent option set (see
 :ref:`RM_GPRconfig`).
 
+.. tip::
+
+   When developing a custom project-aware tool, support most if not all of
+   these options to ensure a consistent user experience across the GPR tool
+   suite.
+
 
 .. index:: pair: switch; -P
 
