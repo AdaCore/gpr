@@ -14,7 +14,7 @@ and how project extension overrides inherited sources.
 Source discovery
 ================
 
-For each non-abstract, non-aggregate project view the build system scans
+For each non-abstract, non-aggregate project view, GPR tools scan
 every directory listed in ``Source_Dirs`` in declaration order. The resulting
 candidate set is then filtered by:
 

@@ -20,7 +20,7 @@ project:
 - Otherwise the project is treated as standard.
 
 For non-standard project kinds, **using an explicit qualifier is best
-practice**: it documents intent clearly, the project parser validates that the
+practice**: it documents intent clearly, GPR tools validate that the
 declared attributes are consistent with the stated kind, and the kind is
 immediately visible to readers without having to inspect the attribute
 declarations. Omitting the qualifier for a plain standard project is common

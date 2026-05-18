@@ -2,9 +2,9 @@
 
 .. _RM_Out_Of_Tree_Builds:
 
-*******************
+******************
 Out-of-Tree Builds
-*******************
+******************
 
 By default, GPR tools write build artifacts (object files, libraries,
 executables) to the directories declared in the project file
