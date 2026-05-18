@@ -9,6 +9,21 @@ lexical rules, the structure of a project file, and the language constructs
 available within it.
 
 
+Overview
+========
+
+The fundamental purpose of a project file is to supply **attribute values**
+to GPR tools. An attribute is a named configuration parameter - source
+directories, compiler switches, library name, and so on - declared with a
+``for`` clause (see :ref:`Attribute_Declarations`). Attributes may be
+*indexed* by a key such as a language name or source file name, and are
+grouped into **packages** that namespace them by tool
+(``Compiler'Switches``, ``Linker'Switches``, ...).
+
+**Typed variables** and ``case`` statements let attribute values vary by
+configuration without duplicating the project file.
+
+
 Lexical Elements
 ================
 
@@ -642,6 +657,8 @@ Qualified names may refer to a package in the current project, an imported
 project, a base project (direct or indirect), or a package within any of
 those.
 
+
+.. _Attribute_Declarations:
 
 .. index:: attribute declaration, indexed attribute
 
