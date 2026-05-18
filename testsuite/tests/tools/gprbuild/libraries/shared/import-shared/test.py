@@ -43,13 +43,13 @@ error = False
 
 for job in cntlib:
     if job["status"] != "SKIPPED":
-            if "pkg1.o" in job["command"] and "pkg2.o" in job["command"]:
+            if "pkg1.o" in job.get("command", "") and "pkg2.o" in job.get("command", ""):
                 print("ERROR: Found both pkg1/2.o in the same command")
                 error = True
-            if "pkg1.o" in job["command"] and "pkg3.o" in job["command"]:
+            if "pkg1.o" in job.get("command", "") and "pkg3.o" in job.get("command", ""):
                 print("ERROR: Found both pkg1/3.o in the same command")
                 error = True
-            if "pkg2.o" in job["command"] and "pkg3.o" in job["command"]:
+            if "pkg2.o" in job.get("command", "") and "pkg3.o" in job.get("command", ""):
                 print("ERROR: Found both pkg2/3.o in the same command")
                 error = True
 
@@ -59,20 +59,20 @@ with open("jobs.json") as fp:
 
 for job in cntbin:
     if job["status"] != "SKIPPED":
-        if "-lmylib1" in job["command"] and "-lmylib2" in job["command"]:
+        if "-lmylib1" in job.get("command", "") and "-lmylib2" in job.get("command", ""):
             found = True
 
-            if "pkg1.o" in job["command"] or "pkg2.o" in job["command"]:
+            if "pkg1.o" in job.get("command", "") or "pkg2.o" in job.get("command", ""):
                 print("ERROR: found both -lmylib1/2 and pkg1/2.o in the link command")
                 error = True
-        if "mylib1.a" in job["command"] or "mylib2.a" in job["command"]:
+        if "mylib1.a" in job.get("command", "") or "mylib2.a" in job.get("command", ""):
             print(
                 "ERROR: The static version of the libs should not be used in the link command"
             )
             error = True
         if (
-            "mylib1" + shared_lib_ext in job["command"]
-            or "mylib2" + shared_lib_ext in job["command"]
+            "mylib1" + shared_lib_ext in job.get("command", "")
+            or "mylib2" + shared_lib_ext in job.get("command", "")
         ):
             print(
                 "ERROR: mylib1"

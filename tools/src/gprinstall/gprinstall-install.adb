@@ -33,8 +33,8 @@ with GNAT.String_Split;
 with GNATCOLL.OS.Constants;
 with GNATCOLL.OS.FSUtil;
 
-with GPR2.Build.Actions.Compile.Ada;
-with GPR2.Build.Actions.Link;
+with GPR2.Build.Actions.Process.Compile.Ada;
+with GPR2.Build.Actions.Process.Link;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Unit_Info.List;
@@ -67,6 +67,7 @@ package body GPRinstall.Install is
    use GNAT;
 
    use GPR2;
+   use GPR2.Build.Actions.Process;
 
    --  use GPRtools.Program_Termination;
 
@@ -155,18 +156,18 @@ package body GPRinstall.Install is
 
       function OC
         (A : GPR2.Build.Actions.Object'Class)
-         return GPR2.Build.Actions.Compile.Object'Class
-      is (GPR2.Build.Actions.Compile.Object'Class (A));
+         return Compile.Object'Class
+      is (Compile.Object'Class (A));
 
       function AC
         (A : GPR2.Build.Actions.Object'Class)
-         return GPR2.Build.Actions.Compile.Ada.Object'Class
-      is (GPR2.Build.Actions.Compile.Ada.Object'Class (A));
+         return Compile.Ada.Object'Class
+      is (Compile.Ada.Object'Class (A));
 
       function AL
         (A : GPR2.Build.Actions.Object'Class)
-         return GPR2.Build.Actions.Link.Object'Class
-      is (GPR2.Build.Actions.Link.Object'Class (A));
+         return Link.Object'Class
+      is (Link.Object'Class (A));
 
       subtype Param is GPRinstall.Options.Param;
 
@@ -1098,7 +1099,7 @@ package body GPRinstall.Install is
                --  Copy object
 
                if Copy (Object)
-                 and then Action in GPR2.Build.Actions.Compile.Object'Class
+                 and then Action in Compile.Object'Class
                  and then Action.View = Project
                then
                   Copy_File
@@ -1109,7 +1110,7 @@ package body GPRinstall.Install is
                --  Copy object artifacts like coverage or callgraph
 
                if (Copy (Object) or else Copy (Library))
-                 and then Action in GPR2.Build.Actions.Compile.Object'Class
+                 and then Action in Compile.Object'Class
                  and then Action.View = Project
                then
                   for Artifact of
@@ -1168,7 +1169,7 @@ package body GPRinstall.Install is
                  and then Action.View = Project
                  and then not Options.Sources_Only
                then
-                  if Action in GPR2.Build.Actions.Compile.Ada.Object'Class then
+                  if Action in Compile.Ada.Object'Class then
                      declare
                         U    : constant GPR2.Build.Compilation_Unit.Object :=
                                  AC (Action).Unit;
@@ -1213,7 +1214,7 @@ package body GPRinstall.Install is
                         end if;
                      end;
 
-                  elsif Action in GPR2.Build.Actions.Compile.Object'Class then
+                  elsif Action in Compile.Object'Class then
                      if OC (Action).Dependency_File.Is_Defined then
                         Copy_File
                           (From => OC (Action).Dependency_File.Path,
@@ -1225,7 +1226,7 @@ package body GPRinstall.Install is
                end if;
 
                if Copy (Library)
-                 and then Action in GPR2.Build.Actions.Link.Object
+                 and then Action in Link.Object
                  and then Action.View = Project
                  and then AL (Action).Is_Library
                  and then not Options.Sources_Only
@@ -1236,7 +1237,7 @@ package body GPRinstall.Install is
                --  Copy executable(s)
 
                if Copy (Executable)
-                 and then Action in GPR2.Build.Actions.Link.Object'Class
+                 and then Action in Link.Object'Class
                  and then Action.View = Project
                  and then not AL (Action).Is_Library
                  and then not Options.Sources_Only
@@ -1544,7 +1545,7 @@ package body GPRinstall.Install is
                --  Handle the Ada bodies for libraries, this is done at this
                --  time as we have access to the full closure.
 
-               if Action in GPR2.Build.Actions.Link.Object
+               if Action in Link.Object
                  and then Action.View = Project
                  and then Action.View.Is_Library
                then
@@ -1672,7 +1673,7 @@ package body GPRinstall.Install is
                loop
                   --  Handle the aggregate library
 
-                  if Action in GPR2.Build.Actions.Link.Object
+                  if Action in Link.Object
                     and then Action.View = Project
                   then
                      Copy_Project_Library (Project, AL (Action).Output.Path);

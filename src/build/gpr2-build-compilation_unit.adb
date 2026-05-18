@@ -9,7 +9,8 @@ with Ada.Strings.Wide_Wide_Maps.Wide_Wide_Constants;
 
 with GNAT.UTF_32;
 
-with GPR2.Build.Actions.Compile.Ada;
+with GPR2.Build.Actions.Process.Compile.Ada;
+use GPR2.Build.Actions.Process;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
 with GPR2.Message;
@@ -26,25 +27,25 @@ package body GPR2.Build.Compilation_Unit is
                 ("GPR.BUILD.COMPILATION_UNIT", GNATCOLL.Traces.Off);
 
    function Ada_Compile_Action
-     (Self : Object) return GPR2.Build.Actions.Compile.Ada.Object;
+     (Self : Object) return Compile.Ada.Object;
 
    ------------------------
    -- Ada_Compile_Action --
    ------------------------
 
    function Ada_Compile_Action
-     (Self : Object) return GPR2.Build.Actions.Compile.Ada.Object
+     (Self : Object) return Compile.Ada.Object
    is
-      UID  : constant Actions.Compile.Ada.Ada_Compile_Id :=
-        Actions.Compile.Ada.Create (Self);
+      UID  : constant Actions.Process.Compile.Ada.Ada_Compile_Id :=
+        Actions.Process.Compile.Ada.Create (Self);
       Tree : constant Tree_Db.Object_Access :=
         Self.Owning_View.Tree.Artifacts_Database;
 
    begin
       if Tree.Has_Action (UID) then
-         return Actions.Compile.Ada.Object (Tree.Action (UID));
+         return Actions.Process.Compile.Ada.Object (Tree.Action (UID));
       else
-         return Comp : Actions.Compile.Ada.Object do
+         return Comp : Actions.Process.Compile.Ada.Object do
             Comp.Initialize (Self);
          end return;
       end if;
@@ -347,7 +348,7 @@ package body GPR2.Build.Compilation_Unit is
    ----------------------------
 
    function Is_Body_Needed_For_SAL (Self : Object) return Boolean is
-      Comp : Actions.Compile.Ada.Object := Self.Ada_Compile_Action;
+      Comp : Actions.Process.Compile.Ada.Object := Self.Ada_Compile_Action;
    begin
       if not Comp.Parse_Ali then
          Traces.Trace

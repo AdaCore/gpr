@@ -1,7 +1,7 @@
 with Ada.Text_IO;
 with GPR2.Build.Artifacts;
 with GPR2.Build.Artifacts.Library;
-with GPR2.Build.Actions.Archive_Extract;
+with GPR2.Build.Actions.Process.Archive_Extract;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
@@ -16,7 +16,8 @@ procedure Test is
    Opts        : GPR2.Options.Object;
    Project     : constant String := "test.gpr";
 
-   Action : GBA.Archive_Extract.Object := GBA.Archive_Extract.Undefined;
+   Action : GBA.Process.Archive_Extract.Object :=
+              GBA.Process.Archive_Extract.Undefined;
 
    -----------------
    -- Init_Action --

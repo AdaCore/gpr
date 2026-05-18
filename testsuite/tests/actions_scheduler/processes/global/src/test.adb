@@ -1,0 +1,322 @@
+--
+--  Copyright (C) 2024, AdaCore
+--
+--  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
+--
+
+with Ada.Command_Line;
+with Ada.Directories;
+with Ada.Text_IO;
+
+with GPR2.Build.Actions.Process.Write_File;
+with GPR2.Build.Actions_Scheduler.JSON;
+
+with GPR2.Options;
+with GPR2.Path_Name;
+
+with GPR2.Project.Tree;
+with GPR2.Project.View;
+with GPR2.Reporter.Console;
+
+with GNATCOLL.VFS; use GNATCOLL.VFS;
+
+use GPR2, GPR2.Reporter;
+
+function Test return Integer is
+   Tree      : GPR2.Project.Tree.Object;
+   Opts      : GPR2.Options.Object;
+   Project   : constant String := "tree/main.gpr";
+   Scheduler : GPR2.Build.Actions_Scheduler.JSON.Object;
+   Root_View : GPR2.Project.View.Object;
+   Exec_Opts : GPR2.Build.Actions_Scheduler.Options;
+
+   Scenario_Idx : Integer := Integer'Value (Ada.Command_Line.Argument (1));
+   --  To ease the testing, this file contains all the tests scenarios.
+   --  The scenario to run is given by test.py
+
+   package GBA renames GPR2.Build.Actions;
+
+   use type GPR2.Build.Actions_Scheduler.Execution_Status;
+begin
+   Opts.Add_Switch (GPR2.Options.P, Project);
+
+   if not Tree.Load (Opts, True, Console.Create (Quiet))
+     or else not Tree.Update_Sources (GPR2.Sources_Units_Artifacts)
+   then
+      return 1;
+   end if;
+
+   Root_View := Tree.Namespace_Root_Projects.First_Element;
+
+   case Scenario_Idx is
+      when 1 =>
+         ----
+         --  Scenario 1
+         --
+         --  All actions pass correctly.
+         ----
+
+         for Action_Index in 1 .. 3 loop
+            declare
+               A          : GBA.Process.Write_File.Object;
+               Ret_Code   : Integer               := 0;
+               With_Deps  : Boolean               := True;
+               Executable : GPR2.Path_Name.Object :=
+                              GPR2.Path_Name.Create_File
+                                (Name => "write_file", Directory => "write_file");
+            begin
+               A.Initialize
+                 (Root_View, Action_Index, Executable, Ret_Code, With_Deps);
+               if not Tree.Artifacts_Database.Add_Action (A) then
+                  return 1;
+               end if;
+            end;
+         end loop;
+
+      when 2 =>
+         ----
+         --  Scenario 2
+         --
+         --  Action n. 2 returns an erroneous code
+         ----
+
+         for Action_Index in 1 .. 3 loop
+            declare
+               A          : GBA.Process.Write_File.Object;
+               Ret_Code   : Integer;
+               With_Deps  : Boolean               := True;
+               Executable : GPR2.Path_Name.Object :=
+                              GPR2.Path_Name.Create_File
+                                (Name => "write_file", Directory => "write_file");
+            begin
+               if Action_Index = 2 then
+                  Ret_Code := 1;
+               else
+                  Ret_Code := 0;
+               end if;
+
+               A.Initialize
+                 (Root_View, Action_Index, Executable, Ret_Code, With_Deps);
+
+               if not Tree.Artifacts_Database.Add_Action (A) then
+                  return 1;
+               end if;
+            end;
+         end loop;
+
+      when 3 =>
+         ----
+         --  Scenario 3
+         --
+         --  Action n. 6 does not depend on action n. 5
+         ----
+
+         --  To have repeatable output, we ensure that Write_File wait
+         --  other instances to be finished before actually executing.
+
+         declare
+            A          : GBA.Process.Write_File.Object;
+            Ret_Code   : Integer               := 0;
+            With_Deps  : Boolean;
+            Executable : GPR2.Path_Name.Object :=
+                           GPR2.Path_Name.Create_File
+                             (Name      => "write_file",
+                              Directory => "write_file");
+            With_Wait  : Natural;
+
+         begin
+            for Action_Index in 1 .. 10 loop
+               --  make DAG:
+               --  1->2->3->4->5
+               --  6->7->8->9->10
+               --  while under the hood action 1 will wait for action 10 to be
+               --  done before executing
+               With_Deps := Action_Index /= 6;
+
+               if Action_Index = 1 then
+                  With_Wait := 10;
+               else
+                  With_Wait := 0;
+               end if;
+
+               A.Initialize
+                 (Root_View,
+                  Action_Index,
+                  Executable,
+                  Ret_Code,
+                  With_Deps,
+                  With_Wait);
+
+               if not Tree.Artifacts_Database.Add_Action (A) then
+                  return 1;
+               end if;
+            end loop;
+         end;
+
+      when 4 =>
+         ----
+         --  Scenario 4
+         --
+         --  Action n. 3 does not have a valid executable
+         ----
+
+         for Action_Index in 1 .. 5 loop
+            declare
+               A                  : GBA.Process.Write_File.Object;
+               Ret_Code           : Integer               := 0;
+               With_Deps          : Boolean               := True;
+               Valid_Executable   : GPR2.Path_Name.Object :=
+                                      GPR2.Path_Name.Create_File
+                                        (Name      => "write_file",
+                                         Directory => "write_file");
+               Invalid_Executable : GPR2.Path_Name.Object :=
+                                      GPR2.Path_Name.Create_File
+                                        (Name => "exec_that_does_not_exist");
+            begin
+               if Action_Index = 3 then
+                  A.Initialize
+                    (Root_View, Action_Index, Invalid_Executable,
+                     Ret_Code, With_Deps);
+               else
+                  A.Initialize
+                    (Root_View, Action_Index, Valid_Executable,
+                     Ret_Code, With_Deps);
+               end if;
+
+               if not Tree.Artifacts_Database.Add_Action (A) then
+                  return 1;
+               end if;
+            end;
+         end loop;
+
+      when 5 =>
+         ----
+         --  Scenario 5
+         --
+         --  Action n. 2 is deactivated
+         ----
+
+            declare
+               A1                 : GBA.Process.Write_File.Object;
+               A2                 : GBA.Process.Write_File.Object;
+               Ret_Code           : Integer               := 0;
+               With_Deps          : Boolean               := True;
+               Valid_Executable   : GPR2.Path_Name.Object :=
+                                      GPR2.Path_Name.Create_File
+                                        (Name      => "write_file",
+                                         Directory => "write_file");
+            begin
+
+               A1.Initialize
+                  (Root_View, 1, Valid_Executable,
+                  Ret_Code, With_Deps);
+               A2.Initialize
+                  (Root_View, 2, Valid_Executable,
+                  Ret_Code, With_Deps);
+               A2.Deactivate;
+
+               if not Tree.Artifacts_Database.Add_Action (A1) then
+                  return 1;
+               end if;
+
+               if not Tree.Artifacts_Database.Add_Action (A2) then
+                  return 1;
+               end if;
+            end;
+
+      when 6 =>
+         ----
+         --  Scenario 6
+         --
+         --  Action n. 1 is deactivated so action n.2 is not executed
+         ----
+
+            declare
+               A1                 : GBA.Process.Write_File.Object;
+               A2                 : GBA.Process.Write_File.Object;
+               Ret_Code           : Integer               := 0;
+               With_Deps          : Boolean               := True;
+               Valid_Executable   : GPR2.Path_Name.Object :=
+                                      GPR2.Path_Name.Create_File
+                                        (Name      => "write_file",
+                                         Directory => "write_file");
+            begin
+               A1.Initialize (Root_View, 1, Valid_Executable);
+               A1.Deactivate;
+               A2.Initialize (Root_View, 2, Valid_Executable);
+
+               if not Tree.Artifacts_Database.Add_Action (A1) then
+                  return 1;
+               end if;
+
+               if not Tree.Artifacts_Database.Add_Action (A2) then
+                  return 1;
+               end if;
+            end;
+
+      when 7 =>
+         ----
+         --  Scenario 7
+         --
+         --  Scenario required for scenario 8
+         ----
+
+            declare
+               A                  : GBA.Process.Write_File.Object;
+               Valid_Executable   : GPR2.Path_Name.Object :=
+                                      GPR2.Path_Name.Create_File
+                                        (Name      => "write_file",
+                                         Directory => "write_file");
+            begin
+               A.Initialize (Root_View, 1, Valid_Executable);
+
+               if not Tree.Artifacts_Database.Add_Action (A) then
+                  return 1;
+               end if;
+            end;
+
+      when 8 =>
+         ----
+         --  Scenario 8
+         --
+         --  Action n. 1 is deactivated but its signature is valid,
+         --  so action n.2 executed. Note that scenario 7 must be run before
+         --  so the artifacts and signatures are already present
+         ----
+
+            declare
+               A1                 : GBA.Process.Write_File.Object;
+               A2                 : GBA.Process.Write_File.Object;
+               Ret_Code           : Integer               := 0;
+               With_Deps          : Boolean               := True;
+               Valid_Executable   : GPR2.Path_Name.Object :=
+                                      GPR2.Path_Name.Create_File
+                                        (Name      => "write_file",
+                                         Directory => "write_file");
+            begin
+               A1.Initialize (Root_View, 1, Valid_Executable);
+               A1.Deactivate;
+               A2.Initialize (Root_View, 2, Valid_Executable);
+
+               if not Tree.Artifacts_Database.Add_Action (A1) then
+                  return 1;
+               end if;
+
+               if not Tree.Artifacts_Database.Add_Action (A2) then
+                  return 1;
+               end if;
+            end;
+      when others =>
+         null;
+   end case;
+
+   Scheduler.Set_JSON_File (Path_Name.Create_File ("jobs.json"));
+
+   Exec_Opts.Jobs := 2;
+
+   if Tree.Artifacts_Database.Execute (Scheduler, Exec_Opts) /= GPR2.Build.Actions_Scheduler.Success then
+      Ada.Text_IO.Put_Line ("execute detected errors");
+   end if;
+
+   return 0;
+end Test;

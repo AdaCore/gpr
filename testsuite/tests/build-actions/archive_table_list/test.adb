@@ -2,7 +2,7 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Text_IO;
 with GPR2.Build.Artifacts;
 with GPR2.Build.Artifacts.Library;
-with GPR2.Build.Actions.Archive_Table_List;
+with GPR2.Build.Actions.Process.Archive_Table_List;
 with GPR2.Containers;
 with GPR2.Options;
 with GPR2.Path_Name;
@@ -18,7 +18,8 @@ procedure Test is
    Opts        : GPR2.Options.Object;
    Project     : constant String := "tree/lib.gpr";
 
-   Action : GBA.Archive_Table_List.Object := GBA.Archive_Table_List.Undefined;
+   Action : GBA.Process.Archive_Table_List.Object :=
+              GBA.Process.Archive_Table_List.Undefined;
 
    -----------------
    -- Init_Action --

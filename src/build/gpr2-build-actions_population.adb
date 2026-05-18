@@ -9,13 +9,14 @@ with Ada.Containers.Vectors;
 with GNATCOLL.Directed_Graph;
 with GNATCOLL.Traces;
 
-with GPR2.Build.Actions.Ada_Bind;
-with GPR2.Build.Actions.Archive_Table_List;
-with GPR2.Build.Actions.Compile.Ada;
-with GPR2.Build.Actions.Link;
-with GPR2.Build.Actions.Link_Options_Insert;
-with GPR2.Build.Actions.Link.Partial;
-with GPR2.Build.Actions.Post_Bind;
+with GPR2.Build.Actions.Process.Ada_Bind;
+with GPR2.Build.Actions.Process.Archive_Table_List;
+with GPR2.Build.Actions.Process.Compile.Ada;
+with GPR2.Build.Actions.Process.Link;
+with GPR2.Build.Actions.Process.Link_Options_Insert;
+with GPR2.Build.Actions.Process.Link.Partial;
+with GPR2.Build.Actions.Process.Post_Bind;
+use GPR2.Build.Actions.Process;
 with GPR2.Build.Actions.Sets;
 with GPR2.Build.Artifacts;
 with GPR2.Build.Artifacts.Library;
@@ -53,39 +54,39 @@ package body GPR2.Build.Actions_Population is
    package PAI renames GPR2.Project.Attribute_Index;
 
    type Link_Array is
-     array (Positive range <>) of GPR2.Build.Actions.Link.Object;
+     array (Positive range <>) of Link.Object;
 
    type Bind_Array is
-     array (Positive range <>) of GPR2.Build.Actions.Ada_Bind.Object;
+     array (Positive range <>) of Ada_Bind.Object;
 
    package Library_Helper is
 
       type Object is tagged record
          View                : GPR2.Project.View.Object;
-         Bind                : GPR2.Build.Actions.Ada_Bind.Object;
+         Bind                : Ada_Bind.Object;
          Static_Libs_Deps    : GPR2.View_Ids.Set.Set;
          Shared_Libs_Deps    : GPR2.View_Ids.Set.Set;
-         Link_Options_Insert : GPR2.Build.Actions.Link_Options_Insert.Object;
-         Partial_Link        : GPR2.Build.Actions.Link.Partial.Object;
-         Main_Link           : GPR2.Build.Actions.Link.Object;
+         Link_Options_Insert : Actions.Process.Link_Options_Insert.Object;
+         Partial_Link        : Link.Partial.Object;
+         Main_Link           : Link.Object;
       end record;
 
       function Initial_Link_Action
-        (Self : in out Object) return GPR2.Build.Actions.Link.Object'Class;
+        (Self : in out Object) return Link.Object'Class;
 
       function Final_Link_Action
-        (Self : Object) return GPR2.Build.Actions.Link.Object'Class;
+        (Self : Object) return Link.Object'Class;
 
    private
 
       function Initial_Link_Action
-        (Self : in out Object) return GPR2.Build.Actions.Link.Object'Class
+        (Self : in out Object) return Link.Object'Class
       is (if Self.Partial_Link.Is_Defined
           then Self.Partial_Link
           else Self.Main_Link);
 
       function Final_Link_Action
-        (Self : Object) return GPR2.Build.Actions.Link.Object'Class
+        (Self : Object) return Link.Object'Class
       is (Self.Main_Link);
 
    end Library_Helper;
@@ -667,7 +668,7 @@ package body GPR2.Build.Actions_Population is
                      if Src.Is_Defined then
                         if Src.Language = Ada_Language then
                            declare
-                              Comp : GPR2.Build.Actions.Compile.Ada.Object;
+                              Comp : Compile.Ada.Object;
                            begin
                               Comp.Initialize
                                 (V.Unit (Src.Unit (M.Index).Name));
@@ -679,7 +680,7 @@ package body GPR2.Build.Actions_Population is
 
                         else
                            declare
-                              Comp : GPR2.Build.Actions.Compile.Object;
+                              Comp : Compile.Object;
                            begin
                               Comp.Initialize (Src);
 
@@ -769,18 +770,18 @@ package body GPR2.Build.Actions_Population is
                --  actions according to their classes.
 
                Compile_Phase_En := Options.Compile_Phase_Mandated
-                 and then A in Actions.Compile.Object'Class;
+                 and then A in Compile.Object'Class;
 
                Bind_Phase_En := Options.Bind_Phase_Mandated
                  and then
-                   (A in Actions.Ada_Bind.Object'Class
-                    or else A in Actions.Post_Bind.Object'Class
-                    or else (A in Actions.Link.Object'Class
-                             and then Actions.Link.Object (A).Is_Library));
+                   (A in Ada_Bind.Object'Class
+                    or else A in Post_Bind.Object'Class
+                    or else (A in Link.Object'Class
+                             and then Link.Object (A).Is_Library));
 
                Link_Phase_En := Options.Link_Phase_Mandated
-                 and then A in Actions.Link.Object'Class
-                 and then not Actions.Link.Object (A).Is_Library;
+                 and then A in Link.Object'Class
+                 and then not Link.Object (A).Is_Library;
 
                if not
                  (Compile_Phase_En
@@ -795,9 +796,9 @@ package body GPR2.Build.Actions_Population is
 
       if not Options.Restricted_To_Languages.Is_Empty then
          for A of Tree_Db.All_Actions loop
-            if A in Actions.Compile.Object'Class
+            if A in Compile.Object'Class
               and then not Options.Restricted_To_Languages.Contains
-                (Actions.Compile.Object'Class (A).Language)
+                (Compile.Object'Class (A).Language)
             then
                To_Remove.Include (A);
             end if;
@@ -894,7 +895,7 @@ package body GPR2.Build.Actions_Population is
       for V of Closure loop
          if not V.Is_Externally_Built or else With_Externally_Built then
             declare
-               Comp : GPR2.Build.Actions.Compile.Ada.Object;
+               Comp : Compile.Ada.Object;
             begin
                for CU of V.Own_Units loop
                   Comp.Initialize (CU);
@@ -906,7 +907,7 @@ package body GPR2.Build.Actions_Population is
             end;
 
             declare
-               Comp : GPR2.Build.Actions.Compile.Object;
+               Comp : Compile.Object;
             begin
                for Src of V.Sources loop
                   if not Src.Has_Units
@@ -985,7 +986,7 @@ package body GPR2.Build.Actions_Population is
       Self.View := View;
 
       Self.Main_Link.Initialize
-        (Kind     => Actions.Link.Library,
+        (Kind     => Link.Library,
          Context  => View,
          No_Rpath => Options.No_Run_Path);
 
@@ -1096,12 +1097,12 @@ package body GPR2.Build.Actions_Population is
 
          --  Used by the linker so it can find its bind action easily.
 
-         Actions.Link.Object'Class
+         Link.Object'Class
            (Tree_Db.Action_Id_To_Reference (Self.Initial_Link_Action.UID)
               .Element.all)
            .Set_Bind_Action (Self.Bind);
 
-         Actions.Link.Object'Class
+         Link.Object'Class
            (Tree_Db.Action_Id_To_Reference (Self.Final_Link_Action.UID)
               .Element.all)
            .Set_Bind_Action (Self.Bind);
@@ -1145,7 +1146,7 @@ package body GPR2.Build.Actions_Population is
             for Agg of View.Aggregated loop
                for CU of Agg.Own_Units loop
                   declare
-                     Comp : GPR2.Build.Actions.Compile.Ada.Object;
+                     Comp : Compile.Ada.Object;
                   begin
                      Comp.Initialize (CU);
 
@@ -1166,7 +1167,7 @@ package body GPR2.Build.Actions_Population is
          else
             for CU of View.Own_Units loop
                declare
-                  Comp : GPR2.Build.Actions.Compile.Ada.Object;
+                  Comp : Compile.Ada.Object;
                begin
                   Comp.Initialize (CU);
 
@@ -1193,7 +1194,7 @@ package body GPR2.Build.Actions_Population is
               and then Src.Kind = S_Body
             then
                declare
-                  Comp : GPR2.Build.Actions.Compile.Object;
+                  Comp : Compile.Object;
                begin
                   Comp.Initialize (Src);
 
@@ -1268,10 +1269,10 @@ package body GPR2.Build.Actions_Population is
       use type GPR2.Path_Name.Object;
       use type Ada.Containers.Count_Type;
 
-      A_Comp       : Actions.Compile.Ada.Object;
-      Comp         : Actions.Compile.Object;
+      A_Comp       : Compile.Ada.Object;
+      Comp         : Compile.Object;
       Source       : GPR2.Build.Source.Object;
-      Archive      : Actions.Link.Object;
+      Archive      : Link.Object;
       Actual_Mains : Compilation_Unit.Unit_Location_Vector;
 
    begin
@@ -1389,7 +1390,7 @@ package body GPR2.Build.Actions_Population is
                      --  uses all objects that are on the command line.
 
                      Archive.Initialize
-                       (Kind     => Build.Actions.Link.Global_Archive,
+                       (Kind     => Actions.Process.Link.Global_Archive,
                         Context  => View);
 
                      if not Tree_Db.Add_Action (Archive) then
@@ -1408,7 +1409,7 @@ package body GPR2.Build.Actions_Population is
             Source := Main.View.Visible_Source (Main.Source);
 
             Link (Idx).Initialize
-              (Kind     => Build.Actions.Link.Executable,
+              (Kind     => Actions.Process.Link.Executable,
                Src      => Main,
                No_Rpath => Options.No_Run_Path,
                Output   => -Options.Output_File);
@@ -1461,7 +1462,7 @@ package body GPR2.Build.Actions_Population is
                begin
                   for U of Units loop
                      declare
-                        R_Comp : Actions.Compile.Ada.Object;
+                        R_Comp : Compile.Ada.Object;
                      begin
                         R_Comp.Initialize (U);
 
@@ -1550,7 +1551,7 @@ package body GPR2.Build.Actions_Population is
             if Bind (Idx).Is_Defined then
                --  Used by the linker so it can find its bind action easily.
 
-               Actions.Link.Object'Class
+               Actions.Process.Link.Object'Class
                  (Tree_Db.Action_Id_To_Reference (Link (Idx).UID)
                   .Element.all)
                  .Set_Bind_Action (Bind (Idx));
@@ -1576,7 +1577,8 @@ package body GPR2.Build.Actions_Population is
                  (Lib      : LH.Object;
                   Link_Idx : Natural)
                is
-                  Archive_Table_List : Actions.Archive_Table_List.Object;
+                  Archive_Table_List :
+                    Actions.Process.Archive_Table_List.Object;
                begin
                   Archive_Table_List.Initialize
                     (Artifacts.Library.Object (Lib.Final_Link_Action.Output),
@@ -1678,8 +1680,8 @@ package body GPR2.Build.Actions_Population is
                   --  Make the linker action generate --start-group --end-group
                   --  to resolve recursively the symbols in the libraries.
 
-                  Actions.Link.Set_Has_Library_Dependency_Circle
-                    (Actions.Link.Object'Class
+                  Actions.Process.Link.Set_Has_Library_Dependency_Circle
+                    (Actions.Process.Link.Object'Class
                        (Tree_Db.Action_Id_To_Reference
                             (Link (Idx).UID).Element.all),
                      True);

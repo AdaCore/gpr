@@ -3,7 +3,7 @@ with Ada.Containers.Indefinite_Vectors;
 with Ada.Text_IO;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
-with GPR2.Build.Actions.Compile.Ada;
+with GPR2.Build.Actions.Process.Compile.Ada;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Tree_Db;
 with GPR2.Options;
@@ -34,7 +34,7 @@ begin
    for NS of Tree.Namespace_Root_Projects loop
       for Unit of NS.Units loop
          declare
-            A : GPR2.Build.Actions.Compile.Ada.Object;
+            A : GPR2.Build.Actions.Process.Compile.Ada.Object;
          begin
             A.Initialize (Unit);
 
@@ -52,7 +52,7 @@ begin
 
    for A of Actions loop
       A.Load_Signature;
-      A.Update_Command_Line (1);
+      GPR2.Build.Actions.Process.Object'Class (A).Update_Command_Line (1);
 
       if not A.Valid_Signature then
          Ada.Text_IO.Put_Line (A.UID.Image);

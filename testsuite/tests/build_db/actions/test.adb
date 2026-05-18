@@ -4,7 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with GPR2.Build.Actions.Write_File;
+with GPR2.Build.Actions.Process.Write_File;
 with GPR2.Options;
 with GPR2.Path_Name;
 with Ada.Strings;
@@ -35,7 +35,7 @@ begin
    for Action_Index in 1 .. 3 loop
       declare
          use all type Ada.Strings.Trim_End;
-         A : GBA.Write_File.Object;
+         A : GBA.Process.Write_File.Object;
       begin
          A.Initialize
             (Root_View, Action_Index);

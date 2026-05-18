@@ -1,0 +1,2 @@
+description: Test that an action raising an exception is properly handled
+driver: python_script

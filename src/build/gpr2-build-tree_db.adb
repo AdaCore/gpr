@@ -491,10 +491,10 @@ package body GPR2.Build.Tree_Db is
    -------------
 
    function Execute
-     (Self    : in out Object;
-      PM      : in out GPR2.Build.Process_Manager.Object'Class;
-      Options : GPR2.Build.Process_Manager.PM_Options)
-      return Process_Manager.Execution_Status
+     (Self              : in out Object;
+      Actions_Scheduler : in out GPR2.Build.Actions_Scheduler.Object'Class;
+      Options           : GPR2.Build.Actions_Scheduler.Options'Class)
+      return GPR2.Build.Actions_Scheduler.Execution_Status
    is
       Node : GNATCOLL.Directed_Graph.Node_Id;
       Pred : Artifact_Action_Maps.Cursor;
@@ -503,7 +503,7 @@ package body GPR2.Build.Tree_Db is
    begin
       --  Populate the DAG used for the execution
 
-      Process_Manager.Clear (Self.Exec_Ctxt);
+      GPR2.Build.Actions_Scheduler.Clear (Self.Exec_Ctxt);
 
       --  First ensure all actions correspond to a node in the DAG
 
@@ -550,7 +550,7 @@ package body GPR2.Build.Tree_Db is
 
       if not Self.Actions.Is_Empty then
          Self.Executing := True;
-         PM.Execute
+         Actions_Scheduler.Execute
            (Self.Self,
             Context => Self.Exec_Ctxt'Access,
             Options => Options);

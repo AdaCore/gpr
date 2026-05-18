@@ -6,8 +6,8 @@ with Ada.Text_IO;
 with GNAT.OS_Lib;
 
 with GNATCOLL.Utils;
-with GPR2.Build.Actions.Ada_Bind;
-with GPR2.Build.Actions.Post_Bind;
+with GPR2.Build.Actions.Process.Ada_Bind;
+with GPR2.Build.Actions.Process.Post_Bind;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source;
@@ -36,7 +36,7 @@ function Main return Integer is
 begin
    Test_Case_Binder_Action_Process : declare
       Tree    : GPR2.Project.Tree.Object;
-      Action  : GBA.Ada_Bind.Object := GBA.Ada_Bind.Undefined;
+      Action  : GBA.Process.Ada_Bind.Object := GBA.Process.Ada_Bind.Undefined;
       Count   : Natural;
       Obj_Dir : Virtual_File;
    begin
@@ -92,7 +92,7 @@ begin
       Test_Helper.Assert (Count = 3, "Correct number of inputs");
 
       declare
-         PB  : GPR2.Build.Actions.Post_Bind.Object := Action.Post_Bind;
+         PB  : GBA.Process.Post_Bind.Object := Action.Post_Bind;
       begin
          Test_Helper.Assert (PB.Is_Defined,
                              "Post-Bind action correctly created");
@@ -101,7 +101,7 @@ begin
 
    Test_Cases_Parse_Binder_Tool : declare
       Tree   : GPR2.Project.Tree.Object;
-      Action : GBA.Ada_Bind.Object := GBA.Ada_Bind.Undefined;
+      Action : GBA.Process.Ada_Bind.Object := GBA.Process.Ada_Bind.Undefined;
    begin
       Test_Helper.New_Test_Case ("Parse gnatbind_prefix");
       --  package Binder is

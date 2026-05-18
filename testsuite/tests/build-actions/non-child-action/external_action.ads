@@ -5,6 +5,7 @@
 --
 
 with GPR2.Build.Actions;
+with GPR2.Build.Actions.Process;
 with GPR2.Build.Command_Line;
 with GPR2.Path_Name;
 with GPR2.Project.Registry.Attribute;
@@ -17,7 +18,7 @@ package External_Action is
 
    type External_Action_Id is new GPR2.Build.Actions.Action_Id with private;
 
-   type Object is new GPR2.Build.Actions.Object with private;
+   type Object is new GPR2.Build.Actions.Process.Object with private;
 
    overriding function UID (Self : Object) return GPR2.Build.Actions.Action_Id'Class;
 
@@ -47,7 +48,7 @@ package External_Action is
 
 private
 
-   type Object is new GPR2.Build.Actions.Object with null record;
+   type Object is new GPR2.Build.Actions.Process.Object with null record;
 
    type External_Action_Id is new GPR2.Build.Actions.Action_Id with record
       Ctxt  : GPR2.Project.View.Object;

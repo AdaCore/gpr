@@ -1,8 +1,8 @@
 with Ada.Command_Line;
 with Ada.Text_IO;
 
-with GPR2.Build.Actions.Compile;
-with GPR2.Build.Actions.Compile.Ada;
+with GPR2.Build.Actions.Process.Compile;
+with GPR2.Build.Actions.Process.Compile.Ada;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Source.Sets;
 
@@ -34,7 +34,7 @@ begin
    for NS of Tree.Namespace_Root_Projects loop
       for Unit of NS.Units loop
          declare
-            A : GPR2.Build.Actions.Compile.Ada.Object;
+            A : GPR2.Build.Actions.Process.Compile.Ada.Object;
          begin
             A.Initialize (Unit);
 
@@ -51,7 +51,7 @@ begin
            and then Src.Kind = S_Body
          then
             declare
-               A : GPR2.Build.Actions.Compile.Object;
+               A : GPR2.Build.Actions.Process.Compile.Object;
             begin
                A.Initialize (Src);
 

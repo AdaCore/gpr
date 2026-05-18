@@ -12,10 +12,10 @@ with GNATCOLL.Directed_Graph;
 with GNATCOLL.OS.FS;
 
 with GPR2.Build.Actions;
+with GPR2.Build.Actions_Scheduler;
 with GPR2.Build.Artifacts;
 with GPR2.Build.External_Options;
 with GPR2.Build.Options;
-with GPR2.Build.Process_Manager;
 with GPR2.Build.View_Db;
 with GPR2.Log;
 with GPR2.Path_Name;
@@ -133,10 +133,10 @@ package GPR2.Build.Tree_Db is
                    and then Artifact.Is_Defined;
 
    function Execute
-     (Self    : in out Object;
-      PM      : in out GPR2.Build.Process_Manager.Object'Class;
-      Options : GPR2.Build.Process_Manager.PM_Options)
-      return Process_Manager.Execution_Status;
+     (Self              : in out Object;
+      Actions_Scheduler : in out GPR2.Build.Actions_Scheduler.Object'Class;
+      Options           : GPR2.Build.Actions_Scheduler.Options'Class)
+      return GPR2.Build.Actions_Scheduler.Execution_Status;
 
    function Is_Executing (Self : Object) return Boolean;
 
@@ -371,7 +371,7 @@ private
       Predecessor      : Artifact_Action_Maps.Map;
 
       Executing        : Boolean := False;
-      Exec_Ctxt        : aliased Process_Manager.Process_Execution_Context;
+      Exec_Ctxt        : aliased GPR2.Build.Actions_Scheduler.Context;
 
       File_Index       : aliased GPR2.Utils.Hash.Object;
 

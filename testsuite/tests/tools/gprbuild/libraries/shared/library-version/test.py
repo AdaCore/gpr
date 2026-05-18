@@ -22,9 +22,9 @@ lib_version_found = False
 lib_version_switches_found = False
 for job in cntlib:
     if job["status"] != "SKIPPED":
-        if "-Wl,-soname,libmylib.1.2.3.so" in job["command"]:
+        if "-Wl,-soname,libmylib.1.2.3.so" in job.get("command", ""):
             lib_version_switches_found = True
-        if "lib/libmylib.1.2.3.so" in job["command"]:
+        if "lib/libmylib.1.2.3.so" in job.get("command", ""):
             lib_version_found = True
 
 if 'windows' in Env().host.platform:

@@ -23,9 +23,10 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with GNATCOLL.Traces;
 
 with GPR2.Build.Actions_Population;
+with GPR2.Build.Actions_Scheduler;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.External_Options;
-with GPR2.Build.Process_Manager.JSON;
+with GPR2.Build.Actions_Scheduler.JSON;
 with GPR2.Build.Source;
 with GPR2.Message;
 with GPR2.Options;
@@ -62,7 +63,7 @@ procedure GPRbuild.Main is
    package PRA renames GPR2.Project.Registry.Attribute;
 
    function Execute
-     (PM : in out GPR2.Build.Process_Manager.Object'Class)
+     (PM : in out GPR2.Build.Actions_Scheduler.Object'Class)
       return Exit_Code_Type;
 
    Opt  : Options.Object;
@@ -72,23 +73,23 @@ procedure GPRbuild.Main is
    -------------
 
    function Execute
-     (PM : in out GPR2.Build.Process_Manager.Object'Class)
+     (PM : in out GPR2.Build.Actions_Scheduler.Object'Class)
       return Exit_Code_Type is
    begin
       case Opt.Tree.Artifacts_Database.Execute (PM, Opt.PM_Options) is
-         when GPR2.Build.Process_Manager.Success =>
+         when GPR2.Build.Actions_Scheduler.Success =>
             return E_Success;
-         when GPR2.Build.Process_Manager.Errors =>
+         when GPR2.Build.Actions_Scheduler.Errors =>
             return E_Errors;
-         when GPR2.Build.Process_Manager.Failed =>
+         when GPR2.Build.Actions_Scheduler.Failed =>
             return E_Fatal;
       end case;
    end Execute;
 
    Parser         : constant Options.GPRbuild_Parser := Options.Create;
    Sw_Attr        : GPR2.Project.Attribute.Object;
-   Process_M      : GPR2.Build.Process_Manager.Object;
-   Process_M_JSON : GPR2.Build.Process_Manager.JSON.Object;
+   Process_M      : GPR2.Build.Actions_Scheduler.Object;
+   Process_M_JSON : GPR2.Build.Actions_Scheduler.JSON.Object;
    Jobs_JSON      : GPR2.Path_Name.Object;
 
    use GPR2.Build;

@@ -1,0 +1,55 @@
+================================================================
+Case 1 - No errors
+[Write File]      1
+[Write File]      2
+[Write File]      3
+
+================================================================
+Case 2 - No errors with already existing artifacts
+
+================================================================
+Case 3 - Action n. 2 returns an erroneous code
+[Write File]      1
+[Write File]      2
+File '2.txt' has been created, but return code is 1
+[Write File] 2 (main.gpr) failed.
+Error detected during thread manager execution.
+
+================================================================
+Case 4 - Action n. 6 does not depend on action n. 5
+[Write File]      1
+[Write File]      6
+[Write File]      7
+[Write File]      8
+[Write File]      9
+[Write File]      10
+[Write File]      2
+[Write File]      3
+[Write File]      4
+[Write File]      5
+
+================================================================
+Case 5 - Action n. 3 does not have a valid executable
+[Write File]      1
+[Write File]      2
+[Write File]      3
+[Write File]      4
+[Write File]      5
+
+================================================================
+Case 6 - Action n. 2 is deactivated
+[Write File]      1
+
+================================================================
+Case 7 - Action n. 1 is deactivated so action n. 2 is not executed
+Action [Write File] 1 (main.gpr) has been deactivated, but its signature is invalid. As a result, the following dependent action(s) will not be executed:
+   * [Write File] 2 (main.gpr)
+
+================================================================
+Case 8 - Prepare action n.1 signature for next scenario
+[Write File]      1
+
+================================================================
+Case 9 - Action n. 1 is deactivated but has a valid signature, so action n. 2 is executed
+[Write File]      2
+

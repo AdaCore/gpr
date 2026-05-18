@@ -34,14 +34,14 @@ print("bin:")
 found = False
 for job in cntbin:
     if job["status"] != "SKIPPED":
-        if "-lmylib" in job["command"]:
+        if "-lmylib" in job.get("command", ""):
             found = True
-            if "pkg.o" in job["command"]:
+            if "pkg.o" in job.get("command", ""):
                 print("ERROR: found both -lmylib and pkg.o in the link command")
-                print(job["command"])
-        if "mylib.a" in job["command"]:
+                print(job.get("command", ""))
+        if "mylib.a" in job.get("command", ""):
                 print("ERROR: The static version of mylib (mylib.a) should not be used in the link command")
-        if "mylib" + shared_lib_ext in job["command"]:
+        if "mylib" + shared_lib_ext in job.get("command", ""):
             print("ERROR: mylib" + shared_lib_ext + " should not be explicitly added to the command line. Instead, -L and -l option should be used.");
 
 if not found:

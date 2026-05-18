@@ -19,9 +19,9 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 with GPR2;
-with GPR2.Build.Process_Manager;
 with GPR2.Build.External_Options;
 with GPR2.Containers;
+with GPR2.Build.Actions_Scheduler;
 
 with GPRtools.Options;
 
@@ -39,7 +39,8 @@ package GPRbuild.Options is
 
       Extra_Args              : GPR2.Build.External_Options.Object;
       Config_Args             : GPR2.Containers.Value_List;
-      PM_Options              : GPR2.Build.Process_Manager.PM_Options;
+      PM_Options              :
+        GPR2.Build.Actions_Scheduler.Options;
 
       Dash_A_Option           : Boolean := False;
       --  Ignored but reporting has to be done after the options are parsed

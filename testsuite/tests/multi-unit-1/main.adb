@@ -4,7 +4,7 @@ with Ada.Text_IO;
 
 with GPR2; use GPR2;
 with GPR2.Build.Actions_Population;
-with GPR2.Build.Actions.Compile.Ada;
+with GPR2.Build.Actions.Process.Compile.Ada;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Options;
 with GPR2.Build.Source;
@@ -30,7 +30,7 @@ procedure Main is
    procedure Print_Source (S : Build.Source.Object) is
       DN   : Path_Name.Object;
       CU   : GPR2.Build.Compilation_Unit.Object;
-      Comp : GPR2.Build.Actions.Compile.Ada.Object;
+      Comp : GPR2.Build.Actions.Process.Compile.Ada.Object;
    begin
       Text_IO.Put_Line (String (S.Path_Name.Simple_Name));
       Text_IO.Put_Line ("  single-unit          = " & S.Has_Single_Unit'Image);
@@ -46,13 +46,13 @@ procedure Main is
          if CU.Is_Defined then
 
             declare
-               UID  : constant Build.Actions.Compile.Ada.Ada_Compile_Id :=
-                 Build.Actions.Compile.Ada.Create (CU);
+               UID  : constant Build.Actions.Process.Compile.Ada.Ada_Compile_Id :=
+                 Build.Actions.Process.Compile.Ada.Create (CU);
                Deps : GPR2.Containers.Name_Set;
             begin
                if Tree.Artifacts_Database.Has_Action (UID) then
                   Comp :=
-                    Build.Actions.Compile.Ada.Object
+                    Build.Actions.Process.Compile.Ada.Object
                       (Tree.Artifacts_Database.Action (UID));
 
                   if U_Info.Kind = S_Spec then

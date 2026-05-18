@@ -1,7 +1,7 @@
 with Ada.Directories;
 with Ada.Text_IO;
 
-with GPR2.Build.Actions.Compile.Ada;
+with GPR2.Build.Actions.Process.Compile.Ada;
 with GPR2.Build.Compilation_Unit; use GPR2.Build.Compilation_Unit;
 with GPR2.Build.Source;
 
@@ -27,13 +27,13 @@ function Test return Integer is
    Project     : constant String := "tree/main.gpr";
 
 
-   Ada_Comp : GBA.Compile.Ada.Object;
+   Ada_Comp : GBA.Process.Compile.Ada.Object;
 
    procedure Init_Action
-     (Action : in out GBA.Compile.Ada.Object; Tree : GPR2.Project.Tree.Object);
+     (Action : in out GBA.Process.Compile.Ada.Object; Tree : GPR2.Project.Tree.Object);
 
    procedure Init_Action
-     (Action : in out GBA.Compile.Ada.Object; Tree : GPR2.Project.Tree.Object)
+     (Action : in out GBA.Process.Compile.Ada.Object; Tree : GPR2.Project.Tree.Object)
    is
       Source : GPR2.Build.Source.Object;
    begin

@@ -4,13 +4,12 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Containers.Indefinite_Holders;
 with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 with GPR2.Build.Artifacts.Key_Value;
-with GPR2.Build.Command_Line;
-with GPR2.Build.Response_Files;
 with GPR2.Build.Signature;
 with GPR2.Containers;
 with GPR2.Path_Name;
@@ -40,6 +39,9 @@ package GPR2.Build.Actions is
    function Language (Self : Action_Id) return Language_Id is abstract;
    function Action_Parameter (Self : Action_Id) return Value_Type is abstract;
 
+   package Action_Id_Holder is new Ada.Containers.Indefinite_Holders
+     (Action_Id'Class, "=");
+
    function Image
      (Self      : Action_Id'Class;
       With_View : Boolean := True) return String;
@@ -59,6 +61,9 @@ package GPR2.Build.Actions is
    --  Return a unique string representation of the action ID.
 
    function "<" (L, R : Action_Id'Class) return Boolean;
+   --  Class-wide comparison
+
+   function "=" (L, R : Action_Id'Class) return Boolean;
    --  Class-wide comparison
 
    package Action_Id_Sets is new Ada.Containers.Indefinite_Ordered_Sets
@@ -118,13 +123,11 @@ package GPR2.Build.Actions is
    --    dependencies of its inputs and add them until the closure of the
    --    Ada program is complete in order to compute the elaboration.
    --  - Compute_Command: this computes the command line. This is called just
-   --    before actually executing the action. The command line is also part
-   --    of the signature, so this is called even when the process manager
-   --    finally decides that the signature is valid so the action can be
+   --    before actually executing the action.
+   --  - Pre_Execution: called just before the process is actually executed.
+   --    This is thus not called if the signature is valid and the action
    --    skipped.
-   --  - Pre_Command: called just before the process is actually executed. This
-   --    is thus not called if the signature is valid and the action skipped.
-   --  - Post_Command: called after the process is finished or the action is
+   --  - Post_Execution: called after the process is finished or the action is
    --    skipped or an error occurred.
    --
    --  If the actions are not meant to be executed, such as when populating
@@ -158,37 +161,27 @@ package GPR2.Build.Actions is
    --  the signature may be incorrect.
    --  Returns True on success.
 
-   procedure Compute_Command
-     (Self           : in out Object;
-      Slot           : Positive;
-      Cmd_Line       : in out GPR2.Build.Command_Line.Object;
-      Signature_Only : Boolean) is abstract;
-   --  Return the command line and environment corresponding to the action
-   --  If Signature_Only is set, then no temp file should be generated, and
-   --  only the arguments that are part of the signature are to be computed.
-
-   procedure Compute_Response_Files
-     (Self           : in out Object;
-      Cmd_Line       : in out GPR2.Build.Command_Line.Object) is null;
-   --  Return the command line and response files corresponding to the action
-   --  If Signature_Only is set, then no temp file should be generated, and
-   --  only the arguments that are part of the signature are to be computed.
-
-   function Pre_Command
+   function Pre_Execution
      (Self : in out Object) return Boolean;
-   --  Pre-processing that should occur before executing the command
+   --  Pre-processing that should occur before executing the action
 
    type Execution_Status is (Skipped, Success);
 
-   function Post_Command
+   SUCCESS_RETURN_CODE : constant Integer := 0;
+
+   function Post_Execution
      (Self   : in out Object;
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;
       Stderr : Unbounded_String := Null_Unbounded_String) return Boolean;
-   --  Post-processing that should occur after executing the command.
-   --  Called when the command has been executed (even after reporting a
-   --  failure) or when the command is disabled or skipped but the signature
+   --  Post-processing that should occur after executing the action.
+   --  Called when the action has been executed (even after reporting a
+   --  failure) or when the action is disabled or skipped but the signature
    --  is valid.
+
+   function Failure_Message (Self : Object) return String;
+   --  Return the message to display by the action scheduler when the
+   --  action fails during its execution life cycle.
 
    procedure Compute_Signature
      (Self : in out Object; Check_Checksums : Boolean)
@@ -217,7 +210,7 @@ package GPR2.Build.Actions is
 
    function Display_Output (Action : Object) return Boolean;
    --  Indicates whether the action output needs to be displayed by the
-   --  process manager. By default, this returns True, meaning the output
+   --  actions scheduler. By default, this returns True, meaning the output
    --  of the action will be shown to the user. This can be overridden in
    --  derived types to suppress output for specific actions, such as those
    --  that produce intermediate results or are part of a batch process
@@ -228,14 +221,14 @@ package GPR2.Build.Actions is
    --  by its project nature.
 
    function Write_Signature
-     (Self   : in out Object'Class;
+     (Self   : in out Object;
       Stdout : Unbounded_String;
       Stderr : Unbounded_String) return Boolean;
    --  Used to store the signature of the action after it has been executed.
    --  Returns false in case an expected artifact is missing.
 
    procedure Load_Signature
-     (Self : in out Object'Class; Check_Checksums : Boolean := True);
+     (Self : in out Object; Check_Checksums : Boolean := True);
    --  Load the signature checksums from the build DB. The obtained signature
    --  is saved in the action. If Check_Checksums is True, compare the current
    --  action signature to the loaded one, and invalidate it as soon as a
@@ -253,16 +246,6 @@ package GPR2.Build.Actions is
    procedure Attach
      (Self : in out Object'Class;
       Db   : in out GPR2.Build.Tree_Db.Object);
-
-   procedure Update_Command_Line
-     (Self : in out Object'Class;
-      Slot : Positive);
-   --  Updates the command line and update the signature accordingly
-
-   function Command_Line (Self : Object) return GPR2.Build.Command_Line.Object;
-
-   function Response_File
-     (Self : Object) return GPR2.Build.Response_Files.Object;
 
    ---------------------------
    -- Temp files management --
@@ -303,10 +286,6 @@ private
       --  List of tmp files to be cleaned up
       Deactivated    : Boolean := False;
       --  Set when the action is deactivated
-      Cmd_Line       : GPR2.Build.Command_Line.Object;
-      --  Command line used to run the action. Used also in the signature
-      Response_Files : GPR2.Build.Response_Files.Object;
-      --  Response files used in the command line
       Force          : Boolean := False;
       --  Force the action no matter the state of its signature
    end record;
@@ -319,6 +298,13 @@ private
       elsif L.Language /= R.Language
       then L.Language < R.Language
       else L.Action_Parameter < R.Action_Parameter);
+
+
+   function "=" (L, R : Action_Id'Class) return Boolean is
+     (L.View.Id = R.View.Id and then
+      L.Action_Class = R.Action_Class and then
+      L.Language = R.Language and then
+      L.Action_Parameter = R.Action_Parameter);
 
    function "<" (L, R : Object'Class) return Boolean is
       (L.UID < R.UID);
@@ -336,29 +322,25 @@ private
      (Self : in out Object) return Boolean is
      (True);
 
-   function Pre_Command
+   function Pre_Execution
      (Self : in out Object) return Boolean is
      (True);
 
-   function Post_Command
+   function Post_Execution
      (Self   : in out Object;
       Status : Execution_Status;
       Stdout : Unbounded_String := Null_Unbounded_String;
       Stderr : Unbounded_String := Null_Unbounded_String) return Boolean is
      (True);
 
+   function Failure_Message (Self : Object) return String
+   is (Object'Class (Self).UID.Image & " failed.");
+
    function Is_Deactivated (Self : Object) return Boolean
    is (Self.Deactivated);
 
    function Display_Output (Action : Object) return Boolean
    is (True);
-
-   function Command_Line (Self : Object) return GPR2.Build.Command_Line.Object
-   is (Self.Cmd_Line);
-
-   function Response_File
-     (Self : Object) return GPR2.Build.Response_Files.Object
-   is (Self.Response_Files);
 
    function Saved_Stdout (Self : Object'Class) return Unbounded_String is
      (Self.Signature.Stdout);

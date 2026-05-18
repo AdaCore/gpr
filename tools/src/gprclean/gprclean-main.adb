@@ -28,11 +28,11 @@ with GNATCOLL.OS.Stat;
 with GNATCOLL.Traces;
 with GNATCOLL.Utils;
 
-with GPR2.Build.Actions.Post_Bind;
+with GPR2.Build.Actions.Process.Post_Bind;
 with GPR2.Build.Actions_Population;
-with GPR2.Build.Actions.Compile;
-with GPR2.Build.Actions.Compile.Ada;
-with GPR2.Build.Actions.Link;
+with GPR2.Build.Actions.Process.Compile;
+with GPR2.Build.Actions.Process.Compile.Ada;
+with GPR2.Build.Actions.Process.Link;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Log;
@@ -60,6 +60,7 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
 
    use GPR2;
    use GPR2.Build;
+   use GPR2.Build.Actions.Process;
    use GPRtools.Program_Termination;
    use GPR2.Path_Name;
 
@@ -327,7 +328,7 @@ begin
            or else Opt.Tree.Namespace_Root_Projects.Contains (Action.View))
         and then not
           (Opt.Compil_Only
-           and then Action in GPR2.Build.Actions.Link.Object'Class)
+           and then Action in Link.Object'Class)
       then
          for Artifact of
            Opt.Tree.Artifacts_Database.Outputs (Action.UID)
@@ -338,12 +339,12 @@ begin
 
                Delete_File (Artifact_Path.String_Value, Opt);
 
-               if Action in GPR2.Build.Actions.Compile.Object'Class
-                 or else Action in GPR2.Build.Actions.Post_Bind.Object'Class
+               if Action in Compile.Object'Class
+                 or else Action in Post_Bind.Object'Class
                then
-                  if Action in GPR2.Build.Actions.Compile.Object'Class then
+                  if Action in Compile.Object'Class then
                      Lang :=
-                       GPR2.Build.Actions.Compile.Object'Class
+                       Compile.Object'Class
                          (Action).Language;
                   else
                      Lang := Ada_Language;
@@ -378,10 +379,10 @@ begin
 
                      if Src_Exts.Is_Defined then
                         for Val of Src_Exts.Values loop
-                           if Action in Actions.Compile.Ada.Object'Class then
+                           if Action in Compile.Ada.Object'Class then
                               declare
                                  CU : constant Compilation_Unit.Object :=
-                                        Actions.Compile.Ada.Object'Class
+                                        Compile.Ada.Object'Class
                                           (Action).Unit;
 
                                  procedure For_Part

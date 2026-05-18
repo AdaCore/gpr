@@ -22,7 +22,7 @@ for kind in "static", "relocatable":
     run([GPRBUILD, "-q", "-Pagglib.gpr", "-p", "--json-summary", lib_kind])
     with open("jobs.json") as fp:
         cnt = json.load(fp)
-    jobs = {job["uid"]: job["command"] for job in cnt}
+    jobs = {job["uid"]: job.get("command", "") for job in cnt}
     for uid in sorted(jobs.keys()):
         print(uid)
         if "-fpic" in jobs[uid].lower():
@@ -33,15 +33,15 @@ for kind in "static", "relocatable":
         cnt = json.load(fp)
     for job in cnt:
         if "[Link]" in job["uid"] and (
-            "-o ../main" in job["command"] or "-o ..\\main" in job["command"]
+            "-o ../main" in job.get("command", "") or "-o ..\\main" in job.get("command", "")
         ):
-            if "libdemo.a" in job["command"]:
+            if "libdemo.a" in job.get("command", ""):
                 print("Ok: linking with libdemo.a")
-            if "-ldemo" in job["command"]:
+            if "-ldemo" in job.get("command", ""):
                 print("Ok: linking with libdemo")
-            if "pkg1.o" in job["command"]:
+            if "pkg1.o" in job.get("command", ""):
                 print("ERROR: linking with pkg1.o")
-            elif "pkg2.o" in job["command"]:
+            elif "pkg2.o" in job.get("command", ""):
                 print("ERROR: linking with pkg2.o")
             else:
                 print("Ok: not linking with individual .o's")
