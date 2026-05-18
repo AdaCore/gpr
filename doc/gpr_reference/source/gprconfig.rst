@@ -128,9 +128,9 @@ Compiler selection (batch mode)
   value, so ``ada,,zfp`` is equivalent to ``language:ada,runtime:zfp``.
 
 ``--fallback-targets``
-  When no compiler is found for the requested target, also search for native
-  toolchains of a different architecture. Useful on systems where a
-  cross-compiler is registered under a different target triple.
+  When no compiler is found for the requested target, also search for
+  toolchains recorded as fallbacks, such as a compatible native target of
+  a different architecture.
 
 
 Knowledge base
