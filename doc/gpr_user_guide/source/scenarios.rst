@@ -191,9 +191,20 @@ independent dimension of the configuration:
       for Exec_Dir    use "bin/" & Build & "-" & OS;
       for Main        use ("main.adb");
 
+      package Compiler is
+         case Build is
+            when "debug"   =>
+               for Switches ("Ada") use ("-g", "-gnatwa");
+            when "release" =>
+               for Switches ("Ada") use ("-O2", "-gnatn");
+         end case;
+      end Compiler;
+
       case OS is
-         when others =>
-            for Source_Dirs use My_App'Source_Dirs & ("src/" & OS);
+         when "windows" =>
+            for Source_Dirs use My_App'Source_Dirs & ("src/windows");
+         when others =>  --  linux, macos
+            for Source_Dirs use My_App'Source_Dirs & ("src/posix");
       end case;
       ...
    end My_App;
