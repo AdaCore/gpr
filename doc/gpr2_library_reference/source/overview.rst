@@ -43,9 +43,9 @@ Operations that can fail in normal use (missing attribute, source not found,
 Callers guard calls with ``Has_XXX`` or ``Is_Defined`` checks. Preconditions
 on getters enforce this at runtime when the library is built with
 ``GPR2_BUILD=debug`` or ``GPR2_BUILD=release_checks``.
-At the highest level, ``Tree.Load`` and ``Build.Tree_Db.Execute`` return a
-simple success/failure status so callers do not need exception handlers for
-normal error paths.
+At the highest level, ``GPR2.Project.Tree.Load`` and
+``GPR2.Build.Tree_Db.Execute`` return a simple success/failure status so
+callers do not need exception handlers for normal error paths.
 
 **Typed paths.**
 All filesystem paths in the API use ``GPR2.Path_Name.Object`` rather than raw
