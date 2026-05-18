@@ -51,21 +51,13 @@ files, each responsible for one component. Dependencies are expressed as
 root project automatically builds everything it depends on.
 
 
-How the tools find a toolchain
-==============================
 
-GPR tools need to know which compiler to use, what default switches to apply,
-and how library files should be named. This information comes from a
-**configuration project** (a ``.cgpr`` file). Each tool automatically builds
-one in memory by probing the toolchains found on ``PATH``; for most projects
-this is fully transparent.
+Attributes
+==========
 
-The in-memory configuration can be persisted to disk - either by calling
-GPRconfig directly, or by passing ``--autoconf=my.cgpr`` to a GPR tool. On
-subsequent invocations ``--autoconf=my.cgpr`` reuses the file instead of
-re-probing. Passing ``--config=my.cgpr`` uses an existing file but will not
-create one if it is missing. Configuration files can also be written by hand.
-
-Explicit configuration management can be useful when targeting a different
-platform, selecting a specific runtime, or working with non-default toolchain
-layouts - topics covered in :ref:`Working_With_Tools`.
+Every piece of information in a project file is expressed as an **attribute** -
+a named property that tools read to decide what to do. Attributes cover
+everything from source directories (``Source_Dirs``) and compiler switches
+(``Compiler'Switches``) to library names (``Library_Name``) and installation
+prefixes (``Install'Prefix``). The tools interpret those values; the project
+file itself contains no executable logic.

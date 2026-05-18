@@ -214,6 +214,6 @@ without modifying the project file, use ``--relocate-build-tree``:
    $ gprbuild -P my_proj.gpr --relocate-build-tree=/tmp/build
 
 Each artifact directory is mirrored under the given path, keeping the
-source tree untouched. See the *GPR Reference Manual*
-(:ref:`RM_Out_Of_Tree_Builds`) for the full description, including the
+source tree untouched. See the *GPR Reference Manual*, chapter
+*Out-of-Tree Builds*, for the full description including the
 ``--root-dir`` option for project trees that span multiple directories.
