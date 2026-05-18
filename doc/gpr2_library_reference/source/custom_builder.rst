@@ -1,4 +1,4 @@
-.. index:: custom builder, GPR2.Build.Tree_DB, build action
+.. index:: custom builder, GPR2.Build.Tree_DB, build action, GPR2.Build.Actions_Scheduler
 
 **************************
 Custom Incremental Builder
@@ -14,7 +14,7 @@ but is fully available to third-party tools. The key packages are:
   that connect actions to each other.
 * ``GPR2.Build.Actions_Population`` - populates the action graph from a
   project tree using the standard GPR2 build actions.
-* ``GPR2.Build.Process_Manager`` - parallel process execution engine.
+* ``GPR2.Build.Actions_Scheduler`` - parallel action execution engine.
 
 
 Overview
@@ -84,29 +84,29 @@ dependencies (e.g. the Ada binder closure).
 Executing the graph
 ===================
 
-Pass a process manager and options to ``Db.Execute``:
+Pass a scheduler and options to ``Db.Execute``:
 
 .. code-block:: ada
 
-   with GPR2.Build.Process_Manager;
+   with GPR2.Build.Actions_Scheduler;
 
-   PM      : GPR2.Build.Process_Manager.Object;
-   PM_Opts : GPR2.Build.Process_Manager.PM_Options;
+   Scheduler  : GPR2.Build.Actions_Scheduler.Object;
+   Sched_Opts : GPR2.Build.Actions_Scheduler.Options;
 
-   PM_Opts.Jobs         := 0;    --  0 = auto-detect CPU count
-   PM_Opts.Stop_On_Fail := True;
+   Sched_Opts.Jobs         := 0;    --  0 = auto-detect CPU count
+   Sched_Opts.Stop_On_Fail := True;
 
-   case Db.Execute (PM, PM_Opts) is
-      when GPR2.Build.Process_Manager.Success => null;
-      when GPR2.Build.Process_Manager.Errors  =>
+   case Db.Execute (Scheduler, Sched_Opts) is
+      when GPR2.Build.Actions_Scheduler.Success => null;
+      when GPR2.Build.Actions_Scheduler.Errors  =>
          --  some actions reported errors
          return;
-      when GPR2.Build.Process_Manager.Failed  =>
+      when GPR2.Build.Actions_Scheduler.Failed  =>
          --  some actions failed to launch
          return;
    end case;
 
-Key ``PM_Options`` fields:
+Key ``Options`` fields:
 
 ``Jobs``
   Parallel job count; ``0`` auto-detects the number of CPUs.
@@ -125,6 +125,13 @@ Key ``PM_Options`` fields:
 
 ``Show_Progress``
   Emit progress counters as actions are dispatched.
+
+``No_Warnings_Replay``
+  When set, warnings from skipped (up-to-date) actions are suppressed
+  rather than replayed.
+
+``Force_Jobserver``
+  When set, abort if no Make jobserver protocol is available.
 
 
 Actions
