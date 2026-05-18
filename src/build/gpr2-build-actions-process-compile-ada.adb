@@ -298,6 +298,47 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
       end if;
 
       declare
+         Units : constant GPR2.Containers.Name_Set :=
+                   Self.Withed_Units (False);
+      begin
+         for Unit of Units loop
+            --  Look for Unit Part naming exception and add it to the signature
+            --  in case there are any. This allows to properly rebuild the
+            --  action in the case of scenario variable switching from one
+            --  naming exception to the other.
+
+            declare
+               CU : constant Build.Compilation_Unit.Object :=
+                      Self.Ctxt.Namespace_Roots.First_Element.Unit (Unit);
+            begin
+               if CU.Is_Defined
+                 and then not CU.Owning_View.Is_Runtime
+               then
+                  if CU.Owning_View.Has_Implementation (Value_Type (CU.Name))
+                  then
+                     if not Self.Signature.Add_Input
+                       (Artifacts.Source_Files.Create (CU.Main_Body.Source),
+                        Check_Checksums)
+                     then
+                        return;
+                     end if;
+                  end if;
+
+                  if CU.Owning_View.Has_Specification (Value_Type (CU.Name))
+                  then
+                     if not Self.Signature.Add_Input
+                       (Artifacts.Source_Files.Create (CU.Spec.Source),
+                        Check_Checksums)
+                     then
+                        return;
+                     end if;
+                  end if;
+               end if;
+            end;
+         end loop;
+      end;
+
+      declare
          Deps : constant GPR2.Containers.Filename_Set := Self.Dependencies;
       begin
          if Deps.Is_Empty then
@@ -822,6 +863,24 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
       return Result;
    end Post_Execution;
 
+   ---------------------
+   -- Spec_Needs_Body --
+   ---------------------
+
+   function Spec_Needs_Body (Self : in out Object) return Boolean is
+   begin
+      if not Self.ALI_Object.Parse then
+         Traces.Trace
+           ("Failed to parse withed units from the ALI file " &
+            Self.ALI_Object.Path_Name.String_Value);
+
+         --  Return an arbitrary value
+         return False;
+      end if;
+
+      return Self.ALI_Object.Spec_Needs_Body;
+   end Spec_Needs_Body;
+
    ---------------------------
    -- Update_Binds_From_ALI --
    ---------------------------
@@ -874,5 +933,69 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
 
       return True;
    end Update_Binds_From_ALI;
+
+   ------------------
+   -- Withed_Units --
+   ------------------
+
+   function Withed_Units
+     (Self                : in out Object;
+      All_Units : Boolean := True) return Containers.Name_Set is
+   begin
+      if not Self.ALI_Object.Parse then
+         Traces.Trace
+           ("Failed to parse withed units from the ALI file " &
+            Self.ALI_Object.Path_Name.String_Value);
+
+         return Containers.Empty_Name_Set;
+      end if;
+
+      if All_Units then
+         return Self.ALI_Object.Withed_From_Spec.Union
+           (Self.ALI_Object.Withed_From_Body);
+      else
+         if Self.CU.Main_Part = S_Spec then
+            return Self.Withed_Units_From_Spec;
+         else
+            return Self.Withed_Units_From_Body;
+         end if;
+      end if;
+   end Withed_Units;
+
+   ----------------------------
+   -- Withed_Units_From_Body --
+   ----------------------------
+
+   function Withed_Units_From_Body
+     (Self : in out Object) return Containers.Name_Set is
+   begin
+      if not Self.ALI_Object.Parse then
+         Traces.Trace
+           ("Failed to parse withed units from the ALI file " &
+            Self.ALI_Object.Path_Name.String_Value);
+
+         return Containers.Empty_Name_Set;
+      end if;
+
+      return Self.ALI_Object.Withed_From_Body;
+   end Withed_Units_From_Body;
+
+   ----------------------------
+   -- Withed_Units_From_Spec --
+   ----------------------------
+
+   function Withed_Units_From_Spec
+     (Self : in out Object) return Containers.Name_Set is
+   begin
+      if not Self.ALI_Object.Parse then
+         Traces.Trace
+           ("Failed to parse withed units from the ALI file " &
+              Self.ALI_Object.Path_Name.String_Value);
+
+         return Containers.Empty_Name_Set;
+      end if;
+
+      return Self.ALI_Object.Withed_From_Spec;
+   end Withed_Units_From_Spec;
 
 end GPR2.Build.Actions.Process.Compile.Ada;

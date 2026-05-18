@@ -1,0 +1,19 @@
+
+with "../shared";
+
+project Lib is
+
+  for Source_Dirs use (".");
+  for Library_Dir use "lib";
+  for Library_Name use "dummy";
+
+  package Naming is
+     case Shared.Kind is
+        when "va" =>
+           for Implementation ("Pck") use "pck__va.adb";
+        when "vb" =>
+           for Implementation ("Pck") use "pck__vb.adb";
+     end case;
+  end Naming;
+
+end Lib;

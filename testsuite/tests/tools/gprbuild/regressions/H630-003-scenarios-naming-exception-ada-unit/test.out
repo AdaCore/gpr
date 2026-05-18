@@ -1,0 +1,17 @@
+$ gprbuild -c -q -P simulation.gpr -XProduct=A
+$ gprbuild -c -P simulation.gpr -XProduct=C
+[Ada Compile]     main.ada
+[Ada Compile]     pack.ada
+$ gprclean -q -P simulation.gpr -XProduct=A
+$ gprclean -q -P simulation.gpr -XProduct=C
+$ gprbuild -c -q -P simulation.gpr -XProduct=A
+$ gprbuild -c -P simulation.gpr -XProduct=B
+[Ada Compile]     pack.ada
+$ gprclean -q -P simulation.gpr -XProduct=A
+$ gprclean -q -P simulation.gpr -XProduct=B
+$ gprbuild -c -q -P simulation.gpr -XProduct=A
+$ gprbuild -c -P simulation.gpr -XProduct=D
+[Ada Compile]     main.ada
+[Ada Compile]     pack.ada2
+$ gprclean -q -P simulation.gpr -XProduct=A
+$ gprclean -q -P simulation.gpr -XProduct=D

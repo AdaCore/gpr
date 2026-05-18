@@ -2180,10 +2180,10 @@ package body GPR2.Build.Actions.Process.Link is
                         end if;
                      end On_Unit_Part;
 
-                     Comp    : constant Compile.Ada.Object :=
-                                 Compile.Ada.Object
-                                   (Self.Tree.Action
-                                      (Compile.Ada.Create (CU)));
+                     Comp : Compile.Ada.Object :=
+                              Compile.Ada.Object
+                                (Self.Tree.Action
+                                   (Compile.Ada.Create (CU)));
                   begin
                      if Comp.Spec_Needs_Body
                        or else not CU.Has_Part (S_Spec)

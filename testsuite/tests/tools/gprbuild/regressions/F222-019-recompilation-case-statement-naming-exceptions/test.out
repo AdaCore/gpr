@@ -1,0 +1,39 @@
+$ gprbuild -P main.gpr -XKIND=va
+"lib/lib" created
+[Ada Compile]     pck__va.adb
+[Ada Compile]     main.adb
+[Archive]         libdummy.a
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ ./main
+Version A
+
+$ rm -f lib/lib/*
+$ gprbuild -P main.gpr -XKIND=vb
+[Ada Compile]     pck__vb.adb
+[Ada Compile]     main.adb
+[Archive]         libdummy.a
+[Ada Bind]        main
+[Link]            main
+$ ./main
+Version B
+
+$ rm -f lib/lib/*
+$ gprbuild -P main.gpr -XKIND=va
+[Archive]         libdummy.a
+[Ada Compile]     main.adb
+[Ada Bind]        main
+[Link]            main
+$ ./main
+Version A
+
+$ rm -f lib/lib/*
+$ gprbuild -P main.gpr -XKIND=vb
+[Archive]         libdummy.a
+[Ada Compile]     main.adb
+[Ada Bind]        main
+[Link]            main
+$ ./main
+Version B
+
