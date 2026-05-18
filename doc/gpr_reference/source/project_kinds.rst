@@ -64,7 +64,16 @@ Standard Project
 **Qualifier:** ``standard`` (or omitted)
 
 A standard project contains source files and produces executables or object
-files. It is the default project kind.
+files. It is the default project kind. The qualifier may be stated explicitly:
+
+.. code-block:: gpr
+
+   standard project My_App is
+      for Source_Dirs use ("src");
+      for Main use ("main.adb");
+   end My_App;
+
+The ``standard`` qualifier is optional and most often omitted:
 
 .. code-block:: gpr
 
