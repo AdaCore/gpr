@@ -1,0 +1,5 @@
+with "sys";
+project db is
+   for Source_Dirs use ("db");
+   for Object_Dir use "db";
+end db;

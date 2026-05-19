@@ -1,0 +1,3 @@
+description: Regression test for no return code on aggregate project
+driver: python_script
+timeout: 800

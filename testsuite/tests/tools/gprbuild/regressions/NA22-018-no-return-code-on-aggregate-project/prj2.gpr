@@ -1,0 +1,4 @@
+project Prj2 is
+   for Source_Files use ("main2.adb");
+   for Main use ("main2.adb");
+end Prj2;

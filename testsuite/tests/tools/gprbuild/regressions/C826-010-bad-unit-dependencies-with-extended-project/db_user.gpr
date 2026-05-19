@@ -1,0 +1,6 @@
+with "sys_user";
+project db_user extends "db" is
+   for Source_Dirs use ("db_user");
+   for Object_Dir use "db_user";
+   for Source_Files use ("db.adb");
+end db_user;

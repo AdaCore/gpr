@@ -1,0 +1,5 @@
+with "lib";
+
+project Driver is
+   for Main use ("driver.adb");
+end Driver;

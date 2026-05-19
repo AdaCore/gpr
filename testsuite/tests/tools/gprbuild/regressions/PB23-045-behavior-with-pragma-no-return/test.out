@@ -1,0 +1,3 @@
+$ gprbuild -f -q main.adb
+check.adb:18:03: error: pragma "No_Return" requires separate spec and must come before body
+[Ada Compile] check.adb (default.gpr) failed.

@@ -1,0 +1,10 @@
+with "prj";
+
+project Prj.Titi is
+
+   for Source_Dirs use ("titi_sources");
+
+   for Main use ("titi");
+
+end Prj.Titi;
+

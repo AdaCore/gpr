@@ -1,0 +1,10 @@
+limited with "prj";
+project Prj1 is
+
+   package Naming is
+      for Spec_Suffix ("Ada") use "_.ada";
+      for Body_Suffix ("Ada") use ".ada";
+   end Naming;
+
+end Prj1;
+

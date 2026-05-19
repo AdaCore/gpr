@@ -1,0 +1,3 @@
+main_program_b.adb:1: Main_Prog cannot be used as a main program
+gprbind: invocation of gnatbind failed
+gprbuild: unable to bind main_program_b.adb

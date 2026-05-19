@@ -1,0 +1,12 @@
+$ gprbuild -q -P aggr.gpr
+main2.adb:3:08: error: missing ";"
+[Ada Compile] main2.adb (prj2.gpr) failed.
+$ FAILED
+$ gprbuild -q -k -P prj2.gpr
+main2.adb:3:08: error: missing ";"
+[Ada Compile] main2.adb (prj2.gpr) failed.
+$ FAILED
+$ gprbuild -q -k -P aggr.gpr
+main2.adb:3:08: error: missing ";"
+[Ada Compile] main2.adb (prj2.gpr) failed.
+$ FAILED

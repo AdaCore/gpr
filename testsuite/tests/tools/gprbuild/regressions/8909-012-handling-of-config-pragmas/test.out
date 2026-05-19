@@ -1,0 +1,9 @@
+$ gprbuild -f -q -P comperr.gpr -o drove driver -j1
+driver.adb:3:28: error: actual for "T" must be a definite subtype
+[Ada Compile] driver.adb (comperr.gpr) failed.
+$ gprbuild -f -q -P badprj.gpr -o drove driver -j1
+gnat1: cannot find configuration pragmas file /titi.adc
+[Ada Compile] driver.adb (badprj.gpr) failed.
+$ gprbuild -f -q -P prj.gpr -o drove driver -j1
+$ gprbuild -f -q -P lprj.gpr -o drove driver -j1
+$ gprbuild -f -q -P glprj.gpr -o drove driver -j1

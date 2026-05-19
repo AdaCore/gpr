@@ -1,0 +1,3 @@
+description: Regression test for source deletion not detected
+driver: python_script
+timeout: 800

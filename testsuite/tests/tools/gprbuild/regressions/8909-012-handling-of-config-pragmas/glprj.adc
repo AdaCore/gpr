@@ -1,0 +1,11 @@
+project Glprj is
+
+   package Gnatmake is
+      for Global_Configuration_Pragmas use "toto.adc";
+   end Gnatmake;
+
+   package Compiler is
+      for Local_Configuration_Pragmas use "toto.adc";
+   end Compiler;
+
+end Glprj;

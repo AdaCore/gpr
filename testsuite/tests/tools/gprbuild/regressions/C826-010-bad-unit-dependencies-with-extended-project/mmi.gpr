@@ -1,0 +1,5 @@
+with "db";
+project mmi is
+   for Source_Dirs use ("mmi");
+   for Object_Dir use "mmi";
+end mmi;

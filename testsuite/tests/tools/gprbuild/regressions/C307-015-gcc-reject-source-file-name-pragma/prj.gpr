@@ -1,0 +1,11 @@
+project Prj is
+
+   for Main use ("main");
+
+   package Builder is
+      for Default_Switches ("Ada") use ("-x");
+      for Global_Configuration_Pragmas use "gnat.adc";
+   end Builder;
+
+end Prj;
+
