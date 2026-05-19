@@ -1216,7 +1216,14 @@ package body GPR2.Build.View_Tables is
 
          Traces.Trace ("1 source for basename");
 
-         Candidate := Set.Constant_Reference (Set.First).Element;
+         declare
+            pragma Suppress (Accessibility_Check);
+            --  The below trick makes it possible to get a reference implicitly
+            --  bypassing tampering checks but it violates accessibility rules.
+
+         begin
+            Candidate := Set.Constant_Reference (Set.First).Element;
+         end;
 
       else
          --  project extension case, or the same basename is found in
@@ -1420,7 +1427,14 @@ package body GPR2.Build.View_Tables is
       C_Path := Data.Basenames.Find (Basename);
 
       if Basename_Source_Maps.Has_Element (C_Path) then
-         Current := Data.Basenames.Constant_Reference (C_Path).Element;
+         declare
+            pragma Suppress (Accessibility_Check);
+            --  The below trick makes it possible to get a reference implicitly
+            --  bypassing tampering checks but it violates accessibility rules.
+
+         begin
+            Current := Data.Basenames.Constant_Reference (C_Path).Element;
+         end;
       else
          Current := null;
       end if;

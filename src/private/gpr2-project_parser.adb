@@ -4020,6 +4020,10 @@ package body GPR2.Project_Parser is
             P_Name : constant Package_Id :=
                        +Get_Name_Type (Name.As_Single_Tok_Node);
 
+            pragma Suppress (Accessibility_Check);
+            --  The below trick makes it possible to get a reference implicitly
+            --  bypassing tampering checks but it violates accessibility rules.
+
          begin
             --  Entering a package, set the state and parse the corresponding
             --  children.
