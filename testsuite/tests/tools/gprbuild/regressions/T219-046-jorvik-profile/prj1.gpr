@@ -1,0 +1,3 @@
+project Prj1 is
+    for Main use ("jorvik_test.adb");
+end Prj1;

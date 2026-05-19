@@ -1,0 +1,13 @@
+$ gprbuild -q -P prj.gpr
+import-toto.gpr:5:08: warning: attribute "Library_Name" cannot be used in standard projects
+$ ./driver
+Import.Execute
+
+$ gprbuild -q -P prj-titi.gpr
+import-toto.gpr:5:08: warning: attribute "Library_Name" cannot be used in standard projects
+$ ./titi
+Import.Execute
+
+$ gprbuild -q -P prj-toto.gpr
+driver.adb:1:06: error: file "import.ads" not found
+[Ada Compile] driver.adb (prj-toto.gpr) failed.

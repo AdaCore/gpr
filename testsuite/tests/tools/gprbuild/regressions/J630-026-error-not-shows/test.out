@@ -1,0 +1,4 @@
+$ gprbuild -c -q -P prj.gpr
+$ gprbuild -b -q -P prj.gpr
+main_program_b.adb:1: Main_Prog cannot be used as a main program
+[Ada Bind] main_program_b (prj.gpr) failed.

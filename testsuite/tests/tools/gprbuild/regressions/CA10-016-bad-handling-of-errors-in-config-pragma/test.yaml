@@ -1,0 +1,3 @@
+description: Regression test for bad handling of errors in config pragmas
+driver: python_script
+timeout: 800

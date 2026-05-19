@@ -1,0 +1,5 @@
+project sys_user extends "sys" is
+   for Source_Dirs use ("sys_user");
+   for Object_Dir use "sys_user";
+   for Source_Files use ("fileio.adb");
+end sys_user;

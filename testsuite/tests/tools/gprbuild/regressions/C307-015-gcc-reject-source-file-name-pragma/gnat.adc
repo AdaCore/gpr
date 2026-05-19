@@ -1,0 +1,2 @@
+pragma Source_File_Name (Pkg, Spec_File_Name => "pkg_.ada");
+

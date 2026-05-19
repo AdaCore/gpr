@@ -1,0 +1,6 @@
+$ gprbuild -f -q -p -P build_lib.gpr
+$ gprbuild -f -q -P driver.gpr
+error: "p.ali" not found, "p.ads" must be compiled
+[Ada Bind] driver (driver.gpr) failed.
+$ gprbuild -f -q -p -P build_lib.gpr
+$ gprbuild -f -q -P driver.gpr

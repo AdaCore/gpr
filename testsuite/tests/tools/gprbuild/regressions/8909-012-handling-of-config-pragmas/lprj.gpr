@@ -1,0 +1,7 @@
+project Lprj is
+
+   package Compiler is
+      for Local_Configuration_Pragmas use "toto.adc";
+   end Compiler;
+
+end Lprj;

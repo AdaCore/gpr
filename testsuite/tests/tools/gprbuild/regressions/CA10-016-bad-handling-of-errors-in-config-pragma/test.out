@@ -1,0 +1,4 @@
+$ gprbuild -P prj.gpr
+[Ada Compile]     dummy.adb
+/gnat.adc:2:01: error: only pragmas allowed in configuration file
+[Ada Compile] dummy.adb (prj.gpr) failed.

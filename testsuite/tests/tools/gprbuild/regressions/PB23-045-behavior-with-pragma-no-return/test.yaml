@@ -1,0 +1,3 @@
+description: Regression test for behavior with pragma no return
+driver: python_script
+timeout: 800

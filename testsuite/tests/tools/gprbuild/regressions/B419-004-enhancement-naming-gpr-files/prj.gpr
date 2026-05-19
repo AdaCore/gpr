@@ -1,0 +1,17 @@
+with "import/import-toto";
+
+project Prj is
+
+   Switches := Import.Toto.Switches;
+
+   Switches := Import.Toto.Builder.S;
+
+   package Builder is
+      Release_Switches := ("-g");
+      for Default_Switches ("Ada") use Import.Toto.Builder'Default_Switches ("Ada") & Release_Switches;
+   end Builder;
+
+   for Main use ("driver");
+
+end Prj;
+

@@ -1,0 +1,4 @@
+project sys is
+   for Source_Dirs use ("sys");
+   for Object_Dir use "sys";
+end sys;

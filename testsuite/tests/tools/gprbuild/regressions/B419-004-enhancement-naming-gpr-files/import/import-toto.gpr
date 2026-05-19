@@ -1,0 +1,13 @@
+project Import.Toto extends "imp/import" is
+
+   Switches := ("-O2", "-g");
+   
+   for Library_Name use "toto";
+
+   package Builder is
+      S := Switches;
+      for Default_Switches ("Ada") use Switches;
+   end Builder;
+
+end Import.Toto;
+

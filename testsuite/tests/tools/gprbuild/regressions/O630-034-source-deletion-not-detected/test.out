@@ -1,0 +1,4 @@
+$ gprbuild -q -P prj.gpr
+$ gprbuild -q -P prj.gpr
+main.adb:1:06: error: file "pkg.ads" not found
+[Ada Compile] main.adb (prj.gpr) failed.

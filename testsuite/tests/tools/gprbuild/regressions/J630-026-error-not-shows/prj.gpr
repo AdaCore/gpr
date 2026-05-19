@@ -1,0 +1,8 @@
+project Prj is
+   for Main use ("main_program_b.adb");
+
+   package Naming is
+      for Body ("main_prog") use "main_program_b.adb";
+   end Naming;
+end Prj;
+

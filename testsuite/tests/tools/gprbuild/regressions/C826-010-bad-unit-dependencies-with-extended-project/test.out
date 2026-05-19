@@ -1,0 +1,3 @@
+$ gprbuild -q -P mmi_user.gpr m
+fileio.adb:2:06: error: file "db.ads" not found
+[Ada Compile] fileio.adb (sys_user.gpr) failed.

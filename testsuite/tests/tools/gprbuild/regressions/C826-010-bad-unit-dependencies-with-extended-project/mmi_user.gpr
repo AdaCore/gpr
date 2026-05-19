@@ -1,0 +1,6 @@
+with "db_user";
+project mmi_user extends "mmi" is
+   for Source_Dirs use ("mmi_user");
+   for Object_Dir use "mmi_user";
+   for Source_Files use ("mmi.adb");
+end mmi_user;

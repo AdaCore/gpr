@@ -1,0 +1,9 @@
+
+project Build_Lib is
+   for Source_Dirs use ("src");
+   for Object_Dir use "lib_objs";
+   for Library_Dir use "libs";
+   for Library_ALI_Dir use "alis";
+   for Library_Kind use "dynamic";
+   for Library_Name use "p";
+end Build_Lib;
