@@ -15,6 +15,7 @@ with Ada.Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
 with Ada.Synchronous_Task_Control;
+with Ada.Unchecked_Deallocation;
 
 with GNATCOLL.OS.FS;
 with GNATCOLL.Traces;
@@ -438,6 +439,9 @@ package body GPR2.Build.Actions_Scheduler is
       --  for the given Slot_Id. Creates the runner if it
       --  has not been allocated yet.
 
+      procedure Stop_And_Free_Runners;
+      --  Stop all runners and free their memory
+
       procedure Initialize_Script_FD (Script_FD : in out File_Descriptor);
       --  Initialize the script file descriptor of the script file specified in
       --  the options.
@@ -732,6 +736,44 @@ package body GPR2.Build.Actions_Scheduler is
          Serialized_Slot (Action_Slot) := (Is_Free => False);
       end Reserve_Slot;
 
+      ----------------------------
+      -- Stop_And_Free_Runners --
+      ---------------------------
+
+      procedure Stop_And_Free_Runners is
+         procedure Free is new
+           Ada.Unchecked_Deallocation (Process_Runner, Process_Runner_Access);
+         procedure Free is new
+           Ada.Unchecked_Deallocation (Thread_Runner, Thread_Runner_Access);
+      begin
+         for Runner of Thread_Runners loop
+            if Runner /= null then
+               Runner.Stop;
+            end if;
+         end loop;
+
+         for Runner of Process_Runners loop
+            if Runner /= null then
+               Runner.Stop;
+            end if;
+         end loop;
+
+         --  Do the free in dedicated loops, so tasks have time to stop
+         --  before we free their memory.
+
+         for Runner of Thread_Runners loop
+            if Runner /= null then
+               Free (Runner);
+            end if;
+         end loop;
+
+         for Runner of Process_Runners loop
+            if Runner /= null then
+               Free (Runner);
+            end if;
+         end loop;
+      end Stop_And_Free_Runners;
+
       --------------------
       -- Process_Runner --
       --------------------
@@ -879,6 +921,9 @@ package body GPR2.Build.Actions_Scheduler is
             select
                accept Stop do
                   Received_Stop_Signal := True;
+
+                  Stdout_Listener.Listen (Null_FD);
+                  Stderr_Listener.Listen (Null_FD);
                end Stop;
             or
                accept Execute (UID : Action_Id'Class; Action_Slot : Natural) do
@@ -935,9 +980,6 @@ package body GPR2.Build.Actions_Scheduler is
                end if;
             end;
          end loop Main_Loop;
-
-         Stdout_Listener.Listen (Null_FD);
-         Stderr_Listener.Listen (Null_FD);
       end Process_Runner;
 
       -------------------
@@ -1298,8 +1340,8 @@ package body GPR2.Build.Actions_Scheduler is
 
                   if Job_Status = Abort_Execution then
 
-                      --  Failing to compute the command line is considered as
-                      --  an execution failure.
+                     --  Failing to compute the command line is considered as
+                     --  an execution failure.
 
                      if Status = Failed_Cmd_Line_Computation then
                         Context.Status := Failed;
@@ -1409,20 +1451,7 @@ package body GPR2.Build.Actions_Scheduler is
          Tree_Db.Clear_Temp_Files;
       end if;
 
-      --  Notify the thread and process runner tasks that the
-      --  execution is finished so that they can terminate.
-
-      for Runner of Thread_Runners loop
-         if Runner /= null then
-            Runner.Stop;
-         end if;
-      end loop;
-
-      for Runner of Process_Runners loop
-         if Runner /= null then
-            Runner.Stop;
-         end if;
-      end loop;
+      Stop_And_Free_Runners;
    end Internal_Execute;
 
    --------------
