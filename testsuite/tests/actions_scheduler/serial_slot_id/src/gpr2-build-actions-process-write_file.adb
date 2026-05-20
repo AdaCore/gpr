@@ -97,8 +97,7 @@ package body GPR2.Build.Actions.Process.Write_File is
       if Self.With_Deps and then Self.Index > 1 then
          Db.Add_Input
             (Self.UID,
-             Output_File (Self.Index - 1),
-             True);
+             Output_File (Self.Index - 1));
       end if;
 
       return Db.Add_Output

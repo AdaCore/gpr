@@ -114,7 +114,7 @@ package body GPR2.Build.Actions.Thread.Write_File is
      (Self : Object; Db : in out GPR2.Build.Tree_Db.Object) return Boolean is
    begin
       if Self.With_Deps and then Self.Index > 1 then
-         Db.Add_Input (Self.UID, Output_File (Self.Index - 1), True);
+         Db.Add_Input (Self.UID, Output_File (Self.Index - 1));
       end if;
 
       return Db.Add_Output (Self.UID, Output_File (Self.Index));

@@ -1248,7 +1248,7 @@ package body GPR2.Build.Actions.Process.Compile is
    begin
       Db.Add_Input
         (UID,
-         GPR2.Build.Artifacts.Source_Files.Create (Self.Src.Path_Name), True);
+         GPR2.Build.Artifacts.Source_Files.Create (Self.Src.Path_Name));
 
       if Self.Obj_File.Is_Defined
         and then not Db.Add_Output (UID, Self.Obj_File)

@@ -20,7 +20,6 @@ with GPR2.Build.Actions.Process.Link;
 with GPR2.Build.Actions.Process.Link_Options_Insert;
 with GPR2.Build.Actions.Process.Post_Bind;
 with GPR2.Build.ALI_Parser;
-with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Compilation_Unit;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
@@ -31,7 +30,6 @@ with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
-with GPR2.Project.View.Set;
 pragma Warnings (Off, "*is not referenced");
 with GPR2.Project.View.Vector;
 pragma Warnings (On);
@@ -207,37 +205,33 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
                           Self.View.Attribute
                             (PRA.Compiler.Mapping_Body_Suffix,
                              PAI.Create (Ada_Language)).Value.Text;
-         Initial_Closure : GPR2.Project.View.Set.Object;
          use Standard.Ada.Characters.Handling;
 
       begin
          if Map_File.FD /= Invalid_FD and then Map_File.FD /= Null_FD then
-            for Input of Self.Tree.Inputs (Self.UID) loop
-               if Input not in Artifacts.Library.Object'Class
-                 and then Self.Tree.Has_Predecessor (Input)
-               then
+            for Ali_In of Self.ALI_Inputs loop
+               if Self.Tree.Has_Predecessor (Ali_In.Ali) then
                   declare
-                     Ali      : constant Path_Name.Object :=
-                                  Artifacts.Files.Object (Input).Path;
-                     Comp     : constant Compile.Ada.Object :=
-                                  Compile.Ada.Object
-                                    (Self.Tree.Predecessor (Input));
-                     Key      : constant String :=
-                                  To_Lower (String (Comp.Unit.Name)) &
-                                  (if Comp.Unit.Main_Part = S_Spec
-                                   then S_Suffix else B_Suffix);
-
+                     Ali : constant Path_Name.Object := Ali_In.Ali.Path;
+                     Key : constant String :=
+                       To_Lower (String (Ali_In.CU.Name))
+                       & (if Ali_In.CU.Main_Part = S_Spec
+                          then S_Suffix
+                          else B_Suffix);
                   begin
-                     if not Comp.View.Is_Runtime
-                       or else (Comp.View.Is_Library
-                                and then Comp.View.Is_Library_Standalone)
+                     if not Ali_In.CU.Owning_View.Is_Runtime
+                       or else
+                         (Ali_In.CU.Owning_View.Is_Library
+                          and then Ali_In.CU.Owning_View.Is_Library_Standalone)
                      then
                         Write
                           (Map_File.FD,
-                           Key & ASCII.LF &
-                             String (Ali.Simple_Name) &
-                             ASCII.LF &
-                             Ali.String_Value & ASCII.LF);
+                           Key
+                           & ASCII.LF
+                           & String (Ali.Simple_Name)
+                           & ASCII.LF
+                           & Ali.String_Value
+                           & ASCII.LF);
                      end if;
                   end;
                end if;
@@ -402,20 +396,19 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
       --  For standalone libraries, we need to give the full list of ALIs that
       --  are part of the library
 
-      for Art of Self.Tree.Inputs (Self.UID, Explicit_Only => True) loop
-         if Self.Tree.Has_Predecessor (Art)
-           and then Self.Tree.Predecessor (Art) in Compile.Ada.Object'Class
-         then
-            declare
-               Comp : constant Compile.Ada.Object :=
-                 Compile.Ada.Object (Self.Tree.Predecessor (Art));
-            begin
-               if not Self.Roots.Contains (Comp.Unit.Name) then
-                  Cmd_Line.Add_Argument
-                    (Comp.Local_Ali_File.Path, Build.Command_Line.Simple);
-               end if;
-            end;
-         end if;
+      for C in Self.ALI_Inputs.Iterate loop
+         declare
+            Unit_Name : constant Name_Type := ALI_Input_Maps.Key (C);
+            Ali_In    : constant ALI_Input := ALI_Input_Maps.Element (C);
+         begin
+            if Ali_In.Explicit
+              and then not Self.Roots.Contains (Unit_Name)
+              and then Self.Tree.Has_Predecessor (Ali_In.Ali)
+            then
+               Cmd_Line.Add_Argument
+                 (Ali_In.Ali.Path, Build.Command_Line.Simple);
+            end if;
+         end;
       end loop;
 
       for View of Self.Ctxt.Closure (True, True, True) loop
@@ -566,6 +559,19 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          end loop;
       end return;
    end Extended_Interface;
+
+   ---------------
+   -- First_ALI --
+   ---------------
+
+   function First_ALI (Self : Object) return Artifacts.Files.Object is
+   begin
+      if Self.ALI_Inputs.Is_Empty then
+         return Artifacts.Files.Undefined;
+      else
+         return Self.ALI_Inputs.First_Element.Ali;
+      end if;
+   end First_ALI;
 
    ----------------
    -- Initialize --
@@ -863,33 +869,36 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
             --  If same scope just add the dependencies
             --  on the output of the compile action.
 
+            Self.Tree.Add_Input (Self.UID, Comp.Local_Ali_File);
+
             --  All units that are in a SAL and are in the closure of its
             --  interface need to be listed explicitly during the bind
-            --  operation. We do that by marking them as explicit inputs
-            --  of the action.
+            --  operation.
 
-            Self.Tree.Add_Input
-              (Self.UID,
+            Self.Track_ALI_Input
+              (CU,
                Comp.Local_Ali_File,
                Self.Ctxt.Is_Library and then Self.Ctxt.Is_Library_Standalone);
 
             if Link.Is_Defined then
-               Self.Tree.Add_Input (Link.UID, Comp.Object_File, False);
+               Self.Tree.Add_Input (Link.UID, Comp.Object_File);
             end if;
 
          elsif Self.Ctxt.Is_Library
            and then Self.Ctxt.Library_Standalone = Encapsulated
          then
             --  Part of a library, just add the ALI to the binder
-            Self.Tree.Add_Input
-              (Self.UID, Comp.Local_Ali_File, False);
+            Self.Tree.Add_Input (Self.UID, Comp.Local_Ali_File);
+
+            Self.Track_ALI_Input (CU, Comp.Local_Ali_File, False);
 
          else
             --  Use the .ali that's in the library dir instead of the object
             --  directory.
 
-            Self.Tree.Add_Input
-              (Self.UID, Comp.Intf_Ali_File, False);
+            Self.Tree.Add_Input (Self.UID, Comp.Intf_Ali_File);
+
+            Self.Track_ALI_Input (CU, Comp.Intf_Ali_File, False);
          end if;
 
          if Comp.Valid_Signature or else Comp.View.Is_Externally_Built then
@@ -1128,7 +1137,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          return False;
       end if;
 
-      Db.Add_Input (Post_Bind.UID, Self.Output_Body, True);
+      Db.Add_Input (Post_Bind.UID, Self.Output_Body);
 
       return True;
    end On_Tree_Insertion;
@@ -1165,25 +1174,23 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
             if Self.Ctxt /= CU.Owning_View and then CU.Owning_View.Is_Library
             then
-               Self.Tree.Add_Input (Self.UID, Ada_Comp.Intf_Ali_File, True);
+               Self.Tree.Add_Input (Self.UID, Ada_Comp.Intf_Ali_File);
+               Self.Track_ALI_Input (CU, Ada_Comp.Intf_Ali_File, True);
             else
-               Self.Tree.Add_Input (Self.UID, Ada_Comp.Local_Ali_File, True);
+               Self.Tree.Add_Input (Self.UID, Ada_Comp.Local_Ali_File);
+               Self.Track_ALI_Input (CU, Ada_Comp.Local_Ali_File, True);
             end if;
 
             if Link.Is_Defined and then Ada_Comp.Object_File.Is_Defined then
-               Self.Tree.Add_Input (Link.UID, Ada_Comp.Object_File, True);
+               Self.Tree.Add_Input (Link.UID, Ada_Comp.Object_File);
             end if;
          end;
       end loop;
 
-      for Ali of Self.Tree.Inputs (Self.UID, True) loop
-         if Self.Tree.Has_Predecessor (Ali) then
-            declare
-               A_Comp : constant Compile.Ada.Object :=
-                 Compile.Ada.Object (Self.Tree.Predecessor (Ali));
-            begin
-               Deps.Union (A_Comp.Unit.Known_Dependencies);
-            end;
+      for Ali_In of Self.ALI_Inputs loop
+         if Ali_In.Explicit and then Self.Tree.Has_Predecessor (Ali_In.Ali)
+         then
+            Deps.Union (Ali_In.CU.Known_Dependencies);
          end if;
       end loop;
 
@@ -1492,6 +1499,31 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
       return True;
    end Post_Execution;
+
+   ---------------------
+   -- Track_ALI_Input --
+   ---------------------
+
+   procedure Track_ALI_Input
+     (Self        : in out Object;
+      Unit        : Compilation_Unit.Object;
+      Ali         : Artifacts.Files.Object;
+      Is_Explicit : Boolean)
+   is
+      C        : ALI_Input_Maps.Cursor;
+      Inserted : Boolean;
+   begin
+      Self.ALI_Inputs.Insert
+        (Unit.Name, (Ali, Unit, Is_Explicit), C, Inserted);
+
+      if not Inserted
+        and then Is_Explicit
+        and then not Self.ALI_Inputs (C).Explicit
+      then
+         --  Promote from implicit to explicit
+         Self.ALI_Inputs.Replace_Element (C, (Ali, Unit, True));
+      end if;
+   end Track_ALI_Input;
 
    ---------
    -- UID --

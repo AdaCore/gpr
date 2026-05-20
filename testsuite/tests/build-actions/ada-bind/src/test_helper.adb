@@ -98,7 +98,7 @@ package body Test_Helper is
                Assert
                  (Tree.Artifacts_Database.Add_Action (Action),
                   "Action inserted in Tree_DB", Topic => Setup);
-               Tree.Artifacts_Database.Add_Input (Action.UID, Ali, True);
+               Tree.Artifacts_Database.Add_Input (Action.UID, Ali);
             end;
          end loop;
       end loop;

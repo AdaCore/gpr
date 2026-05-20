@@ -142,7 +142,6 @@ package body GPR2.Build.Tree_Db is
 
       Self.New_Actions.Include (Action.UID);
 
-      Self.Implicit_Inputs.Insert (Action.UID, Artifact_Vectors.Empty_Vector);
       Self.Inputs.Insert (Action.UID, Artifact_Vectors.Empty_Vector);
       Self.Outputs.Insert (Action.UID, Artifact_Vectors.Empty_Vector);
 
@@ -201,34 +200,16 @@ package body GPR2.Build.Tree_Db is
    procedure Add_Input
      (Self     : in out Object;
       Action   : Actions.Action_Id'Class;
-      Artifact : Artifacts.Object'Class;
-      Explicit : Boolean)
+      Artifact : Artifacts.Object'Class)
    is
-      Pred          : Artifact_Action_Maps.Cursor;
-      Implicit_List : constant Action_Artifacts_Maps.Reference_Type :=
-                        Self.Implicit_Inputs.Reference (Action);
-      Explicit_List : constant Action_Artifacts_Maps.Reference_Type :=
-                        Self.Inputs.Reference (Action);
-      C             : Artifact_Vectors.Cursor;
+      Pred       : Artifact_Action_Maps.Cursor;
+      Input_List : constant Action_Artifacts_Maps.Reference_Type :=
+                     Self.Inputs.Reference (Action);
    begin
       Self.Add_Artifact (Artifact);
 
-      if Explicit then
-         if not Explicit_List.Contains (Artifact) then
-            Explicit_List.Append (Artifact);
-         end if;
-
-         C := Implicit_List.Find (Artifact);
-         if Artifact_Vectors.Has_Element (C) then
-            Implicit_List.Delete (C);
-         end if;
-
-      elsif not Explicit_List.Contains (Artifact) then
-         if not Implicit_List.Contains (Artifact) then
-            Implicit_List.Append (Artifact);
-         end if;
-      else
-         return;
+      if not Input_List.Contains (Artifact) then
+         Input_List.Append (Artifact);
       end if;
 
       Self.Successors.Reference (Artifact).Include (Action);
@@ -369,33 +350,23 @@ package body GPR2.Build.Tree_Db is
       Pos      : Artifact_Cursor) return Constant_Artifact_Reference_Type
    is
       Ref : constant Artifact_Vectors.Constant_Reference_Type :=
-              (case Pos.Current is
-               when Implicit_Inputs =>
-                  Iterator.Db.Implicit_Inputs.Constant_Reference
-                    (Pos.Map_Pos).Constant_Reference (Pos.Pos),
-               when Explicit_Inputs =>
+              (case Iterator.Kind is
+               when Inputs  =>
                   Iterator.Db.Inputs.Constant_Reference
                     (Pos.Map_Pos).Constant_Reference (Pos.Pos),
-               when Outputs         =>
+               when Outputs =>
                   Iterator.Db.Outputs.Constant_Reference
-                    (Pos.Map_Pos).Constant_Reference (Pos.Pos),
-               when others          =>
-                  raise Internal_Error with "Wrong kind of cursor");
+                    (Pos.Map_Pos).Constant_Reference (Pos.Pos));
    begin
       return (Element => Ref.Element.all'Unchecked_Access,
               Ref     =>
-                (case Pos.Current is
-                 when Implicit_Inputs =>
-                    Iterator.Db.Implicit_Inputs.Constant_Reference
-                      (Pos.Map_Pos).Constant_Reference (Pos.Pos),
-                 when Explicit_Inputs =>
+                (case Iterator.Kind is
+                 when Inputs  =>
                     Iterator.Db.Inputs.Constant_Reference
                       (Pos.Map_Pos).Constant_Reference (Pos.Pos),
-                 when Outputs         =>
+                 when Outputs =>
                     Iterator.Db.Outputs.Constant_Reference
-                      (Pos.Map_Pos).Constant_Reference (Pos.Pos),
-                 when others          =>
-                    raise Internal_Error with "Wrong kind of cursor"));
+                      (Pos.Map_Pos).Constant_Reference (Pos.Pos)));
    end Constant_Artifact_Reference;
 
    ------------
@@ -498,7 +469,6 @@ package body GPR2.Build.Tree_Db is
    is
       Node : GNATCOLL.Directed_Graph.Node_Id;
       Pred : Artifact_Action_Maps.Cursor;
-      Inputs : Artifact_Vectors.Vector;
 
    begin
       --  Populate the DAG used for the execution
@@ -519,10 +489,7 @@ package body GPR2.Build.Tree_Db is
 
       for Action of Self.Actions loop
          if not Action.View.Is_Externally_Built then
-            Inputs := Self.Inputs (Action.UID);
-            Inputs.Append (Self.Implicit_Inputs (Action.UID));
-
-            for Input of Inputs loop
+            for Input of Self.Inputs (Action.UID) loop
                --  Find the action that generated this input
                Pred := Self.Predecessor.Find (Input);
 
@@ -591,45 +558,18 @@ package body GPR2.Build.Tree_Db is
       end if;
 
       case Iter.Kind is
-         when Explicit_Inputs | Inputs =>
-            declare
-               Id : constant Actions.Action_Id'Class :=
-                      Action_Maps.Key (Iter.Action);
-            begin
-               Map_Pos := Iter.Db.Inputs.Find (Id);
-               Res :=
-                 (Pos     => Iter.Db.Inputs.Constant_Reference (Map_Pos).First,
-                  Map_Pos => Map_Pos,
-                  Current => Explicit_Inputs);
-
-               if not Artifact_Vectors.Has_Element (Res.Pos)
-                 and then Iter.Kind = Inputs
-               then
-                  Map_Pos := Iter.Db.Implicit_Inputs.Find (Id);
-                  Res :=
-                    (Pos     =>
-                       Iter.Db.Implicit_Inputs.Constant_Reference
-                         (Map_Pos).First,
-                     Map_Pos => Map_Pos,
-                     Current => Implicit_Inputs);
-               end if;
-            end;
-
-         when Implicit_Inputs =>
-            Map_Pos :=
-              Iter.Db.Implicit_Inputs.Find (Action_Maps.Key (Iter.Action));
+         when Inputs =>
+            Map_Pos := Iter.Db.Inputs.Find
+              (Action_Maps.Key (Iter.Action));
             Res :=
-              (Pos    => Iter.Db.Implicit_Inputs.Constant_Reference
-                           (Map_Pos).First,
-               Map_Pos => Map_Pos,
-               Current => Implicit_Inputs);
+              (Pos     => Iter.Db.Inputs.Constant_Reference (Map_Pos).First,
+               Map_Pos => Map_Pos);
 
          when Outputs =>
             Map_Pos := Iter.Db.Outputs.Find (Action_Maps.Key (Iter.Action));
             Res :=
               (Pos     => Iter.Db.Outputs.Constant_Reference (Map_Pos).First,
-               Map_Pos => Map_Pos,
-               Current => Outputs);
+               Map_Pos => Map_Pos);
 
       end case;
 
@@ -771,17 +711,6 @@ package body GPR2.Build.Tree_Db is
       Res : Artifact_Cursor := Position;
    begin
       Artifact_Vectors.Next (Res.Pos);
-
-      if not Artifact_Vectors.Has_Element (Res.Pos)
-        and then Iter.Kind = Inputs
-        and then Res.Current = Explicit_Inputs
-      then
-         Res.Map_Pos :=
-           Iter.Db.Implicit_Inputs.Find (Action_Maps.Key (Iter.Action));
-         Res.Pos     :=
-           Iter.Db.Implicit_Inputs.Constant_Reference (Res.Map_Pos).First;
-         Res.Current := Implicit_Inputs;
-      end if;
 
       if not Artifact_Vectors.Has_Element (Res.Pos) then
          return No_Artifact_Element;
@@ -1063,12 +992,6 @@ package body GPR2.Build.Tree_Db is
 
          if Artifact_Vectors.Has_Element (C) then
             Self.Inputs (Succ).Replace_Element (C, Value);
-         end if;
-
-         C := Self.Implicit_Inputs (Succ).Find (Old);
-
-         if Artifact_Vectors.Has_Element (C) then
-            Self.Implicit_Inputs (Succ).Replace_Element (C, Value);
          end if;
       end loop;
 

@@ -72,6 +72,14 @@ package GPR2.Build.Actions.Process.Ada_Bind is
    --  Used to perform an initial population of the bind dependencies from
    --  explicitly withed units of the known entry points
 
+   procedure Track_ALI_Input
+     (Self        : in out Object;
+      Unit        : Compilation_Unit.Object;
+      Ali         : Artifacts.Files.Object;
+      Is_Explicit : Boolean);
+   --  Insert or update the ALI entry to the bind closure. If the unit is
+   --  already tracked and Is_Explicit is True, promote it to explicit.
+
    function On_Ali_Parsed
      (Self : in out Object;
       Comp : in out Compile.Ada.Object) return Boolean;
@@ -80,6 +88,11 @@ package GPR2.Build.Actions.Process.Ada_Bind is
 
    function Extended_Interface
      (Self : Object) return Compilation_Unit.Maps.Map;
+
+   function First_ALI (Self : Object) return Artifacts.Files.Object
+     with Pre => Self.Is_Defined;
+   --  Return the first ALI artifact in the bind closure. Used by Post_Bind
+   --  to extract compiler switches from the first ALI.
 
 private
 
@@ -109,6 +122,17 @@ private
    package Extended_Interface_Map is new Ada.Containers.Indefinite_Ordered_Maps
      (Compilation_Unit.Object, Name_Type, Less);
 
+   type ALI_Input is record
+      Ali      : Artifacts.Files.Object;
+      CU       : Compilation_Unit.Object;
+      Explicit : Boolean := False;
+   end record;
+
+   package ALI_Input_Maps is new
+     Ada.Containers.Indefinite_Ordered_Maps
+       (Key_Type     => Name_Type,
+        Element_Type => ALI_Input);
+
    type Object is new Actions.Process.Object with record
       Basename    : Unbounded_String;
       --  Basename used to generate b__<bn>,ads and b__<bn>.adb
@@ -133,6 +157,10 @@ private
       Roots        : GPR2.Build.Compilation_Unit.Maps.Map;
       --  The root units as explicit inputs to the binder
       Extra_Intf   : Extended_Interface_Map.Map;
+      ALI_Inputs   : ALI_Input_Maps.Map;
+      --  All ALI files in the bind closure, keyed by unit name.
+      --  Tracks both the artifact, its unit and whether it is an explicit
+      --  input (for standalone library binding).
       Skip         : Boolean := False;
       Main_Unit    : GPR2.Build.Compilation_Unit.Object;
       --  Defined if the binder generates a main entry point
