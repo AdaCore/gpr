@@ -1,0 +1,5 @@
+$ gprbuild -f -q -P prj.gpr
+main.adb:1:01: error: pragma "Source_File_Name_Project" can only appear in a configuration pragmas file
+
+/gnat.adc:1:01: error: pragma Source_File_Name cannot be used with a project file
+[Ada Compile] main.adb (prj.gpr) failed.

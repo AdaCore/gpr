@@ -1,3 +1,5 @@
 description: Regression test for gcc to reject Source_File_Name pragma when a gpr is used (-gnateP)
 driver: python_script
 timeout: 800
+output:
+- ["test.out.win", "'windows' in env.host.platform"]

@@ -1,0 +1,22 @@
+$ gprbuild -q -P prj1.gpr
+jorvik_test.adb:6:04: error: violation of restriction "Max_Asynchronous_Select_Nesting = 0"
+
+jorvik_test.adb:6:04: error: from profile "Jorvik" at line 1
+
+jorvik_test.adb:6:04: error: violation of restriction "No_Select_Statements"
+
+jorvik_test.adb:6:04: error: from profile "Jorvik" at line 1
+[Ada Compile] jorvik_test.adb (prj1.gpr) failed.
+$ gprbuild -q -P prj2.gpr
+error: "pkg1.adb" has restriction No_Select_Statements
+
+error: but the following files violate this restriction:
+
+error:   "pkg2.adb"
+
+error: "pkg1.adb" has restriction Max_Asynchronous_Select_Nesting => 0
+
+error: but the following files violate this restriction:
+
+error:   "pkg2.adb" (count = at least 1)
+[Ada Bind] main (prj2.gpr) failed.
