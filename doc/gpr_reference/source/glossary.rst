@@ -52,7 +52,8 @@ Glossary
    Entry point
       A build target that anchors the DAG traversal in GPRbuild2: an
       executable declared via the ``Main`` attribute or on the command line,
-      a library, or additional units specified via the ``Roots`` attribute.
+      a library interface, or additional units specified via the
+      ``Roots`` attribute.
 
    Extending project
       A project that inherits sources and attributes from a base project

@@ -217,8 +217,9 @@ Source ownership
 
 Each project directly owns a set of **immediate sources**: files identified
 through its source-related attributes (source directories, explicit file
-lists, etc.). The full set of **sources** visible to a project extends this with
-the immediate sources of every project it depends on, directly or indirectly
+lists, etc.). The full set of **sources** visible to a project extends this
+with the immediate sources of every project it depends on, directly or
+indirectly
 (unless overridden by extension). For the rules governing basename uniqueness,
 search order, and source shadowing in extensions, see
 :ref:`Source_Resolution`.

@@ -262,8 +262,8 @@ project, automatic initialization is available. The library project may then
 set ``Library_Auto_Init`` to ``"true"`` (to opt in) or ``"false"`` (to opt
 out); when not set, it defaults to ``Library_Auto_Init_Supported``.
 
-Setting ``Library_Auto_Init`` to ``"true"`` when ``Library_Auto_Init_Supported``
-is ``"false"`` triggers a warning at load time.
+Setting ``Library_Auto_Init`` to ``"true"`` when
+``Library_Auto_Init_Supported`` is ``"false"`` triggers a warning at load time.
 
 
 .. _Aggregate_Project_Kind:

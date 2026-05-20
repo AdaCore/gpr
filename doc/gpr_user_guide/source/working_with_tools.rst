@@ -169,8 +169,9 @@ gprconfig
 
 ``gprconfig`` probes the host for available compilers and generates a
 configuration project (``.cgpr``) describing the selected toolchains to all
-GPR tools. It can be run interactively for guided toolchain selection, or in batch
-mode for scripted workflows, producing a persistent configuration project
+GPR tools. It can be run interactively for guided toolchain selection, or
+in batch mode for scripted workflows, producing a persistent configuration
+project
 as an alternative to passing ``--autoconf`` to a GPR tool.
 
 .. code-block:: shell

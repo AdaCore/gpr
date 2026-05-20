@@ -83,8 +83,9 @@ LibGPR2
 =======
 
 The GPR tools described in this manual are built on top of **LibGPR2**, an Ada
-library that implements the GPR project model - parsing project files, resolving
-sources and dependencies, and exposing the result as a queryable object model.
+library that implements the GPR project model - parsing project files,
+resolving sources and dependencies, and exposing the result as a queryable
+object model.
 It also provides a build infrastructure that can be used to implement custom
 incremental builders. Developers who need to integrate GPR project loading or
 build orchestration into their own tools work directly with LibGPR2.
