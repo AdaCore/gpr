@@ -418,7 +418,7 @@ String Manipulation Functions
 
    The functions in this section are not available in tools based on the
    legacy GPR1 framework. This includes all tools that have not yet migrated
-   to GPR2.
+   to the GPR2 library.
 
 ``Split``
 ^^^^^^^^^
