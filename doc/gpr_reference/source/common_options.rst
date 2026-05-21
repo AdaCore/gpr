@@ -123,3 +123,10 @@ Output and diagnostics
 
 ``-wn``
   Restore default warning behavior (cancels ``-we`` or ``-ws``).
+
+.. note::
+
+   All switches documented in this chapter must be given on the command
+   line. They are not accepted in the ``Switches`` attribute of any tool's
+   project package (``Builder'Switches``, ``Clean'Switches``,
+   ``Install'Switches``, etc.).

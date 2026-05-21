@@ -312,6 +312,11 @@ global compilation switches that apply to every invocation. See
 :ref:`Package_Builder_Attributes` in the Attributes Reference for the full
 attribute list and descriptions.
 
+The following switches are not accepted in ``Builder'Switches`` and must
+be given on the command line: ``-o``, ``-r``, ``-u``, ``-U``, ``-z``,
+``--build-script``, ``--compiler-subst``, ``--no-sal-binding``,
+``--restricted-to-languages``, and ``--temp-dir``.
+
 .. code-block:: gpr
 
    project My_App is
