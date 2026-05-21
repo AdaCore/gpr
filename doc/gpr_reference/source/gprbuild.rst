@@ -161,8 +161,11 @@ Build behavior
 
 ``-j``\ *num*
   Maximum number of actions to run in parallel. ``-j0`` uses one job per
-  CPU core. GPRbuild2 automatically coordinates with a GNU make jobserver
-  when one is present.
+  CPU core. If GPRbuild is invoked from a Makefile and the invoking make
+  provides a jobserver, GPRbuild2 acquires job slots from it rather than
+  running freely: ``-j`` then acts as an upper bound on the slots
+  requested, with actual parallelism capped by what the jobserver makes
+  available.
 
 ``-k``
   Keep executing independent actions after a failure. Actions that depend on
