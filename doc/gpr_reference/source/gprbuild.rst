@@ -21,7 +21,7 @@ Build Engine Selection
 ======================
 
 Two build engines are available. Set the :envvar:`GNAT_GPR_ENGINE` environment
-variable, or pass ``--gpr=<n>`` on the command line (takes precedence):
+variable, or pass ``--gpr=``\ *n* on the command line (takes precedence):
 
 ``1`` / ``legacy``
   The original GPRbuild engine. Current default.

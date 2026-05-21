@@ -51,7 +51,7 @@ Project and configuration switches
 ``-aP`` *dir*
   Add *dir* to the project search path.
 
-``-X`` *NAME*\ ``=``\ *value*
+``-X``\ *NAME*\ ``=``\ *value*
   Set external reference *NAME* to *value* for use in project files.
 
 ``--no-project``
@@ -96,7 +96,8 @@ Project and configuration switches
   them as needed.
 
 ``--src-subdirs=``\ *dir*
-  Prepend ``<obj-dir>/``\ *dir* to the source directories of each project.
+  For each project, prepend *obj-dir*\ ``/``\ *dir* to the source directories,
+  where *obj-dir* is the project's object directory.
   Useful for temporary source overrides such as instrumentation.
 
 
