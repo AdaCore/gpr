@@ -243,7 +243,10 @@ Build artifacts
 ---------------
 
 ``--build-script=``\ *file*
-  Write a shell script to *file* that reproduces the build.
+  Write a shell script to *file* that reproduces the build. This is a
+  best-effort output: the generated script may not be portable and will
+  only work reliably for simple cases. It nonetheless gives a useful
+  overview of the commands GPRbuild executed.
 
 ``--create-map-file[=``\ *file*\ ``]``
   Ask the linker to generate a map file. Defaults to the executable name
