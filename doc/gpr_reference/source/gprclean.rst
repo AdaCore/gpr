@@ -78,8 +78,9 @@ command-line switches, so command-line switches take precedence. See
 :ref:`Package_Clean_Attributes` in the Attributes Reference for the full
 attribute list and descriptions.
 
-The ``--autoconf`` switch must be given on the command line and is not
-accepted in ``Clean'Switches``.
+The ``--autoconf`` switch and all switches from :ref:`RM_Common_Options`
+must be given on the command line and are not accepted in
+``Clean'Switches``.
 
 .. code-block:: gpr
 

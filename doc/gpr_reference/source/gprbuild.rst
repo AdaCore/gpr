@@ -315,7 +315,8 @@ attribute list and descriptions.
 The following switches are not accepted in ``Builder'Switches`` and must
 be given on the command line: ``-o``, ``-r``, ``-u``, ``-U``, ``-z``,
 ``--build-script``, ``--compiler-subst``, ``--no-sal-binding``,
-``--restricted-to-languages``, and ``--temp-dir``.
+``--restricted-to-languages``, and ``--temp-dir``. The common switches
+documented in :ref:`RM_Common_Options` are likewise command-line only.
 
 .. code-block:: gpr
 
