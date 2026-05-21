@@ -55,6 +55,11 @@ def configure(g, doc_title, copyright_start_year=2024):
 
     g['setup'] = setup
 
+    subdoc_name = os.path.basename(os.path.dirname(source_dir))
+    g['latex_documents'] = [
+        ('index', subdoc_name + '.tex', doc_title, 'AdaCore', 'manual'),
+    ]
+
     # If pagefind is available, enable improved search indexing.
     if shutil.which('pagefind') is not None:
         g['extensions'].append('pagefind-sphinx')
