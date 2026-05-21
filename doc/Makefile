@@ -49,9 +49,8 @@ subdoc-html-%:
 
 subdoc-index-%:
 	$(MAKE) -C $* html
-	mkdir -p $(INST_DIR)/$(SUBDOC_ROOT_$*)/$*/$(HTML_DIR)
+	mkdir -p $(INST_DIR)/$(SUBDOC_ROOT_$*)/$(HTML_DIR)
 	cp -r $*/build/html/. $(INST_DIR)/$(SUBDOC_ROOT_$*)/$(HTML_DIR)/
-	(cd $(INST_DIR)/$(SUBDOC_ROOT_$*)/$(HTML_DIR)/ && mv index.html $*.html)
 
 subdoc-pdf-%:
 	$(MAKE) -C $* pdf
