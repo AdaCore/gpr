@@ -90,6 +90,14 @@ The ``standard`` qualifier is optional and most often omitted:
   entire project hierarchy (``extends all``). See :ref:`RM_Project_Extension`.
 - May be extended by other projects.
 
+.. note::
+
+   The ``Main`` attribute is honored only when the project is the **root
+   project** of a build invocation, or is directly listed in the
+   ``Project_Files`` attribute of an aggregate project. When a standard
+   project is imported via a ``with`` clause by another project, its
+   ``Main`` attribute is ignored and no executable is produced.
+
 
 .. _Abstract_Project_Kind:
 
