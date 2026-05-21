@@ -116,6 +116,20 @@ Phase selection
 ``-l``
   Include only link actions in the DAG.
 
+.. note::
+
+   These switches are compatibility filters over GPRbuild2's action DAG.
+   ``-c`` maps cleanly to compile actions. ``-b`` includes not only the
+   binder invocation but also the compilation of the binder-generated Ada
+   source, so it involves actual compile steps. ``-l`` may cover a range
+   of intermediate actions beyond the final linker call: intermediate
+   archive creation, partial linking, linker-options section generation,
+   and similar housekeeping. In the legacy engine these stages were driven
+   by separate tools (``gprbind`` for ``-b``, ``gprlib`` for ``-l``);
+   GPRbuild2 models them as ordinary actions in the DAG with no distinct
+   stage boundaries, and ``-b`` / ``-l`` simply select the corresponding
+   subsets.
+
 ``-u``
   Compile only the source files named on the command line (or all sources of
   the main project if none named). No binding or linking.
