@@ -27,11 +27,17 @@ Project file and common switches
 See :ref:`RM_Common_Options` for project file discovery rules, project and
 configuration switches, and common diagnostic switches.
 
-Entry points
+Main sources
 ------------
 
 Zero or more main file names may be listed on the command line to restrict
 cleaning to the artifacts of those entry points only.
+
+GPRclean applies the same source resolution rules as GPRbuild (see
+:ref:`RM_GPRbuild`): a simple name is looked up across the entire project
+tree, and an error is reported if it matches sources in more than one
+project. This ensures GPRclean removes exactly the artifacts that GPRbuild
+produced.
 
 
 .. index:: pair: GPRclean; switches, pair: switch; -r, pair: switch; -n

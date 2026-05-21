@@ -59,9 +59,12 @@ project search path environment variables.
 Main sources
 ------------
 
-Main source files to build may be listed on the command line. If omitted,
-GPRbuild uses the ``Main`` attribute of the main project. If that is also
-absent, no executable is built.
+Main source files to build may be listed on the command line by simple file
+name or full path. When a simple name is given, GPRbuild searches the entire
+project tree for a source whose basename matches. If the name matches
+sources in more than one project, GPRbuild reports an error. If no mains
+are given on the command line, GPRbuild uses the ``Main`` attribute of the
+root project. If that is also absent, no executable is built.
 
 Pass-through option groups
 --------------------------
