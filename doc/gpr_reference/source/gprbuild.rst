@@ -143,7 +143,12 @@ Phase selection
   projects recursively.
 
 ``-z``
-  Build without a main subprogram (zero-main mode).
+  Build without generating an OS-level entry point. Normally GPRbuild
+  produces a ``main`` symbol that the operating system calls to start the
+  program, driving Ada elaboration and invoking the main subprogram. With
+  ``-z``, that symbol is omitted so the resulting objects can be linked
+  with a main subprogram written in another language — for example a C
+  ``main`` that handles startup and then calls into Ada code.
 
 
 .. index:: pair: GPRbuild; build behavior, pair: switch; -f, pair: switch; -j, pair: switch; -k
