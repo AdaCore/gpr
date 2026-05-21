@@ -4,6 +4,16 @@
 Quick Start
 ***********
 
+The GPR2 library is an Ada library for loading, querying, and processing GPR
+project trees programmatically. It is the foundation of all GPR tools
+(GPRbuild, GPRclean, GPRinstall, and others) and is the recommended API for
+tools that need to read or interpret GPR project files.
+
+This guide covers the most common operations — loading a project tree,
+iterating over views, reading attributes, listing sources, and navigating Ada
+compilation units — with complete code snippets for each. For a full API
+reference, see the *GPR2 Library Reference*.
+
 .. note::
 
    This guide assumes familiarity with the GPR project file language. If you
@@ -16,7 +26,7 @@ tree, inspecting views, reading attributes, and working with sources and units.
 Each section builds on the previous one.  A minimal project file
 ``hello.gpr`` is used throughout:
 
-.. code-block:: ada
+.. code-block:: gpr
 
    project Hello is
       for Source_Dirs use ("src");

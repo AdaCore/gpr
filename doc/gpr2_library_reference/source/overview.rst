@@ -4,17 +4,22 @@
 Overview
 ********
 
+The GPR2 library provides a complete parser and project model for GPR (GNAT
+Project) files. It is the foundation used by all AdaCore build tools
+(``gprbuild``, ``gprclean``, ``gprinstall``, ``gprconfig``, ...) and is
+available to third-party tools that need to reason about Ada project structure.
+
+This reference covers the core API of the GPR2 library: project tree loading,
+view and attribute access, source and unit enumeration, diagnostics reporting,
+and the incremental build infrastructure. For a task-oriented introduction
+with working code examples, start with the *GPR2 Library Quick Start*.
+
 .. note::
 
    This document assumes familiarity with the GPR project file language. If
    you are new to GPR, read the *GPR User Guide* for a task-oriented
    introduction or the *GPR Reference Manual* for a complete language
    specification before proceeding.
-
-The GPR2 library provides a complete parser and project model for GPR (GNAT
-Project) files. It is the foundation used by all AdaCore build tools
-(``gprbuild``, ``gprclean``, ``gprinstall``, ``gprconfig``, ...) and is
-available to third-party tools that need to reason about Ada project structure.
 
 Core capabilities
 =================
