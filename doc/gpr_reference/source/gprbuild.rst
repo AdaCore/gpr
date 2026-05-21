@@ -169,8 +169,13 @@ Build behavior
   a failed action are skipped.
 
 ``-p`` / ``--create-missing-dirs``
-  Create missing object, library, and executable directories, including
-  absolute paths.
+  Force creation of object, library, and executable directories that lie
+  outside the project directory. Directories relative to the project
+  directory (including relocated ones via ``--relocate-build-tree``) are
+  created automatically without this switch. GPRbuild refuses by default
+  to create directories outside the project tree — whether specified as
+  absolute paths or as relative paths that escape the project directory
+  (e.g. ``../other``) — and ``-p`` overrides that restriction.
 
 ``-R``
   Do not pass a run-path option to the linker, even when ``Run_Path_Option``
