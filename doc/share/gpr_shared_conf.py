@@ -1,6 +1,7 @@
 """Shared Sphinx configuration for all GPR documentation subdocs."""
 import sys
 import os
+import shutil
 import time
 import re
 
@@ -38,6 +39,7 @@ def configure(g, doc_title, copyright_start_year=2024):
             'sphinx_rtd_theme',
         ],
         templates_path=[os.path.join(share_dir, '_templates')],
+        html_css_files=[],
         exclude_patterns=[],
         html_theme='sphinx_rtd_theme',
         html_theme_options={'style_nav_header_background': '#12284c'},
@@ -52,3 +54,10 @@ def configure(g, doc_title, copyright_start_year=2024):
         app.add_lexer('gpr', ada_pygments.GNATProjectLexer)
 
     g['setup'] = setup
+
+    # If pagefind is available, enable improved search indexing.
+    if shutil.which('pagefind') is not None:
+        g['extensions'].append('pagefind-sphinx')
+        g['templates_path'].append(
+            os.path.join(share_dir, '_templates_pagefind'))
+        g['html_css_files'].append('pagefind.css')
