@@ -38,10 +38,11 @@ def run_pagefind(app, exception):
     # Only run if there were no errors during the build, and if the html
     # documentation has actually been ran
     if exception is None and app.builder.name == "html":
-        subprocess.run(["pagefind", "--verbose", "--keep-index-url"])
+        subprocess.run(
+            ["pagefind", "--verbose", "--keep-index-url", "--site", app.outdir]
+        )
 
 
 def setup(app):
     app.connect("doctree-resolved", add_custom_ids)
     app.connect("build-finished", run_pagefind)
-
