@@ -504,6 +504,48 @@ package body GPR2.Project.Tree.Inspect is
                  (Source_Object,
                   "simple-name",
                   String (Source.Path_Name.Simple_Name));
+               Set_Field
+                 (Source_Object,
+                  "language",
+                  String (Name (Source.Language)));
+
+               --  Emit "units" for unit-based (Ada) sources: one element per
+               --  compilation unit in the file.  Non-unit-based sources
+               --  (C, C++, …) have no "units" field.
+               if Source.Has_Units then
+                  declare
+                     Units_Array : JSON_Array;
+                  begin
+                     for U of Source.Units loop
+                        declare
+                           Unit_Object : constant JSON_Value := Create_Object;
+                           K           : constant Unit_Kind  := U.Kind;
+                        begin
+                           Set_Field (Unit_Object, "name", String (U.Name));
+
+                           --  Emit "index" only for multi-unit files.
+                           if U.Index /= No_Index then
+                              Set_Field
+                                (Unit_Object, "index",
+                                 Create (Integer (U.Index)));
+                           end if;
+
+                           if K in Valid_Unit_Kind then
+                              Set_Field
+                                (Unit_Object, "kind", GPR2.Image (K));
+                           else
+                              --  S_No_Body: Ada body with "pragma No_Body";
+                              --  semantically a spec with no body required.
+                              Set_Field (Unit_Object, "kind", "spec");
+                           end if;
+
+                           Append (Units_Array, Unit_Object);
+                        end;
+                     end loop;
+
+                     Set_Field (Source_Object, "units", Units_Array);
+                  end;
+               end if;
 
                Append (Source_Array, Source_Object);
             end loop;
