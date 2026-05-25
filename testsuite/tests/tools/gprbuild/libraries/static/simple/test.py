@@ -25,7 +25,7 @@ with open("jobs.json") as fp:
 
 
 print("lib:")
-for job in cntlib:
+for job in sorted(cntlib, key=lambda j: j["uid"]):
     print(
         "uid: '"
         + job["uid"]
