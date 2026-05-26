@@ -89,6 +89,9 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          Is_List      : Boolean;
          In_Signature : Boolean);
 
+      function Set_Binder_Driver (Arg : String) return Boolean;
+      --  Parses Arg to find a binder binder to resolve
+
       function Resolve_Binder return String;
       --  Resolves the path to the binder. Needs to be called after all
       --  Switches attributes have been analyzed.
@@ -97,7 +100,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
       Lang_Ada_Idx      : constant PAI.Object :=
                             PAI.Create (GPR2.Ada_Language);
-      Binder_From_Attrs : Unbounded_String;
+      Binder_Driver     : Unbounded_String;
       Exe_Ext           : constant String :=
                             (if GPR2.On_Windows then ".exe" else "");
       Roots             : GPR2.Containers.Name_Set;
@@ -115,15 +118,10 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
       is
          Attr                  : constant Project.Attribute.Object :=
                                    Self.View.Attribute (Id, Index);
-         Gnatbind_Prefix_Equal : constant String := "gnatbind_prefix=";
-         Gnatbind_Path_Equal   : constant String := "--gnatbind_path=";
-         Ada_Binder_Equal      : constant String := "ada_binder=";
-         Default_Binder_Name   : constant String := "gnatbind" & Exe_Ext;
          Mode                  : constant Build.Command_Line.Signature_Mode :=
                                    (if In_Signature
                                     then Build.Command_Line.In_Signature
                                     else Build.Command_Line.Ignore);
-
       begin
          if not Attr.Is_Defined then
             return;
@@ -138,30 +136,10 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
                   --  Also ignore empty values
                   null;
 
-               elsif Starts_With (Val.Text, Gnatbind_Path_Equal) then
-                  Binder_From_Attrs :=
-                    +(Val.Text (Val.Text'First +
-                        Gnatbind_Path_Equal'Length .. Val.Text'Last) &
-                      Exe_Ext);
-
-               elsif Starts_With (Val.Text, Gnatbind_Prefix_Equal) then
-                  --  There is always a '-' between <prefix> and
-                  --  "gnatbind". Add one if not already in <prefix>.
-                  if Val.Text'Length = Gnatbind_Prefix_Equal'Length then
-                     Binder_From_Attrs :=
-                       +(Self.Ctxt.Compiler_Prefix & Default_Binder_Name);
-                  else
-                     Binder_From_Attrs :=
-                       +(Val.Text (Val.Text'First +
-                           Gnatbind_Prefix_Equal'Length .. Val.Text'Last)
-                         & (if Val.Text (Val.Text'Last) = '-' then "" else "-")
-                         & Default_Binder_Name);
-                  end if;
-
-               elsif Starts_With (Val.Text, Ada_Binder_Equal) then
-                  Binder_From_Attrs :=
-                    +(Val.Text (Val.Text'First +
-                        Ada_Binder_Equal'Length .. Val.Text'Last) & Exe_Ext);
+               elsif Set_Binder_Driver (Val.Text) then
+                  --  Do nothing, the binder driver will be set in
+                  --  Set_Binder_Driver.
+                  null;
 
                elsif Starts_With (Val.Text, "-A=") then
                   --  Ensure the path is absolute
@@ -257,12 +235,12 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          --  if "gnatbind_prefix=", "--gnatbind_path=" or "ada_binder=" weren't
          --  found, default to "<prefix->gnatbind".
 
-         if Length (Binder_From_Attrs) = 0 then
-            Binder_From_Attrs := +Default_Binder_Name;
+         if Length (Binder_Driver) = 0 then
+            Binder_Driver := +Default_Binder_Name;
          end if;
 
-         if OS_Lib.Is_Absolute_Path (-Binder_From_Attrs) then
-            return Path_Name.Create_File (-Binder_From_Attrs).String_Value;
+         if OS_Lib.Is_Absolute_Path (-Binder_Driver) then
+            return Path_Name.Create_File (-Binder_Driver).String_Value;
          end if;
 
          --  if we don't have an absolute path to gnatbind at this point, try
@@ -275,7 +253,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          begin
             if Compiler_Driver.Is_Defined then
                Binder_Path := Path_Name.Create_File
-                 (-Binder_From_Attrs,
+                 (-Binder_Driver,
                   Filename_Type
                     (Directory_Operations.Dir_Name
                          (Compiler_Driver.Value.Text)));
@@ -291,16 +269,57 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
          declare
             Full_Path : constant String :=
-                          Locate_Exec_On_Path (-Binder_From_Attrs);
+                          Locate_Exec_On_Path (-Binder_Driver);
          begin
             if Full_Path'Length > 0 then
                return Full_Path;
             else
                --  Try with the relative path
-               return -Binder_From_Attrs;
+               return -Binder_Driver;
             end if;
          end;
       end Resolve_Binder;
+
+      -----------------------
+      -- Set_Binder_Driver --
+      -----------------------
+
+      function Set_Binder_Driver (Arg : String) return Boolean
+      is
+         Gnatbind_Prefix_Equal : constant String := "gnatbind_prefix=";
+         Gnatbind_Path_Equal   : constant String := "--gnatbind_path=";
+         Ada_Binder_Equal      : constant String := "ada_binder=";
+         Default_Binder_Name   : constant String := "gnatbind" & Exe_Ext;
+      begin
+         if Starts_With (Arg, Gnatbind_Path_Equal) then
+            Binder_Driver :=
+              +(Arg (Arg'First + Gnatbind_Path_Equal'Length .. Arg'Last)
+                & Exe_Ext);
+
+         elsif Starts_With (Arg, Gnatbind_Prefix_Equal) then
+            --  There is always a '-' between <prefix> and
+            --  "gnatbind". Add one if not already in <prefix>.
+            if Arg'Length = Gnatbind_Prefix_Equal'Length then
+               Binder_Driver :=
+                 +(Self.Ctxt.Compiler_Prefix & Default_Binder_Name);
+            else
+               Binder_Driver :=
+                 +(Arg (Arg'First +
+                     Gnatbind_Prefix_Equal'Length .. Arg'Last)
+                   & (if Arg (Arg'Last) = '-' then "" else "-")
+                   & Default_Binder_Name);
+            end if;
+
+         elsif Starts_With (Arg, Ada_Binder_Equal) then
+            Binder_Driver :=
+              +(Arg (Arg'First + Ada_Binder_Equal'Length .. Arg'Last)
+                & Exe_Ext);
+         else
+            return False;
+         end if;
+
+         return True;
+      end Set_Binder_Driver;
 
       use type GPR2.Project.Standalone_Library_Kind;
 
@@ -459,7 +478,10 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
       for Arg of Self.Tree.External_Options.Fetch
                    (External_Options.Binder, GPR2.Ada_Language)
       loop
-         Cmd_Line.Add_Argument (Arg);
+         if not Set_Binder_Driver (Arg) then
+            --  The -bargs wasn't a binder driver, add it to the command line
+            Cmd_Line.Add_Argument (Arg);
+         end if;
       end loop;
 
       --  ??? Modify binding option -A=<file> if <file> is not an absolute path
