@@ -1312,7 +1312,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
             --  Make sure that only the first switch --stack= is taken into
             --  account
-            if Starts_With (Line, "-stack=") then
+            if Starts_With (Line, "--stack=") then
                if not Stack_Equal_Seen then
                   Stack_Equal_Seen := True;
                   Self.Linker_Opts.Append ("-Xlinker");

@@ -1,0 +1,5 @@
+$ gprbuild -q -P my_gnatbind/gnatbind.gpr
+$ gprbuild -v -P tree/prj.gpr -bargs --gnatbind_path=/my_gnatbind/main
+OK: '-Xlinker --stack=0x200000,0x1000' found
+OK: '-Xlinker --stack=0x800000,0x1000' absent
+OK: '-Wl,--stack=0x2000000' absent
