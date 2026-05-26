@@ -758,17 +758,26 @@ package body GPR2.Build.Actions_Scheduler is
             end if;
          end loop;
 
-         --  Do the free in dedicated loops, so tasks have time to stop
-         --  before we free their memory.
+         --  Wait for tasks to actually terminate before freeing their memory:
+         --  Runner.Stop returns as soon as the rendezvous completes, but the
+         --  task body continues running (exiting the loop, finalizing local
+         --  listener tasks) until it reaches its end.  Freeing the task object
+         --  before that point corrupts the still-executing task body.
 
          for Runner of Thread_Runners loop
             if Runner /= null then
+               while not Runner.all'Terminated loop
+                  delay 0.001;
+               end loop;
                Free (Runner);
             end if;
          end loop;
 
          for Runner of Process_Runners loop
             if Runner /= null then
+               while not Runner.all'Terminated loop
+                  delay 0.001;
+               end loop;
                Free (Runner);
             end if;
          end loop;
