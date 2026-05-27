@@ -19,7 +19,7 @@ workflow:
 
 include:
   ###############
-  # BUILD STAGE #
+  # CHECK STAGE #
   ###############
 
   # Issue check
@@ -29,6 +29,10 @@ include:
   # - component: $CI_SERVER_FQDN/eng/gitlab-templates/pre-commit@~latest
   #   inputs:
   #     on-diff: true
+
+  ###############
+  # BUILD STAGE #
+  ###############
 
   # regular build
   - component: $CI_SERVER_FQDN/eng/gitlab-templates/build@~latest
@@ -216,6 +220,17 @@ include:
       rules:
         - allow_failure: true
 
+# Add a precommit to prevent new tests at the toplevel test directory
+check_testsuite:
+  stage: check
+  needs: []
+  interruptible: true
+  services:
+    - image:pe-base
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  script: |
+    ls -A1 $CI_PROJECT_DIR/testsuite/tests/*/test.yaml > /dev/null 2>&1 && (echo "Error: test detected at toplevel"; exit 1) || echo "OK: no test at the toplevel of the testsuite"
 
 # Make some jobs optional
 
