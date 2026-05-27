@@ -29,7 +29,7 @@ package GPR2.Build.Jobserver is
      with Pre => Self.Is_Available;
    --  Read a token from the jobserver :
    --     True  : A token is available, a process can be spawned.
-   --     Flase : No available token, no process must be spawned.
+   --     False : No available token, no process must be spawned.
    --  At this point the token is unidentified, meaning we took a token but it
    --  is not associated to a process yet.
    --  In the case of actually spawning a process, Register_Token should be
