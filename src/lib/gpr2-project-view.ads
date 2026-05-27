@@ -490,7 +490,8 @@ package GPR2.Project.View is
    --  then give a different result.
 
    function Visible_Sources
-     (Self : Object) return GPR2.Build.Source.Sets.Object;
+     (Self : Object) return GPR2.Build.Source.Sets.Object
+     with Pre => Self.Is_Defined;
    --  Return all sources visible by Self
 
    function Interface_Units
@@ -586,7 +587,8 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns true if the project is externally built
 
-   function Is_Runtime (Self : Object) return Boolean;
+   function Is_Runtime (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
    --  Returns True if the project describes the runtime
 
    function Has_Mains (Self : Object) return Boolean
@@ -601,7 +603,8 @@ package GPR2.Project.View is
    function Suffixed_Simple_Name
      (Self : Object;
       Name : String;
-      Lang : Language_Id := Ada_Language) return Simple_Name;
+      Lang : Language_Id := Ada_Language) return Simple_Name
+     with Pre => Self.Is_Defined;
    --  If the provided name contains any standard suffix (.ada, .adb, .c)
    --  or any declared convention in the Naming package then it returns the
    --  value as is.
