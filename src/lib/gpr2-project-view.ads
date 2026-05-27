@@ -648,12 +648,12 @@ package GPR2.Project.View is
    --  Returns whether the optional interfaces attribute is defined
 
    function Has_Any_Interfaces (Self : Object) return Boolean
-   with
-     Pre  => Self.Is_Defined,
-     Post =>
-       Has_Any_Interfaces'Result = Self.Has_Interfaces
-         or else (Self.Kind in GPR2.Library_Kind
-                  and then Self.Has_Library_Interface);
+     with
+       Pre  => Self.Is_Defined,
+       Post =>
+         Has_Any_Interfaces'Result = Self.Has_Interfaces
+           or else (Self.Kind in GPR2.Library_Kind
+                    and then Self.Has_Library_Interface);
    --  Returns whether any interface is defined either using the
    --  Library_Interface or Interfaces attribute.
 
