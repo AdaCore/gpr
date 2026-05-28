@@ -831,10 +831,14 @@ package body GPR2.Build.Tree_Db is
                      declare
                         Lang : constant Language_Id := +Name_Type (L.Text);
                      begin
+                        --  Don't print the warning for Extended projects:
+                        --  only interesting for the extending one.
+
                         if (not V_Db.Langs_Usage.Contains (Lang)
                             or else V_Db.Langs_Usage (Lang) = 0)
                           and then V.Attribute (PRA.Compiler.Driver,
                                                 PAI.Create (Lang)).Is_Defined
+                          and then not V.Is_Extended
                         then
                            Messages.Append
                              (Message.Create
