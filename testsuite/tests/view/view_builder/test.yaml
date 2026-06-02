@@ -1,7 +1,4 @@
-description:
-    Test for the view builder
+description: Test for the view builder
 driver: build_and_run
 project_file: test
 main: main
-output:
-- ["test.out.win", "'windows' in env.host.platform"]

@@ -1,9 +1,0 @@
-Attributes:
-Main: "main.adb"
-Object_Dir: "obj"
-Source_Dirs: "src1", "src2"
-Builder'Executable ("main.adb"): "mymain"
-Sources:
-/demo/src2/main.adb
-/demo/src2/pkg.adb
-/demo/src1/pkg.ads
