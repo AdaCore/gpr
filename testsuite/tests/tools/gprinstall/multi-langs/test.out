@@ -1,0 +1,47 @@
+library project Prj is
+   type BUILD_KIND is ("static", "relocatable");
+   BUILD : BUILD_KIND := external("LIBRARY_TYPE", "static");
+
+   case BUILD is
+      when "relocatable" =>
+         for Languages use ("Ada");
+         for Source_Dirs use ("../../include/prj.relocatable");
+         for Library_Dir use "../../lib/prj.relocatable";
+         for Library_Kind use "relocatable";
+      when "static" =>
+         for Languages use ("Ada", "C");
+         for Source_Dirs use ("../../include/prj.static");
+         for Library_Dir use "../../lib/prj.static";
+         for Library_Kind use "static";
+   end case;
+
+   for Library_Name use "lang";
+
+   package Naming is
+      case BUILD is
+         when "relocatable" =>
+            null;
+         when "static" =>
+            null;
+      end case;
+   end Naming;
+
+   package Linker is
+      case BUILD is
+         when "relocatable" =>
+            null;
+         when "static" =>
+            null;
+      end case;
+   end Linker;
+
+   package Install is
+      for Active use "False";
+   end Install;
+
+   for Externally_Built use "True";
+
+   type BUILD_KIND is ("static", "relocatable");
+
+   Library_Type : BUILD_KIND := "relocatable";
+end Prj;
