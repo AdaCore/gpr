@@ -492,6 +492,13 @@ package body GPR2.Build.View_Tables is
                     String (Src.Path_Name));
             end if;
 
+            pragma Annotate
+              (Xcov, Exempt_On,
+               "This looks like the case Src.Inh_From.Is_Defined may not " &
+                 "be exercised currently considering the order used to load " &
+                 "sources. However if the order change or the above analysis" &
+                 "is incorrect, it is better to keep it as-is.");
+
             if Src.Inh_From.Is_Defined then
                --  Remove the source from the project that loaded it rather
                --  than just the current view. Allows fixing case where a
@@ -505,6 +512,7 @@ package body GPR2.Build.View_Tables is
                   Project.View.Undefined,
                   True,
                   Messages);
+               pragma Annotate (Xcov, Exempt_Off);
             else
                Remove_Source
                  (View_Db,
