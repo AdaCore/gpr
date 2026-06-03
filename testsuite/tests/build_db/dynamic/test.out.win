@@ -126,7 +126,6 @@ Executing scenario/extending.txt
 --- cp ../projects/base.gpr .
 --- cp ../projects/extending.gpr .
 --- Loading project extending.gpr
-base.gpr: warning: there are no sources of language "Ada" in this project
 extending.gpr:3:23: warning: there are no sources of language "Ada" in this project
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------

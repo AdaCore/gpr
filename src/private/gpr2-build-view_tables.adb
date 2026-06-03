@@ -492,12 +492,36 @@ package body GPR2.Build.View_Tables is
                     String (Src.Path_Name));
             end if;
 
-            Remove_Source (View_Db,
-                           Src.View,
-                           Src.Path_Name,
-                           Src.Inh_From,
-                           False,
-                           Messages);
+            pragma Annotate
+              (Xcov, Exempt_On,
+               "This looks like the case Src.Inh_From.Is_Defined may not " &
+                 "be exercised currently considering the order used to load " &
+                 "sources. However if the order change or the above analysis" &
+                 "is incorrect, it is better to keep it as-is.");
+
+            if Src.Inh_From.Is_Defined then
+               --  Remove the source from the project that loaded it rather
+               --  than just the current view. Allows fixing case where a
+               --  source is overriden by its Ada unit but has a different
+               --  basename than the overloading source.
+
+               Remove_Source
+                 (Get_Data (NS_Db.Tree_Db, Src.View),
+                  Src.View,
+                  Src.Path_Name,
+                  Project.View.Undefined,
+                  True,
+                  Messages);
+               pragma Annotate (Xcov, Exempt_Off);
+            else
+               Remove_Source
+                 (View_Db,
+                  Src.View,
+                  Src.Path_Name,
+                  Src.Inh_From,
+                  True,
+                  Messages);
+            end if;
          end if;
 
 
@@ -514,12 +538,24 @@ package body GPR2.Build.View_Tables is
                        "' as it is not used anymore");
                end if;
 
-               Remove_Source (View_Db,
-                              Other_Loc.View,
-                              Other_Loc.Path_Name,
-                              Other_Loc.Inh_From,
-                              False,
-                              Messages);
+               if Other_Loc.Inh_From.Is_Defined then
+                  --  See above: we remove fron the inherited view
+                  Remove_Source
+                    (Get_Data (NS_Db.Tree_Db, Other_Loc.View),
+                     Other_Loc.View,
+                     Other_Loc.Path_Name,
+                     Project.View.Undefined,
+                     True,
+                     Messages);
+               else
+                  Remove_Source
+                    (View_Db,
+                     Other_Loc.View,
+                     Other_Loc.Path_Name,
+                     Other_Loc.Inh_From,
+                     True,
+                     Messages);
+               end if;
             end;
          end if;
 
