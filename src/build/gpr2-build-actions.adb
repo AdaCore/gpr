@@ -170,8 +170,9 @@ package body GPR2.Build.Actions is
    -----------
 
    function Image
-     (Self      : Action_Id'Class;
-      With_View : Boolean := True) return String
+     (Self        : Action_Id'Class;
+      With_View   : Boolean := True;
+      Align_Class : Boolean := False) return String
    is
       Res : Unbounded_String;
    begin
@@ -182,7 +183,14 @@ package body GPR2.Build.Actions is
       end if;
 
       Append (Res, Self.Action_Class);
-      Append (Res, "] ");
+      Append (Res, "]");
+
+      if Align_Class and then Length (Res) < Action_Class_Width + 3 then
+         Append (Res, (Action_Class_Width + 3 - Length (Res)) * ' ');
+      else
+         Append (Res, ' ');
+      end if;
+
       Append (Res, Self.Action_Parameter);
 
       if With_View then

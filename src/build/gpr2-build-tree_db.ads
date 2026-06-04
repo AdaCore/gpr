@@ -139,6 +139,32 @@ package GPR2.Build.Tree_Db is
       Options           : GPR2.Build.Actions_Scheduler.Options'Class)
       return GPR2.Build.Actions_Scheduler.Execution_Status;
 
+   function Execute_Next_Action
+     (Self              : in out Object;
+      Catch_Exceptions   : Boolean := True;
+      Force_Execution    : Boolean := False;
+      Keep_Temp_Files    : Boolean := False;
+      No_Warnings_Replay : Boolean := False;
+      Clear_Exec_Ctxt    : Boolean := False)
+   return GPR2.Build.Actions_Scheduler.Action_Report;
+   --  Execute the next available action in the DAG and return a report
+   --  describing the outcome. Unlike Execute, this runs one action at a time,
+   --  allowing the caller to drive execution step by step.
+   --
+   --  The execution context is populated on the first call and reused on
+   --  subsequent calls. Set Clear_Exec_Ctxt to True to force a rebuild of the
+   --  DAG (e.g. after adding new actions).
+   --
+   --  Catch_Exceptions:   if True (default), exceptions raised during
+   --                      execution are caught and reported in the return
+   --                      value instead of propagated.
+   --  Force_Execution:    if True, re-execute even if the action's signature
+   --                      is still valid.
+   --  Keep_Temp_Files:    if True, temporary files are preserved after
+   --                      execution.
+   --  No_Warnings_Replay: if True, the saved stderr of a skipped action is
+   --                      not replayed.
+
    function Is_Executing (Self : Object) return Boolean;
 
    --  ACTION MANAGEMENT
@@ -343,35 +369,40 @@ private
 
    type Object is tagged limited record
    --  Options:
-      Src_Option       : Optional_Source_Info_Option := No_Source;
-      External_Options : Build.External_Options.Object;
-      Build_Options    : Build.Options.Build_Options;
+      Src_Option         : Optional_Source_Info_Option := No_Source;
+      External_Options   : Build.External_Options.Object;
+      Build_Options      : Build.Options.Build_Options;
 
-      Self             : access Object;
+      Self               : access Object;
       --  Handy self-reference
 
-      Tree             : access GPR2.Tree_Internal.Object;
+      Tree               : access GPR2.Tree_Internal.Object;
       --  The project tree
 
-      Build_Dbs        : Build_DB_Maps.Map;
+      Build_Dbs          : Build_DB_Maps.Map;
       --  Distributed database objects sources from the views
 
-      Actions          : Action_Maps.Map;
-      Artifacts        : Artifact_Sets.Set;
-      New_Actions      : Action_Sets.Set;
+      Actions            : Action_Maps.Map;
+      Artifacts          : Artifact_Sets.Set;
+      New_Actions        : Action_Sets.Set;
 
-      Inputs           : Action_Artifacts_Maps.Map;
+      Inputs             : Action_Artifacts_Maps.Map;
       --  Input(s) for each action
-      Outputs          : Action_Artifacts_Maps.Map;
+      Outputs            : Action_Artifacts_Maps.Map;
       --  Artifacts produced by a given action
 
-      Successors       : Artifact_Actions_Maps.Map;
-      Predecessor      : Artifact_Action_Maps.Map;
+      Successors         : Artifact_Actions_Maps.Map;
+      Predecessor        : Artifact_Action_Maps.Map;
 
-      Executing        : Boolean := False;
-      Exec_Ctxt        : aliased GPR2.Build.Actions_Scheduler.Context;
+      Executing          : Boolean := False;
+      First_Single_Exec  : Boolean := False;
+      --  Indicates whether a first single action execution has already been
+      --  done with Execute_Next_Action. If not, the execution context will
+      --  be populated.
 
-      File_Index       : aliased GPR2.Utils.Hash.Object;
+      Exec_Ctxt          : aliased GPR2.Build.Actions_Scheduler.Context;
+
+      File_Index         : aliased GPR2.Utils.Hash.Object;
 
       Linker_Lib_Dir_Opt : Unbounded_String;
    end record;

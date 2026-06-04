@@ -53,6 +53,66 @@ package body GPR2.Build.Actions_Scheduler is
       Options : GPR2.Build.Actions_Scheduler.Options'Class);
    --  Execute the actions scheduler, which occurs after an option cast
 
+   procedure Launch_Process
+     (Job            : in out Actions.Process.Object'Class;
+      Proc_Handler   : in out Process_Handler;
+      Capture_Stdout : out GNATCOLL.OS.FS.File_Descriptor;
+      Capture_Stderr : out GNATCOLL.OS.FS.File_Descriptor);
+   --  Launch the given process action. On success,
+   --  Proc_Handler is set to Running and Capture_Stdout/
+   --  Capture_Stderr provide file descriptors for the
+   --  captured output. On failure, Proc_Handler is set
+   --  to Failed_To_Launch with an error message.
+
+   function Collect_Action
+     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      Action  : in out Actions.Object'Class;
+      Handler : Collect_Handler;
+      Context : access GPR2.Build.Actions_Scheduler.Context)
+      return Collect_Status;
+
+   subtype Pre_Run_Action_Status is Action_Status
+   with
+     Static_Predicate =>
+       Pre_Run_Action_Status
+       in Skipped | Deactivated | Ready_To_Run | Failed_Cmd_Line_Computation;
+
+   function Pre_Run_Status
+     (Action  : in out Actions.Object'Class;
+      Slot_Id : Positive;
+      Force   : Boolean) return Pre_Run_Action_Status;
+   --  Determine the status of Action before execution.
+   --  Returns Deactivated if the action is externally
+   --  built or deactivated, Skipped if its signature is
+   --  still valid and Force is False, or Ready_To_Run
+   --  otherwise.
+
+
+   procedure Display
+     (Action  : Actions.Action_Id'Class;
+      Tree_Db : GPR2.Build.Tree_Db.Object_Access);
+   --  Display information about the specified action execution
+
+   function RF_Message
+     (Resp_File_Path : Path_Name.Object; Command : Unbounded_String)
+      return String;
+   --  Return a message containig the path of the response file followed by the
+   --  provided commands.
+
+   procedure Display_Command_Line
+     (Action  : Actions.Process.Object'Class;
+      Tree_Db : GPR2.Build.Tree_Db.Object_Access);
+   --  Report the command about to be executed. At verbose level, prints the
+   --  full argument list and any response file contents; otherwise delegates
+   --  to Display for the compact one-line form.
+
+   procedure Report_Deactivated_Invalid_Signature
+     (Act     : Actions.Object'Class;
+      Tree_Db : GPR2.Build.Tree_Db.Object_Access);
+   --  If Act has been deactivated but its signature is invalid, report the
+   --  list of activated successor actions that will not be executed as a
+   --  consequence.
+
    Traces : constant GNATCOLL.Traces.Logger :=
      GNATCOLL.Traces.Create ("GPR.ACTIONS_SCHEDULER", GNATCOLL.Traces.Off);
 
@@ -99,6 +159,19 @@ package body GPR2.Build.Actions_Scheduler is
       Action  : in out Actions.Object'Class;
       Handler : Collect_Handler;
       Context : access GPR2.Build.Actions_Scheduler.Context)
+      return Collect_Status is
+   begin
+      --  This wrapper is required so the JSON scheduler can override
+      --  Collect_Action while using internal fields.
+
+      return Collect_Action (Self.Tree_Db, Action, Handler, Context);
+   end Collect_Action;
+
+   function Collect_Action
+     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      Action  : in out Actions.Object'Class;
+      Handler : Collect_Handler;
+      Context : access GPR2.Build.Actions_Scheduler.Context)
       return Collect_Status
    is
 
@@ -122,12 +195,12 @@ package body GPR2.Build.Actions_Scheduler is
               & " before it finishes");
 
          if Length (Handler.Stdout) > 0 and then Action.Display_Output then
-            Self.Tree_Db.Reporter.Report
+            Tree_Db.Reporter.Report
               (-Handler.Stdout, Level => GPR2.Message.Important);
          end if;
 
          if Length (Handler.Stderr) > 0 then
-            Self.Tree_Db.Reporter.Report
+            Tree_Db.Reporter.Report
               (-Handler.Stderr,
                To_Stderr => True,
                Level     => GPR2.Message.Important);
@@ -169,7 +242,7 @@ package body GPR2.Build.Actions_Scheduler is
                        Actions.Process.Link.Object'Class (Action);
                   begin
                      if not Link.Is_Library then
-                        Self.Tree_Db.Reporter.Report
+                        Tree_Db.Reporter.Report
                           ('"'
                            & String (Link.Output.Path.Simple_Name)
                            & """ up to date");
@@ -199,7 +272,7 @@ package body GPR2.Build.Actions_Scheduler is
 
             --  Propagate any newly created action
             if Handler.Status = Finished then
-               if not Self.Tree_Db.Propagate_Actions then
+               if not Tree_Db.Propagate_Actions then
                   Traces.Trace
                     ("action propagation failed for " & Action.UID.Image);
                   return Abort_Execution;
@@ -223,7 +296,7 @@ package body GPR2.Build.Actions_Scheduler is
 
       exception
          when E : others =>
-            Self.Tree_Db.Reporter.Report
+            Tree_Db.Reporter.Report
               ("!!! Unexpected exception caught"
                & ASCII.LF
                & Ada.Exceptions.Exception_Information (E),
@@ -239,7 +312,7 @@ package body GPR2.Build.Actions_Scheduler is
             Msg : constant String := Action.Failure_Message;
          begin
             if Msg'Length > 0 then
-               Self.Tree_Db.Reporter.Report
+               Tree_Db.Reporter.Report
                  (Msg, To_Stderr => True, Level => GPR2.Message.Important);
             end if;
          end;
@@ -252,30 +325,52 @@ package body GPR2.Build.Actions_Scheduler is
    -- Display --
    -------------
 
-   procedure Display (Self : Object; Action : Action_Id'Class) is
-      Res              : Unbounded_String;
-      Action_Class_Max : constant Natural := 18;
-
+   procedure Display
+     (Action : Action_Id'Class; Tree_Db : GPR2.Build.Tree_Db.Object_Access) is
    begin
-      Append (Res, '[');
-
-      if Action.Language /= No_Language then
-         Append (Res, Image (Action.Language));
-         Append (Res, ' ');
-      end if;
-
-      Append (Res, Action.Action_Class);
-      Append (Res, ']');
-
-      if Length (Res) < Action_Class_Max then
-         Append (Res, (Action_Class_Max - Length (Res)) * ' ');
-      else
-         Append (Res, ' ');
-      end if;
-
-      Append (Res, Action.Action_Parameter);
-      Self.Tree_Db.Reporter.Report (-Res);
+      Tree_Db.Reporter.Report
+        (Action.Image (With_View => False, Align_Class => True));
    end Display;
+
+   --------------------------
+   -- Display_Command_Line --
+   --------------------------
+
+   procedure Display_Command_Line
+     (Action  : Actions.Process.Object'Class;
+      Tree_Db : GPR2.Build.Tree_Db.Object_Access)
+   is
+      Action_RF : constant GPR2.Build.Response_Files.Object :=
+        Action.Response_File;
+   begin
+      --  ??? Both message level and Project tree verbosity
+      --  don't cope with tooling messages that need quiet,
+      --  normal or detailed info.
+      --  Let's go for the default one *and* verbose one for now
+      if Tree_Db.Reporter.User_Verbosity >= Verbose
+        or else
+          (Tree_Db.Reporter.User_Verbosity = Unset
+           and then Tree_Db.Reporter.Verbosity >= Verbose)
+      then
+         Tree_Db.Reporter.Report (Image (Action.Command_Line.Argument_List));
+
+         if Action_RF.Has_Secondary_Content then
+            Tree_Db.Reporter.Report
+              (RF_Message
+                 (Action_RF.Secondary_Response_File,
+                  Action_RF.Secondary_Response_File_Content));
+         end if;
+
+         if Action_RF.Has_Primary_Content then
+            Tree_Db.Reporter.Report
+              (RF_Message
+                 (Action_RF.Primary_Response_File,
+                  Action_RF.Primary_Response_File_Content));
+         end if;
+      else
+         Display (Action.UID, Tree_Db);
+      end if;
+   end Display_Command_Line;
 
    --------------------------
    -- Effective_Job_Number --
@@ -302,6 +397,267 @@ package body GPR2.Build.Actions_Scheduler is
    begin
       Internal_Execute (Self, Tree_Db, Context, Options);
    end Execute;
+
+   -------------------------
+   -- Execute_Next_Action --
+   -------------------------
+
+   function Execute_Next_Action
+     (Tree_Db            : GPR2.Build.Tree_Db.Object_Access;
+      Context            : access GPR2.Build.Actions_Scheduler.Context;
+      Catch_Exceptions   : Boolean := True;
+      Force_Execution    : Boolean := False;
+      Keep_Temp_Files    : Boolean := False;
+      No_Warnings_Replay : Boolean := False) return Action_Report
+   is
+      procedure Execute_Process
+        (Status                : out Action_Status;
+         Action                :
+           in out GPR2.Build.Actions.Process.Object'Class;
+         Stderr                : out Unbounded_String;
+         Stdout                : out Unbounded_String;
+         Execution_Return_Code : out Integer);
+
+      procedure Execute_Thread
+        (Status                : out Action_Status;
+         Action                : in out GPR2.Build.Actions.Thread.Object'Class;
+         Stderr                : out Unbounded_String;
+         Stdout                : out Unbounded_String;
+         Execution_Return_Code : out Integer);
+
+      procedure Execute_Process
+        (Status                : out Action_Status;
+         Action                :
+           in out GPR2.Build.Actions.Process.Object'Class;
+         Stderr                : out Unbounded_String;
+         Stdout                : out Unbounded_String;
+         Execution_Return_Code : out Integer)
+      is
+         Proc_Handler : Process_Handler;
+         P_Stdout     : FS.File_Descriptor;
+         P_Stderr     : FS.File_Descriptor;
+      begin
+         Display_Command_Line (Action, Tree_Db);
+
+         Launch_Process (Action, Proc_Handler, P_Stdout, P_Stderr);
+
+         Status := Proc_Handler.Status;
+         pragma Assert (Status in Running | Failed_To_Launch);
+
+         if Status = Running then
+            Execution_Return_Code := GOP.Wait (Proc_Handler.Handle);
+
+            Stdout :=
+              To_Unbounded_String
+                (FS.Read (P_Stdout, Buffer_Size => 8 * 1024));
+            Stderr :=
+              To_Unbounded_String
+                (FS.Read (P_Stderr, Buffer_Size => 8 * 1024));
+            FS.Close (P_Stdout);
+            FS.Close (P_Stderr);
+
+            Status := Finished;
+         elsif Status = Failed_To_Launch then
+            Stderr := Proc_Handler.Error_Message;
+         end if;
+      end Execute_Process;
+
+      procedure Execute_Thread
+        (Status                : out Action_Status;
+         Action                : in out GPR2.Build.Actions.Thread.Object'Class;
+         Stderr                : out Unbounded_String;
+         Stdout                : out Unbounded_String;
+         Execution_Return_Code : out Integer) is
+      begin
+         Display (Action.UID, Tree_Db);
+
+         if Catch_Exceptions then
+            begin
+               Execution_Return_Code := Action.Execute (Stdout, Stderr);
+               Status := Finished;
+            exception
+               when E : others =>
+                  Stderr :=
+                    To_Unbounded_String
+                      (Action.UID.Image
+                       & " "
+                       & Ada.Exceptions.Exception_Information (E));
+                  Status := Exception_Raised;
+            end;
+         else
+            Execution_Return_Code := Action.Execute (Stdout, Stderr);
+            Status := Finished;
+         end if;
+      end Execute_Thread;
+
+      Status            : Action_Status := Unknown;
+      Dumb_Action_Slot  : constant Integer := 1;
+      Handler           : Collect_Handler;
+      Stderr            : Unbounded_String;
+      Stdout            : Unbounded_String;
+      Ret_Code          : Integer;
+      Node              : GDG.Node_Id;
+      Unused_Job_Status : Collect_Status;
+   begin
+      if not Context.Graph.Iterator_Started then
+         Traces.Trace ("Starting the graph iterator");
+         Context.Graph.Start_Iterator (Enable_Visiting_State => True);
+      end if;
+
+      if not Context.Graph.Next (Node) or else Node = GDG.No_Node then
+         --  Either no more nodes in the graph to visit, or previous nodes
+         --  were visited but not completed because of failing executions.
+         return (Status => No_Action_To_Execute, others => <>);
+      end if;
+
+      declare
+         UID            : constant Action_Id'Class := Context.Actions (Node);
+         Act            : Actions.Object'Class := Tree_Db.Action (UID);
+         Is_Proc_Action : constant Boolean :=
+           Act in Actions.Process.Object'Class;
+      begin
+         Status :=
+           Pre_Run_Status
+             (Tree_Db.Action_Id_To_Reference (UID),
+              Dumb_Action_Slot,
+              Force_Execution);
+
+         if Status = Ready_To_Run then
+            declare
+               Act_Ref : constant Build.Tree_Db.Action_Reference_Type :=
+                 Tree_Db.Action_Id_To_Reference (UID);
+            begin
+               if not Act_Ref.Pre_Execution then
+                  Status := Failed_Pre_Execution;
+               else
+                  if Is_Proc_Action then
+                     Execute_Process
+                       (Status                => Status,
+                        Action                =>
+                          Process.Object'Class (Act_Ref.Element.all),
+                        Stderr                => Stderr,
+                        Stdout                => Stdout,
+                        Execution_Return_Code => Ret_Code);
+                  else
+                     Execute_Thread
+                       (Status                => Status,
+                        Action                =>
+                          Thread.Object'Class (Act_Ref.Element.all),
+                        Stderr                => Stderr,
+                        Stdout                => Stdout,
+                        Execution_Return_Code => Ret_Code);
+                  end if;
+               end if;
+            end;
+
+         elsif Status = Deactivated
+           and then not Tree_Db.Action_Id_To_Reference (UID).Valid_Signature
+         then
+            Report_Deactivated_Invalid_Signature (Act, Tree_Db);
+         end if;
+
+         Handler :=
+           (case Status is
+              when Skipped                     =>
+                (Status     => Skipped,
+                 Stdout     => Act.Saved_Stdout,
+                 Stderr     =>
+                   (if No_Warnings_Replay
+                    then Null_Unbounded_String
+                    else Act.Saved_Stderr),
+                 UID_Holder => Action_Id_Holder.To_Holder (UID),
+                 others     => <>),
+              when Deactivated                 =>
+                (Status     => Deactivated,
+                 Stdout     => Null_Unbounded_String,
+                 Stderr     => Null_Unbounded_String,
+                 UID_Holder => Action_Id_Holder.To_Holder (UID),
+                 others     => <>),
+              when Failed_Cmd_Line_Computation =>
+                (Status     => Failed_Cmd_Line_Computation,
+                 Stdout     => Null_Unbounded_String,
+                 Stderr     => Null_Unbounded_String,
+                 UID_Holder => Action_Id_Holder.To_Holder (UID),
+                 others     => <>),
+              when Failed_To_Launch            =>
+                (Status     => Failed_To_Launch,
+                 Stdout     => Stdout,
+                 Stderr     => Stderr,
+                 UID_Holder => Action_Id_Holder.To_Holder (UID),
+                 others     => <>),
+              when Exception_Raised            =>
+                (Status     => Exception_Raised,
+                 Stdout     => Stdout,
+                 Stderr     => Stderr,
+                 UID_Holder => Action_Id_Holder.To_Holder (UID),
+                 others     => <>),
+              when Finished                    =>
+                (Status      => Finished,
+                 Stdout      => Stdout,
+                 Stderr      => Stderr,
+                 UID_Holder  => Action_Id_Holder.To_Holder (UID),
+                 Return_Code => Ret_Code,
+                 others      => <>),
+              when others                      =>
+                (Status     => Unknown,
+                 Stdout     => Null_Unbounded_String,
+                 Stderr     => Null_Unbounded_String,
+                 UID_Holder => Action_Id_Holder.To_Holder (UID),
+                 others     => <>));
+
+         --  Cleanup the temporary files that are local to the job
+         if not Keep_Temp_Files then
+            Act.Cleanup_Temp_Files (Scope => Actions.Local);
+         end if;
+
+         Unused_Job_Status := Collect_Action (Tree_Db, Act, Handler, Context);
+
+         Tree_Db.Action_Id_To_Reference (UID) := Act;
+
+         --  Cleanup the temporary files with global scope
+         if not Keep_Temp_Files then
+            Tree_Db.Clear_Temp_Files;
+         end if;
+
+         return
+           (case Handler.Status is
+              when Skipped                     =>
+                (Status     => Skipped,
+                 Stdout     => Act.Saved_Stdout,
+                 Stderr     =>
+                   (if No_Warnings_Replay
+                    then Null_Unbounded_String
+                    else Act.Saved_Stderr),
+                 UID_Holder => Handler.UID_Holder),
+              when Deactivated                 =>
+                (Status     => Deactivated,
+                 UID_Holder => Handler.UID_Holder,
+                 others     => <>),
+              when Failed_Cmd_Line_Computation =>
+                (Status     => Failed_Cmd_Line_Computation,
+                 UID_Holder => Handler.UID_Holder,
+                 others     => <>),
+              when Failed_To_Launch            =>
+                (Status     => Failed_To_Launch,
+                 Stdout     => Handler.Stdout,
+                 Stderr     => Handler.Stderr,
+                 UID_Holder => Handler.UID_Holder),
+              when Exception_Raised            =>
+                (Status     => Exception_Raised,
+                 Stdout     => Handler.Stdout,
+                 Stderr     => Handler.Stderr,
+                 UID_Holder => Handler.UID_Holder),
+              when Finished                    =>
+                (Status      => Finished,
+                 Stdout      => Handler.Stdout,
+                 Stderr      => Handler.Stderr,
+                 UID_Holder  => Handler.UID_Holder,
+                 Return_Code => Handler.Return_Code),
+              when others                      =>
+                raise Actions_Scheduler_Error
+                  with "invalid execution status for action" & UID.Image);
+      end;
+   end Execute_Next_Action;
 
    -----------
    -- Image --
@@ -408,15 +764,6 @@ package body GPR2.Build.Actions_Scheduler is
       --  Note: this variable does not need shared protection as all accesses
       --  are serialized through the main task.
 
-      subtype Pre_Run_Action_Status is Action_Status
-      with
-        Static_Predicate =>
-          Pre_Run_Action_Status
-          in Skipped
-           | Deactivated
-           | Ready_To_Run
-           | Failed_Cmd_Line_Computation;
-
       function Nb_Active_Actions return Integer
       is (Active_Actions);
       --  Return the number of actions being executed
@@ -463,24 +810,6 @@ package body GPR2.Build.Actions_Scheduler is
         (Self : in out Object'Class; Total_Number_Of_Nodes : Natural);
       --  Report progress of the execution based on the number of executed
       --  actions and the total number of actions to execute.
-
-      function Pre_Run_Status
-        (Action  : in out Actions.Object'Class;
-         Slot_Id : Positive;
-         Force   : Boolean) return Pre_Run_Action_Status;
-      --  Determine the status of Action before execution.
-      --  Returns Deactivated if the action is externally
-      --  built or deactivated, Skipped if its signature is
-      --  still valid and Force is False, or Ready_To_Run
-      --  otherwise.
-
-      function Find_Activated_And_Unskipped_Successor_Actions
-        (Act : Actions.Object'Class)
-         return GPR2.Build.Actions.Action_Id_Sets.Set;
-      --  For each artifact produced by the specified action, find the first
-      --  transitive activated actions that depend on it. If a successor
-      --  is deactivated, then the search continues until an activated action
-      --  is found. If no action is found, then an empty set is returned.
 
       package Collect_Queue_Interfaces is new
         Ada.Containers.Synchronized_Queue_Interfaces (Collect_Handler);
@@ -547,45 +876,6 @@ package body GPR2.Build.Actions_Scheduler is
          Thread_Runners (Slot_Id).Execute (UID, Slot_Id);
       end Execute_Thread_Runner;
 
-      ----------------------------------------------------
-      -- Find_Activated_And_Unskipped_Successor_Actions --
-      ----------------------------------------------------
-
-      function Find_Activated_And_Unskipped_Successor_Actions
-        (Act : Actions.Object'Class) return Action_Id_Sets.Set
-      is
-         Result             : Action_Id_Sets.Set := Action_Id_Sets.Empty_Set;
-         Actions_To_Process : Action_Id_Sets.Set;
-      begin
-         Actions_To_Process.Include (Act.UID);
-
-         while not Actions_To_Process.Is_Empty loop
-            declare
-               Current_Action : constant Action_Id'Class :=
-                 Actions_To_Process.First_Element;
-            begin
-               Actions_To_Process.Exclude (Current_Action);
-               for Artifact of Self.Tree_Db.Outputs (Action => Current_Action)
-               loop
-                  for Action of Self.Tree_Db.Successors (Artifact) loop
-                     if Action.Is_Deactivated then
-
-                        --  If an action successor is also deactivated then the
-                        --  search for the first dependent correct action
-                        --  continues.
-
-                        Actions_To_Process.Include (Action.UID);
-                     else
-                        Result.Include (Action.UID);
-                     end if;
-                  end loop;
-               end loop;
-            end;
-         end loop;
-
-         return Result;
-      end Find_Activated_And_Unskipped_Successor_Actions;
-
       --------------------------
       -- Initialize_Script_FD --
       --------------------------
@@ -607,87 +897,6 @@ package body GPR2.Build.Actions_Scheduler is
             Script_FD := Null_FD;
          end if;
       end Initialize_Script_FD;
-
-      --------------------
-      -- Pre_Run_Status --
-      --------------------
-
-      function Pre_Run_Status
-        (Action  : in out Actions.Object'Class;
-         Slot_Id : Positive;
-         Force   : Boolean) return Pre_Run_Action_Status is
-      begin
-         if Action.View.Is_Externally_Built then
-            if Traces.Is_Active then
-               pragma Annotate (Xcov, Exempt_On, "debug code");
-               Traces.Trace ("job externally built: " & Action.UID.Image);
-               pragma Annotate (Xcov, Exempt_Off);
-            end if;
-
-            return Deactivated;
-         end if;
-
-         --  Load and check the job's signature
-
-         Action.Load_Signature;
-
-         if Action.Is_Deactivated then
-            --  Note: we need to check for deactivated jobs *after* the
-            --  signature is computed to understand if the deactivated
-            --  action has all its output correct (so that we can unblock
-            --  depending non-deactivated actions).
-
-            if Traces.Is_Active then
-               pragma Annotate (Xcov, Exempt_On, "debug code");
-               Traces.Trace ("job is deactivated: " & Action.UID.Image);
-               pragma Annotate (Xcov, Exempt_Off);
-            end if;
-
-            return Deactivated;
-         end if;
-
-         if not Force and then Action.Valid_Signature then
-            if Traces.Is_Active then
-               pragma Annotate (Xcov, Exempt_On, "debug code");
-               Traces.Trace
-                 ("Signature is valid, do not execute the job '"
-                  & Action.UID.Image
-                  & "'");
-               pragma Annotate (Xcov, Exempt_Off);
-            end if;
-
-            return Skipped;
-         end if;
-
-         if Action in Actions.Process.Object'Class then
-            begin
-               Actions.Process.Object'Class (Action).Update_Command_Line
-                 (Slot_Id);
-
-               if Actions.Process.Object'Class (Action)
-                    .Command_Line
-                    .Argument_List
-                    .Is_Empty
-               then
-                  if Traces.Is_Active then
-                     pragma Annotate (Xcov, Exempt_On, "debug code");
-                     Traces.Trace
-                       ("job arguments is empty for '"
-                        & Action.UID.Image
-                        & "'");
-                     pragma Annotate (Xcov, Exempt_Off);
-                  end if;
-
-                  return Failed_Cmd_Line_Computation;
-               end if;
-            exception
-               when Action_Error =>
-                  return Failed_Cmd_Line_Computation;
-            end;
-         end if;
-
-         return Ready_To_Run;
-      end Pre_Run_Status;
 
       ------------------
       -- Release_Slot --
@@ -805,106 +1014,6 @@ package body GPR2.Build.Actions_Scheduler is
          Status                           : Action_Status := Unknown;
          Act_Slot                         : Natural;
 
-         procedure Display (Command : Argument_List);
-         --  Report the full command line to the reporter.
-
-         procedure Display_RF
-           (Resp_File_Path : Path_Name.Object; Command : Unbounded_String);
-         --  Report a response file content to the reporter.
-
-         procedure Launch_Process
-           (Job            : in out Actions.Process.Object'Class;
-            Proc_Handler   : in out Process_Handler;
-            Capture_Stdout : out GNATCOLL.OS.FS.File_Descriptor;
-            Capture_Stderr : out GNATCOLL.OS.FS.File_Descriptor);
-         --  Launch the given process action. On success,
-         --  Proc_Handler is set to Running and Capture_Stdout/
-         --  Capture_Stderr provide file descriptors for the
-         --  captured output. On failure, Proc_Handler is set
-         --  to Failed_To_Launch with an error message.
-
-         -------------
-         -- Display --
-         -------------
-
-         procedure Display (Command : Argument_List) is
-         begin
-            Self.Tree_Db.Reporter.Report (Image (Command));
-         end Display;
-
-         -------------
-         -- Display --
-         -------------
-
-         procedure Display_RF
-           (Resp_File_Path : Path_Name.Object; Command : Unbounded_String)
-         is
-            Msg : Unbounded_String;
-         begin
-            Append (Msg, "Response file: @");
-            Append (Msg, String (Resp_File_Path.Simple_Name));
-            Append (Msg, ": {");
-            Append (Msg, Command);
-            Append (Msg, "}");
-
-            Self.Tree_Db.Reporter.Report (To_String (Msg));
-         end Display_RF;
-
-         --------------------
-         -- Launch_Process --
-         --------------------
-
-         procedure Launch_Process
-           (Job            : in out Actions.Process.Object'Class;
-            Proc_Handler   : in out Process_Handler;
-            Capture_Stdout : out GNATCOLL.OS.FS.File_Descriptor;
-            Capture_Stderr : out GNATCOLL.OS.FS.File_Descriptor)
-         is
-            package FS renames GNATCOLL.OS.FS;
-
-            P_Wo : FS.File_Descriptor;
-            P_Ro : FS.File_Descriptor;
-            P_We : FS.File_Descriptor;
-            P_Re : FS.File_Descriptor;
-         begin
-            FS.Open_Pipe (P_Ro, P_Wo);
-            FS.Open_Pipe (P_Re, P_We);
-
-            begin
-               Proc_Handler :=
-                 (Status => Running,
-                  Handle =>
-                    Start
-                      (Args        => Job.Command_Line.Argument_List,
-                       Env         => Job.Command_Line.Environment_Variables,
-                       Cwd         => Job.Working_Directory.String_Value,
-                       Stdout      => P_Wo,
-                       Stderr      => P_We,
-                       Inherit_Env => True));
-
-            exception
-               when Ex : GNATCOLL.OS.OS_Error =>
-                  FS.Close (P_Ro);
-                  FS.Close (P_Re);
-
-                  Proc_Handler :=
-                    (Status        => Failed_To_Launch,
-                     Error_Message =>
-                       To_Unbounded_String
-                         ("Command '"
-                          & Image (Job.Command_Line.Argument_List)
-                          & "' failed: "
-                          & Ada.Exceptions.Exception_Message (Ex)));
-                  return;
-            end;
-
-            FS.Close (P_Wo);
-            FS.Close (P_We);
-
-            Capture_Stdout := P_Ro;
-            Capture_Stderr := P_Re;
-         end Launch_Process;
-
       begin
          Main_Loop : loop
             select
@@ -930,38 +1039,7 @@ package body GPR2.Build.Actions_Scheduler is
                   Act_Holder.Replace_Element
                     (Process.Object'Class (Self.Tree_Db.Action (UID)));
 
-                  Display_Command_Line : declare
-                     Elt    : constant Process.Object'Class :=
-                       Act_Holder.Element;
-                     Elt_RF : constant GPR2.Build.Response_Files.Object :=
-                       Elt.Response_File;
-                  begin
-                     --  ??? Both message level and Project tree verbosity
-                     --  don't cope with tooling messages that need quiet,
-                     --  normal or detailed info.
-                     --  Let's go for the default one *and* verbose one for now
-                     if Self.Tree_Db.Reporter.User_Verbosity >= Verbose
-                       or else
-                         (Self.Tree_Db.Reporter.User_Verbosity = Unset
-                          and then Self.Tree_Db.Reporter.Verbosity >= Verbose)
-                     then
-                        Display (Elt.Command_Line.Argument_List);
-
-                        if Elt_RF.Has_Secondary_Content then
-                           Display_RF
-                             (Elt_RF.Secondary_Response_File,
-                              Elt_RF.Secondary_Response_File_Content);
-                        end if;
-
-                        if Elt_RF.Has_Primary_Content then
-                           Display_RF
-                             (Elt_RF.Primary_Response_File,
-                              Elt_RF.Primary_Response_File_Content);
-                        end if;
-                     else
-                        Self.Display (Elt.UID);
-                     end if;
-                  end Display_Command_Line;
+                  Display_Command_Line (Act_Holder.Element, Self.Tree_Db);
 
                end Execute;
             end select;
@@ -1052,7 +1130,7 @@ package body GPR2.Build.Actions_Scheduler is
                   Act_Slot := Action_Slot;
                   Reserve_Slot (Action_Slot);
 
-                  Self.Display (UID);
+                  Display (UID, Tree_Db);
 
                   --  Read the action inside the rendezvous: this runs on
                   --  the caller (main task), serializing access to the
@@ -1296,28 +1374,8 @@ package body GPR2.Build.Actions_Scheduler is
                  and then
                    not Tree_Db.Action_Id_To_Reference (UID).Valid_Signature
                then
-                  declare
-                     Act                 : constant Actions.Object'Class :=
-                       Tree_Db.Action (UID);
-                     Impacted_Successors : constant Action_Id_Sets.Set :=
-                       Find_Activated_And_Unskipped_Successor_Actions (Act);
-                  begin
-                     if not Impacted_Successors.Is_Empty then
-                        Tree_Db.Reporter.Report
-                          ("Action "
-                           & Act.UID.Image
-                           & " has been deactivated, but its"
-                           & " signature is invalid. As a result, the"
-                           & " following dependent action(s) will not"
-                           & " be executed:",
-                           To_Stderr => True);
-
-                        for Successor_ID of Impacted_Successors loop
-                           Tree_Db.Reporter.Report
-                             ("   * " & Successor_ID.Image, To_Stderr => True);
-                        end loop;
-                     end if;
-                  end;
+                  Report_Deactivated_Invalid_Signature
+                    (Tree_Db.Action (UID), Tree_Db);
                end if;
             exception
                when E : Actions_Scheduler_Error =>
@@ -1395,8 +1453,7 @@ package body GPR2.Build.Actions_Scheduler is
                   end if;
 
                   Job_Status :=
-                    Collect_Action
-                      (Object'Class (Self), Act, Handler, Context);
+                    Object'Class (Self).Collect_Action (Act, Handler, Context);
 
                   Self.Tree_Db.Action_Id_To_Reference (UID) := Act;
 
@@ -1461,8 +1518,7 @@ package body GPR2.Build.Actions_Scheduler is
                   end if;
 
                   Job_Status :=
-                    Collect_Action
-                      (Object'Class (Self), Act, Handler, Context);
+                    Object'Class (Self).Collect_Action (Act, Handler, Context);
                   Self.Tree_Db.Action_Id_To_Reference
                     (Handler.UID_Holder.Element) :=
                     Act;
@@ -1525,6 +1581,61 @@ package body GPR2.Build.Actions_Scheduler is
       Stop_And_Free_Runners;
    end Internal_Execute;
 
+   --------------------
+   -- Launch_Process --
+   --------------------
+
+   procedure Launch_Process
+     (Job            : in out Actions.Process.Object'Class;
+      Proc_Handler   : in out Process_Handler;
+      Capture_Stdout : out GNATCOLL.OS.FS.File_Descriptor;
+      Capture_Stderr : out GNATCOLL.OS.FS.File_Descriptor)
+   is
+      package FS renames GNATCOLL.OS.FS;
+
+      P_Wo : FS.File_Descriptor;
+      P_Ro : FS.File_Descriptor;
+      P_We : FS.File_Descriptor;
+      P_Re : FS.File_Descriptor;
+   begin
+      FS.Open_Pipe (P_Ro, P_Wo);
+      FS.Open_Pipe (P_Re, P_We);
+
+      begin
+         Proc_Handler :=
+           (Status => Running,
+            Handle =>
+              Start
+                (Args        => Job.Command_Line.Argument_List,
+                 Env         => Job.Command_Line.Environment_Variables,
+                 Cwd         => Job.Working_Directory.String_Value,
+                 Stdout      => P_Wo,
+                 Stderr      => P_We,
+                 Inherit_Env => True));
+
+      exception
+         when Ex : GNATCOLL.OS.OS_Error =>
+            FS.Close (P_Ro);
+            FS.Close (P_Re);
+
+            Proc_Handler :=
+              (Status        => Failed_To_Launch,
+               Error_Message =>
+                 To_Unbounded_String
+                   ("Command '"
+                    & Image (Job.Command_Line.Argument_List)
+                    & "' failed: "
+                    & Ada.Exceptions.Exception_Message (Ex)));
+            return;
+      end;
+
+      FS.Close (P_Wo);
+      FS.Close (P_We);
+
+      Capture_Stdout := P_Ro;
+      Capture_Stderr := P_Re;
+   end Launch_Process;
+
    --------------
    -- Listener --
    --------------
@@ -1580,5 +1691,174 @@ package body GPR2.Build.Actions_Scheduler is
          Traces.Trace ("!!! Listener error");
          Traces.Trace (Ada.Exceptions.Exception_Information (E));
    end Listener;
+
+   --------------------
+   -- Pre_Run_Status --
+   --------------------
+
+   function Pre_Run_Status
+     (Action  : in out Actions.Object'Class;
+      Slot_Id : Positive;
+      Force   : Boolean) return Pre_Run_Action_Status is
+   begin
+      if Action.View.Is_Externally_Built then
+         if Traces.Is_Active then
+            pragma Annotate (Xcov, Exempt_On, "debug code");
+            Traces.Trace ("job externally built: " & Action.UID.Image);
+            pragma Annotate (Xcov, Exempt_Off);
+         end if;
+
+         return Deactivated;
+      end if;
+
+      --  Load and check the job's signature
+
+      Action.Load_Signature;
+
+      if Action.Is_Deactivated then
+         --  Note: we need to check for deactivated jobs *after* the
+         --  signature is computed to understand if the deactivated
+         --  action has all its output correct (so that we can unblock
+         --  depending non-deactivated actions).
+
+         if Traces.Is_Active then
+            pragma Annotate (Xcov, Exempt_On, "debug code");
+            Traces.Trace ("job is deactivated: " & Action.UID.Image);
+            pragma Annotate (Xcov, Exempt_Off);
+         end if;
+
+         return Deactivated;
+      end if;
+
+      if not Force and then Action.Valid_Signature then
+         if Traces.Is_Active then
+            pragma Annotate (Xcov, Exempt_On, "debug code");
+            Traces.Trace
+              ("Signature is valid, do not execute the job '"
+               & Action.UID.Image
+               & "'");
+            pragma Annotate (Xcov, Exempt_Off);
+         end if;
+
+         return Skipped;
+      end if;
+
+      if Action in Actions.Process.Object'Class then
+         begin
+            Actions.Process.Object'Class (Action).Update_Command_Line
+              (Slot_Id);
+
+            if Actions.Process.Object'Class (Action)
+                 .Command_Line
+                 .Argument_List
+                 .Is_Empty
+            then
+               if Traces.Is_Active then
+                  pragma Annotate (Xcov, Exempt_On, "debug code");
+                  Traces.Trace
+                    ("job arguments is empty for '" & Action.UID.Image & "'");
+                  pragma Annotate (Xcov, Exempt_Off);
+               end if;
+
+               return Failed_Cmd_Line_Computation;
+            end if;
+         exception
+            when Action_Error =>
+               return Failed_Cmd_Line_Computation;
+         end;
+      end if;
+
+      return Ready_To_Run;
+   end Pre_Run_Status;
+
+   ------------------------------------------
+   -- Report_Deactivated_Invalid_Signature --
+   ------------------------------------------
+
+   procedure Report_Deactivated_Invalid_Signature
+     (Act     : Actions.Object'Class;
+      Tree_Db : GPR2.Build.Tree_Db.Object_Access)
+   is
+      function Find_Activated_And_Unskipped_Successor_Actions
+        return Action_Id_Sets.Set;
+      --  For each artifact produced by the specified action, find the first
+      --  transitive activated actions that depend on it. If a successor
+      --  is deactivated, then the search continues until an activated action
+      --  is found. If no action is found, then an empty set is returned.
+
+      ----------------------------------------------------
+      -- Find_Activated_And_Unskipped_Successor_Actions --
+      ----------------------------------------------------
+
+      function Find_Activated_And_Unskipped_Successor_Actions
+        return Action_Id_Sets.Set
+      is
+         --  For each artifact produced by Act, find the first transitive
+         --  activated successor actions. If a successor is also deactivated,
+         --  the search continues until an activated action is found.
+         Result             : Action_Id_Sets.Set := Action_Id_Sets.Empty_Set;
+         Actions_To_Process : Action_Id_Sets.Set;
+      begin
+         Actions_To_Process.Include (Act.UID);
+
+         while not Actions_To_Process.Is_Empty loop
+            declare
+               Current_Action : constant Action_Id'Class :=
+                 Actions_To_Process.First_Element;
+            begin
+               Actions_To_Process.Exclude (Current_Action);
+               for Artifact of Tree_Db.Outputs (Action => Current_Action) loop
+                  for Action of Tree_Db.Successors (Artifact) loop
+                     if Action.Is_Deactivated then
+                        Actions_To_Process.Include (Action.UID);
+                     else
+                        Result.Include (Action.UID);
+                     end if;
+                  end loop;
+               end loop;
+            end;
+         end loop;
+
+         return Result;
+      end Find_Activated_And_Unskipped_Successor_Actions;
+
+      Impacted_Successors : constant Action_Id_Sets.Set :=
+        Find_Activated_And_Unskipped_Successor_Actions;
+   begin
+      if not Impacted_Successors.Is_Empty then
+         Tree_Db.Reporter.Report
+           ("Action "
+            & Act.UID.Image
+            & " has been deactivated, but its"
+            & " signature is invalid. As a result, the"
+            & " following dependent action(s) will not"
+            & " be executed:",
+            To_Stderr => True);
+
+         for Successor_ID of Impacted_Successors loop
+            Tree_Db.Reporter.Report
+              ("   * " & Successor_ID.Image, To_Stderr => True);
+         end loop;
+      end if;
+   end Report_Deactivated_Invalid_Signature;
+
+   ----------------
+   -- RF_Message --
+   ----------------
+
+   function RF_Message
+     (Resp_File_Path : Path_Name.Object; Command : Unbounded_String)
+      return String
+   is
+      Msg : Unbounded_String;
+   begin
+      Append (Msg, "Response file: @");
+      Append (Msg, String (Resp_File_Path.Simple_Name));
+      Append (Msg, ": {");
+      Append (Msg, Command);
+      Append (Msg, "}");
+
+      return To_String (Msg);
+   end RF_Message;
 
 end GPR2.Build.Actions_Scheduler;

@@ -43,12 +43,17 @@ package GPR2.Build.Actions is
      (Action_Id'Class, "=");
 
    function Image
-     (Self      : Action_Id'Class;
-      With_View : Boolean := True) return String;
-   --  A string representation of Self that can be displayed to the end-user,
-   --  The description will omit the owning view if With_View is not set, This
+     (Self        : Action_Id'Class;
+      With_View   : Boolean := True;
+      Align_Class : Boolean := False) return String;
+   --  A string representation of Self that can be displayed to the end-user.
+   --  The description will omit the owning view if With_View is not set; this
    --  is used typically in case the view is already referenced in a
    --  GPR2.Message object and the Image is used in the Messages textual part.
+   --  If Align_Class is set, the action class part (including surrounding
+   --  brackets and trailing space) is right-padded to Action_Class_Width + 3
+   --  characters so action identifiers align when printed on multiple lines.
+
 
    function Db_Filename
      (Self     : Action_Id'Class;
@@ -272,6 +277,12 @@ package GPR2.Build.Actions is
    --  Cleanup any existing temp file for the given scope
 
 private
+
+   Action_Class_Width : constant := 15;
+   --  Maximum width of the action class name (the text between "[" and "]").
+   --  When Align_Class is True, Image pads the full "[class] " token to
+   --  Action_Class_Width + 3 characters (1 for "[", Action_Class_Width for
+   --  the class name, 1 for "]", 1 for the trailing space).
 
    use type GPR2.View_Ids.View_Id;
 

@@ -1,0 +1,11 @@
+"obj/lib" created
+"lib" created
+"obj/app" created
+[Ada Compile]     main.adb
+[Ada Compile]     pkg.adb
+[Archive]         libdemo.a
+[Library-Files-Copy] Demo
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+ 7 actions have been executed
