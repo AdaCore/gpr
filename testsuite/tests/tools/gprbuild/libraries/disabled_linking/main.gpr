@@ -1,0 +1,8 @@
+with "dep.gpr";
+
+project Main is
+   for Source_Dirs use ("src_main");
+   for Object_Dir use "obj_main";
+   for Main use ("main.adb");
+   for Disable_Linking use "true";
+end Main;

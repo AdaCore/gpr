@@ -10,10 +10,12 @@ $ gprbuild -P ext2.gpr -f
 [Ada Compile]     ext.adb
 [Ada Compile]     root.adb
 [Archive]         libroot.a
+[Library-Files-Copy] Ext2
 $ gprbuild -P ext3.gpr -f
 [Ada Compile]     ext.adb
 [Ada Compile]     root.adb
 [Archive]         libroot.a
+[Library-Files-Copy] Ext3
 $ gprbuild -P ext4.gpr -f
 [Ada Compile]     ext.adb
 [Ada Compile]     root.adb

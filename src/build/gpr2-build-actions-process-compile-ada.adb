@@ -753,12 +753,6 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          return False;
       end if;
 
-      if Self.Lib_Ali_File.Path /= Self.Dep_File.Path
-        and then not Db.Add_Output (UID, Self.Lib_Ali_File)
-      then
-         return False;
-      end if;
-
       return True;
    end On_Tree_Insertion;
 

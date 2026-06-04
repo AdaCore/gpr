@@ -1,10 +1,14 @@
 import json
 import os
 from e3.fs import mv
+from e3.env import Env
+
 from testsuite_support.builder_and_runner import BuilderAndRunner
 from testsuite_support.tools import GPRBUILD
 
 bnr = BuilderAndRunner()
+
+expect_fpic = not 'windows' in Env().host.platform
 
 def run(cmd):
     print("$ " + " ".join(cmd));
@@ -25,8 +29,10 @@ for kind in "static", "relocatable":
     jobs = {job["uid"]: job.get("command", "") for job in cnt}
     for uid in sorted(jobs.keys()):
         print(uid)
-        if "-fpic" in jobs[uid].lower():
-            print("uses fpic")
+        if "Ada Compile" in uid and kind == "relocatable":
+            has_fpic = "-fpic" in jobs[uid].lower()
+            if has_fpic != expect_fpic:
+                print(f"ERROR: should {'not ' if has_fpic else ''}have -fpic option")
 
     run([GPRBUILD, "-q", "-Pdemo.gpr", "-p", "--json-summary", lib_kind])
     with open("jobs.json") as fp:

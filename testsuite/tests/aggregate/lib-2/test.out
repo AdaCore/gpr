@@ -1,13 +1,14 @@
 Demo     K_AGGREGATE_LIBRARY
    Archive
       agg-lib/libalib.a
+   Library-Files-Copy
+      agg-lib/pcka.ali
+      agg-lib/pckb.ali
 A        K_STANDARD
    pcka
       a-obj/pcka.o
       a-obj/pcka.ali
-      agg-lib/pcka.ali
 B        K_LIBRARY
    pckb
       b-obj/pckb.o
       b-obj/pckb.ali
-      agg-lib/pckb.ali

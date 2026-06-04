@@ -299,6 +299,7 @@ class BaseDriver(DiffTestDriver):
             Substitute("\\", "/"),
             ReplacePath("C:/", "/"),
             Substitute(".exe", ""),
+            PatternSubstitute(r"\.(so|dll)", "<shared-lib-suffix>"),
             Substitute(gcc_version, "(gcc-version)"),
             Substitute("gpr2build", replacement="gprbuild"),
             Substitute("gpr2clean", replacement="gprclean"),

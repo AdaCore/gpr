@@ -1,0 +1,2 @@
+description: Test disabled linking of libraries with gprbuild
+driver: python_script

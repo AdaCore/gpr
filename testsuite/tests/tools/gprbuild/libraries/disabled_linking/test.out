@@ -1,0 +1,3 @@
+lib_copy: OK
+ada_bind: OK
+ada_bind signature contains pkg.ali: OK

@@ -12,12 +12,8 @@ bnr.call([GPRBUILD, "-Papp.gpr"], quiet=True)
 # This change will not modify the produced .o used by importinglib library,
 # because the new procedure is not used by importinglib.
 # However, the ALI file of foo.ads will see its pkg.ads dependency change,
-# so the library-link signature of mylib will change.
-# This is mandatory to ensure that the copy of the updated foo.ali file is made
-# into the importinglib library directory, so that the build of app.gpr will
-# not fail on gnatbind.
-# So, the link signature of libraries must include the signatures of
-# all its ALI files.
+# so the copy of ALIs to the library directory must be done again.
+
 
 shutil.copy(
     os.path.join("mylib", "src", "pkg.ads.new-version"),
@@ -30,7 +26,7 @@ jobs = json.load(json_file)
 
 for job in jobs:
     if (
-        "[Archive] libimporting_lib.a (importinglib.gpr)" in job["uid"]
+        "[Library-Files-Copy] ImportingLib (importinglib.gpr)" in job["uid"]
         and job["status"] == "0"
     ):
         print("OK")

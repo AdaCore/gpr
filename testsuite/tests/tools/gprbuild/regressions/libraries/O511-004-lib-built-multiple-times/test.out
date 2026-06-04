@@ -3,6 +3,7 @@ $ gprbuild -P aggr.gpr
 [Ada Compile]     main.adb
 [Ada Compile]     pkg.ads
 [Archive]         libtoto.a
+[Library-Files-Copy] Toto
 [Ada Bind]        main
 [Ada Post-Bind]   b__main.adb
 [Link]            main

@@ -8,7 +8,9 @@ bnr = BuilderAndRunner()
 def run(cmd):
     print("$ " + " ".join(cmd))
     if cmd[0] in (GPRBUILD, GPRCLEAN):
-        bnr.call(cmd)
+        out = bnr.run(cmd).out
+        print("(output lines sorted)")
+        print('\n'.join(sorted(out.splitlines())))
     else:
         print(bnr.simple_run([cmd], catch_error=True).out)
 
