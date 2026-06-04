@@ -23,6 +23,7 @@ with GNATCOLL.Traces;
 with GPR2.Build.Actions.Process;
 with GPR2.Build.Actions.Thread;
 with GPR2.Build.Actions.Process.Link;
+with GPR2.Build.Response_Files;
 with GPR2.Build.Tree_Db;
 with GPR2.Reporter;
 with GPR2.Source_Reference;
@@ -800,6 +801,13 @@ package body GPR2.Build.Actions_Scheduler is
          Status                           : Action_Status := Unknown;
          Act_Slot                         : Natural;
 
+         procedure Display (Command : Argument_List);
+         --  Report the full command line to the reporter.
+
+         procedure Display_RF
+           (Resp_File_Path : Path_Name.Object; Command : Unbounded_String);
+         --  Report a response file content to the reporter.
+
          procedure Launch_Process
            (Job            : in out Actions.Process.Object'Class;
             Proc_Handler   : in out Process_Handler;
@@ -810,6 +818,33 @@ package body GPR2.Build.Actions_Scheduler is
          --  Capture_Stderr provide file descriptors for the
          --  captured output. On failure, Proc_Handler is set
          --  to Failed_To_Launch with an error message.
+
+         -------------
+         -- Display --
+         -------------
+
+         procedure Display (Command : Argument_List) is
+         begin
+            Self.Tree_Db.Reporter.Report (Image (Command));
+         end Display;
+
+         -------------
+         -- Display --
+         -------------
+
+         procedure Display_RF
+           (Resp_File_Path : Path_Name.Object; Command : Unbounded_String)
+         is
+            Msg : Unbounded_String;
+         begin
+            Append (Msg, "Response file: @");
+            Append (Msg, String (Resp_File_Path.Simple_Name));
+            Append (Msg, ": {");
+            Append (Msg, Command);
+            Append (Msg, "}");
+
+            Self.Tree_Db.Reporter.Report (To_String (Msg));
+         end Display_RF;
 
          --------------------
          -- Launch_Process --
@@ -823,40 +858,6 @@ package body GPR2.Build.Actions_Scheduler is
          is
             package FS renames GNATCOLL.OS.FS;
 
-            procedure Display (Command : Argument_List);
-            --  Report the full command line to the reporter.
-
-            procedure Display_RF
-              (Resp_File_Path : Path_Name.Object; Command : Unbounded_String);
-            --  Report a response file content to the reporter.
-
-            -------------
-            -- Display --
-            -------------
-
-            procedure Display (Command : Argument_List) is
-            begin
-               Self.Tree_Db.Reporter.Report (Image (Command));
-            end Display;
-
-            -------------
-            -- Display --
-            -------------
-
-            procedure Display_RF
-              (Resp_File_Path : Path_Name.Object; Command : Unbounded_String)
-            is
-               Msg : Unbounded_String;
-            begin
-               Append (Msg, "Response file: @");
-               Append (Msg, String (Resp_File_Path.Simple_Name));
-               Append (Msg, ": {");
-               Append (Msg, Command);
-               Append (Msg, "}");
-
-               Self.Tree_Db.Reporter.Report (To_String (Msg));
-            end Display_RF;
-
             P_Wo : FS.File_Descriptor;
             P_Ro : FS.File_Descriptor;
             P_We : FS.File_Descriptor;
@@ -866,31 +867,6 @@ package body GPR2.Build.Actions_Scheduler is
             FS.Open_Pipe (P_Re, P_We);
 
             begin
-               --  ??? Both message level and Project tree verbosity don't cope
-               --  with tooling messages that need quiet/normal/detailed info.
-               --  Let's go for the default one *and* verbose one for now
-               if Self.Tree_Db.Reporter.User_Verbosity >= Verbose
-                 or else
-                   (Self.Tree_Db.Reporter.User_Verbosity = Unset
-                    and then Self.Tree_Db.Reporter.Verbosity >= Verbose)
-               then
-                  Display (Job.Command_Line.Argument_List);
-
-                  if Job.Response_File.Has_Secondary_Content then
-                     Display_RF
-                       (Job.Response_File.Secondary_Response_File,
-                        Job.Response_File.Secondary_Response_File_Content);
-                  end if;
-
-                  if Job.Response_File.Has_Primary_Content then
-                     Display_RF
-                       (Job.Response_File.Primary_Response_File,
-                        Job.Response_File.Primary_Response_File_Content);
-                  end if;
-               else
-                  Self.Display (Job.UID);
-               end if;
-
                Proc_Handler :=
                  (Status => Running,
                   Handle =>
@@ -949,6 +925,40 @@ package body GPR2.Build.Actions_Scheduler is
 
                   Act_Holder.Replace_Element
                     (Process.Object'Class (Self.Tree_Db.Action (UID)));
+
+                  Display_Command_Line : declare
+                     Elt    : constant Process.Object'Class :=
+                       Act_Holder.Element;
+                     Elt_RF : constant GPR2.Build.Response_Files.Object :=
+                       Elt.Response_File;
+                  begin
+                     --  ??? Both message level and Project tree verbosity
+                     --  don't cope with tooling messages that need quiet,
+                     --  normal or detailed info.
+                     --  Let's go for the default one *and* verbose one for now
+                     if Self.Tree_Db.Reporter.User_Verbosity >= Verbose
+                       or else
+                         (Self.Tree_Db.Reporter.User_Verbosity = Unset
+                          and then Self.Tree_Db.Reporter.Verbosity >= Verbose)
+                     then
+                        Display (Elt.Command_Line.Argument_List);
+
+                        if Elt_RF.Has_Secondary_Content then
+                           Display_RF
+                             (Elt_RF.Secondary_Response_File,
+                              Elt_RF.Secondary_Response_File_Content);
+                        end if;
+
+                        if Elt_RF.Has_Primary_Content then
+                           Display_RF
+                             (Elt_RF.Primary_Response_File,
+                              Elt_RF.Primary_Response_File_Content);
+                        end if;
+                     else
+                        Self.Display (Elt.UID);
+                     end if;
+                  end Display_Command_Line;
+
                end Execute;
             end select;
 
@@ -989,6 +999,17 @@ package body GPR2.Build.Actions_Scheduler is
                end if;
             end;
          end loop Main_Loop;
+      exception
+         when E : others =>
+            --  The runner died, we supposedly cannot access the Tree or
+            --  Reporter, attempt to trace errors in order to investigate
+            --  potential issues.
+            --  Note that the potential behavior or such an error is the
+            --  action scheduler indefinitely hanging (stuck waiting for this
+            --  runner to properly terminate itself) or finalize issues of
+            --  the underlying tools.
+            Traces.Trace ("!!! Process_Runner error");
+            Traces.Trace (Ada.Exceptions.Exception_Information (E));
       end Process_Runner;
 
       -------------------
