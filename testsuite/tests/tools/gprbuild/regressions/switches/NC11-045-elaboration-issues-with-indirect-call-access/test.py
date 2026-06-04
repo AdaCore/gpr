@@ -13,4 +13,4 @@ def run(cmd):
         print(bnr.simple_run([cmd], catch_error=True).out)
 
 Path("mm").unlink(missing_ok=True)
-run([GPRBUILD, "-q", "-k", "-g", "mm", "-gnatw.f", "-gnatwae"])
+run([GPRBUILD, "-j1", "-q", "-k", "-g", "mm", "-gnatw.f", "-gnatwae"])

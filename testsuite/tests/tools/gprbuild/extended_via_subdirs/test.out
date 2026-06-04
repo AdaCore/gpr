@@ -1,0 +1,19 @@
+$ gprbuild -p -P tree/p.gpr -j1 --src-subdirs=subdir
+[Ada Compile]     main.adb
+[Ada Compile]     pkg.adb
+[Ada Compile]     pkh.adb
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ ./tree/obj/main
+Hello, world in subdir!
+This test procedure is useless in subdir!
+This double separate is super useless in subdir!
+Hello, world in subdir!
+This test procedure is useless in subdir!
+
+$ gprbuild -p -P tree2/p.gpr -j1 --src-subdirs=subdir
+p.gpr:6:11: warning: in "pkg-test-sep2.adb", actual unit name "PKG.TEST.SEP" differs from the one declared in the project : "PKG.TEST"
+p.gpr: warning: duplicated separate for unit "PKG.TEST" in /tree2/obj/subdir/pkg-test-sep.adb and /tree2/obj/subdir/pkg-test-sep2.adb
+p.gpr:6:33: error: source file "pkg-test-sep2.adb" for unit "PKG.TEST" not found
+gprbuild: processing failed

@@ -1,0 +1,8 @@
+project P is
+   for Object_Dir use "obj";
+   for Main use ("main.adb");
+
+   package Naming is 
+      for Body ("PKG.TEST") use "pkg-test-sep2.adb";
+   end Naming;
+end P;
