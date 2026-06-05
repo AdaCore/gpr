@@ -1,0 +1,5 @@
+$ gprbuild -P prj.gpr -j2
+"lib" created
+[Ada Compile]     pkg.ads
+[Archive]         libtoto.a
+[Library-Files-Copy] Prj

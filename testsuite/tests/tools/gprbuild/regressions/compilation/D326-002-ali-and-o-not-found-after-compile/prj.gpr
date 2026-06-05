@@ -1,0 +1,5 @@
+project Prj is
+   for Library_Dir  use "lib";
+   for Library_Name use "toto";
+end Prj;
+
