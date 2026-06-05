@@ -11,7 +11,7 @@ help:
 .PHONY: help Makefile pdf
 
 # Explicit empty ';' recipes to preempt Sphinx's '%' catch-all rule.
-all: html pdf ;
+all: html info pdf ;
 pdf: latexpdf ;
 
 %: Makefile
