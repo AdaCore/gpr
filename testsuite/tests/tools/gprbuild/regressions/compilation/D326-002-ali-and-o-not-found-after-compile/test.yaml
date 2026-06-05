@@ -1,0 +1,2 @@
+description: Regression test for ALI and object files not found after compilation
+driver: python_script
