@@ -999,6 +999,19 @@ package body GPR2.Build.Actions_Scheduler is
                end if;
             end;
          end loop Main_Loop;
+
+         --  Wait for listener tasks to fully terminate before this task
+         --  completes, to avoid a deadlock on the GNAT global task lock during
+         --  task termination.
+
+         while not Stdout_Listener'Terminated loop
+            delay 0.001;
+         end loop;
+
+         while not Stderr_Listener'Terminated loop
+            delay 0.001;
+         end loop;
+
       exception
          when E : others =>
             --  The runner died, we supposedly cannot access the Tree or
