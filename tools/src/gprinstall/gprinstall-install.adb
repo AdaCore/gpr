@@ -1959,6 +1959,28 @@ package body GPRinstall.Install is
          begin
             V.Append ("      when """ & (-Options.Build_Name) & """ =>");
 
+            --  Add languages, for an aggregate library we want all unique
+            --  languages from all aggregated libraries.
+
+            if Has_Sources (Project, False) then
+               declare
+                  Lang  : Unbounded_String;
+                  First : Boolean := True;
+               begin
+                  for L of Languages loop
+                     if not First then
+                        Append (Lang, ", ");
+                     end if;
+
+                     Append (Lang, '"' & L & '"');
+                     First := False;
+                  end loop;
+
+                  V.Append
+                    ("         for Languages use (" & To_String (Lang) & ");");
+               end;
+            end if;
+
             --  Project sources
 
             Line := +"         for Source_Dirs use (""";
@@ -2877,30 +2899,6 @@ package body GPRinstall.Install is
                   Default => -Options.Build_Name);
 
                Content.Append (-Line);
-
-               --  Add languages, for an aggregate library we want all unique
-               --  languages from all aggregated libraries.
-
-               if Has_Sources (Project, False) then
-                  Add_Empty_Line;
-
-                  declare
-                     Lang  : Unbounded_String;
-                     First : Boolean := True;
-                  begin
-                     for L of Languages loop
-                        if not First then
-                           Append (Lang, ", ");
-                        end if;
-
-                        Append (Lang, '"' & L & '"');
-                        First := False;
-                     end loop;
-
-                     Content.Append
-                       ("   for Languages use (" & To_String (Lang) & ");");
-                  end;
-               end if;
 
                --  Build_Suffix used to avoid .default as suffix
 

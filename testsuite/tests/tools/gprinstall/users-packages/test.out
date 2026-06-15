@@ -3,10 +3,9 @@ standard project Prj is
    type BUILD_KIND is ("default");
    BUILD : BUILD_KIND := external("PRJ_BUILD", "default");
 
-   for Languages use ("Ada");
-
    case BUILD is
       when "default" =>
+         for Languages use ("Ada");
          for Source_Dirs use ("../../include/prj");
          for Object_Dir use "../../lib/prj";
    end case;
@@ -48,10 +47,9 @@ standard project Prj is
    type BUILD_KIND is ("default");
    BUILD : BUILD_KIND := external("PRJ_BUILD", "default");
 
-   for Languages use ("Ada");
-
    case BUILD is
       when "default" =>
+         for Languages use ("Ada");
          for Source_Dirs use ("../../include/prj");
          for Object_Dir use "../../lib/prj";
    end case;
