@@ -633,6 +633,10 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns True if the project is library
 
+   function Is_Library_Supported (Self : Object) return Boolean
+     with Pre => Self.Is_Defined and then Self.Kind in GPR2.Library_Kind;
+   --  Returns True if the library is supported on the current platform
+
    function Is_Static_Library (Self : Object) return Boolean
      with Pre => Self.Is_Defined and then Self.Kind in GPR2.Library_Kind;
    --  Returns True if the library is a static one, so either static or
@@ -709,6 +713,12 @@ package GPR2.Project.View is
    --  Defines the location (absolute or relative to the project directory)
    --  where the sources of the interface units are copied at installation
    --  time.
+
+   function Library_Support (Self : Object) return Library_Support_Type;
+   --  Returns the kind of support for library the system has:
+   --     - "Full"   for supporting all libraries
+   --     - "Static" for supporting only static libraries
+   --     - "None"   for no support of libraries at all (the Default)
 
    function Library_Standalone (Self : Object) return Standalone_Library_Kind
      with Pre => Self.Is_Defined and then Self.Kind in GPR2.Library_Kind;

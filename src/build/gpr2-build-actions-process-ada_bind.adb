@@ -1338,8 +1338,17 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          if not Add_Remaining
            and then Path_Name.Simple_Name
              (Filename_Type (Line)) not in "g-trasym.o" | "g-trasym.obj"
+           and then not (Self.Ctxt.Is_Library
+                         and then not Self.Ctxt.Is_Library_Supported
+                         and then GNATCOLL.Utils.Starts_With
+                           (Line, Adalib_Dir.String_Value))
          then
-            --  g-trasym is a special case as it is not included in libgnat
+            --  Skipping all the list of objects unless:
+            --     - The view is a library and the kind of library isn't
+            --       supported on the platform meaning we need to link directly
+            --       with the runtime objects.
+            --     - g-trasym.o and g-trasym.obj which are not included in
+            --       libgnat.
             return;
          end if;
 
@@ -1374,14 +1383,17 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
             end loop;
 
             --  For a number of archives, we need to indicate the full path of
-            --  the arghive, if we find it, to be sure that the correct
+            --  the archive, if we find it, to be sure that the correct
             --  archive is used by the linker.
 
          elsif Line = "-lgnat" then
-            if Static_Libs then
+            if Static_Libs
+              and then not (Self.Ctxt.Is_Library
+                            and then not Self.Ctxt.Is_Library_Supported)
+            then
                if Self.Ctxt.Is_Library
-                 and then Self.Ctxt.Library_Standalone =
-                   GPR2.Project.Encapsulated
+                 and then
+                   Self.Ctxt.Library_Standalone = GPR2.Project.Encapsulated
                then
                   Self.Linker_Opts.Append
                     (Adalib_Dir.Compose ("libgnat_pic.a").String_Value);
@@ -1394,10 +1406,13 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
             end if;
 
          elsif Line = "-lgnarl" then
-            if Static_Libs then
+            if Static_Libs
+              and then not (Self.Ctxt.Is_Library
+                            and then not Self.Ctxt.Is_Library_Supported)
+            then
                if Self.Ctxt.Is_Library
-                 and then Self.Ctxt.Library_Standalone =
-                   GPR2.Project.Encapsulated
+                 and then
+                   Self.Ctxt.Library_Standalone = GPR2.Project.Encapsulated
                then
                   Self.Linker_Opts.Append
                     (Adalib_Dir.Compose ("libgnarl_pic.a").String_Value);

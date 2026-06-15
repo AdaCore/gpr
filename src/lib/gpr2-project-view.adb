@@ -640,9 +640,12 @@ package body GPR2.Project.View is
                Result.Set_From_Config (True);
             end if;
 
-         elsif PRA_Def.Config_Concatenable then
-            --  If the attribute value has been found, prepend if necessary
-            --  the value from the configuration project.
+         elsif PRA_Def.Config_Concatenable
+           and then not Result.Is_From_Config
+         then
+            --  If the attribute value has been found and not already comming
+            --  from the configuration, prepend if necessary the value from the
+            --  configuration project.
 
             declare
                Result2 : Project.Attribute.Object;
@@ -2071,6 +2074,24 @@ package body GPR2.Project.View is
       return Attr.Is_Defined and then Attr.Value_Equal ("true");
    end Is_Externally_Built;
 
+   --------------------------
+   -- Is_Library_Supported --
+   --------------------------
+
+   function Is_Library_Supported (Self : Object) return Boolean is
+      Supported : Boolean := False;
+   begin
+      if Self.Is_Static_Library then
+         if Self.Library_Support /= None then
+            Supported := True;
+         end if;
+      elsif Self.Library_Support = Full then
+         Supported := True;
+      end if;
+
+      return Supported;
+   end Is_Library_Supported;
+
    -----------------------
    -- Is_Namespace_Root --
    -----------------------
@@ -2338,6 +2359,31 @@ package body GPR2.Project.View is
    begin
       return Standalone_Library_Kind'Value (Attr.Value.Text);
    end Library_Standalone;
+
+   ---------------------
+   -- Library_Support --
+   ---------------------
+
+   function Library_Support (Self : Object) return Library_Support_Type is
+      Attr : constant Project.Attribute.Object :=
+        Self.Attribute (PRA.Library_Support);
+
+      LS_Type : Library_Support_Type := None;
+   begin
+      if Attr.Is_Defined then
+         if Attr.Value.Text = "none" then
+            LS_Type := None;
+
+         elsif Attr.Value.Text = "static_only" then
+            LS_Type := Static;
+
+         elsif Attr.Value.Text = "full" then
+            LS_Type := Full;
+         end if;
+      end if;
+
+      return LS_Type;
+   end Library_Support;
 
    ------------------------------
    -- Library_Version_Filename --

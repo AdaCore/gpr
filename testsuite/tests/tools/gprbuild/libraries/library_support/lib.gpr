@@ -1,0 +1,56 @@
+project Lib is
+	type Lib_Type is ("static", "shared");
+	Lib : Lib_Type := external ("LIB_TYPE", "static");
+
+	type Support_Type is ("none", "static_only", "full");
+	Support : Support_Type := external ("SUPPORT_TYPE", "none");
+
+	type Construct_Type is ("true", "false");
+	Construct : Construct_Type := external ("CONSTRUCT_TYPE", "false");
+
+	for Source_Dirs use ("tree/src_lib");
+	for Object_Dir use "tree/obj_lib";
+
+	for Library_Support use Support;
+
+	--  The logic here is:
+	--  Construct = False:
+	--     The user always uses a "library" project, depending on the library
+	--     support error will be raised.
+	--  Construct = True:
+	--     This is to mimic what an user would need to do for a "library" project
+	--     (not explicitely a library project) to still link as a standard project
+	--     if the platform doesn't support libraries. Which is cleaner than just
+	--     handling corner cases in our project view builder.
+
+	case Construct is
+		when "true" =>
+			case Support is
+				when "none" =>
+				when "static_only" =>
+					case Lib is
+						when "static" =>
+							for Library_Dir use "tree/lib";
+							for Library_Name use "lib";
+					end case;
+				when "full" =>
+					for Library_Dir use "tree/lib";
+					for Library_Name use "lib";
+
+					case Lib is
+						when "shared" =>
+							for Library_Kind use "relocatable";
+							for Library_Interface use ("pkg");
+					end case;
+			end case;
+		when "false" =>
+			for Library_Dir use "tree/lib";
+			for Library_Name use "lib";
+
+			case Lib is
+				when "shared" =>
+					for Library_Kind use "relocatable";
+					for Library_Interface use ("pkg");
+			end case;
+	end case;
+end Lib;

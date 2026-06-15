@@ -2913,6 +2913,18 @@ package body GPR2.Tree_Internal is
          end if;
 
          if View.Is_Library then
+            if not View.Is_Library_Supported then
+               if View.Library_Support = None then
+                  Self.Error
+                    ("libraries are not supported on this platform",
+                     Source_Reference.Create (View.Path_Name.Value, 0, 0));
+               elsif View.Library_Support = Static then
+                  Self.Error
+                    ("only static libraries are supported on this platform",
+                     Source_Reference.Create (View.Path_Name.Value, 0, 0));
+               end if;
+            end if;
+
             if View.Is_Library_Standalone
               and then not View.Has_Any_Interfaces
             then
