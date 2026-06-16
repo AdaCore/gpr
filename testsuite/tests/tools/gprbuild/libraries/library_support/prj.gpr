@@ -1,0 +1,9 @@
+with "lib.gpr";
+
+project Prj is
+	for Source_Dirs use ("tree/src");
+	for Object_Dir  use "tree/obj";
+	for Exec_Dir    use ".";
+
+	for Main use ("main.adb");
+end Prj;

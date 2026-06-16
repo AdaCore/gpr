@@ -1,6 +1,8 @@
 configuration project MyConfig is
    for Runtime ("C++") use "baz";
 
+   for Library_Support use "full";
+
    package Compiler is
       for Switches("ada") use ("-config-ada");
       for Driver ("ada") use "gcc";

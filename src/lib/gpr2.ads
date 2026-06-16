@@ -291,6 +291,8 @@ package GPR2 is
    function Image (Name : Q_Attribute_Id) return String;
    --  Returns qualified name image
 
+   type Library_Support_Type is (None, Full, Static);
+
 private
 
    use Ada;

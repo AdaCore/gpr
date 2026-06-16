@@ -5,6 +5,7 @@ library project Prj1 is
    for Object_Dir use "obj";
    for Library_Name use project'Name;
    for Library_Dir use "lib";
+   for Library_Support use "full";
    for Library_Ali_Dir use project'Library_Dir;
    for Externally_Built use "False";
    for Library_Version use "lib" & project'Library_Name & ".so.20.0w";

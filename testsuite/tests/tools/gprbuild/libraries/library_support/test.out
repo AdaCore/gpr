@@ -1,0 +1,92 @@
+$ gprbuild -P prj.gpr -XLIB_TYPE=static -XSUPPORT_TYPE=none
+lib.gpr: error: libraries are not supported on this platform
+gprbuild: "prj.gpr" processing failed
+$ gprbuild -P prj.gpr -j1 -XLIB_TYPE=static -XSUPPORT_TYPE=none -XCONSTRUCT_TYPE=true
+"tree/obj_lib" created
+"tree/obj" created
+[Ada Compile]     pkg.adb
+[Ada Compile]     main.adb
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ ./main
+Hello world !
+
+$ gprclean -p -r -P prj.gpr -XLIB_TYPE=static -XSUPPORT_TYPE=none -XCONSTRUCT_TYPE=true
+$ gprbuild -P prj.gpr -j1 -XLIB_TYPE=static -XSUPPORT_TYPE=static_only
+"tree/obj_lib" created
+"tree/lib" created
+"tree/obj" created
+[Ada Compile]     pkg.adb
+[Archive]         liblib.a
+[Library-Files-Copy] Lib
+[Ada Compile]     main.adb
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ ./main
+Hello world !
+
+$ gprclean -p -r -P prj.gpr -XLIB_TYPE=static -XSUPPORT_TYPE=static_only
+$ gprbuild -P prj.gpr -j1 -XLIB_TYPE=static -XSUPPORT_TYPE=full
+"tree/obj_lib" created
+"tree/lib" created
+"tree/obj" created
+[Ada Compile]     pkg.adb
+[Archive]         liblib.a
+[Library-Files-Copy] Lib
+[Ada Compile]     main.adb
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ ./main
+Hello world !
+
+$ gprclean -p -r -P prj.gpr -XLIB_TYPE=static -XSUPPORT_TYPE=full
+$ gprbuild -P prj.gpr -XLIB_TYPE=shared -XSUPPORT_TYPE=none
+lib.gpr: error: libraries are not supported on this platform
+gprbuild: "prj.gpr" processing failed
+$ gprbuild -P prj.gpr -j1 -XLIB_TYPE=shared -XSUPPORT_TYPE=none -XCONSTRUCT_TYPE=true
+"tree/obj_lib" created
+"tree/obj" created
+[Ada Compile]     pkg.adb
+[Ada Compile]     main.adb
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ ./main
+Hello world !
+
+$ gprclean -p -r -P prj.gpr -XLIB_TYPE=shared -XSUPPORT_TYPE=none -XCONSTRUCT_TYPE=true
+$ gprbuild -P prj.gpr -XLIB_TYPE=shared -XSUPPORT_TYPE=static_only
+lib.gpr: error: only static libraries are supported on this platform
+gprbuild: "prj.gpr" processing failed
+$ gprbuild -P prj.gpr -j1 -XLIB_TYPE=shared -XSUPPORT_TYPE=static_only -XCONSTRUCT_TYPE=true
+"tree/obj_lib" created
+"tree/obj" created
+[Ada Compile]     pkg.adb
+[Ada Compile]     main.adb
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ ./main
+Hello world !
+
+$ gprclean -p -r -P prj.gpr -XLIB_TYPE=shared -XSUPPORT_TYPE=static_only -XCONSTRUCT_TYPE=true
+$ gprbuild -P prj.gpr -j1 -XLIB_TYPE=shared -XSUPPORT_TYPE=full
+"tree/obj_lib" created
+"tree/lib" created
+"tree/obj" created
+[Ada Compile]     pkg.adb
+[Ada Bind]        lib
+[Library-Files-Copy] Lib
+[Ada Post-Bind]   b__lib.adb
+[Link]            liblib<shared-lib-suffix>
+[Ada Compile]     main.adb
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ ./main
+Hello world !
+
+$ gprclean -p -r -P prj.gpr -XLIB_TYPE=shared -XSUPPORT_TYPE=full
