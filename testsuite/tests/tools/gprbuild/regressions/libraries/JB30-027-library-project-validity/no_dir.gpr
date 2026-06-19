@@ -1,0 +1,5 @@
+library project No_Dir is
+   for Library_Name use "toto";
+   for Library_Kind use "relocatable";
+end No_Dir;
+

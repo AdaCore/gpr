@@ -1,0 +1,4 @@
+library project Nothing is
+   for Library_Kind use "relocatable";
+end Nothing;
+

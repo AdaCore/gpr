@@ -1,0 +1,10 @@
+$ gprbuild -q -P no_dir.gpr
+no_dir.gpr: error: attribute Library_Dir not declared
+gprbuild: "no_dir.gpr" processing failed
+$ gprbuild -q -P no_name.gpr
+no_name.gpr: error: attribute Library_Name not declared
+gprbuild: "no_name.gpr" processing failed
+$ gprbuild -q -P nothing.gpr
+nothing.gpr: error: attribute Library_Dir not declared
+nothing.gpr: error: attribute Library_Name not declared
+gprbuild: "nothing.gpr" processing failed
