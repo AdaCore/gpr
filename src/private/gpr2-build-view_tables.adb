@@ -317,14 +317,38 @@ package body GPR2.Build.View_Tables is
                         if not Src.Inh_From.Is_Defined
                           and then not Other_Loc.Inh_From.Is_Defined
                         then
-                           --  both sources are directly defined for the view,
-                           --  so we raise an error about duplicated units.
+                           if View_Db.View.Visible_Source
+                             (Path).From_Src_Subdirs
+                             xor View_Db.View.Visible_Source
+                             (Other.Source).From_Src_Subdirs
+                           then
+                              if View_Db.View.Visible_Source
+                                (Path).From_Src_Subdirs
+                              then
+                                 --  The new source comes from --src-subdirs we
+                                 --  need to replace the one which doesn't come
+                                 --  from the --src-subdirs.
 
-                           Traces.Trace
-                             ("... error: both units are defined in the" &
-                                " current view");
+                                 Replace := True;
+                              else
+                                 --  The new source isn't from --source-subdirs
+                                 --  we just need to remove the new source
+                                 --  since the --src-subdirs one has priority.
 
-                           Error_Case := True;
+                                 Remove_Src := True;
+                              end if;
+
+                           else
+                              --  both sources are directly defined for the
+                              --  view, so we raise an error about duplicated
+                              --  units.
+
+                              Traces.Trace
+                                ("... error: both units are defined in the" &
+                                   " current view");
+
+                              Error_Case := True;
+                           end if;
 
                         elsif Src.Inh_From.Is_Defined
                           and then not Other_Loc.Inh_From.Is_Defined

@@ -1,4 +1,4 @@
-$ gprbuild -q -k -g mm -gnatw.f -gnatwae
+$ gprbuild -j1 -q -k -g mm -gnatw.f -gnatwae
 gen_g.adb:2:06: warning: renamed predefined unit is an obsolescent feature (RM J.1) [-gnatwj]
 [Ada Compile] gen_g.adb (default.gpr) failed.
 ng.ads:7:34: warning: "Access" attribute of "Image" before body seen [-gnatw.f]
