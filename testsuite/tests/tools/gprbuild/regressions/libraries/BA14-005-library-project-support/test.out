@@ -1,0 +1,3 @@
+$ gprbuild -q -P main/main.gpr
+print.gpr: error: library directory cannot be the same as object directory
+gprbuild: "main.gpr" processing failed

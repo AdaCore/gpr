@@ -1,0 +1,6 @@
+project Print is
+  for Library_Name use "print";
+  for Library_Dir use ".";
+  for Library_Version use "libprint.so";
+  for Library_Kind use "dynamic";
+end Print;
