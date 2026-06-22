@@ -706,6 +706,8 @@ package body GPRbuild.Options is
         or else Arg = "-x"
         or else Arg = "--complete-output"
         or else Arg = "--single-compiler-per-obj-dir"
+        or else Arg = "-vl"
+        or else Arg = "-vm"
       then
          --  Ignore, only there for compatibility reason
          null;
