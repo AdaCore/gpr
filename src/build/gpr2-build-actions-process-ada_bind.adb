@@ -1338,10 +1338,10 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          if not Add_Remaining
            and then Path_Name.Simple_Name
              (Filename_Type (Line)) not in "g-trasym.o" | "g-trasym.obj"
-           and then not (Self.Ctxt.Is_Library
-                         and then not Self.Ctxt.Is_Library_Supported
-                         and then GNATCOLL.Utils.Starts_With
-                           (Line, Adalib_Dir.String_Value))
+           and then (Self.Ctxt.Library_Support /= None
+                     or else not Static_Libs
+                     or else not GNATCOLL.Utils.Starts_With
+                       (Line, Adalib_Dir.String_Value))
          then
             --  Skipping all the list of objects unless:
             --     - The view is a library and the kind of library isn't
@@ -1387,9 +1387,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
             --  archive is used by the linker.
 
          elsif Line = "-lgnat" then
-            if Static_Libs
-              and then not (Self.Ctxt.Is_Library
-                            and then not Self.Ctxt.Is_Library_Supported)
+            if Static_Libs and then Self.Ctxt.Library_Support /= None
             then
                if Self.Ctxt.Is_Library
                  and then
@@ -1406,9 +1404,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
             end if;
 
          elsif Line = "-lgnarl" then
-            if Static_Libs
-              and then not (Self.Ctxt.Is_Library
-                            and then not Self.Ctxt.Is_Library_Supported)
+            if Static_Libs and then Self.Ctxt.Library_Support /= None
             then
                if Self.Ctxt.Is_Library
                  and then
