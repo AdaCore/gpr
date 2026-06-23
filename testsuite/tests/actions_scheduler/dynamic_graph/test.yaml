@@ -1,0 +1,4 @@
+description: Test that an action added dynamically by Post_Execution is picked up by the scheduler
+driver: build_and_run
+project_file: test.gpr
+main: test

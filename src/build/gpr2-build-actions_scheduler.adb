@@ -355,9 +355,13 @@ package body GPR2.Build.Actions_Scheduler is
       Script_FD  : GNATCOLL.OS.FS.File_Descriptor := FS.Null_FD;
       Script_Dir : Path_Name.Object;
 
-      Nb_Executed      : Natural := 0;
-      End_Of_Iteration : Boolean := False;
-      Active_Actions   : Natural := 0;
+      Nb_Executed        : Natural := 0;
+      End_Of_Iteration   : Boolean := False;
+      End_Due_To_Failure : Boolean := False;
+      --  Set when End_Of_Iteration was triggered by a failure (exception,
+      --  Stop_On_Fail), as opposed to simply running out of ready nodes.
+      --  Only in the latter case may new nodes appear via Post_Execution.
+      Active_Actions     : Natural := 0;
 
       task type Thread_Runner is
          entry Execute (UID : Action_Id'Class; Action_Slot : Natural);
@@ -1181,8 +1185,10 @@ package body GPR2.Build.Actions_Scheduler is
            and then not End_Of_Iteration
          loop
             begin
-               if not (Status = Pending) and then not Context.Graph.Next (Node)
+               if Status /= Pending and then not Context.Graph.Next (Node)
                then
+                  Traces.Trace ("End of iteration: status /= pending " &
+                                "and no more nodes available");
                   End_Of_Iteration := True;
                   exit Next_Node_Loop;
                end if;
@@ -1195,7 +1201,8 @@ package body GPR2.Build.Actions_Scheduler is
                      & ")");
                   Traces.Trace ("!!! Internal error in the DAG");
                   Traces.Trace (Ada.Exceptions.Exception_Information (E));
-                  End_Of_Iteration := True;
+                  End_Of_Iteration   := True;
+                  End_Due_To_Failure := True;
                   exit Next_Node_Loop;
                   pragma Annotate (Xcov, Exempt_Off);
             end;
@@ -1315,12 +1322,14 @@ package body GPR2.Build.Actions_Scheduler is
             exception
                when E : Actions_Scheduler_Error =>
                   pragma Annotate (Xcov, Exempt_On, "defensive code");
-                  End_Of_Iteration := True;
+                  End_Of_Iteration   := True;
+                  End_Due_To_Failure := True;
                   Tree_Db.Reporter.Report
                     ("Fatal error: " & Ada.Exceptions.Exception_Message (E),
                      To_Stderr => True);
                when E : others =>
-                  End_Of_Iteration := True;
+                  End_Of_Iteration   := True;
+                  End_Due_To_Failure := True;
                   Tree_Db.Reporter.Report
                     ("Unexpected exception:", To_Stderr => True);
                   Tree_Db.Reporter.Report
@@ -1403,7 +1412,8 @@ package body GPR2.Build.Actions_Scheduler is
                      end if;
 
                      if Options.Stop_On_Fail then
-                        End_Of_Iteration := True;
+                        End_Of_Iteration   := True;
+                        End_Due_To_Failure := True;
                         exit Next_Node_Loop;
                      end if;
                   end if;
@@ -1487,8 +1497,16 @@ package body GPR2.Build.Actions_Scheduler is
                   end if;
 
                   if Options.Stop_On_Fail then
-                     End_Of_Iteration := True;
+                     End_Of_Iteration   := True;
+                     End_Due_To_Failure := True;
                   end if;
+
+               elsif not End_Due_To_Failure then
+                  --  The action completed successfully and its Post_Execution
+                  --  may have added new actions to the graph. Reset
+                  --  End_Of_Iteration so the scheduler re-enters the graph
+                  --  iterator to pick up any newly available nodes.
+                  End_Of_Iteration := False;
                end if;
             end;
          end loop;
