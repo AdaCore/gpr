@@ -96,24 +96,12 @@ package body GPR2.Build.Signature is
 
       --  Check immediately if the artifact checksum matches the saved state
       declare
-         Chk : constant String := Art.Checksum (Self.Indexer.all);
-         CC  : constant Checksum_Maps.Cursor := Self.Checksums (IO).Find (Art);
+         CC : constant Checksum_Maps.Cursor := Self.Checksums (IO).Find (Art);
       begin
-         if not Checksum_Maps.Has_Element (CC)
-           or else Checksum_Maps.Element (CC) /= Chk
-         then
-            if Checksum_Maps.Has_Element (CC) then
-               Traces.Trace
-                 ("Invalidating the signature because checksums do " &
-                  "not match:");
-               Traces.Trace ("  Current checksum: " & Chk);
-               Traces.Trace
-                 ("  Saved checksum  : " & Checksum_Maps.Element (CC));
-            else
-               Traces.Trace
-                 ("Invalidating the signature because no saved checksum " &
-                  "has been found.");
-            end if;
+         if not Checksum_Maps.Has_Element (CC) then
+            Traces.Trace
+              ("Invalidating the signature because no saved checksum " &
+               "has been found.");
 
             --  Invalidate the saved checksums
             Self.Checksums (Input).Clear;
@@ -121,6 +109,25 @@ package body GPR2.Build.Signature is
 
             return False;
          end if;
+
+         declare
+            Chk : constant String := Art.Checksum (Self.Indexer.all);
+         begin
+            if Checksum_Maps.Element (CC) /= Chk then
+               Traces.Trace
+                 ("Invalidating the signature because checksums do " &
+                  "not match:");
+               Traces.Trace ("  Current checksum: " & Chk);
+               Traces.Trace
+                 ("  Saved checksum  : " & Checksum_Maps.Element (CC));
+
+               --  Invalidate the saved checksums
+               Self.Checksums (Input).Clear;
+               Self.Checksums (Output).Clear;
+
+               return False;
+            end if;
+         end;
       end;
 
       Traces.Trace ("Checksums matched");
@@ -445,12 +452,14 @@ package body GPR2.Build.Signature is
          return False;
       end if;
 
-      return (Self.Checksums (Input).Contains (Art)
-              and then Self.Checksums (Input).Element (Art) =
-                Art.Checksum (Self.Indexer.all))
-              or else (Self.Checksums (Output).Contains (Art)
-                and then Self.Checksums (Output).Element (Art) =
-                  Art.Checksum (Self.Indexer.all));
+      declare
+         Chk : constant String := Art.Checksum (Self.Indexer.all);
+      begin
+         return (Self.Checksums (Input).Contains (Art)
+                   and then Self.Checksums (Input).Element (Art) = Chk)
+                 or else (Self.Checksums (Output).Contains (Art)
+                   and then Self.Checksums (Output).Element (Art) = Chk);
+      end;
    end Valid;
 
 end GPR2.Build.Signature;
