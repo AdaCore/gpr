@@ -34,16 +34,12 @@ package GPR2.Project.Attribute_Cache is
 
    type Cursor is private;
 
-   function Check_Cache
+   function Cached_Element
      (Self   : Object;
       Name   : Q_Attribute_Id;
       Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Unit_Index                     := No_Index)
-      return Cursor;
-
-   function Has_Element (C : Cursor) return Boolean;
-
-   function Element (C : Cursor) return GPR2.Project.Attribute.Object;
+      At_Pos : Unit_Index                     := No_Index;
+      Attr   : out Project.Attribute.Object) return Boolean;
 
    procedure Schedule_Update_Cache (Self : Object);
 
@@ -64,6 +60,17 @@ package GPR2.Project.Attribute_Cache is
    --  Re-enable storage in the cache
 
 private
+
+   function Check_Cache
+     (Self   : Object;
+      Name   : Q_Attribute_Id;
+      Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index                     := No_Index)
+      return Cursor;
+
+   function Has_Element (C : Cursor) return Boolean;
+
+   function Element (C : Cursor) return GPR2.Project.Attribute.Object;
 
    package Attribute_Cache_Maps is
         new Ada.Containers.Indefinite_Hashed_Maps

@@ -579,15 +579,16 @@ package body GPR2.Project.View is
          end if;
       end Get_Default_Index;
 
-      Cache_Cursor : constant Project.Attribute_Cache.Cursor :=
-                       View_Internal.Get_RO (Self).Cache.Check_Cache
-                         (Name   => Name,
-                          Index  => Index,
-                          At_Pos => At_Pos);
    begin
-      if Project.Attribute_Cache.Has_Element (Cache_Cursor) then
-         return Project.Attribute_Cache.Element (Cache_Cursor);
-      end if;
+      Cached_Element : declare
+         Cached_Attribute : Project.Attribute.Object;
+      begin
+         if View_Internal.Get_RO (Self).Cache.Cached_Element
+           (Name, Index, At_Pos, Cached_Attribute)
+         then
+            return Cached_Attribute;
+         end if;
+      end Cached_Element;
 
       View_Internal.Get_RO (Self).Cache.Schedule_Update_Cache;
 
