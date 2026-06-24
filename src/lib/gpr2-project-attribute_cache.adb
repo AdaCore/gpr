@@ -4,6 +4,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+pragma Extensions_Allowed (All_Extensions);
+
 with Ada.Unchecked_Deallocation;
 with GNAT.Task_Lock;
 
@@ -30,6 +32,8 @@ package body GPR2.Project.Attribute_Cache is
 
    overriding procedure Adjust (Cache : in out Object) is
    begin
+      GNAT.Task_Lock.Lock;
+
       Cache.Inner := new Inner_Object'
         (Enabled               => Cache.Inner.Enabled,
          Table                 => new Attribute_Cache_Maps.Map'
@@ -45,6 +49,9 @@ package body GPR2.Project.Attribute_Cache is
       if Cache.Inner.Table.Capacity < Min_Cache_Size then
          Cache.Inner.Table.Reserve_Capacity (Min_Cache_Size);
       end if;
+
+   finally
+      GNAT.Task_Lock.Unlock;
    end Adjust;
 
    ---------------
@@ -65,6 +72,38 @@ package body GPR2.Project.Attribute_Cache is
          return Name.Attr'Img & ":" & Name.Pack'Img;
       end if;
    end Cache_Key;
+
+   --------------------
+   -- Cached_Element --
+   --------------------
+
+   function Cached_Element
+     (Self   : Object;
+      Name   : Q_Attribute_Id;
+      Index  : Project.Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index                     := No_Index;
+      Attr   : out Project.Attribute.Object) return Boolean
+   is
+      Cache_Cursor : Project.Attribute_Cache.Cursor;
+   begin
+      GNAT.Task_Lock.Lock;
+
+      Attr := Project.Attribute.Undefined;
+
+      Cache_Cursor := Self.Check_Cache
+        (Name   => Name,
+         Index  => Index,
+         At_Pos => At_Pos);
+
+      if Has_Element (Cache_Cursor) then
+         Attr := Element (Cache_Cursor);
+         return True;
+      end if;
+
+      return False;
+   finally
+      GNAT.Task_Lock.Unlock;
+   end Cached_Element;
 
    -----------------
    -- Check_Cache --
@@ -212,6 +251,7 @@ package body GPR2.Project.Attribute_Cache is
          end;
       end if;
 
+   finally
       GNAT.Task_Lock.Unlock;
    end Schedule_Update_Cache;
 
@@ -239,6 +279,7 @@ package body GPR2.Project.Attribute_Cache is
          end if;
       end if;
 
+   finally
       GNAT.Task_Lock.Unlock;
    end Update_Cache;
 

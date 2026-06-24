@@ -1094,6 +1094,16 @@ package body GPR2.Build.Actions_Scheduler is
 
             Enqueue (Handler);
          end loop Main_Loop;
+      exception
+         when E : others =>
+            --  The runner died, attempt to trace errors in order to
+            --  investigate potential issues.
+            --  Note that the potential behavior or such an error is the
+            --  action scheduler indefinitely hanging (stuck waiting for this
+            --  runner to properly terminate itself) or finalize issues of
+            --  the underlying tools.
+            Traces.Trace ("!!! Thread_Runner error");
+            Traces.Trace (Ada.Exceptions.Exception_Information (E));
       end Thread_Runner;
 
       ------------------
@@ -1541,6 +1551,16 @@ package body GPR2.Build.Actions_Scheduler is
          end if;
 
       end loop;
+   exception
+      when E : others =>
+         --  The listener died, attempt to trace errors in order to investigate
+         --  potential issues.
+         --  Note that the potential behavior or such an error is the
+         --  action scheduler indefinitely hanging (stuck waiting for this
+         --  runner to properly terminate itself) or finalize issues of
+         --  the underlying tools.
+         Traces.Trace ("!!! Listener error");
+         Traces.Trace (Ada.Exceptions.Exception_Information (E));
    end Listener;
 
 end GPR2.Build.Actions_Scheduler;
