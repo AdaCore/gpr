@@ -452,12 +452,14 @@ package body GPR2.Build.Signature is
          return False;
       end if;
 
-      return (Self.Checksums (Input).Contains (Art)
-              and then Self.Checksums (Input).Element (Art) =
-                Art.Checksum (Self.Indexer.all))
-              or else (Self.Checksums (Output).Contains (Art)
-                and then Self.Checksums (Output).Element (Art) =
-                  Art.Checksum (Self.Indexer.all));
+      declare
+         Chk : constant String := Art.Checksum (Self.Indexer.all);
+      begin
+         return (Self.Checksums (Input).Contains (Art)
+                   and then Self.Checksums (Input).Element (Art) = Chk)
+                 or else (Self.Checksums (Output).Contains (Art)
+                   and then Self.Checksums (Output).Element (Art) = Chk);
+      end;
    end Valid;
 
 end GPR2.Build.Signature;
