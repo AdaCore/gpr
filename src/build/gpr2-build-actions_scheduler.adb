@@ -829,6 +829,10 @@ package body GPR2.Build.Actions_Scheduler is
       procedure Enqueue (Handler : Collect_Handler);
       --  Enqueue the handler and wake up the main loop
 
+      procedure Drain_Collect_Queue;
+      --  Collect all finished actions currently in queue, releasing slots
+      --  and updating execution state.
+
       --------------------
       -- Available_Slot --
       --------------------
@@ -843,6 +847,89 @@ package body GPR2.Build.Actions_Scheduler is
 
          return -1;
       end Available_Slot;
+
+      -------------------------
+      -- Drain_Collect_Queue --
+      -------------------------
+
+      procedure Drain_Collect_Queue is
+      begin
+         while Collect_Queue.Current_Use > 0 loop
+            declare
+               Handler    : Collect_Handler;
+               Job_Status : Collect_Status;
+            begin
+               Collect_Queue.Dequeue (Handler);
+
+               declare
+                  Act : Actions.Object'Class :=
+                    Self.Tree_Db.Action (Handler.UID_Holder.Element);
+               begin
+
+                  --  Write the command to the script file if needed.
+                  --  This is done here (in the main task) rather than in the
+                  --  process runner to avoid concurrent access to Script_FD.
+
+                  if Script_FD /= Null_FD
+                    and then Handler.Status = Finished
+                    and then Act in Actions.Process.Object'Class
+                  then
+                     Write_Script
+                       (Actions.Process.Object'Class (Act),
+                        Script_FD,
+                        Script_Dir);
+                  end if;
+
+                  Job_Status :=
+                    Object'Class (Self).Collect_Action (Act, Handler, Context);
+                  Self.Tree_Db.Action_Id_To_Reference
+                    (Handler.UID_Holder.Element) :=
+                    Act;
+               end;
+
+               --  Cleanup the temporary files that are local to the job
+               if not Options.Keep_Temp_Files then
+                  Self.Tree_Db.Action_Id_To_Reference
+                    (Handler.UID_Holder.Element)
+                    .Cleanup_Temp_Files (Scope => Actions.Local);
+               end if;
+
+               Release_Slot (Action_Slot => Handler.Action_Slot);
+               Nb_Executed := Nb_Executed + 1;
+
+               if Self.Make_JS.Is_Available then
+                  Self.Make_JS.Release_Token;
+               end if;
+
+               --  Report the progress if requested
+               if Options.Show_Progress then
+                  Report_Progress (Self, Natural (Context.Nodes.Length));
+               end if;
+
+               if Job_Status = Abort_Execution then
+                  if Handler.Status
+                     in Failed_To_Launch | Failed_Cmd_Line_Computation
+                  then
+                     Context.Status := Failed;
+                  elsif Context.Status /= Failed then
+                     Context.Status := Errors;
+                  end if;
+
+                  if Options.Stop_On_Fail then
+                     End_Of_Iteration   := True;
+                     End_Due_To_Failure := True;
+                  end if;
+
+               elsif not End_Due_To_Failure then
+                  --  The action completed successfully and its Post_Execution
+                  --  may have added new actions to the graph. Reset
+                  --  End_Of_Iteration so the scheduler re-enters the graph
+                  --  iterator to pick up any newly available nodes.
+                  End_Of_Iteration := False;
+               end if;
+            end;
+         end loop;
+      end Drain_Collect_Queue;
 
       -------------
       -- Enqueue --
@@ -1268,6 +1355,18 @@ package body GPR2.Build.Actions_Scheduler is
          Next_Node_Loop : while Nb_Active_Actions < Max_Jobs
            and then not End_Of_Iteration
          loop
+            --  Interleave collection with scheduling so that completed jobs
+            --  release slots promptly instead of waiting for the launch phase
+            --  to fill all slots.
+
+            if Collect_Queue.Current_Use > 0 then
+               Drain_Collect_Queue;
+
+               if End_Of_Iteration then
+                  exit Next_Node_Loop;
+               end if;
+            end if;
+
             begin
                if Status /= Pending and then not Context.Graph.Next (Node)
                then
@@ -1497,81 +1596,7 @@ package body GPR2.Build.Actions_Scheduler is
 
          Suspend_Until_True (New_Action_To_Collect);
 
-         while Collect_Queue.Current_Use > 0 loop
-            declare
-               Handler    : Collect_Handler;
-               Job_Status : Collect_Status;
-            begin
-               Collect_Queue.Dequeue (Handler);
-
-               declare
-                  Act : Actions.Object'Class :=
-                    Self.Tree_Db.Action (Handler.UID_Holder.Element);
-               begin
-
-                  --  Write the command to the script file if needed.
-                  --  This is done here (in the main task) rather than in the
-                  --  process runner to avoid concurrent access to Script_FD.
-
-                  if Script_FD /= Null_FD
-                    and then Handler.Status = Finished
-                    and then Act in Actions.Process.Object'Class
-                  then
-                     Write_Script
-                       (Actions.Process.Object'Class (Act),
-                        Script_FD,
-                        Script_Dir);
-                  end if;
-
-                  Job_Status :=
-                    Object'Class (Self).Collect_Action (Act, Handler, Context);
-                  Self.Tree_Db.Action_Id_To_Reference
-                    (Handler.UID_Holder.Element) :=
-                    Act;
-               end;
-
-               --  Cleanup the temporary files that are local to the job
-               if not Options.Keep_Temp_Files then
-                  Self.Tree_Db.Action_Id_To_Reference
-                    (Handler.UID_Holder.Element)
-                    .Cleanup_Temp_Files (Scope => Actions.Local);
-               end if;
-
-               Release_Slot (Action_Slot => Handler.Action_Slot);
-               Nb_Executed := Nb_Executed + 1;
-
-               if Self.Make_JS.Is_Available then
-                  Self.Make_JS.Release_Token;
-               end if;
-
-               --  Report the progress if requested
-               if Options.Show_Progress then
-                  Report_Progress (Self, Natural (Context.Nodes.Length));
-               end if;
-
-               if Job_Status = Abort_Execution then
-                  if Handler.Status
-                     in Failed_To_Launch | Failed_Cmd_Line_Computation
-                  then
-                     Context.Status := Failed;
-                  elsif Context.Status /= Failed then
-                     Context.Status := Errors;
-                  end if;
-
-                  if Options.Stop_On_Fail then
-                     End_Of_Iteration   := True;
-                     End_Due_To_Failure := True;
-                  end if;
-
-               elsif not End_Due_To_Failure then
-                  --  The action completed successfully and its Post_Execution
-                  --  may have added new actions to the graph. Reset
-                  --  End_Of_Iteration so the scheduler re-enters the graph
-                  --  iterator to pick up any newly available nodes.
-                  End_Of_Iteration := False;
-               end if;
-            end;
-         end loop;
+         Drain_Collect_Queue;
       end loop;
 
       --  Close the script file if needed
