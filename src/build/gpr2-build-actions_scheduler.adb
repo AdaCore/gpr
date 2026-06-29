@@ -70,6 +70,12 @@ package body GPR2.Build.Actions_Scheduler is
       Handler : Collect_Handler;
       Context : access GPR2.Build.Actions_Scheduler.Context)
       return Collect_Status;
+   --  Finalize a completed action: flush its captured stdout/stderr to the
+   --  reporter, run Post_Execution, write the signature, propagate any newly
+   --  created actions, and mark the DAG node as visited so its successors
+   --  become eligible for execution. Handler must not be in Running or Pending
+   --  state when called. Returns Abort_Execution on any failure, otherwise
+   --  Continue_Execution.
 
    subtype Pre_Run_Action_Status is Action_Status
    with
