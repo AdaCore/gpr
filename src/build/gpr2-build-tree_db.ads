@@ -165,7 +165,6 @@ package GPR2.Build.Tree_Db is
    --  No_Warnings_Replay: if True, the saved stderr of a skipped action is
    --                      not replayed.
 
-   function Is_Executing (Self : Object) return Boolean;
 
    --  ACTION MANAGEMENT
 
@@ -455,9 +454,6 @@ private
      (Self     : Object;
       Artifact : Artifacts.Object'Class) return Boolean
    is (Self.Artifacts.Contains (Artifact));
-
-   function Is_Executing (Self : Object) return Boolean is
-     (Self.Executing);
 
    function File_Indexer (Self : Object) return access GPR2.Utils.Hash.Object
    is (Self.Self.File_Index'Unrestricted_Access);
