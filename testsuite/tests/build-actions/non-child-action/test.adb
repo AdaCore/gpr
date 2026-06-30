@@ -1,8 +1,8 @@
 with Ada.Text_IO;
+with GPR2.Build.Actions;
+with GPR2.Build.Signature;
 with GPR2.Options;
 with GPR2.Project.Tree;
-with GNATCOLL.OS.Process; use GNATCOLL.OS.Process;
-with GPR2.Build.Actions;
 with External_Action;
 with Test_Assert; use Test_Assert;
 
@@ -56,6 +56,11 @@ begin
    A.Assert (Lib2_Action.View.Name = "Lib2");
    Lib1_Action.Set_View (Lib2_Action.View);
    A.Assert (Lib1_Action.View.Name = "Lib2");
+
+   Lib2_Action.Compute_Signature (False);
+   A.Assert (not Lib2_Action.Signature.Is_Empty);
+   A.Assert (not Lib2_Action.Valid_Signature);
+   --  Action has not been executed, so signature should be invalid
 
    return A.Report;
 end Test;

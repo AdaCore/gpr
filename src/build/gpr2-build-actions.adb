@@ -249,6 +249,17 @@ package body GPR2.Build.Actions is
       return -Res;
    end Serialize;
 
+   -------------------
+   -- Set_Signature --
+   -------------------
+
+   procedure Set_Signature
+     (Self  : in out Object;
+      Value : GPR2.Build.Signature.Object) is
+   begin
+      Self.Signature := Value;
+   end Set_Signature;
+
    --------------
    -- Set_View --
    --------------

@@ -243,6 +243,11 @@ package GPR2.Build.Actions is
    function Signature (Self : Object) return GPR2.Build.Signature.Object;
    --  Returns the signature of the action.
 
+   procedure Set_Signature
+     (Self  : in out Object;
+      Value : GPR2.Build.Signature.Object);
+   --  Replace the action's signature with Value
+
    function Saved_Stdout (Self : Object'Class) return Unbounded_String;
    function Saved_Stderr (Self : Object'Class) return Unbounded_String;
 
