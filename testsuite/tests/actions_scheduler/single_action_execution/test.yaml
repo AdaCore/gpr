@@ -1,0 +1,4 @@
+description: Test the Execute_Next_Action's API of the action scheduler
+driver: build_and_run
+project_file: test.gpr
+main: test

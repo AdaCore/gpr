@@ -31,6 +31,8 @@ package body GPR2.Build.Tree_Db is
    package PAI renames GPR2.Project.Attribute_Index;
 
    procedure Create_View_Dbs  (Self : in out Object);
+   procedure Populate_Exec_Ctxt (Self : in out Object);
+   --  Clear the execution context and rebuild the DAG from scratch
 
    type Artifact_Internal_Iterator is limited new
      Artifact_Iterators.Forward_Iterator with record
@@ -467,53 +469,8 @@ package body GPR2.Build.Tree_Db is
       Options           : GPR2.Build.Actions_Scheduler.Options'Class)
       return GPR2.Build.Actions_Scheduler.Execution_Status
    is
-      Node : GNATCOLL.Directed_Graph.Node_Id;
-      Pred : Artifact_Action_Maps.Cursor;
-
    begin
-      --  Populate the DAG used for the execution
-
-      GPR2.Build.Actions_Scheduler.Clear (Self.Exec_Ctxt);
-
-      --  First ensure all actions correspond to a node in the DAG
-
-      for Action of Self.Actions loop
-         if not Action.View.Is_Externally_Built then
-            Node := Self.Exec_Ctxt.Graph.Add_Node;
-            Self.Exec_Ctxt.Actions.Insert (Node, Action.UID);
-            Self.Exec_Ctxt.Nodes.Insert (Action.UID, Node);
-         end if;
-      end loop;
-
-      --  Now propagate the dependencies
-
-      for Action of Self.Actions loop
-         if not Action.View.Is_Externally_Built then
-            for Input of Self.Inputs (Action.UID) loop
-               --  Find the action that generated this input
-               Pred := Self.Predecessor.Find (Input);
-
-               if Artifact_Action_Maps.Has_Element (Pred)
-                 and then not Artifact_Action_Maps.Element
-                   (Pred).View.Is_Externally_Built
-               then
-                  Self.Exec_Ctxt.Graph.Add_Predecessor
-                    (Node        => Self.Exec_Ctxt.Nodes (Action.UID),
-                     Predecessor =>
-                       Self.Exec_Ctxt.Nodes
-                         (Artifact_Action_Maps.Element (Pred)));
-               end if;
-            end loop;
-
-            for Output of Self.Outputs (Action.UID) loop
-               for Suc of Self.Successors (Output) loop
-                  Self.Exec_Ctxt.Graph.Add_Predecessor
-                    (Node        => Self.Exec_Ctxt.Nodes (Suc),
-                     Predecessor => Self.Exec_Ctxt.Nodes (Action.UID));
-               end loop;
-            end loop;
-         end if;
-      end loop;
+      Populate_Exec_Ctxt (Self);
 
       if not Self.Actions.Is_Empty then
          Self.Executing := True;
@@ -541,6 +498,52 @@ package body GPR2.Build.Tree_Db is
 
       return Self.Exec_Ctxt.Status;
    end Execute;
+
+   ----------------------
+   -- Execute_Next_Action --
+   -------------------------
+
+   function Execute_Next_Action
+     (Self               : in out Object;
+      Catch_Exceptions   : Boolean := True;
+      Force_Execution    : Boolean := False;
+      Keep_Temp_Files    : Boolean := False;
+      No_Warnings_Replay : Boolean := False;
+      Clear_Exec_Ctxt    : Boolean := False)
+      return GPR2.Build.Actions_Scheduler.Action_Report
+   is
+   begin
+      if not Self.First_Single_Exec or else Clear_Exec_Ctxt then
+         Self.First_Single_Exec := True;
+         Populate_Exec_Ctxt (Self);
+      end if;
+
+      Self.Executing := True;
+      declare
+         Result : constant GPR2.Build.Actions_Scheduler.Action_Report :=
+           GPR2.Build.Actions_Scheduler.Execute_Next_Action
+             (Self.Self,
+              Context            => Self.Exec_Ctxt'Access,
+              Catch_Exceptions   => Catch_Exceptions,
+              Force_Execution    => Force_Execution,
+              Keep_Temp_Files    => Keep_Temp_Files,
+              No_Warnings_Replay => No_Warnings_Replay);
+      begin
+         --  Save the file index of the involved artifacts
+         Self.File_Index.Save (Self.File_Index_Save_Path);
+         Self.Executing := False;
+
+         return Result;
+      exception
+         when others =>
+            --  Ignore issues when saving the index: this is optimization
+            --  and not being able to save the index don't impact the
+            --  functionality of libgpr2.
+
+            Self.Executing := False;
+            return Result;
+      end;
+   end Execute_Next_Action;
 
    -----------
    -- First --
@@ -746,6 +749,57 @@ package body GPR2.Build.Tree_Db is
 
       return Res;
    end Next;
+
+   ------------------------
+   -- Populate_Exec_Ctxt --
+   ------------------------
+
+   procedure Populate_Exec_Ctxt (Self : in out Object) is
+      Node : GNATCOLL.Directed_Graph.Node_Id;
+      Pred : Artifact_Action_Maps.Cursor;
+   begin
+      GPR2.Build.Actions_Scheduler.Clear (Self.Exec_Ctxt);
+
+      --  First ensure all actions correspond to a node in the DAG
+
+      for Action of Self.Actions loop
+         if not Action.View.Is_Externally_Built then
+            Node := Self.Exec_Ctxt.Graph.Add_Node;
+            Self.Exec_Ctxt.Actions.Insert (Node, Action.UID);
+            Self.Exec_Ctxt.Nodes.Insert (Action.UID, Node);
+         end if;
+      end loop;
+
+      --  Now propagate the dependencies
+
+      for Action of Self.Actions loop
+         if not Action.View.Is_Externally_Built then
+            for Input of Self.Inputs (Action.UID) loop
+               --  Find the action that generated this input
+               Pred := Self.Predecessor.Find (Input);
+
+               if Artifact_Action_Maps.Has_Element (Pred)
+                 and then not Artifact_Action_Maps.Element
+                   (Pred).View.Is_Externally_Built
+               then
+                  Self.Exec_Ctxt.Graph.Add_Predecessor
+                    (Node        => Self.Exec_Ctxt.Nodes (Action.UID),
+                     Predecessor =>
+                       Self.Exec_Ctxt.Nodes
+                         (Artifact_Action_Maps.Element (Pred)));
+               end if;
+            end loop;
+
+            for Output of Self.Outputs (Action.UID) loop
+               for Suc of Self.Successors (Output) loop
+                  Self.Exec_Ctxt.Graph.Add_Predecessor
+                    (Node        => Self.Exec_Ctxt.Nodes (Suc),
+                     Predecessor => Self.Exec_Ctxt.Nodes (Action.UID));
+               end loop;
+            end loop;
+         end if;
+      end loop;
+   end Populate_Exec_Ctxt;
 
    -----------------------
    -- Propagate_Actions --

@@ -116,6 +116,74 @@ package GPR2.Build.Actions_Scheduler is
    --  directed graph in Context, launching and collecting
    --  actions according to the given Options.
 
+   -----------------------------
+   -- SINGLE ACTION EXECUTION --
+   -----------------------------
+
+   type Report_Status is
+     (No_Action_To_Execute,
+      --  The DAG does not contain actions to execute
+
+      Skipped,
+      --  Signature is still valid; no re-execution needed
+
+      Deactivated,
+      --  Action is externally built or explicitly deactivated
+
+      Failed_Cmd_Line_Computation,
+      --  Command-line construction failed
+
+      Failed_To_Launch,
+      --  OS-level process launch failed
+
+      Exception_Raised,
+      --  An exception was raised during a thread action execution
+
+      Failed_Pre_Execution,
+      --  Pre_Execution hook returned False
+
+      Finished
+      --  Action execution completed (check return code for success)
+     );
+   --  Outcome of a single action execution attempt
+
+   type Action_Report (Status : Report_Status) is tagged private;
+   --  Result of a single Execute_Next_Action call. The discriminant Status
+   --  describes what happened.
+
+   function Execute_Next_Action
+     (Tree_Db            : GPR2.Build.Tree_Db.Object_Access;
+      Context            : access GPR2.Build.Actions_Scheduler.Context;
+      Catch_Exceptions   : Boolean := True;
+      Force_Execution    : Boolean := False;
+      Keep_Temp_Files    : Boolean := False;
+      No_Warnings_Replay : Boolean := False) return Action_Report;
+   --  Pick the next eligible action from Context, execute it, and return an
+   --  Action_Report describing the outcome. Returns a report with Status set
+   --  to No_Action_To_Execute when the DAG is exhausted. This is the low-level
+   --  entry point used by the Tree_Db wrapper; prefer
+   --  Tree_Db.Execute_Next_Action for normal use.
+
+   function Action_UID
+     (Report : Action_Report) return GPR2.Build.Actions.Action_Id'Class
+   with Pre => Report.Status /= No_Action_To_Execute;
+   --  Return the action identifier specified in the report
+
+   function Stdout (Report : Action_Report) return String
+   with Pre => Report.Status /= No_Action_To_Execute;
+   --  Return the standard output of the action report
+
+   function Stderr (Report : Action_Report) return String
+   with Pre => Report.Status /= No_Action_To_Execute;
+   --  Return the standard error of the action report
+
+   function Status (Report : Action_Report) return Report_Status;
+   --  Return the status of the action report
+
+   function Return_Code (Report : Action_Report) return Integer
+   with Pre => Report.Status = Finished;
+   --  Return the OS return code of the action report
+
 private
 
    type Object is tagged limited record
@@ -125,9 +193,6 @@ private
       --  When used from make, the make job server to limit our number of
       --  simultaneous processes to what make accepts.
    end record;
-
-   procedure Display (Self : Object; Action : Actions.Action_Id'Class);
-   --  Display information about the specified action execution
 
    type Action_Status is
      (Unknown,
@@ -218,4 +283,32 @@ private
    --  unlocks dependent actions in the graph. Returns
    --  Continue_Execution or Abort_Execution.
 
+   type Action_Report (Status : Report_Status) is tagged record
+      UID_Holder : Actions.Action_Id_Holder.Holder;
+      Stdout     : Unbounded_String := Null_Unbounded_String;
+      Stderr     : Unbounded_String := Null_Unbounded_String;
+      case Status is
+         when Finished =>
+            Return_Code : Integer;
+
+         when others =>
+            null;
+      end case;
+   end record;
+
+   function Action_UID
+     (Report : Action_Report) return GPR2.Build.Actions.Action_Id'Class
+   is (Report.UID_Holder.Element);
+
+   function Stdout (Report : Action_Report) return String
+   is (To_String (Report.Stdout));
+
+   function Stderr (Report : Action_Report) return String
+   is (To_String (Report.Stderr));
+
+   function Status (Report : Action_Report) return Report_Status
+   is (Report.Status);
+
+   function Return_Code (Report : Action_Report) return Integer
+   is (Report.Return_Code);
 end GPR2.Build.Actions_Scheduler;
