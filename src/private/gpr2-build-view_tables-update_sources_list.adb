@@ -567,7 +567,12 @@ package body Update_Sources_List is
          end if;
       end loop;
 
-      Krunch (Buffer, Len, 8, False);
+      --  Set Maxlen to the Buffer length, Krunching further more already
+      --  detect cases where the Maxlen must be adjusted to 8.
+      --  this allows to not krunch units like interfaces-smt32-pwr further
+      --  more than i-smt32-pwr instead of forcing down the Maxlen to 8 giving
+      --  i-smtpwr which doesn't exists.
+      Krunch (Buffer, Len, Len, False);
 
       return Filename_Type (Buffer (1 .. Len));
    end Krunch;
