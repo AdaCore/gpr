@@ -5,6 +5,7 @@
 --
 
 with Ada.Characters.Handling;
+with Ada.Containers.Ordered_Maps;
 
 with GNATCOLL.OS.FS;
 with GNATCOLL.Traces;
@@ -22,6 +23,7 @@ with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
 with GPR2.Source_Reference;
 with GPR2.Tree_Internal;
+with GPR2.View_Ids;
 with GPR2.View_Internal;
 with GNAT.OS_Lib;
 
@@ -32,6 +34,43 @@ package body GPR2.Build.Actions.Process.Compile is
                 ("GPR.BUILD.ACTIONS.COMPILE",
                  GNATCOLL.Traces.Off);
 
+   type Mapping_Cache_Key is record
+      View : GPR2.View_Ids.View_Id;
+      Lang : Language_Id;
+   end record;
+
+   function "<" (L, R : Mapping_Cache_Key) return Boolean is
+     (if L.View /= R.View
+      then L.View < R.View
+      else L.Lang < R.Lang);
+
+   package Mapping_Content_Maps is new Ada.Containers.Ordered_Maps
+     (Key_Type => Mapping_Cache_Key, Element_Type => Unbounded_String);
+
+   Mapping_Content_Cache : Mapping_Content_Maps.Map;
+   --  Cache of the compiler mapping-file content built by Add_Mapping_File,
+   --  keyed by (view id, language). The mapping file content only depends
+   --  on the view and language, but the mapping file name depends on the
+   --  slot provided in Compute_Command. Caching the content allows to
+   --  compute it once and reused for every subsequent (view, slot)
+   --  combination instead of re-walking the view's sources each time a
+   --  fresh per-slot mapping file is created. This is especially useful
+   --  for machine that have a lot of cores.
+   --
+   --  This could instead live in View_Tables/Tree_Db (like Temp_Files),
+   --  which would avoid this package-level global. But Compute_Command
+   --  (and therefore Add_Mapping_File) is only ever invoked from the main
+   --  scheduler task (see GPR2.Build.Actions_Scheduler.Next_Node_Loop),
+   --  never concurrently from the Process_Runner/Thread_Runner tasks, so a
+   --  plain global here is safe and simpler than threading a new cache
+   --  through the shared build database for a need that is specific to
+   --  this one action kind.
+   --
+   --  Note that we cannot create a single mapping file per project view and
+   --  reuse it for all compilation commands for the sources in that project
+   --  view. Indeed, the GNAT compiler may update the mapping file it is
+   --  given, so each compilation process running in parallel must have its
+   --  own mapping file.
 
    function Lang_Img (Lang : Language_Id) return Filename_Type is
       (Filename_Type (Ada.Characters.Handling.To_Lower (GPR2.Image (Lang))));
@@ -472,6 +511,11 @@ package body GPR2.Build.Actions.Process.Compile is
          Slot_Img     : constant Filename_Type :=
                           Slot_Img_Raw
                             (Slot_Img_Raw'First + 1 .. Slot_Img_Raw'Last);
+         Cache_Key    : constant Mapping_Cache_Key :=
+                          (View => Self.View.Id, Lang => Self.Lang);
+         --  The mapping content only depends on the view and language, so
+         --  it is cached independently of the slot (see Mapping_Content_Cache
+         --  above).
       begin
          if not Attr.Is_Defined then
             --  Nothing to do
@@ -483,90 +527,122 @@ package body GPR2.Build.Actions.Process.Compile is
                          Self.Get_Or_Create_Temp_File
                            (Lang_Img (Self.Lang) & "_mapping_" & Slot_Img,
                             Global);
-            S_Suffix : constant String :=
-                         Self.View.Attribute
-                           (PRA.Compiler.Mapping_Spec_Suffix,
-                            Lang_Idx).Value.Text;
-            B_Suffix : constant String :=
-                         Self.View.Attribute
-                           (PRA.Compiler.Mapping_Body_Suffix,
-                            Lang_Idx).Value.Text;
-            use Standard.Ada.Characters.Handling;
          begin
             if Map_File.FD /= Null_FD then
-               for S of Self.View.Visible_Sources loop
-                  if S.Language = Ada_Language then
-                     for U of S.Units loop
-                        if U.Kind /= S_No_Body then
-                           declare
-                              Key : constant String :=
-                                      To_Lower (String (U.Full_Name)) &
-                              (if U.Kind = S_Spec
-                               then S_Suffix else B_Suffix);
-                           begin
-                              Write
-                                (Map_File.FD,
-                                 Key & ASCII.LF &
-                                 String (S.Path_Name.Simple_Name) & ASCII.LF &
-                                 S.Path_Name.String_Value & ASCII.LF);
-                           end;
-                        end if;
-                     end loop;
-                  end if;
-               end loop;
+               declare
+                  Cached : constant Mapping_Content_Maps.Cursor :=
+                             Mapping_Content_Cache.Find (Cache_Key);
+               begin
+                  if Mapping_Content_Maps.Has_Element (Cached) then
 
-               for S of Self.View.View_Db.Excluded_Sources loop
-                  declare
-                     U   : constant Build.Compilation_Unit.Object :=
-                             Self.View.Own_Unit (S.Base_Name);
-                  begin
-                     --  If we have an excluded source with a valid unit in
-                     --  the View, and the unit is at least missing one of its
-                     --  part, this means the other part of the unit has
-                     --  its source exluded by the View.
-                     --  If we have an Unit with none of its part missing, this
-                     --  means the source was excluded due to not matching Self
-                     --  naming scheme.
-                     if U.Is_Defined
-                       and then U.Has_Main_Part
-                       and then (not U.Has_Part (S_Body)
-                                 or else not U.Has_Part (S_Spec))
-                     then
-                        declare
-                           Key : constant String :=
-                                   To_Lower (String (U.Name))
-                                   & (if U.Main_Part = S_Spec
-                                      then B_Suffix else S_Suffix);
-                        begin
-                           Write
-                             (Map_File.FD,
-                              Key & ASCII.LF & String (S.Simple_Name)
-                              & ASCII.LF & "/" & ASCII.LF);
-                        end;
-                     end if;
-                  end;
-               end loop;
+                     --  Already computed for another slot: reuse it as-is
+                     --  instead of re-walking the view's sources.
 
-               for S of Self.View.View_Db.Excluded_Inherited_Sources loop
-                  if S.Language = Ada_Language then
-                     for U of S.Units loop
-                        if U.Kind /= S_No_Body then
+                     Write
+                       (Map_File.FD,
+                        To_String (Mapping_Content_Maps.Element (Cached)));
+
+                  else
+                     declare
+                        S_Suffix : constant String :=
+                                     Self.View.Attribute
+                                       (PRA.Compiler.Mapping_Spec_Suffix,
+                                        Lang_Idx).Value.Text;
+                        B_Suffix : constant String :=
+                                     Self.View.Attribute
+                                       (PRA.Compiler.Mapping_Body_Suffix,
+                                        Lang_Idx).Value.Text;
+                        use Standard.Ada.Characters.Handling;
+                        Content  : Unbounded_String;
+                     begin
+                        for S of Self.View.Visible_Sources loop
+                           if S.Language = Ada_Language then
+                              for U of S.Units loop
+                                 if U.Kind /= S_No_Body then
+                                    declare
+                                       Key : constant String :=
+                                               To_Lower
+                                                 (String (U.Full_Name)) &
+                                       (if U.Kind = S_Spec
+                                        then S_Suffix else B_Suffix);
+                                    begin
+                                       Append
+                                         (Content,
+                                          Key & ASCII.LF &
+                                          String (S.Path_Name.Simple_Name) &
+                                          ASCII.LF &
+                                          S.Path_Name.String_Value &
+                                          ASCII.LF);
+                                    end;
+                                 end if;
+                              end loop;
+                           end if;
+                        end loop;
+
+                        for S of Self.View.View_Db.Excluded_Sources loop
                            declare
-                              Key : constant String :=
-                                      To_Lower (String (U.Full_Name)) &
-                              (if U.Kind = S_Spec
-                               then S_Suffix else B_Suffix);
+                              U   : constant Build.Compilation_Unit.Object :=
+                                      Self.View.Own_Unit (S.Base_Name);
                            begin
-                              Write
-                                (Map_File.FD,
-                                 Key & ASCII.LF &
-                                 String (S.Path_Name.Simple_Name) & ASCII.LF &
-                                 "/" & ASCII.LF);
+                              --  If we have an excluded source with a valid
+                              --  unit in the View, and the unit is at least
+                              --  missing one of its part, this means the
+                              --  other part of the unit has its source
+                              --  exluded by the View.
+                              --  If we have an Unit with none of its part
+                              --  missing, this means the source was excluded
+                              --  due to not matching Self naming scheme.
+                              if U.Is_Defined
+                                and then U.Has_Main_Part
+                                and then (not U.Has_Part (S_Body)
+                                          or else not U.Has_Part (S_Spec))
+                              then
+                                 declare
+                                    Key : constant String :=
+                                            To_Lower (String (U.Name))
+                                            & (if U.Main_Part = S_Spec
+                                               then B_Suffix else S_Suffix);
+                                 begin
+                                    Append
+                                      (Content,
+                                       Key & ASCII.LF &
+                                       String (S.Simple_Name)
+                                       & ASCII.LF & "/" & ASCII.LF);
+                                 end;
+                              end if;
                            end;
-                        end if;
-                     end loop;
+                        end loop;
+
+                        for S of Self.View.View_Db.Excluded_Inherited_Sources
+                        loop
+                           if S.Language = Ada_Language then
+                              for U of S.Units loop
+                                 if U.Kind /= S_No_Body then
+                                    declare
+                                       Key : constant String :=
+                                               To_Lower
+                                                 (String (U.Full_Name)) &
+                                       (if U.Kind = S_Spec
+                                        then S_Suffix else B_Suffix);
+                                    begin
+                                       Append
+                                         (Content,
+                                          Key & ASCII.LF &
+                                          String (S.Path_Name.Simple_Name) &
+                                          ASCII.LF &
+                                          "/" & ASCII.LF);
+                                    end;
+                                 end if;
+                              end loop;
+                           end if;
+                        end loop;
+
+                        Mapping_Content_Cache.Insert (Cache_Key, Content);
+
+                        Write (Map_File.FD, To_String (Content));
+                     end;
                   end if;
-               end loop;
+               end;
 
                Close (Map_File.FD);
             end if;
