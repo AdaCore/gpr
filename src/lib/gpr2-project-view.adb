@@ -3617,8 +3617,9 @@ package body GPR2.Project.View is
    ---------------------
 
    function Visible_Sources
-     (Self : Object) return GPR2.Build.Source.Sets.Object
-   is (Self.View_Db.Visible_Sources);
+     (Self      : Object;
+      Ambiguous : Boolean := False) return GPR2.Build.Source.Sets.Object
+   is (Self.View_Db.Visible_Sources (Ambiguous));
 
 begin
    View_Internal.Get_RO   := Get_RO'Access;

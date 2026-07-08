@@ -44,12 +44,14 @@ package body GPR2.Build.Source.Sets is
    ------------
 
    function Create
-     (Db     : Build.View_Db.Object;
-      Option : Source_Set_Option := Unsorted;
-      Filter : Filter_Function := null;
-      F_Data : Filter_Data'Class := No_Data) return Object is
+     (Db        : Build.View_Db.Object;
+      Option    : Source_Set_Option := Unsorted;
+      Filter    : Filter_Function := null;
+      F_Data    : Filter_Data'Class := No_Data;
+      Ambiguous : Boolean := False) return Object is
    begin
-      return (Db, Option, Filter, Filter_Data_Holders.To_Holder (F_Data));
+      return (Db, Option, Filter, Filter_Data_Holders.To_Holder (F_Data),
+              Ambiguous);
    end Create;
 
    -------------
@@ -304,7 +306,9 @@ package body GPR2.Build.Source.Sets is
                                       Filter_Data_Holders.Element
                                         (Self.F_Data)))
                               then
-                                 if Src.Is_Compilable then
+                                 if Src.Is_Compilable
+                                   and then not Self.Ambiguous
+                                 then
                                     --  Need to check for simple name clashes
                                     Basenames.Insert
                                       (Src.Path_Name.Simple_Name,

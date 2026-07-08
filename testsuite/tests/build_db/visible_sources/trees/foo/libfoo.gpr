@@ -1,0 +1,11 @@
+project Libfoo is
+   for Source_Dirs use ("libfoo");
+   for Exec_Dir use ".";
+   for Object_Dir use "obj_lib";
+
+   for Languages use ("Ada", "C");
+
+   for Library_Kind use "static";
+   for Library_Name use "foo";
+   for Library_Dir use "lib";
+end Libfoo;

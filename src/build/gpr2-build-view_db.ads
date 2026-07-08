@@ -85,10 +85,16 @@ package GPR2.Build.View_Db is
    --  sources (so project's own sources and all its withed projects).
 
    function Visible_Sources
-     (Self : Object) return GPR2.Build.Source.Sets.Object
+     (Self      : Object;
+      Ambiguous : Boolean := False) return GPR2.Build.Source.Sets.Object
      with Pre => Self.Is_Defined and then Self.Source_Option > No_Source;
    --  Get the complete list of visible sources: so sources owned by the view
    --  but also all sources made visible by withed or limited withed views.
+   --  When two sources in the visibility closure share the same simple
+   --  name, only the first one found while iterating the closure (Self,
+   --  then its withed, limited withed, extended and aggregated views, with
+   --  the runtime project always last) is returned unless Ambiguous is set,
+   --  in which case every source sharing that simple name is returned.
 
    function Excluded_Sources (Self : Object) return GPR2.Path_Name.Set.Object
      with Pre => Self.Is_Defined;

@@ -490,9 +490,15 @@ package GPR2.Project.View is
    --  then give a different result.
 
    function Visible_Sources
-     (Self : Object) return GPR2.Build.Source.Sets.Object
+     (Self      : Object;
+      Ambiguous : Boolean := False) return GPR2.Build.Source.Sets.Object
      with Pre => Self.Is_Defined;
-   --  Return all sources visible by Self
+   --  Return all sources visible by Self.
+   --  When two sources share the same simple name, only the first one found
+   --  while iterating Self's closure (Self, then its withed, limited
+   --  withed, extended and aggregated views, with the runtime project
+   --  always last) is returned unless Ambiguous is set, in which case every
+   --  source sharing that simple name is returned too.
 
    function Interface_Units
      (Self : Object) return GPR2.Containers.Unit_Name_To_Sloc.Map
