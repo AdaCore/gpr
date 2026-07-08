@@ -1539,7 +1539,14 @@ package body GPR2.Build.Actions_Population is
 
                   for V of Closure loop
                      for CU of V.Own_Units loop
-                        Bind (Idx).Add_Root_Unit (CU);
+                        --  If we don't have Roots at all or CU.Name is a Root
+                        --  of the main source add the Root to the bind.
+                        if Main.View.Attributes (PRA.Roots).Is_Empty
+                          or else V.Is_Roots
+                            (Source.Path_Name, Source.Language, CU.Name)
+                        then
+                           Bind (Idx).Add_Root_Unit (CU);
+                        end if;
                      end loop;
                   end loop;
 

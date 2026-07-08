@@ -591,6 +591,13 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns True if the project describes the runtime
 
+   function Is_Roots
+     (Self : Object;
+      Src  : GPR2.Path_Name.Object;
+      Lang : Language_Id;
+      Name : Name_Type) return Boolean;
+   --  Check if Name is a root of Src or a root of the Language
+
    function Has_Mains (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns true if the project has some mains defined

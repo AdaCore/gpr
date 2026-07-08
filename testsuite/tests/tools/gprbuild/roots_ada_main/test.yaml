@@ -1,0 +1,2 @@
+description: Do not consider main units when building a non-Ada root
+driver: python_script

@@ -1,0 +1,9 @@
+with "../prj2/prj2.gpr";
+
+project Prj1 is
+	for Languages   use ("Ada", "C");
+	for Source_Dirs use ("src");
+	for Object_Dir  use "obj";
+	for Main        use ("main.c");
+	for Roots ("main.c") use ("pkg*");
+end Prj1;

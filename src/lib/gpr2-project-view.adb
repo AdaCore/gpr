@@ -2100,6 +2100,57 @@ package body GPR2.Project.View is
    function Is_Namespace_Root (Self : Object) return Boolean is
      (for some Id of Get_RO (Self).Root_Views => Self.Id = Id);
 
+   --------------
+   -- Is_Roots --
+   --------------
+
+   function Is_Roots
+     (Self : Object;
+      Src  : GPR2.Path_Name.Object;
+      Lang : Language_Id;
+      Name : Name_Type) return Boolean
+   is
+      Roots_Of_Src : constant Project.Attribute.Object := Self.Attribute
+        (PRA.Roots, PAI.Create_Source (Src.Simple_Name));
+
+      Roots_Of_Language : constant Project.Attribute.Object := Self.Attribute
+        (PRA.Roots, PAI.Create (Lang));
+   begin
+      if Roots_Of_Src.Is_Defined then
+         for V of Roots_Of_Src.Values loop
+            if Name = Name_Type (V.Text) then
+               return True;
+
+            elsif Self.Is_Namespace_Root
+              and then Ada.Strings.Fixed.Index (V.Text, "*") > 0
+              and then GNATCOLL.Utils.Match
+                (Ada.Characters.Handling.To_Lower (String (Name)),
+                 V.Text)
+            then
+               return True;
+            end if;
+         end loop;
+      end if;
+
+      if Roots_Of_Language.Is_Defined then
+         for V of Roots_Of_Language.Values loop
+            if Name = Name_Type (V.Text) then
+               return True;
+
+            elsif Self.Is_Namespace_Root
+              and then Ada.Strings.Fixed.Index (V.Text, "*") > 0
+              and then GNATCOLL.Utils.Match
+                (Ada.Characters.Handling.To_Lower (String (Name)),
+                 V.Text)
+            then
+               return True;
+            end if;
+         end loop;
+      end if;
+
+      return False;
+   end Is_Roots;
+
    ----------------
    -- Is_Runtime --
    ----------------
