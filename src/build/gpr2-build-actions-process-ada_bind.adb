@@ -342,7 +342,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
       end if;
 
       Cmd_Line.Add_Argument ("-o");
-      Cmd_Line.Add_Argument (Self.Output_Body.Path);
+      Cmd_Line.Add_Argument (String (Self.Output_Body.Path.Simple_Name));
 
       if Self.Ctxt.Is_Library then
          if Self.Ctxt.Is_Shared_Library

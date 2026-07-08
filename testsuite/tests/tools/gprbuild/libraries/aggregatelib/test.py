@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from e3.fs import mv
 from e3.env import Env
 
@@ -38,9 +39,7 @@ for kind in "static", "relocatable":
     with open("jobs.json") as fp:
         cnt = json.load(fp)
     for job in cnt:
-        if "[Link]" in job["uid"] and (
-            "-o ../main" in job.get("command", "") or "-o ..\\main" in job.get("command", "")
-        ):
+        if "[Link]" in job["uid"] and re.search(r"-o .*[/\\]main", job.get("command", "")):
             if "libdemo.a" in job.get("command", ""):
                 print("Ok: linking with libdemo.a")
             if "-ldemo" in job.get("command", ""):
