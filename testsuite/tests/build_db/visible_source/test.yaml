@@ -1,0 +1,5 @@
+description:
+    Check that Visible_Source reports Ambiguous when a withed project has a
+    homonym of one of the view's own sources, and that it correctly reports
+    non-ambiguous for a source that has no homonym in the closure
+driver: basic
