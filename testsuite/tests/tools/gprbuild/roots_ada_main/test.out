@@ -1,0 +1,9 @@
+$ gprbuild -P tree/prj1/prj1.gpr
+"../prj2/obj" created
+"obj" created
+[Ada Compile]     pkg.adb
+[C Compile]       main.c
+[Ada Compile]     pkg2.adb
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main

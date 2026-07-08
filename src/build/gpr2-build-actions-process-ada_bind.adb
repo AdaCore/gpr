@@ -719,7 +719,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
                   PAI.Create_Source (Src.Path_Name.Simple_Name));
 
                if Root_Attr.Is_Defined then
-                     Add_Root_Attr (Root_Attr);
+                  Add_Root_Attr (Root_Attr);
                end if;
             end if;
          end loop;
