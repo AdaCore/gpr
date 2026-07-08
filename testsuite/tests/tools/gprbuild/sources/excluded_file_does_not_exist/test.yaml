@@ -1,0 +1,2 @@
+description: Test for raising a warning for unknown excluded source file
+driver: python_script
