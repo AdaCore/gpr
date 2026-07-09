@@ -1644,11 +1644,14 @@ package body GPR2.Build.View_Tables is
 
       Ambiguous := False;
 
-      --  Look for the source in the view's closure (withed or limited withed
-      --  views)
+      --  The view may own a source with this basename itself. Don't return
+      --  it right away though: it still needs to be checked against the
+      --  view's closure (withed or limited withed views) below, since one
+      --  of those may also have a homonym, which would make the source
+      --  ambiguous.
 
       if Basename_Source_Maps.Has_Element (C) then
-         return Source (Data, C);
+         Candidate := Source (Data, C);
       end if;
 
       for V of Data.Visible_Source_Closure loop

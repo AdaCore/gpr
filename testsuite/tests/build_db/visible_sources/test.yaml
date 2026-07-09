@@ -1,3 +1,5 @@
 description:
-    check source of withed or limited withed views are visible
+    check source of withed or limited withed views are visible, and that
+    the Ambiguous parameter of Visible_Sources controls whether homonym
+    sources from different views are all returned
 driver: python_script

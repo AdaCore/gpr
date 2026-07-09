@@ -62,10 +62,11 @@ package GPR2.Build.Source.Sets is
    --  filter.
 
    function Create
-     (Db     : Build.View_Db.Object;
-      Option : Source_Set_Option := Unsorted;
-      Filter : Filter_Function := null;
-      F_Data : Filter_Data'Class := No_Data) return Object;
+     (Db        : Build.View_Db.Object;
+      Option    : Source_Set_Option := Unsorted;
+      Filter    : Filter_Function := null;
+      F_Data    : Filter_Data'Class := No_Data;
+      Ambiguous : Boolean := False) return Object;
    --  Create a source iterator set representing the sources stored in the
    --  view db object.
    --  If sorted is set, the iterated list is sorted alphabetically (but doing
@@ -75,6 +76,13 @@ package GPR2.Build.Source.Sets is
    --  Important note: the Filter parameter is used by the returned object, so
    --  cannot be a nested subprogram, as filter may be called out of its
    --  nested context.
+   --  Ambiguous is only meaningful together with Option = Recurse: by
+   --  default, when two sources in the view's visibility closure share the
+   --  same simple name, only the first one found while iterating the
+   --  closure (Self, then its withed, limited withed, extended and
+   --  aggregated views, with the runtime project always last) is returned.
+   --  When set, every source sharing that simple name is returned instead
+   --  of just the first one.
 
    --  Iterator
 
@@ -134,10 +142,11 @@ private
      (Filter_Data'Class);
 
    type Object is tagged record
-      Db     : Build.View_Db.Object;
-      Option : Source_Set_Option := Unsorted;
-      Filter : Filter_Function;
-      F_Data : Filter_Data_Holders.Holder;
+      Db        : Build.View_Db.Object;
+      Option    : Source_Set_Option := Unsorted;
+      Filter    : Filter_Function;
+      F_Data    : Filter_Data_Holders.Holder;
+      Ambiguous : Boolean := False;
    end record;
 
    Empty_Set : constant Object := (others => <>);

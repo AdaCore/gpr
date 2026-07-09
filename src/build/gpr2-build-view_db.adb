@@ -254,8 +254,10 @@ package body GPR2.Build.View_Db is
    ---------------------
 
    function Visible_Sources
-     (Self : Object) return GPR2.Build.Source.Sets.Object
-   is (Build.Source.Sets.Create (Self, Build.Source.Sets.Recurse));
+     (Self      : Object;
+      Ambiguous : Boolean := False) return GPR2.Build.Source.Sets.Object
+   is (Build.Source.Sets.Create
+         (Self, Build.Source.Sets.Recurse, Ambiguous => Ambiguous));
 
 begin
    View_Tables.View_Base_For := View_Base_For'Access;

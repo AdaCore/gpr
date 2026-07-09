@@ -208,6 +208,57 @@ procedure Main is
       Ada.Text_IO.New_Line;
    end Test;
 
+   --------------------
+   -- Test_Ambiguous --
+   --------------------
+
+   procedure Test_Ambiguous (Gpr : String) is
+      Tree : Project.Tree.Object;
+      Opt  : Options.Object;
+
+      function Count_Foo_C (Ambiguous : Boolean) return Natural;
+      --  Count the sources named foo.c visible by the root project,
+      --  with or without the Ambiguous parameter of Visible_Sources set.
+
+      -----------------
+      -- Count_Foo_C --
+      -----------------
+
+      function Count_Foo_C (Ambiguous : Boolean) return Natural is
+         Count : Natural := 0;
+      begin
+         for S of Tree.Root_Project.Visible_Sources (Ambiguous) loop
+            if S.Path_Name.Simple_Name = "foo.c" then
+               Count := Count + 1;
+            end if;
+         end loop;
+
+         return Count;
+      end Count_Foo_C;
+
+   begin
+      Opt.Add_Switch (Options.P, Gpr);
+
+      if not Tree.Load (Opt, Absent_Dir_Error => No_Error) then
+         return;
+      end if;
+
+      Tree.Update_Sources;
+
+      Ada.Text_IO.Put_Line
+        ("*** checking Ambiguous parameter of Visible_Sources on " &
+           String (Tree.Root_Project.Name));
+      Ada.Text_IO.New_Line;
+
+      Ada.Text_IO.Put_Line
+        ("without Ambiguous:" & Count_Foo_C (False)'Image & " foo.c found");
+      Ada.Text_IO.Put_Line
+        ("with Ambiguous:   " & Count_Foo_C (True)'Image & " foo.c found");
+
+      Tree.Unload;
+      Ada.Text_IO.New_Line;
+   end Test_Ambiguous;
+
 begin
    if Ada.Command_Line.Argument_Count = 0 then
       Ada.Text_IO.Put_Line ("Usage: " & Ada.Command_Line.Command_Name &
@@ -215,5 +266,9 @@ begin
       return;
    end if;
 
-   Test (Ada.Command_Line.Argument (1));
+   if Ada.Command_Line.Argument (1) = "--ambiguous" then
+      Test_Ambiguous ("trees/foo/app.gpr");
+   else
+      Test (Ada.Command_Line.Argument (1));
+   end if;
 end Main;

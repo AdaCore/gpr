@@ -83,3 +83,8 @@ sources visible by Ext
 MAIN
 - S_BODY main.adb
 
+*** checking Ambiguous parameter of Visible_Sources on App
+
+without Ambiguous: 1 foo.c found
+with Ambiguous:    2 foo.c found
+

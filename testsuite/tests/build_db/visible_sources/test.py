@@ -8,3 +8,4 @@ bnr.build(project='prj.gpr',
 
 bnr.call(['./main', 'trees/simple/simple.gpr'])
 bnr.call(['./main', 'trees/extended/ext.gpr'])
+bnr.call(['./main', '--ambiguous'])
