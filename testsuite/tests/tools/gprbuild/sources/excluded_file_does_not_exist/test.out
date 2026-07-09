@@ -1,0 +1,5 @@
+$ gprbuild -q -P tree/prj.gpr
+prj.gpr:5:40: warning: unknown excluded file "do_not_exist.adb"
+$ ./tree/obj/main
+Hello World!
+

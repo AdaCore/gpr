@@ -1303,8 +1303,8 @@ package body Update_Sources_List is
             then
                Messages.Append
                  (Message.Create
-                    (Message.Error,
-                     "unknown file """ & String (Name) & '"',
+                    (Message.Warning,
+                     "unknown excluded file """ & String (Name) & '"',
                      Sloc));
             end if;
          end;
