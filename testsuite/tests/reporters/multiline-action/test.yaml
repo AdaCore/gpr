@@ -1,0 +1,2 @@
+description: Check that the reporter correctly strips carriage returns.
+driver: python_script

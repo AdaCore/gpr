@@ -31,16 +31,22 @@ package GPR2.Reporter is
 
    procedure Report
      (Self    : in out Object'Class;
-      Message : GPR2.Message.Object);
-   --  Report the message based on the reporter's verbosity
+      Message : GPR2.Message.Object;
+      Binary  : Boolean := False);
+   --  Report the message based on the reporter's verbosity.
+   --  If Binary is set, the message content is written verbatim (binary mode)
+   --  so that any end-of-line already present in it is preserved as-is; see
+   --  Internal_Report for the details.
 
    procedure Report
      (Self      : in out Object'Class;
       Message   : String;
       To_Stderr : Boolean := False;
-      Level     : GPR2.Message.User_Level_Value := GPR2.Message.Regular);
+      Level     : GPR2.Message.User_Level_Value := GPR2.Message.Regular;
+      Binary    : Boolean := False);
    --  A wrapper around the Report procedure that creates an end-user
    --  GPR2.Message.Object and reports it.
+   --  Binary is forwarded to the Report procedure above.
 
    function Verbosity (Self : Object) return Verbosity_Level is abstract;
    --  Obtain the reporter's verbosity level
@@ -52,8 +58,14 @@ package GPR2.Reporter is
    --------------------------
 
    procedure Internal_Report
-     (Self : in out Object; Message : GPR2.Message.Object) is abstract;
+     (Self    : in out Object;
+      Message : GPR2.Message.Object;
+      Binary  : Boolean := False) is abstract;
    --  Internal message reporting function to be implemented by the reporter.
+   --  When Binary is set, a reporter that writes to a file descriptor is
+   --  expected to emit the message content in binary mode
+   --  (no end-of-line translation on windows), so that content that already
+   --  contains "\r\n" sequences is not altered.
 
 private
 

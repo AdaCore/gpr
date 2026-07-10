@@ -13,7 +13,8 @@ package GPR2.Reporter.Log is
 
    overriding procedure Internal_Report
      (Self    : in out Object;
-      Message : GPR2.Message.Object);
+      Message : GPR2.Message.Object;
+      Binary  : Boolean := False);
 
    overriding
    function Verbosity (Self : Object) return Verbosity_Level;

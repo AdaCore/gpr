@@ -20,6 +20,8 @@ private
 
    overriding
    procedure Internal_Report
-     (Self : in out Object; Message : GPR2.Message.Object);
+     (Self    : in out Object;
+      Message : GPR2.Message.Object;
+      Binary  : Boolean := False);
 
 end GPR2.C.Reporter;
