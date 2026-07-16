@@ -1,0 +1,3 @@
+description:
+    Languages of externally built projects are not checked on tree load
+driver: basic

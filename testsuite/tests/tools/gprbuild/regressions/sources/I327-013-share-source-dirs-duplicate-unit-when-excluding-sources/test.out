@@ -1,6 +1,5 @@
 $ gprbuild -P prj3.gpr
 "obj3" created
-prj2.gpr: warning: there are no sources of language "Ada" in this project
 [Ada Compile]     main.adb
 [Ada Compile]     pkg.adb
 [Ada Bind]        main
