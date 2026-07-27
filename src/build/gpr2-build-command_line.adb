@@ -33,15 +33,9 @@ package body GPR2.Build.Command_Line is
      (Self : in out Object;
       Arg  : Path_Name.Object;
       Mode : Signature_Mode := In_Signature;
-      Kind : Arg_Kind       := Other)
-   is
-      Rel : constant Filename_Type := Arg.Relative_Path (Self.Cwd);
+      Kind : Arg_Kind       := Other) is
    begin
-      if Rel'Length < Arg.Value'Length then
-         Self.Add_Argument (String (Rel), Mode, Kind);
-      else
-         Self.Add_Argument (Arg.String_Value, Mode, Kind);
-      end if;
+      Self.Add_Argument (Arg.String_Value, Mode, Kind);
    end Add_Argument;
 
    ----------------------
