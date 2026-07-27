@@ -140,6 +140,25 @@ package body GPR2.Build.View_Db is
       end return;
    end Excluded_Sources;
 
+   ----------------------------
+   -- Has_Source_Of_Language --
+   ----------------------------
+
+   function Has_Source_Of_Language
+     (Self     : Object;
+      Language : Language_Id) return Boolean
+   is
+      Internal   : constant View_Tables.View_Data_Ref := Ref (Self);
+   begin
+      if Internal.Langs_Usage.Contains (Language) then
+         if Internal.Langs_Usage (Language) > 0 then
+            return True;
+         end if;
+      end if;
+
+      return False;
+   end Has_Source_Of_Language;
+
    --------------
    -- Own_Unit --
    --------------

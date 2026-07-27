@@ -1,0 +1,5 @@
+$ gprbuild -P tree/prj.gpr
+"obj" created
+prj.gpr:2:28: warning: there are no sources of language "Ada" in this project
+[C Compile]       main.c
+[Link]            main
