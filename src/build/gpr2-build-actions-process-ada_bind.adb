@@ -685,12 +685,6 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          for U of Self.Ctxt.Interface_Closure loop
             Self.Roots.Include (U.Name, U);
          end loop;
-
-      else
-         --  Consider all units of the context as root
-         for U of Self.Ctxt.Own_Units loop
-            Self.Roots.Include (U.Name, U);
-         end loop;
       end if;
 
       --  Check additional entry points defined by the Roots attribute

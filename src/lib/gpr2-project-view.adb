@@ -1717,6 +1717,20 @@ package body GPR2.Project.View is
       end if;
    end Has_Source;
 
+   ----------------------------
+   -- Has_Source_Of_Language --
+   ----------------------------
+
+   function Has_Source_Of_Language
+     (Self : Object; Language : Language_Id) return Boolean is
+   begin
+      if Self.Kind in With_Object_Dir_Kind then
+         return Self.View_Db.Has_Source_Of_Language (Language);
+      else
+         return False;
+      end if;
+   end Has_Source_Of_Language;
+
    -----------------------------
    -- Has_Source_Subdirectory --
    -----------------------------

@@ -46,6 +46,12 @@ package GPR2.Build.View_Db is
      with Pre => Self.Is_Defined and then Self.Source_Option > No_Source;
    --  Check if Basename is a source for the view
 
+   function Has_Source_Of_Language
+     (Self     : Object;
+      Language : Language_Id) return Boolean
+     with Pre => Self.Is_Defined and then Self.Source_Option > No_Source;
+   --  Return True if the view DB has sources of the required language
+
    function Source
      (Self     : Object;
       Basename : Simple_Name) return GPR2.Build.Source.Object

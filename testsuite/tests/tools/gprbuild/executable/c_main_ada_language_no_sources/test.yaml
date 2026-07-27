@@ -1,0 +1,2 @@
+description: Regression test building non-Ada executables with no-Ada sources but Ada language defined
+driver: python_script

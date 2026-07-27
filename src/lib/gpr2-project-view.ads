@@ -453,6 +453,11 @@ package GPR2.Project.View is
    --  Return True if source with such filename found in project namespace
    --  subtree.
 
+   function Has_Source_Of_Language
+     (Self : Object; Language : Language_Id) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Return True if the view has sources of the required language
+
    function Source
      (Self : Object; Filename : GPR2.Simple_Name)
       return Build.Source.Object

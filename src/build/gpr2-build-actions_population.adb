@@ -976,10 +976,10 @@ package body GPR2.Build.Actions_Population is
 
       Requires_Binding : constant Boolean :=
         View.Is_Library_Standalone
-        and then (View.Language_Ids.Contains (Ada_Language)
+        and then (View.Has_Source_Of_Language (Ada_Language)
                   or else (View.Kind = K_Aggregate_Library
                            and then (for some Agg of View.Aggregated =>
-                                       Agg.Language_Ids.Contains
+                                       Agg.Has_Source_Of_Language
                                          (Ada_Language))));
 
       Sorted_Libs : Library_Vector.Vector;
@@ -1518,10 +1518,10 @@ package body GPR2.Build.Actions_Population is
                Tree_Db.Add_Input (Link (Idx).UID, Comp.Object_File);
 
                if (for some Lib of Closure =>
-                     Lib.Language_Ids.Contains (Ada_Language))
+                     Lib.Has_Source_Of_Language (Ada_Language))
                  or else (for some Lib of Static_Libs =>
                             Tree.Get_View
-                              (Lib).Language_Ids.Contains (Ada_Language)
+                              (Lib).Has_Source_Of_Language (Ada_Language)
                           and then
                             not Tree.Get_View
                               (Lib).Is_Library_Standalone)
