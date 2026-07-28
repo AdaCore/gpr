@@ -313,7 +313,9 @@ begin
    Language_List.Id_To_Name.Append ("ada");
    Language_List.Id_To_Name.Append ("c");
    Language_List.Id_To_Name.Append ("c++");
-   Language_List.Name_To_Id.Insert ("ada", 1);
-   Language_List.Name_To_Id.Insert ("c",   2);
-   Language_List.Name_To_Id.Insert ("c++", 3);
+   Language_List.Id_To_Name.Append ("rust");
+   Language_List.Name_To_Id.Insert ("ada",  1);
+   Language_List.Name_To_Id.Insert ("c",    2);
+   Language_List.Name_To_Id.Insert ("c++",  3);
+   Language_List.Name_To_Id.Insert ("rust", 4);
 end GPR2;

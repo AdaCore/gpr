@@ -247,10 +247,11 @@ package GPR2 is
 
    type Language_Id is new Natural with Default_Value => 0;
 
-   No_Language  : constant Language_Id;
-   Ada_Language : constant Language_Id;
-   C_Language   : constant Language_Id;
-   CPP_Language : constant Language_Id; -- C++
+   No_Language   : constant Language_Id;
+   Ada_Language  : constant Language_Id;
+   C_Language    : constant Language_Id;
+   CPP_Language  : constant Language_Id; -- C++
+   Rust_Language : constant Language_Id;
 
    function "+" (L : Optional_Name_Type) return Language_Id;
    function Name (L : Language_Id) return Optional_Name_Type;
@@ -306,6 +307,7 @@ private
    Ada_Language        : constant Language_Id := 1;
    C_Language          : constant Language_Id := 2;
    CPP_Language        : constant Language_Id := 3;
+   Rust_Language       : constant Language_Id := 4;
    No_Attribute        : constant Optional_Attribute_Id := 0;
    Project_Level_Scope : constant Package_Id := 0;
    No_Attribute_Id     : constant Q_Optional_Attribute_Id :=
