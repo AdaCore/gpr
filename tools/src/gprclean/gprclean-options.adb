@@ -61,6 +61,8 @@ package body GPRclean.Options is
          Result.Remove_Empty_Dirs := True;
       elsif Arg = "-f" then
          Result.Force_Deletions := True;
+      elsif Arg = "--remove-cargo-build-dir" then
+         Result.Remove_Cargo_Build_Dir := True;
       end if;
    end On_Switch;
 
@@ -146,6 +148,14 @@ package body GPRclean.Options is
          Create
            ("-f",
             Help      => "Force deletions of unwritable files"));
+      Parser.Add_Argument
+        (Clean_Group,
+         Create
+           ("--remove-cargo-build-dir",
+            Help      => "Force the removal of the whole Cargo target "
+                         & "directory containing the current project. "
+                         & "Please note that this also removes the "
+                         & "unrelated builds of that directory."));
    end Setup;
 
 end GPRclean.Options;

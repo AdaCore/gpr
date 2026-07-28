@@ -6,6 +6,10 @@
 
 with Ada.Strings.Fixed;
 
+with GNAT.OS_Lib;
+
+with GNATCOLL.OS.Process;
+
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
@@ -78,6 +82,67 @@ package body GPR2.Build.Actions.Process.Cargo_Support is
    function Default_Triple (GPR_Target : Name_Type) return String;
    --  The first (default) Rust triple mapped from GPR_Target, or the empty
    --  string when GPR_Target has no known mapping.
+
+   function Resolved (Driver_Name : String) return String;
+   --  Driver_Name found on PATH, or the empty string when it is not there
+
+   function Metadata
+     (View : GPR2.Project.View.Object)
+      return GNATCOLL.JSON.JSON_Value;
+   --  What "cargo metadata --no-deps" reports for View, or JSON_Null when it
+   --  cannot be run or its output cannot be read
+
+   ----------------------
+   -- Cargo_Package_Of --
+   ----------------------
+
+   function Cargo_Package_Of
+     (Root     : GNATCOLL.JSON.JSON_Value;
+      Manifest : GPR2.Path_Name.Object) return GNATCOLL.JSON.JSON_Value
+   is
+      use GNATCOLL.JSON;
+
+      function Resolved
+        (Path : Filename_Type) return GPR2.Path_Name.Full_Name
+      is (GPR2.Path_Name.Create_File (Path, Resolve_Links => True).Value);
+
+      Cargo_Packages : JSON_Array;
+
+   begin
+      if not Root.Has_Field ("packages") then
+         return JSON_Null;
+      end if;
+
+      Cargo_Packages := Root.Get ("packages");
+
+      if Length (Cargo_Packages) = 1 then
+         return Get (Cargo_Packages, 1);
+      end if;
+
+      declare
+         Ours : constant GPR2.Path_Name.Full_Name :=
+           Resolved (Manifest.Value);
+      begin
+         for P in 1 .. Length (Cargo_Packages) loop
+            declare
+               Cargo_Package : constant JSON_Value :=
+                 Get (Cargo_Packages, P);
+            begin
+               if Cargo_Package.Has_Field ("manifest_path")
+                 and then Resolved
+                            (Filename_Type
+                               (String'
+                                  (Cargo_Package.Get ("manifest_path"))))
+                          = Ours
+               then
+                  return Cargo_Package;
+               end if;
+            end;
+         end loop;
+      end;
+
+      return JSON_Null;
+   end Cargo_Package_Of;
 
    --------------------
    -- Default_Triple --
@@ -225,6 +290,139 @@ package body GPR2.Build.Actions.Process.Cargo_Support is
    function Manifest
      (View : GPR2.Project.View.Object) return GPR2.Path_Name.Object
    is (Root_Directory (View).Compose ("Cargo.toml"));
+
+   ------------------
+   -- Package_Name --
+   ------------------
+
+   --------------
+   -- Metadata --
+   --------------
+
+   function Metadata
+     (View : GPR2.Project.View.Object) return GNATCOLL.JSON.JSON_Value
+   is
+      use GNATCOLL.JSON;
+      use GNATCOLL.OS.Process;
+
+      Driver_Name : constant String := Driver (View);
+
+      Cargo : constant String :=
+        (if Driver_Name = ""
+         then ""
+         elsif GNAT.OS_Lib.Is_Absolute_Path (Driver_Name)
+         then Driver_Name
+         else Resolved (Driver_Name));
+      --  Run spawns without searching PATH, so a bare driver name has to be
+      --  resolved here, the way whoever spawns the clean does.
+
+      Manifest_Path : constant GPR2.Path_Name.Object := Manifest (View);
+
+      Args   : Argument_List;
+      Output : Unbounded_String;
+      Status : Integer;
+
+   begin
+      if Cargo = "" or else not Manifest_Path.Exists then
+         return JSON_Null;
+      end if;
+
+      Args.Append (Cargo);
+      Args.Append ("metadata");
+      Args.Append ("--format-version=1");
+      Args.Append ("--no-deps");
+      Args.Append ("--manifest-path=" & Manifest_Path.String_Value);
+
+      --  --no-deps keeps this to reading the manifests of the workspace: no
+      --  dependency resolution, so no lockfile to write and no registry to
+      --  reach
+
+      begin
+         --  From the Cargo root, where the build and the clean run from:
+         --  Cargo looks for .cargo/config.toml in the current directory and
+         --  its parents, so the answer depends on where it is run, and
+         --  --manifest-path does not stand in for that.
+
+         Output := Run
+           (Args   => Args,
+            Cwd    => Root_Directory (View).String_Value,
+            Stdin  => FS.Null_FD,
+            Stderr => FS.Null_FD,
+            Status => Status);
+
+      exception
+         when GNATCOLL.OS.OS_Error =>
+            return JSON_Null;
+      end;
+
+      if Status /= 0 then
+         return JSON_Null;
+      end if;
+
+      declare
+         Parsed : constant Read_Result := Read (Output);
+      begin
+         if not Parsed.Success then
+            return JSON_Null;
+         end if;
+
+         return Parsed.Value;
+      end;
+   end Metadata;
+
+   ------------------
+   -- Package_Name --
+   ------------------
+
+   function Package_Name (View : GPR2.Project.View.Object) return String is
+      use GNATCOLL.JSON;
+
+      Root : constant JSON_Value := Metadata (View);
+   begin
+      if Root.Kind /= JSON_Object_Type then
+         return "";
+      end if;
+
+      declare
+         Cargo_Package : constant JSON_Value :=
+           Cargo_Package_Of (Root, Manifest (View));
+      begin
+         if Cargo_Package.Kind = JSON_Null_Type
+           or else not Cargo_Package.Has_Field ("name")
+         then
+            return "";
+         end if;
+
+         return String'(Cargo_Package.Get ("name"));
+      end;
+   end Package_Name;
+
+   --------------
+   -- Resolved --
+   --------------
+
+   function Resolved (Driver_Name : String) return String is
+      use type GNAT.OS_Lib.String_Access;
+      --  Only the operators. GNAT.OS_Lib and Ada.Strings.Unbounded both
+      --  declare String_Access, and the latter is already use-visible here,
+      --  so the name stays qualified while "=" becomes usable.
+
+      Exe : GNAT.OS_Lib.String_Access :=
+        GNAT.OS_Lib.Locate_Exec_On_Path (Driver_Name);
+
+   begin
+      if Exe = null then
+         return "";
+      end if;
+
+      declare
+         Result : constant String := Exe.all;
+      begin
+         GNAT.OS_Lib.Free (Exe);
+
+         return Result;
+      end;
+   end Resolved;
 
    --------------------
    -- Root_Directory --

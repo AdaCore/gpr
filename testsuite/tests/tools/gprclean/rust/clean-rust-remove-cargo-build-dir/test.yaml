@@ -1,0 +1,5 @@
+description: |
+  gprclean --remove-cargo-build-dir removes the whole Cargo target directory, including what unrelated workspace members built into it.
+driver: python_script
+control:
+- [ SKIP, "not env.rust", "requires a Rust/Cargo toolchain" ]

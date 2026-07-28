@@ -68,6 +68,11 @@ Switches
   In addition to the common ``--autoconf`` behavior, also schedule
   *file.cgpr* itself for deletion after cleaning.
 
+``--remove-cargo-build-dir``
+  Remove the whole Cargo target directory of each Rust project cleaned,
+  that would be kept otherwise. For more details, see
+  :ref:`RM_GPRclean_Rust` below.
+
 
 Project package
 ===============
@@ -117,6 +122,39 @@ GPRclean deletes:
 
 With ``--autoconf``, the specified configuration project (``.cgpr``) file is
 also deleted.
+
+
+.. _RM_GPRclean_Rust:
+
+.. index:: pair: GPRclean; Rust, pair: GPRclean; Cargo
+
+Rust projects
+=============
+
+Rust projects are built by Cargo, so GPRclean does not delete their artifacts
+itself: it runs ``cargo clean`` in the directory named by the ``Cargo.Root``
+attribute.
+
+By default the clean is scoped to what the build produced, naming the package,
+the profile (``Cargo.Profile``) and the target triple (``Cargo.Rust_Target``)::
+
+   cargo clean -p <package> --profile <profile> --target=<triple>
+
+This is deliberately conservative. One Cargo target directory may be shared by
+several packages of a workspace, by several target triples, and by both
+profiles; a clean that named none of them would delete all of it. The scoped
+form therefore leaves the target directory itself standing, along with its
+empty subdirectories.
+
+``--remove-cargo-build-dir`` asks for the unscoped clean instead::
+
+   cargo clean
+
+That removes the target directory outright. Anything else built into it goes
+with it, including the artifacts of other workspace members, other target
+triples and the other profile, whether or not they belong to the project tree
+being cleaned. This is the only way to leave no target directory behind, which
+is why it is a switch and not the default.
 
 
 Exit Codes

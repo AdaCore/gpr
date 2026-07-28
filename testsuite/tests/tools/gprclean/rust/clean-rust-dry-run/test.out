@@ -1,0 +1,4 @@
+after build: found
+package left unresolved: True
+after dry run: found
+after clean: missing

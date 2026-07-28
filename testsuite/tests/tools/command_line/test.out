@@ -140,6 +140,10 @@ clean switches:
  -r        Clean all projects recursively
  --autoconf=file.cgpr
            Specify generated config project file name
+ --remove-cargo-build-dir
+           Force the removal of the whole Cargo target directory containing the
+           current project. Please note that this also removes the unrelated
+           builds of that directory.
 
 Project switches:
    Project file handling switches
@@ -497,6 +501,10 @@ clean switches:
  -r        Clean all projects recursively
  --autoconf=file.cgpr
            Specify generated config project file name
+ --remove-cargo-build-dir
+           Force the removal of the whole Cargo target directory containing the
+           current project. Please note that this also removes the unrelated
+           builds of that directory.
 
 Project switches:
    Project file handling switches

@@ -4,9 +4,11 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GNATCOLL.JSON;
+
 --  Shared helpers for Cargo/Rust support: the mapping from GPR target to Rust
---  target triple, cargo driver resolution, and the extra link options a given
---  triple requires.
+--  target triple, cargo driver resolution, the extra link options a given
+--  triple requires, and the reading of what `cargo metadata` reports.
 
 package GPR2.Build.Actions.Process.Cargo_Support is
 
@@ -55,6 +57,26 @@ package GPR2.Build.Actions.Process.Cargo_Support is
    --  @param View The library view Cargo builds for
    --  @param Kind The kind of library it produces
    --  @return The simple name of the file
+
+   function Cargo_Package_Of
+     (Root     : GNATCOLL.JSON.JSON_Value;
+      Manifest : GPR2.Path_Name.Object) return GNATCOLL.JSON.JSON_Value;
+   --  The package Root describes for Manifest.
+   --
+   --  @param Root The whole `cargo metadata` output, parsed
+   --  @param Manifest The manifest the output was obtained from
+   --  @return The package, or JSON_Null when the output describes none for
+   --     Manifest
+
+   function Package_Name (View : GPR2.Project.View.Object) return String;
+   --  The name Cargo gives the package View builds.
+   --
+   --  Runs Cargo, so this is for callers outside a scheduler, such as
+   --  gprclean.
+   --
+   --  @param View The Rust view to name the package of
+   --  @return The package name, and the empty string when Cargo cannot be run
+   --     or reports no package for View's manifest
 
    function Root_Directory
      (View : GPR2.Project.View.Object) return GPR2.Path_Name.Object;

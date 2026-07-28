@@ -1,0 +1,3 @@
+[workspace]
+members = ["neighbour", "wrapped"]
+resolver = "2"

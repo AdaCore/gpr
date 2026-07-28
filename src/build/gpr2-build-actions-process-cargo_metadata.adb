@@ -7,6 +7,8 @@
 with GNATCOLL.JSON;
 with GNATCOLL.Traces;
 
+with GPR2.Build.Actions.Process.Cargo_Clean;
+with GPR2.Build.Actions.Process.Cargo_Support;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.Library;
 with GPR2.Containers;
@@ -134,13 +136,6 @@ package body GPR2.Build.Actions.Process.Cargo_Metadata is
    --  several of them.
    --  Cargo_Lib_Name and Cargo_Lib_Types are empty in case of error.
 
-   function Cargo_Package_Of
-     (Root     : GNATCOLL.JSON.JSON_Value;
-      Manifest : GPR2.Path_Name.Object) return GNATCOLL.JSON.JSON_Value;
-   --  Return the package Root describes for Manifest, or JSON_Null when
-   --  there is none. Manifest is required to select the right Cargo package
-   --  in a workspace that holds several of them.
-
    function Cargo_Target_Of
      (Cargo_Package : GNATCOLL.JSON.JSON_Value;
       Kinds         : GPR2.Containers.Value_List)
@@ -203,7 +198,7 @@ package body GPR2.Build.Actions.Process.Cargo_Metadata is
 
       Result        : GPR2.Containers.Filename_Set;
       Cargo_Package : constant JSON_Value :=
-        Cargo_Package_Of (Root, Manifest);
+        Cargo_Support.Cargo_Package_Of (Root, Manifest);
    begin
       if Cargo_Package.Kind = JSON_Null_Type
         or else not Cargo_Package.Has_Field ("targets")
@@ -246,7 +241,7 @@ package body GPR2.Build.Actions.Process.Cargo_Metadata is
       use GNATCOLL.JSON;
 
       Cargo_Package : constant JSON_Value :=
-        Cargo_Package_Of (Root, Manifest);
+        Cargo_Support.Cargo_Package_Of (Root, Manifest);
       Cargo_Target  : constant JSON_Value :=
         (if Cargo_Package.Kind = JSON_Null_Type
          then JSON_Null
@@ -277,58 +272,6 @@ package body GPR2.Build.Actions.Process.Cargo_Metadata is
          end loop;
       end;
    end Cargo_Library_Name_And_Types;
-
-   ----------------------
-   -- Cargo_Package_Of --
-   ----------------------
-
-   function Cargo_Package_Of
-     (Root     : GNATCOLL.JSON.JSON_Value;
-      Manifest : GPR2.Path_Name.Object) return GNATCOLL.JSON.JSON_Value
-   is
-      use GNATCOLL.JSON;
-
-      function Resolved
-        (Path : Filename_Type) return GPR2.Path_Name.Full_Name
-      is (GPR2.Path_Name.Create_File (Path, Resolve_Links => True).Value);
-
-      Cargo_Packages : JSON_Array;
-
-   begin
-      if not Root.Has_Field ("packages") then
-         return JSON_Null;
-      end if;
-
-      Cargo_Packages := Root.Get ("packages");
-
-      if Length (Cargo_Packages) = 1 then
-         return Get (Cargo_Packages, 1);
-      end if;
-
-      declare
-         Ours : constant GPR2.Path_Name.Full_Name :=
-           Resolved (Manifest.Value);
-      begin
-         for P in 1 .. Length (Cargo_Packages) loop
-            declare
-               Cargo_Package : constant JSON_Value :=
-                 Get (Cargo_Packages, P);
-            begin
-               if Cargo_Package.Has_Field ("manifest_path")
-                 and then Resolved
-                            (Filename_Type
-                               (String'
-                                  (Cargo_Package.Get ("manifest_path"))))
-                          = Ours
-               then
-                  return Cargo_Package;
-               end if;
-            end;
-         end loop;
-      end;
-
-      return JSON_Null;
-   end Cargo_Package_Of;
 
    ---------------------
    -- Cargo_Target_Of --
