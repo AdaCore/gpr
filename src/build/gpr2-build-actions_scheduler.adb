@@ -202,14 +202,17 @@ package body GPR2.Build.Actions_Scheduler is
 
          if Length (Handler.Stdout) > 0 and then Action.Display_Output then
             Tree_Db.Reporter.Report
-              (-Handler.Stdout, Level => GPR2.Message.Important);
+              (-Handler.Stdout,
+               Level  => GPR2.Message.Important,
+               Binary => True);
          end if;
 
          if Length (Handler.Stderr) > 0 then
             Tree_Db.Reporter.Report
               (-Handler.Stderr,
                To_Stderr => True,
-               Level     => GPR2.Message.Important);
+               Level     => GPR2.Message.Important,
+               Binary    => True);
          end if;
 
          case Handler.Status is

@@ -30,8 +30,13 @@ package body GPR2.Reporter.Log is
    ---------------------
 
    overriding procedure Internal_Report
-     (Self : in out Object; Message : GPR2.Message.Object)
+     (Self    : in out Object;
+      Message : GPR2.Message.Object;
+      Binary  : Boolean := False)
    is
+      pragma Unreferenced (Binary);
+      --  Binary mode only affects file descriptor output; a log reporter just
+      --  stores the message.
    begin
       Self.Log.Append (Message);
    end Internal_Report;

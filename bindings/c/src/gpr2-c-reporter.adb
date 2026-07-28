@@ -16,7 +16,9 @@ package body GPR2.C.Reporter is
 
    overriding
    procedure Internal_Report
-     (Self : in out Object; Message : GPR2.Message.Object) is
+     (Self    : in out Object;
+      Message : GPR2.Message.Object;
+      Binary  : Boolean := False) is
    begin
       null;
    end Internal_Report;

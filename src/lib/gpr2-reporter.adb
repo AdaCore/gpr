@@ -86,7 +86,8 @@ package body GPR2.Reporter is
 
    procedure Report
      (Self    : in out Object'Class;
-      Message : GPR2.Message.Object)
+      Message : GPR2.Message.Object;
+      Binary  : Boolean := False)
    is
 
       function Printable (Msg : GPR2.Message.Object) return Boolean;
@@ -117,7 +118,7 @@ package body GPR2.Reporter is
 
    begin
       if Printable (Message) then
-         Self.Internal_Report (Message);
+         Self.Internal_Report (Message, Binary);
       end if;
    end Report;
 
@@ -125,7 +126,8 @@ package body GPR2.Reporter is
      (Self      : in out Object'Class;
       Message   : String;
       To_Stderr : Boolean := False;
-      Level     : GPR2.Message.User_Level_Value := GPR2.Message.Regular)
+      Level     : GPR2.Message.User_Level_Value := GPR2.Message.Regular;
+      Binary    : Boolean := False)
    is
       use all type GPR2.Message.Level_Value;
       Msg : constant GPR2.Message.Object :=
@@ -135,7 +137,7 @@ package body GPR2.Reporter is
                  To_Stderr  => To_Stderr,
                  User_Level => Level);
    begin
-      Self.Report (Msg);
+      Self.Report (Msg, Binary);
    end Report;
 
 end GPR2.Reporter;
