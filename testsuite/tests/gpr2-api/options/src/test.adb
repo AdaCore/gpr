@@ -1,7 +1,7 @@
 with Ada.Directories;
 with Ada.Exceptions;
 
-with GNAT.IO; use GNAT.IO;
+with Ada.Text_IO; use Ada.Text_IO;
 
 with GPR2;
 with GPR2.Containers;
