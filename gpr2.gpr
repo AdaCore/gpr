@@ -46,6 +46,7 @@ library project GPR2 extends "gpr2_shared.gpr" is
             "GPR2.Build.Artifacts.Files",
             "GPR2.Build.Artifacts.Key_Value",
             "GPR2.Build.Artifacts.Library",
+            "GPR2.Build.Artifacts.Library.Vectors",
             "GPR2.Build.Artifacts.Object_File",
             "GPR2.Build.Artifacts.Source_Files",
             "GPR2.Build.Command_Line",

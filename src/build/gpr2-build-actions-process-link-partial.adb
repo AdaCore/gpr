@@ -47,11 +47,13 @@ package body GPR2.Build.Actions.Process.Link.Partial is
 
       for Lib of Self.Library_Dependencies loop
          declare
-            Link : constant Actions.Process.Link.Object'Class :=
-                     Actions.Process.Link.Object'Class
-                       (Self.Tree.Action (Lib));
+            Pred : constant Actions.Object'Class :=
+              Self.Tree.Predecessor (Lib);
          begin
-            Objects.Difference (Link.Embedded_Objects);
+            if Pred in Actions.Process.Link.Object'Class then
+               Objects.Difference
+                 (Actions.Process.Link.Object'Class (Pred).Embedded_Objects);
+            end if;
          end;
       end loop;
 
@@ -94,15 +96,7 @@ package body GPR2.Build.Actions.Process.Link.Partial is
 
          --  Add all internal library dependencies to the partial link
          for Lib of Self.Library_Dependencies loop
-            declare
-               Link         : constant Actions.Process.Link.Object'Class :=
-                                Actions.Process.Link.Object'Class
-                                  (Self.Tree.Action (Lib));
-               Lib_Artifact : constant GPR2.Path_Name.Object :=
-                                Link.Output.Path;
-            begin
-               Cmd_Line.Add_Argument (Lib_Artifact.String_Value);
-            end;
+            Cmd_Line.Add_Argument (Lib.Path.String_Value);
          end loop;
 
          --  Add all static options given by the binder (libgnat / libgnarl)
@@ -142,15 +136,9 @@ package body GPR2.Build.Actions.Process.Link.Partial is
       end loop;
 
       for Lib of Self.Library_Dependencies loop
-         declare
-            Link : constant Actions.Process.Link.Object'Class :=
-              Actions.Process.Link.Object'Class (Self.Tree.Action (Lib));
-         begin
-            if not Self.Signature.Add_Input (Link.Output, Check_Checksums)
-            then
-               return;
-            end if;
-         end;
+         if not Self.Signature.Add_Input (Lib, Check_Checksums) then
+            return;
+         end if;
       end loop;
 
       if not Self.Signature.Add_Output (Self.Output, Check_Checksums)

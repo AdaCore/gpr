@@ -101,7 +101,8 @@ begin
    for Root of Tree.Namespace_Root_Projects loop
       declare
          Archive : constant GPR2.Build.Artifacts.Library.Object :=
-           GPR2.Build.Artifacts.Library.Create (Root.Library_Filename);
+           GPR2.Build.Artifacts.Library.Create_Static
+             (Root.Library_Filename);
 
          Extract_Id : constant Action_Id'Class :=
            GBA.Process.Link_Options_Extract.Create

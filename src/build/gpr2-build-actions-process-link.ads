@@ -7,6 +7,7 @@
 with GPR2.Build.Actions.Process.Ada_Bind;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.Library;
+with GPR2.Build.Artifacts.Library.Vectors;
 with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
@@ -81,9 +82,9 @@ package GPR2.Build.Actions.Process.Link is
    --  This includes the objects coming from embedded libraries.
 
    function Library_Dependencies
-     (Self : Object'Class) return Actions.Action_Id_Vectors.Vector
+     (Self : Object'Class) return Artifacts.Library.Vectors.Vector
      with Pre => Self.Is_Defined;
-   --  List of libraries this action uses
+   --  Set of library artifacts this action links against
 
    overriding function On_Tree_Insertion
      (Self : Object;
