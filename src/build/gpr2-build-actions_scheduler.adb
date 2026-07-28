@@ -531,7 +531,7 @@ package body GPR2.Build.Actions_Scheduler is
            Pre_Run_Status
              (Tree_Db.Action_Id_To_Reference (UID),
               Dumb_Action_Slot,
-              Force_Execution);
+              Force_Execution or else Act.Force_Execution);
 
          if Status = Ready_To_Run then
             declare
@@ -1415,6 +1415,8 @@ package body GPR2.Build.Actions_Scheduler is
             declare
                UID            : constant Action_Id'Class :=
                  Context.Actions (Node);
+               Act_Ref : constant Build.Tree_Db.Action_Reference_Type :=
+                 Tree_Db.Action_Id_To_Reference (UID);
                Is_Proc_Action : constant Boolean :=
                  Tree_Db.Action_Id_To_Reference (UID).Element.all
                    in Actions.Process.Object'Class;
@@ -1430,9 +1432,9 @@ package body GPR2.Build.Actions_Scheduler is
                if Status = Unknown then
                   Status :=
                     Pre_Run_Status
-                      (Tree_Db.Action_Id_To_Reference (UID),
+                      (Act_Ref.Element.all,
                        Action_Slot,
-                       Options.Force);
+                       Options.Force or else Act_Ref.Force_Execution);
                end if;
 
                --  If an action needs to be run, we first check if
@@ -1453,39 +1455,33 @@ package body GPR2.Build.Actions_Scheduler is
                end if;
 
                if Status = Ready_To_Run then
-                  declare
-                     Act_Ref : constant Build.Tree_Db.Action_Reference_Type :=
-                       Tree_Db.Action_Id_To_Reference (UID);
-                  begin
-                     if Act_Ref.Pre_Execution then
-                        if Is_Proc_Action then
-                           Execute_Process_Runner (Action_Slot, UID);
-                        else
-                           Execute_Thread_Runner (Action_Slot, UID);
-                        end if;
-
-                        Status := Running;
-
-                        if Options.Show_Progress then
-                           --  Update progress report if requested
-                           Report_Progress
-                             (Self, Natural (Context.Nodes.Length));
-                        end if;
+                  if Act_Ref.Pre_Execution then
+                     if Is_Proc_Action then
+                        Execute_Process_Runner (Action_Slot, UID);
                      else
-                        if Make_JS.Is_Available then
-                           Make_JS.Release_Token;
-                        end if;
-
-                        Status := Failed_Pre_Execution;
+                        Execute_Thread_Runner (Action_Slot, UID);
                      end if;
-                  end;
+
+                     Status := Running;
+
+                     if Options.Show_Progress then
+                        --  Update progress report if requested
+                        Report_Progress (Self, Natural (Context.Nodes.Length));
+                     end if;
+                  else
+                     if Make_JS.Is_Available then
+                        Make_JS.Release_Token;
+                     end if;
+
+                     Status := Failed_Pre_Execution;
+                  end if;
 
                elsif Status = Deactivated
                  and then
-                   not Tree_Db.Action_Id_To_Reference (UID).Valid_Signature
+                   not Act_Ref.Valid_Signature
                then
                   Report_Deactivated_Invalid_Signature
-                    (Tree_Db.Action (UID), Tree_Db);
+                    (Act_Ref, Tree_Db);
                end if;
             exception
                when E : Actions_Scheduler_Error =>

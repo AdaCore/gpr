@@ -1,0 +1,2 @@
+description: Check that Force_Execution makes an action always run regardless of its signature
+driver: basic
