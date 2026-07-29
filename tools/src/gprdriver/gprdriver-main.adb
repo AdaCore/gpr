@@ -41,7 +41,7 @@ function GPRDriver.Main return Ada.Command_Line.Exit_Status is
 
    Usage_Error : exception;
 
-   Default_Version : constant Character := '1';
+   Default_Version : constant Character := '2';
    --  Version to use if the environment variable is not set
 
    CTL_VAR : constant String := "GNAT_GPR_ENGINE";
