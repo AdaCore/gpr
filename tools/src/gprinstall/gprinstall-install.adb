@@ -1175,12 +1175,6 @@ package body GPRinstall.Install is
                                  AC (Action).Unit;
                         ALI  : constant Path_Name.Object :=
                                  AC (Action).Intf_Ali_File.Path;
-                        TALI : constant Filename_Optional :=
-                                 (if Options.All_Sources
-                                  then ALI.Simple_Name
-                                  else Filename_Optional
-                                    (String
-                                       (U.Spec.Source.Base_Name) & D_Sfx));
                         To   : constant Path_Name.Object :=
                                  (if Project.Kind = K_Library
                                   then ALI_Dir
@@ -1193,10 +1187,22 @@ package body GPRinstall.Install is
                           or else Interface_Closure.Contains (U.Name)
                           or else U.Is_Body_Needed_For_SAL
                         then
-                           Copy_File
-                             (From => ALI,
-                              To   => To,
-                              File => TALI);
+                           if Options.All_Sources then
+                              Copy_File
+                                (From => ALI,
+                                 To   => To,
+                                 File => Filename_Optional (ALI.Simple_Name));
+                           else
+                              if U.Has_Part (S_Spec) then
+                                 Copy_File
+                                   (From => ALI,
+                                    To   => To,
+                                    File =>
+                                      Filename_Optional
+                                        (String (U.Spec.Source.Base_Name)
+                                         & D_Sfx));
+                              end if;
+                           end if;
                         end if;
 
                         --  The <body>.ali has been copied, we now also want to
