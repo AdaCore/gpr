@@ -548,37 +548,53 @@ package body GPR2.Build.View_Tables is
             end if;
          end if;
 
-
          if Remove_Other then
             declare
-               Other_Loc : constant Source_Proxy :=
-                             Get_Data (NS_Db.Tree_Db, Other.View).Sources
-                             (Other.Source.Value);
+               Other_Db : constant View_Data_Ref :=
+                 Get_Data (NS_Db.Tree_Db, Other.View);
             begin
-               if Traces.Is_Active then
-                  Traces.Trace
-                    ("ignoring source '" &
-                       String (Other_Loc.Path_Name) &
-                       "' as it is not used anymore");
-               end if;
+               --  Base case: if a nested Resolve_Visibility (triggered while
+               --  processing Remove_Src above) already removed this exact
+               --  source as part of its own clash resolution, there is nothing
+               --  left to remove, treat it as already-handled and stop here.
+               if Other_Db.Sources.Contains (Other.Source.Value)
+               then
+                  declare
+                     Other_Loc : constant Source_Proxy :=
+                       Other_Db.Sources (Other.Source.Value);
+                  begin
 
-               if Other_Loc.Inh_From.Is_Defined then
-                  --  See above: we remove fron the inherited view
-                  Remove_Source
-                    (Get_Data (NS_Db.Tree_Db, Other_Loc.View),
-                     Other_Loc.View,
-                     Other_Loc.Path_Name,
-                     Project.View.Undefined,
-                     True,
-                     Messages);
-               else
-                  Remove_Source
-                    (View_Db,
-                     Other_Loc.View,
-                     Other_Loc.Path_Name,
-                     Other_Loc.Inh_From,
-                     True,
-                     Messages);
+                     if Traces.Is_Active then
+                        Traces.Trace
+                          ("ignoring source '" &
+                             String (Other_Loc.Path_Name) &
+                             "' as it is not used anymore");
+                     end if;
+
+                     if Other_Loc.Inh_From.Is_Defined then
+                        --  See above: we remove fron the inherited view
+                        Remove_Source
+                          (Get_Data (NS_Db.Tree_Db, Other_Loc.View),
+                           Other_Loc.View,
+                           Other_Loc.Path_Name,
+                           Project.View.Undefined,
+                           True,
+                           Messages);
+                     else
+                        Remove_Source
+                          (View_Db,
+                           Other_Loc.View,
+                           Other_Loc.Path_Name,
+                           Other_Loc.Inh_From,
+                           True,
+                           Messages);
+                     end if;
+                  end;
+               elsif Traces.Is_Active then
+                  Traces.Trace
+                    ("source '" & String (Other.Source.Value) &
+                       "' already removed by a nested visibility " &
+                       "resolution, nothing to do");
                end if;
             end;
          end if;
