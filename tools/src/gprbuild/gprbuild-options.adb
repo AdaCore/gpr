@@ -395,6 +395,21 @@ package body GPRbuild.Options is
          Create (Name   => "-dn",
                  Help   => "for compatibility with older gprbuild",
                  Hidden => True));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name   => "-du",
+                 Help   => "for compatibility with older gprbuild",
+                 Hidden => True));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name   => "-vl",
+                 Help   => "for compatibility with older gprbuild",
+                 Hidden => True));
+      Parser.Add_Argument
+        (Build_Group,
+         Create (Name   => "-vm",
+                 Help   => "for compatibility with older gprbuild",
+                 Hidden => True));
 
       return Parser;
    end Create;
@@ -696,6 +711,7 @@ package body GPRbuild.Options is
 
       elsif Arg = "-C"
         or else Arg = "-dn"
+        or else Arg = "-du"
         or else Arg = "-eS"
         or else Arg = "-jc"
         or else Arg = "-jb"
