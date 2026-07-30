@@ -96,7 +96,7 @@ package body GPR2.Build.Actions.Process.Post_Bind is
 
       Cmd_Line.Add_Argument (Self.Input.Path);
       Cmd_Line.Add_Argument ("-o");
-      Cmd_Line.Add_Argument (Self.Output.Path);
+      Cmd_Line.Add_Argument (String (Self.Output.Path.Simple_Name));
 
       if Self.View.Is_Library and then Self.View.Library_Kind /= "static" then
          Add_Attr (PRA.Compiler.Pic_Option, Ada_Lang, True);
