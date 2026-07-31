@@ -1119,14 +1119,16 @@ package body GPRinstall.Install is
                      if Artifact in
                        GPR2.Build.Artifacts.Files.Object'Class
                      then
-                        --  For every compilation artifacts we get the
-                        --  basename and check if a known artifacts next
+                        --  For every compilation artifacts we get the basename
+                        --  or source name and check if a known artifact next
                         --  to the file has a defined extension as set in
                         --  Object_Artifact_Extensions.
 
                         declare
                            Lang     : constant GPR2.Language_Id :=
                                         OC (Action).Language;
+                           S_Path   : constant GPR2.Build.Source.Object :=
+                                        OC (Action).Input;
                            A_Path   : constant GPR2.Path_Name.Object :=
                                         GPR2.Build.Artifacts.Files.Object'Class
                                           (Artifact).Path;
@@ -1134,24 +1136,42 @@ package body GPRinstall.Install is
                                         Action.View.Attribute
                                           (A.Clean.Object_Artifact_Extensions,
                                            I.Create (Lang));
-                           Obj_BN   : constant Filename_Type :=
-                                        A_Path.Base_Filename;
+                           Obj_BN : constant Filename_Type :=
+                                       Filename_Type
+                                         (A_Path.Base_Name);
+                           Src_SN : constant Filename_Type :=
+                                       Filename_Type
+                                         (S_Path.Path_Name.Simple_Name);
                            Obj_Dir  : constant Path_Name.Object :=
                                         A_Path.Containing_Directory;
                         begin
                            if Obj_Exts.Is_Defined then
+                              --  Some artifacts are based on the base name
+                              --  (.sid for Ada) and some on the source name
+                              --  (.sid for C/C++). We thus check both
+                              --  locations for the artifacts.
                               for Ext of Obj_Exts.Values loop
                                  declare
-                                    File : constant GPR2.Path_Name.Object :=
-                                             Obj_Dir.Compose
-                                               (Obj_BN
-                                                & Filename_Type (Ext.Text));
+                                    File_O : constant GPR2.Path_Name.Object :=
+                                              Obj_Dir.Compose
+                                                (Obj_BN
+                                                 & Filename_Type (Ext.Text));
+                                    File_S : constant GPR2.Path_Name.Object :=
+                                              Obj_Dir.Compose
+                                                (Src_SN
+                                                 & Filename_Type (Ext.Text));
                                  begin
-                                    --  This is an optional file, check first
-                                    --  if it exists.
+                                    --  Those are optional files, check first
+                                    --  if they exist.
 
-                                    if File.Exists then
-                                       Copy_File (From => File, To => Lib_Dir);
+                                    if File_O.Exists then
+                                       Copy_File
+                                         (From => File_O, To => Lib_Dir);
+                                    end if;
+
+                                    if File_S.Exists then
+                                       Copy_File
+                                         (From => File_S, To => Lib_Dir);
                                     end if;
                                  end;
                               end loop;

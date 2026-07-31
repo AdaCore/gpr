@@ -1,0 +1,3 @@
+description:
+    check check gprinstall for gnatcov Ada,C & C++ .sid artifacts
+driver: python_script
