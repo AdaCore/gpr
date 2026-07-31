@@ -672,8 +672,12 @@ package body GPR2.Build.Actions_Population is
                            declare
                               Comp : Compile.Ada.Object;
                            begin
+                              --  Compile exactly the source named on the
+                              --  command line: when the spec is given, compile
+                              --  the spec even if the unit also has a body.
                               Comp.Initialize
-                                (V.Unit (Src.Unit (M.Index).Name));
+                                (V.Unit (Src.Unit (M.Index).Name),
+                                 Spec_Only => Src.Kind (M.Index) = S_Spec);
 
                               if not Tree_Db.Add_Action (Comp) then
                                  return False;

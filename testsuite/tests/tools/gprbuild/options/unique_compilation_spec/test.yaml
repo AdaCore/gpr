@@ -1,0 +1,2 @@
+description: "gprbuild -u <spec> compiles the named spec, not the unit body"
+driver: python_script
