@@ -1,0 +1,2 @@
+$ gprbuild -P prj.gpr -u parent-child.adb
+PASS: -u compiled the separate parent-child.adb
