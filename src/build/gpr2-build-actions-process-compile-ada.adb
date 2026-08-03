@@ -498,9 +498,10 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
    ----------------
 
    procedure Initialize
-     (Self      : in out Object;
-      Src       : GPR2.Build.Compilation_Unit.Object;
-      Spec_Only : Boolean := False)
+     (Self     : in out Object;
+      Src      : GPR2.Build.Compilation_Unit.Object;
+      Kind     : Unit_Kind := S_Body;
+      Sep_Name : Optional_Name_Type := "")
    is
       View    : constant GPR2.Project.View.Object := Src.Owning_View;
       No_Obj  : constant Boolean :=
@@ -508,19 +509,23 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
                     or else View.Is_Runtime;
       Attr    : GPR2.Project.Attribute.Object;
       Closure : GPR2.Project.View.Set.Object;
-
-      Compiled_Part : constant GPR2.Build.Compilation_Unit.Unit_Location :=
-                        (if Spec_Only and then Src.Has_Part (S_Spec)
-                         then Src.Get (S_Spec)
-                         else Src.Main_Part);
-
    begin
       --  Ensure the object wasn't previously initialized prior to this call
       Self := Undefined;
 
       Self.Ctxt := Src.Owning_View;
-      Self.Src  :=
-        Src.Owning_View.Source (Compiled_Part.Source.Simple_Name);
+
+      if Kind = S_Spec and then Src.Has_Part (S_Spec) then
+         Self.Src :=
+           Src.Owning_View.Source (Src.Get (S_Spec).Source.Simple_Name);
+      elsif Kind = S_Separate and then Src.Has_Part (S_Separate) then
+         Self.Src :=
+           Src.Owning_View.Source
+             (Src.Get (S_Separate, Sep_Name).Source.Simple_Name);
+      else
+         Self.Src := Src.Owning_View.Source (Src.Main_Part.Source.Simple_Name);
+      end if;
+
       Self.Lang := Ada_Language;
       Self.CU   := Src;
 

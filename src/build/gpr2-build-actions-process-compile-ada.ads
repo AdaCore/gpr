@@ -30,12 +30,14 @@ package GPR2.Build.Actions.Process.Compile.Ada is
    overriding function Is_Defined (Self : Object) return Boolean;
 
    procedure Initialize
-     (Self      : in out Object;
-      Src       : GPR2.Build.Compilation_Unit.Object;
-      Spec_Only : Boolean := False);
+     (Self     : in out Object;
+      Src      : GPR2.Build.Compilation_Unit.Object;
+      Kind     : Unit_Kind := S_Body;
+      Sep_Name : Optional_Name_Type := "");
    --  Initialize all object fields according to Src.
-   --  If Spec_Only is True, compile only the spec source file. Otherwise,
-   --  compile the main unit's part.
+   --  If Kind is S_Spec, compile only the spec source file.
+   --  If Kind is S_Separate, compile only the separate source file Sep_Name
+   --  Otherwise, compile the main unit's part.
 
    function Unit
      (Self : Object) return GPR2.Build.Compilation_Unit.Object;

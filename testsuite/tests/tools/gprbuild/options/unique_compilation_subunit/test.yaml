@@ -1,0 +1,2 @@
+description: "gprbuild -u <subunit> compiles the named subunit, not the parent unit"
+driver: python_script

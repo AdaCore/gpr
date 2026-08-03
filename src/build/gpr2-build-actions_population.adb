@@ -674,10 +674,16 @@ package body GPR2.Build.Actions_Population is
                            begin
                               --  Compile exactly the source named on the
                               --  command line: when the spec is given, compile
-                              --  the spec even if the unit also has a body.
+                              --  the spec even ifthe unit also has a body.
+                              --  When a separate is given, compile the
+                              --  separate
+
                               Comp.Initialize
                                 (V.Unit (Src.Unit (M.Index).Name),
-                                 Spec_Only => Src.Kind (M.Index) = S_Spec);
+                                 Src.Kind (M.Index),
+                                 (if Src.Kind (M.Index) = S_Separate
+                                  then Src.Unit (M.Index).Separate_Name
+                                  else No_Name));
 
                               if not Tree_Db.Add_Action (Comp) then
                                  return False;
