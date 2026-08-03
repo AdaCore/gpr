@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Artifacts.Object_File;
 with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
@@ -36,6 +37,20 @@ package GPR2.Build.Actions.Process.Link_Options_Extract is
    --  @param Self The action to initialize
    --  @param Object_File The object file containing the linker options
    --                      to be extracted.
+   --  @param View The view that contains the action
+
+   procedure Initialize
+     (Self    : in out Object;
+      Archive : GPR2.Build.Artifacts.Library.Object;
+      View    : GPR2.Project.View.Object);
+   --  Initialize the action to extract linker options directly from the whole
+   --  library archive rather than from a single, known object file member.
+   --  This is used as a fallback for libraries that do not embed the options
+   --  in a dedicated "o__<lib>.o" member (e.g. libraries built by gprbuild 1):
+   --  objdump reports the ".GPR.linker_options" section from whichever archive
+   --  member carries it, so we do not have to guess the member's name.
+   --  @param Self The action to initialize
+   --  @param Archive The library archive to scan for the linker options.
    --  @param View The view that contains the action
 
    overriding
@@ -88,8 +103,19 @@ private
    is (Object_File'Length, View, Object_File);
 
    type Object is new Actions.Process.Object with record
-      Object_File : GPR2.Build.Artifacts.Object_File.Object;
-      --  The object file containing the link option to be extracted
+      --  This object contains information to extract linker options from
+      --  either a given object file, o__<lib>.o, or an archive when the
+      --  previous object file was not found. It is to keep the backward
+      --  compatibility between gprbuild1 and gprbuild2, as gprbuild1 did
+      --  not rely on o__<lib>.o files.
+
+      Object_File  : GPR2.Build.Artifacts.Object_File.Object;
+      --  The provided object file containing the link option to be extracted,
+      --  when From_Archive is False.
+      Archive      : GPR2.Build.Artifacts.Library.Object;
+      --  The whole library archive to scan, when From_Archive is True
+      From_Archive : Boolean := False;
+      --  Whether to objdump the whole archive or the provided object file
    end record;
 
    overriding
