@@ -1415,7 +1415,8 @@ package body GPR2.Build.Actions_Scheduler is
                UID            : constant Action_Id'Class :=
                  Context.Actions (Node);
                Is_Proc_Action : constant Boolean :=
-                 Tree_Db.Action (UID) in Actions.Process.Object'Class;
+                 Tree_Db.Action_Id_To_Reference (UID).Element.all
+                   in Actions.Process.Object'Class;
             begin
                Action_Slot := Available_Slot;
                pragma Assert (Action_Slot /= -1);
