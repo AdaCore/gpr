@@ -1,0 +1,8 @@
+library project Lib is
+   for Library_Name use "mylib";
+   for Library_Dir use "lib";
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj";
+   for Library_Interface use ("pkg1", "pkg2");
+   for Library_Partial_Linker use ();
+end Lib;

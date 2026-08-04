@@ -157,6 +157,24 @@ package body GPR2.Build.Actions.Process.Archive_Table_List is
             end if;
          end;
       end loop;
+
+      --  No dedicated "o__<lib>.o" member was found. This is typically a
+      --  library built with gprbuild1, which embeds the linker options in
+      --  some other object. Fall back to scanning the whole archive: objdump
+      --  reports the ".GPR.linker_options" section from whichever member
+      --  carries it, so no name guessing is required.
+
+      Link_Options_Extract.Initialize (Self.Archive, Self.Ctxt);
+
+      if not Self.Tree.Add_Action (Link_Options_Extract) then
+         return False;
+      end if;
+
+      for Linker_UID of Linkers_UID loop
+         Self.Tree.Add_Input
+           (Linker_UID, Link_Options_Extract.UID_Artifact);
+      end loop;
+
       return True;
    end Post_Execution;
 

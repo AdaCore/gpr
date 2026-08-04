@@ -33,7 +33,16 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
         (Self.View.Compiler_Prefix & "objdump");
       Cmd_Line.Add_Argument ("-s");
       Cmd_Line.Add_Argument ("--section=.GPR.linker_options");
-      Cmd_Line.Add_Argument (String (Self.Object_File.Path.Simple_Name));
+
+      if Self.From_Archive then
+         --  Scan the whole archive: objdump reads every member and reports
+         --  the section from whichever one carries it. The archive may live
+         --  outside the working directory, so pass its full path.
+
+         Cmd_Line.Add_Argument (Self.Archive.Path.String_Value);
+      else
+         Cmd_Line.Add_Argument (String (Self.Object_File.Path.Simple_Name));
+      end if;
    end Compute_Command;
 
    -----------------------
@@ -44,9 +53,15 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
    procedure Compute_Signature
      (Self : in out Object; Check_Checksums : Boolean) is
    begin
-      if not Self.Signature.Add_Input (Self.Object_File, Check_Checksums)
-      then
-         return;
+      if Self.From_Archive then
+         if not Self.Signature.Add_Input (Self.Archive, Check_Checksums) then
+            return;
+         end if;
+      else
+         if not Self.Signature.Add_Input (Self.Object_File, Check_Checksums)
+         then
+            return;
+         end if;
       end if;
    end Compute_Signature;
 
@@ -67,6 +82,23 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
         GPR2.Build.Artifacts.Object_File.Create (Object_File);
    end Initialize;
 
+   ----------------
+   -- Initialize --
+   ----------------
+
+   procedure Initialize
+     (Self    : in out Object;
+      Archive : GPR2.Build.Artifacts.Library.Object;
+      View    : GPR2.Project.View.Object) is
+   begin
+      --  Ensure the object wasn't previously initialized prior to this call
+      Self := Undefined;
+
+      Self.Ctxt         := View;
+      Self.Archive      := Archive;
+      Self.From_Archive := True;
+   end Initialize;
+
    -----------------------
    -- On_Tree_Insertion --
    -----------------------
@@ -77,7 +109,12 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
    is
       UID : constant Actions.Action_Id'Class := Object'Class (Self).UID;
    begin
-      Db.Add_Input (UID, Self.Object_File);
+      if Self.From_Archive then
+         Db.Add_Input (UID, Self.Archive);
+      else
+         Db.Add_Input (UID, Self.Object_File);
+      end if;
+
       return True;
    end On_Tree_Insertion;
 
@@ -254,7 +291,10 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
 
    overriding
    function UID (Self : Object) return Actions.Action_Id'Class is
-      BN     : constant Simple_Name := Self.Object_File.Path.Simple_Name;
+      BN     : constant Simple_Name :=
+                 (if Self.From_Archive
+                  then Self.Archive.Path.Simple_Name
+                  else Self.Object_File.Path.Simple_Name);
       Result : constant Link_Options_Extract_Id :=
         (Name_Len => BN'Length, View => Self.Ctxt, Object_File => BN);
    begin

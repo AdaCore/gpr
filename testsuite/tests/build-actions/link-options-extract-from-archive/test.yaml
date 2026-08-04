@@ -1,0 +1,2 @@
+description: check link-options-extract action scanning the whole archive
+driver: python_script
