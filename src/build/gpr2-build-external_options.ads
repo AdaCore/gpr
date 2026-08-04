@@ -32,11 +32,21 @@ package GPR2.Build.External_Options is
    --  switches but it makes sense to have if defined at GPR library level for
    --  the command line processing of actions.
 
+   type Origin is (Project, Command_Line);
+   --  Origin of an external option. The literals are declared in emission
+   --  order: Fetch returns Project options before Command_Line ones, so that
+   --  command-line options are emitted last and win when switches conflict
+   --  (the last occurrence of a GNAT switch wins). Do not reorder the
+   --  literals.
+
    procedure Register (Self   : in out Object;
                        Action : Action_Class;
                        Lang   : Language_Id;
-                       Option : String);
-   --  Register an external option based on the external Name and Lang
+                       Option : String;
+                       From   : Origin := Command_Line);
+   --  Register an external option for the given Action and Lang, coming either
+   --  from the project files (From => Project) or the command line
+   --  (From => Command_Line).
 
    function Fetch (Self   : Object;
                    Action : Action_Class;
@@ -58,8 +68,11 @@ private
         GPR2.Containers.Lang_Value_List_Maps."=");
    subtype Lang_Value_List_Map_Map is Lang_Value_List_Map_Maps.Map;
 
+   type Options_By_Origin is array (Origin) of Lang_Value_List_Map_Map;
+   --  One set of options per origin
+
    type Object is tagged record
-      Ext_Opt : Lang_Value_List_Map_Map;
+      Ext_Opt : Options_By_Origin;
    end record;
 
 end GPR2.Build.External_Options;

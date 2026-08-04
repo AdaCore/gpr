@@ -1,0 +1,2 @@
+description: Command-line compiler switches must override Builder'Global_Compilation_Switches
+driver: python_script
