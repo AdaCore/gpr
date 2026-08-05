@@ -365,10 +365,16 @@ begin
                      GPR2."+" (Name_Type (Attr.Index.Value));
          begin
             for V of Attr.Values loop
+               --  Project-level switches: they must be overridable by
+               --  command-line switches, so register them as coming from the
+               --  project (emitted before, and thus overridden by, the
+               --  command-line switches for "last one wins" switches).
+
                Opt.Extra_Args.Register
                  (GPR2.Build.External_Options.Compiler,
                   Lang,
-                  V.Text);
+                  V.Text,
+                  From => GPR2.Build.External_Options.Project);
             end loop;
          end;
       end loop;

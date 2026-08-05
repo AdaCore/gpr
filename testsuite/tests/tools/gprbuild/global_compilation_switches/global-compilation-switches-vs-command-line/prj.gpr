@@ -1,0 +1,10 @@
+project Prj is
+
+   for Main use ("main.adb");
+   for Object_Dir use "obj";
+
+   package Builder is
+      for Global_Compilation_Switches ("ada") use ("-gnatwe");
+   end Builder;
+
+end Prj;
