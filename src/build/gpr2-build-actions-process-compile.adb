@@ -581,8 +581,16 @@ package body GPR2.Build.Actions.Process.Compile is
 
                         for S of Self.View.View_Db.Excluded_Sources loop
                            declare
-                              U   : constant Build.Compilation_Unit.Object :=
-                                      Self.View.Own_Unit (S.Base_Name);
+                              Success   : Boolean;
+                              Unit_Name : constant Optional_Name_Type :=
+                                Self.View.Unit_Name_For_Filename
+                                  (S.Simple_Name, Success);
+                              U         : constant
+                                Build.Compilation_Unit.Object :=
+                                  ((if Success
+                                   then Self.View.Own_Unit
+                                     (Name_Type (Unit_Name))
+                                   else Build.Compilation_Unit.Undefined));
                            begin
                               --  If we have an excluded source with a valid
                               --  unit in the View, and the unit is at least

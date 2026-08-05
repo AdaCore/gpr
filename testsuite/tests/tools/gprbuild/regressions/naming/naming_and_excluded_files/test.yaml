@@ -1,0 +1,2 @@
+description: Regression test for naming exception while exclusing sources
+driver: python_script
