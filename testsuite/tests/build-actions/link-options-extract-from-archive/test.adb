@@ -29,8 +29,6 @@ use GPR2;
 procedure Test is
    package GBA renames GPR2.Build.Actions;
 
-   Fake_Option : constant String := "-lgpr2_fake_marker";
-
    Tree    : GPR2.Project.Tree.Object;
    Opts    : GPR2.Options.Object;
    Project : constant String := "tree/lib.gpr";
@@ -80,10 +78,7 @@ procedure Test is
              .Element.all)
           .Options_From_Binder
       loop
-         --  Match by containment rather than equality: on Windows (PE/COFF)
-         --  objcopy pads the section to alignment, so the extracted option
-         --  may carry trailing NUL bytes.
-         if Ada.Strings.Fixed.Index (Opt, Fake_Option) /= 0 then
+         if Opt = "-lgpr2_fake_marker" then
             return True;
          end if;
       end loop;

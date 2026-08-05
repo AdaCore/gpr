@@ -6,6 +6,7 @@
 
 with GNAT.String_Split;
 with Ada.Strings.Fixed;
+with Ada.Strings.Maps;
 with GNATCOLL.Traces;
 with GPR2.Build.Actions.Process.Link;
 with GPR2.Message;
@@ -15,6 +16,13 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
    Traces : constant GNATCOLL.Traces.Trace_Handle :=
      GNATCOLL.Traces.Create
        ("GPR.BUILD.ACTIONS.LINK_OPTIONS_EXTRACT", GNATCOLL.Traces.Off);
+
+   Blanks : constant Ada.Strings.Maps.Character_Set :=
+     Ada.Strings.Maps.To_Set
+       (' ' & ASCII.HT & ASCII.CR & ASCII.LF);
+   --  Characters stripped from the ends of an extracted linker option. It
+   --  includes the carriage return so that CRLF line endings (Windows) do not
+   --  leave a trailing CR on an option.
 
    ---------------------
    -- Compute_Command --
@@ -260,7 +268,9 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
             declare
                Opt : constant String :=
                  Ada.Strings.Fixed.Trim
-                   (Slice (Sliced_Options, I), Ada.Strings.Both);
+                   (Slice (Sliced_Options, I),
+                    Left  => Blanks,
+                    Right => Blanks);
             begin
                if Opt /= "" then
                   for Linker_UID of Linkers_UID loop

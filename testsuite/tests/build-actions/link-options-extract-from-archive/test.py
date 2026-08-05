@@ -1,5 +1,6 @@
 import os
 
+from e3.env import Env
 from testsuite_support.builder_and_runner import BuilderAndRunner
 from testsuite_support.tools import GPRBUILD
 
@@ -11,10 +12,15 @@ bnr.simple_run([GPRBUILD, "-P" + os.path.join("tree", "lib.gpr"), "-p", "-q"])
 
 archive = os.path.join("tree", "lib", "libmylib.a")
 
-# 2. Fake linker options, in the same format link-options-insert writes them
-#    (one option per line, no trailing newline).
-with open("opts.txt", "w") as f:
-    f.write("-lgpr2_fake_marker")
+# 2. Fake linker options, terminated by the platform's native line ending:
+#    "\n" on Unix, "\r\n" on Windows. This exercises the extraction on both --
+#    in particular the carriage return must be stripped from the option on
+#    Windows. Written in binary mode so the bytes are exactly as intended.
+platform = Env().host.platform
+eol = (b"\r\n" if platform.endswith("windows") or platform.endswith("windows64")
+       else b"\n")
+with open("opts.txt", "wb") as f:
+    f.write(b"-lgpr2_fake_marker" + eol)
 
 # 3. Turn the archive into a "gprbuild1" style archive: embed the
 #    .GPR.linker_options section into a regular member (pkg1.o) and remove the
