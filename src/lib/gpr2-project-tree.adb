@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.Unchecked_Deallocation;
 with GNAT.OS_Lib;
@@ -599,6 +600,26 @@ package body GPR2.Project.Tree is
          use type GPR2.Path_Name.Object;
 
       begin
+         --  A project may request directory creation through the top-level
+         --  Create_Missing_Dirs attribute, which is equivalent to passing -p
+         --  on the command line. It can only be honored here, once the project
+         --  is loaded and its attributes are available. When set, it forces
+         --  creation of every missing artifact directory, exactly like -p.
+
+         if Tree.Root_Project.Is_Defined then
+            declare
+               Attr : constant GPR2.Project.Attribute.Object :=
+                        Tree.Root_Project.Attribute (PRA.Create_Missing_Dirs);
+            begin
+               if Attr.Is_Defined
+                 and then Ada.Characters.Handling.To_Lower (Attr.Value.Text)
+                            = "true"
+               then
+                  Missing_Dirs := Create_Always;
+               end if;
+            end;
+         end if;
+
          if Missing_Dirs = Create_Relative then
             --  Assume there's no absolute path first
             Missing_Dirs := Create_Always;
