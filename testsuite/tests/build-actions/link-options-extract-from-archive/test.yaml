@@ -1,2 +1,2 @@
-description: check link-options-extract action scanning the whole archive
+description: archive-table-list falls back to scanning the whole archive when no o__<lib>.o member is present (gprbuild1-style library)
 driver: python_script
