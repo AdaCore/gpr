@@ -10,6 +10,7 @@ with Ada.Strings.Maps;
 with GNATCOLL.Traces;
 with GPR2.Build.Actions.Process.Link;
 with GPR2.Message;
+with GPR2.Project.Tree;
 
 package body GPR2.Build.Actions.Process.Link_Options_Extract is
 
@@ -268,21 +269,100 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
 
          for I in 1 .. Slice_Count (Sliced_Options) loop
             declare
-               Opt : constant String :=
+               Raw : constant String :=
                  Ada.Strings.Fixed.Trim
                    (Slice (Sliced_Options, I),
                     Left  => Blanks,
                     Right => Blanks);
+
+               Opt          : Unbounded_String := To_Unbounded_String (Raw);
+               Archive_Ctxt : GPR2.Project.View.Object;
+
+               use GPR2.Project;
             begin
-               if Opt /= "" then
+               if Self.From_Archive then
+                  declare
+                     Static_Libs : Boolean := True;
+                     Adalib_Dir  : constant GPR2.Path_Name.Object :=
+                       (if Self.View.Tree.Runtime_Project.Is_Defined
+                        then Self.View.Tree.Runtime_Project.Object_Directory
+                        else GPR2.Path_Name.Undefined);
+                  begin
+
+                     --  Linker options insertion already transforms -lgnat and
+                     --  -lgnarl options as absolute path to the runtime
+                     --  archives. However, if linker options are coming from a
+                     --  library that has been built with gprbuild1, the linker
+                     --  options may contain raw -lgnat and -lgnarl that need
+                     --  to be processed.
+
+                     pragma Assert (Self.Tree.Has_Predecessor (Self.Archive));
+                     pragma Assert (Adalib_Dir.Is_Defined);
+
+                     Archive_Ctxt := Self.Tree.Predecessor (Self.Archive).View;
+
+                     if Raw = "-shared" then
+                        Static_Libs := False;
+                     end if;
+
+                     if Raw = "-lgnat" then
+                        if Static_Libs
+                          and then Archive_Ctxt.Library_Support /= None
+                        then
+                           if Archive_Ctxt.Is_Library
+                             and then
+                               Archive_Ctxt.Library_Standalone
+                               = GPR2.Project.Encapsulated
+                           then
+                              Opt :=
+                                To_Unbounded_String
+                                  (Adalib_Dir.Compose ("libgnat_pic.a")
+                                     .String_Value);
+                           else
+                              Opt :=
+                                To_Unbounded_String
+                                  (Adalib_Dir.Compose ("libgnat.a")
+                                     .String_Value);
+                           end if;
+                        else
+                           Opt := To_Unbounded_String (Raw);
+                        end if;
+
+                     elsif Raw = "-lgnarl" then
+                        if Static_Libs
+                          and then Archive_Ctxt.Library_Support /= None
+                        then
+                           if Archive_Ctxt.Is_Library
+                             and then
+                               Archive_Ctxt.Library_Standalone
+                               = GPR2.Project.Encapsulated
+                           then
+                              Opt :=
+                                To_Unbounded_String
+                                  (Adalib_Dir.Compose ("libgnarl_pic.a")
+                                     .String_Value);
+                           else
+                              Opt :=
+                                To_Unbounded_String
+                                  (Adalib_Dir.Compose ("libgnarl.a")
+                                     .String_Value);
+                           end if;
+                        else
+                           Opt := To_Unbounded_String (Raw);
+                        end if;
+                     end if;
+                  end;
+               end if;
+
+               if To_String (Opt) /= "" then
                   for Linker_UID of Linkers_UID loop
                      Link.Object'Class
                        (Self.Tree.Action_Id_To_Reference (Linker_UID)
                           .Element.all)
-                       .Add_Option_From_Binder (Opt);
+                       .Add_Option_From_Binder (To_String (Opt));
                      Traces.Trace
                        ("Options "
-                        & Opt
+                        & To_String (Opt)
                         & " passed to "
                         & Linker_UID.Image
                         & ":");
