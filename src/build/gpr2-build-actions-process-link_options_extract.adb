@@ -19,10 +19,12 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
 
    Blanks : constant Ada.Strings.Maps.Character_Set :=
      Ada.Strings.Maps.To_Set
-       (' ' & ASCII.HT & ASCII.CR & ASCII.LF);
+       (' ' & ASCII.HT & ASCII.CR & ASCII.LF & ASCII.NUL);
    --  Characters stripped from the ends of an extracted linker option. It
-   --  includes the carriage return so that CRLF line endings (Windows) do not
-   --  leave a trailing CR on an option.
+   --  includes the carriage return so CRLF line endings (Windows) do not leave
+   --  a trailing CR, and NUL so the zero padding objcopy appends to a COFF
+   --  section (Windows) does not leave a trailing NUL on an option (which
+   --  would make e.g. "-lgnarl" become "-lgnarl\0" and fail to be found).
 
    ---------------------
    -- Compute_Command --
