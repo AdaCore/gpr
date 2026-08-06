@@ -233,7 +233,7 @@ package body GPR2.Build.View_Tables is
 
       if not Compilation_Unit_Maps.Has_Element (Cursor) then
          if Traces.Is_Active then
-            pragma Annotate (Xcov, Exempt_On);
+            pragma Annotate (Xcov, Exempt_On, "Logging code");
             Traces.Trace ("new compilation unit, create it");
             pragma Annotate (Xcov, Exempt_Off);
          end if;
@@ -609,7 +609,7 @@ package body GPR2.Build.View_Tables is
                   --  Owning view changed, let's apply this change
                   if Old_Owner.Is_Defined then
                      if Traces.Is_Active then
-                        pragma Annotate (Xcov, Exempt_On);
+                        pragma Annotate (Xcov, Exempt_On, "Logging code");
                         Traces.Trace ("changing unit ownership from " &
                                         String (Old_Owner.Name) & " to " &
                                         String (View_Db.View.Name));
@@ -1199,7 +1199,7 @@ package body GPR2.Build.View_Tables is
                             GPR2.Path_Name.Simple_Name (Src.Path_Name);
             begin
                if Traces.Is_Active then
-                  pragma Annotate (Xcov, Exempt_On);
+                  pragma Annotate (Xcov, Exempt_On, "Logging code");
                   Traces.Trace
                     ("visible source removed propagation: extended project '"
                      & String (Data.View.Name)
@@ -1216,7 +1216,7 @@ package body GPR2.Build.View_Tables is
 
                else
                   if Traces.Is_Active then
-                     pragma Annotate (Xcov, Exempt_On);
+                     pragma Annotate (Xcov, Exempt_On, "Logging code");
                      Traces.Trace
                        ("visible source propagation: remove '" &
                           String (Name) &
@@ -1274,7 +1274,7 @@ package body GPR2.Build.View_Tables is
 
    begin
       if Traces.Is_Active then
-         pragma Annotate (Xcov, Exempt_On);
+         pragma Annotate (Xcov, Exempt_On, "Logging code");
          Traces.Trace
            ("=== Resolve visibility for '" & String (Basename) & "' ===");
          pragma Annotate (Xcov, Exempt_Off);
@@ -1322,7 +1322,7 @@ package body GPR2.Build.View_Tables is
                      C_Info := Data.Src_Infos.Find (Candidate.Path_Name);
 
                      if Traces.Is_Active then
-                        pragma Annotate (Xcov, Exempt_On);
+                        pragma Annotate (Xcov, Exempt_On, "Logging code");
                         Traces.Trace
                           ("found first candidate owned by the view: " &
                              String (Candidate.Path_Name));
@@ -1330,7 +1330,7 @@ package body GPR2.Build.View_Tables is
                      end if;
                   else
                      if Traces.Is_Active then
-                        pragma Annotate (Xcov, Exempt_On);
+                        pragma Annotate (Xcov, Exempt_On, "Logging code");
                         Traces.Trace
                           ("found first candidate not owned by the view: " &
                              String (Candidate.Path_Name));
@@ -1346,7 +1346,7 @@ package body GPR2.Build.View_Tables is
                   C_Info    := Data.Src_Infos.Find (Candidate.Path_Name);
 
                   if Traces.Is_Active then
-                     pragma Annotate (Xcov, Exempt_On);
+                     pragma Annotate (Xcov, Exempt_On, "Logging code");
                      Traces.Trace
                        ("found new candidate owned by the view, overloading " &
                           "old candidate: " &
@@ -1360,7 +1360,7 @@ package body GPR2.Build.View_Tables is
                   --  Candidate is owned by current view, so ignore inherited
                   --  source
                   if Traces.Is_Active then
-                     pragma Annotate (Xcov, Exempt_On);
+                     pragma Annotate (Xcov, Exempt_On, "Logging code");
                      Traces.Trace
                        ("ignoring " &
                           String (C.Element.Path_Name) & ", overloaded " &
@@ -1376,7 +1376,7 @@ package body GPR2.Build.View_Tables is
                   --  visibility priority
 
                   if Traces.Is_Active then
-                     pragma Annotate (Xcov, Exempt_On);
+                     pragma Annotate (Xcov, Exempt_On, "Logging code");
                      Traces.Trace
                        ("checking sources both owned by the view " &
                           String (C.Element.Path_Name) & " and " &
@@ -1403,7 +1403,7 @@ package body GPR2.Build.View_Tables is
                      --  clashing situation).
 
                      if Traces.Is_Active then
-                        pragma Annotate (Xcov, Exempt_On);
+                        pragma Annotate (Xcov, Exempt_On, "Logging code");
                         Traces.Trace
                           ("priority for source_dir " &
                              String (C.Element.Path_Name));
@@ -1519,7 +1519,7 @@ package body GPR2.Build.View_Tables is
          --  Remove current visible source
          if Current /= null then
             if Traces.Is_Active then
-               pragma Annotate (Xcov, Exempt_On);
+               pragma Annotate (Xcov, Exempt_On, "Logging code");
                Traces.Trace
                  ("removing source " &
                     String (Current.Path_Name));
@@ -1541,7 +1541,7 @@ package body GPR2.Build.View_Tables is
             end if;
 
             if Traces.Is_Active then
-               pragma Annotate (Xcov, Exempt_On);
+               pragma Annotate (Xcov, Exempt_On, "Logging code");
                Traces.Trace
                  ("declare visible " &
                     String (Candidate.Path_Name));

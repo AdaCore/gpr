@@ -122,8 +122,9 @@ ifneq (${GPR2_BUILD},gnatcov)
 else
    COVERAGE_BUILD_FLAGS := \
            --implicit-with=gnatcov_rts \
-           --src-subdirs=gnatcov-instr
-   COVERAGE_INSTR_FLAGS := -XGPR2_BUILD=${GPR2_BUILD} \
+           --src-subdirs=gnatcov-instr \
+	       -cargs:Ada -gnat2022 -gnatwA -margs
+   COVERAGE_INSTR_FLAGS := --ada 2022 -XGPR2_BUILD=${GPR2_BUILD} \
            -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}" \
            -XLIBRARY_TYPE=static -XXMLADA_BUILD=static
    COVERAGE_INSTR       := gnatcov instrument --level $(GNATCOV_LEVEL) \

@@ -933,9 +933,10 @@ package body GPR2.Project_Parser is
                                  (External_Name_Type (Var));
                         begin
                            Ext.Append
-                             ((Type_Node  => Typ,
-                               Source_Ref =>
-                                 Get_Source_Reference (Filename, Exprs)));
+                             (External'
+                                (Type_Node  => Typ,
+                                 Source_Ref =>
+                                   Get_Source_Reference (Filename, Exprs)));
                         end;
 
                         declare
