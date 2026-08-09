@@ -245,8 +245,8 @@ install switches:
  --sources-subdir=<dir>
            The sources directory/sub-directory
  --stat    Display stats about installed projects, must be used with --list
- --uninstall
-           Remove all previously installed files
+ --uninstall <manifest file>
+           Remove previously installed files
 
 Project switches:
    Project file handling switches
@@ -602,8 +602,8 @@ install switches:
  --sources-subdir=<dir>
            The sources directory/sub-directory
  --stat    Display stats about installed projects, must be used with --list
- --uninstall
-           Remove all previously installed files
+ --uninstall <manifest file>
+           Remove previously installed files
 
 Project switches:
    Project file handling switches
