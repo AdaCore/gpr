@@ -45,7 +45,9 @@ absence) of ``--uninstall`` and ``--list``:
 **Uninstall** (``--uninstall``)
   Files listed in the named manifest are removed. If any file has been
   modified since installation its checksum will differ and GPRinstall will
-  refuse to delete it unless ``-f`` is given.
+  refuse to delete it unless ``-f`` is given. The install name to remove may be
+  given as a trailing argument or inferred from the project file name
+  if the option ``--install-name`` has not been used during installation.
 
 **List** (``--list``)
   Scan the manifests directory and print the name of every installed package.
