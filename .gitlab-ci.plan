@@ -107,17 +107,17 @@ def build_libgpr2_bindings():
 
 def test_gpr2():
     test_install()
-    anod_test("gpr2")
+    anod_test("gpr2", qualifier={"rust": True})
 
 
 def test_gpr2_cov():
     anod_build("gpr2", qualifier={"coverage": True})
-    anod_test("gpr2", qualifier={"coverage": True})
+    anod_test("gpr2", qualifier={"coverage": True, "rust": True})
 
 
 def test_gpr2_valgrind():
     test_install()
-    anod_test("gpr2", qualifier={"valgrind": True})
+    anod_test("gpr2", qualifier={"valgrind": True, "rust": True})
 
 
 def test_gpr2build():
