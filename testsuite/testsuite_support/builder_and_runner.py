@@ -107,6 +107,8 @@ class BuilderAndRunner(object):
                 "--level",
                 self.level,
                 "--dump-trigger=atexit",
+                "--ada",
+                "2022",
                 "--externally-built-projects",
                 "--projects",
                 "gpr2",
@@ -119,11 +121,17 @@ class BuilderAndRunner(object):
             # to do coverage, we use the repo's gpr2 project file instead of
             # the installed one from libgpr2. This means we need to ensure
             # that some scenario variables are properly set.
+            # gnatcov instruments expression functions with declare
+            # expressions, so the instrumented sources need Ada 2022. It also
+            # generates code that does not follow the gpr2 style, hence
+            # -gnatwA. Both must match the flags used by the Makefile to build
+            # the instrumented library.
             gprbuild_cmd = (
                 [GPRBUILD, "-P", project,
                  "-XGPR2_BUILD=gnatcov", "-XXMLADA_BUILD=static"]
                 + vars
-                + ["--src-subdirs=gnatcov-instr", "--implicit-with=gnatcov_rts"]
+                + ["--src-subdirs=gnatcov-instr", "--implicit-with=gnatcov_rts",
+                   "-cargs:Ada", "-gnat2022", "-gnatwA", "-margs"]
                 + args
             )
         else:
