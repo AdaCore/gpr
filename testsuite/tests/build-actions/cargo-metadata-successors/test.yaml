@@ -1,0 +1,4 @@
+description: Check that Cargo_Metadata gives the library it discovers to all the actions depending on it
+driver: basic
+control:
+- [SKIP, "not env.rust", "requires a Rust/Cargo toolchain"]
