@@ -1,9 +1,4 @@
-$ gprbuild -P tree/prj1/prj1.gpr
-"../prj2/obj" created
-"obj" created
-[Ada Compile]     pkg.adb
-[C Compile]       main.c
-[Ada Compile]     pkg2.adb
-[Ada Bind]        main
-[Ada Post-Bind]   b__main.adb
-[Link]            main
+OK: main2.adb (not a root, not with'ed) was not compiled
+OK: pkg.adb, pkg2.adb and main.c were compiled
+OK: gnatbind command line does not reference Prj3's toto1.ali/toto2.ali/toto3.ali
+OK: gnatbind command line references pkg.ali and pkg2.ali

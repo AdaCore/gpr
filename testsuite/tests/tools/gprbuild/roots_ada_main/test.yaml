@@ -1,2 +1,5 @@
-description: Do not consider main units when building a non-Ada root
+description: 
+  Do not consider main units when building a non-Ada root, and make sure
+  units from a "with"ed non-standalone library outside the Roots-restricted
+  closure are not passed to the bind action
 driver: python_script

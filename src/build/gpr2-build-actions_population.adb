@@ -1552,7 +1552,7 @@ package body GPR2.Build.Actions_Population is
                         --  If we don't have Roots at all or CU.Name is a Root
                         --  of the main source add the Root to the bind.
                         if Main.View.Attributes (PRA.Roots).Is_Empty
-                          or else V.Is_Roots
+                          or else Main.View.Is_Roots
                             (Source.Path_Name, Source.Language, CU.Name)
                         then
                            Bind (Idx).Add_Root_Unit (CU);
@@ -1567,7 +1567,20 @@ package body GPR2.Build.Actions_Population is
                      begin
                         if not V.Is_Library_Standalone then
                            for CU of V.Own_Units loop
-                              Bind (Idx).Add_Root_Unit (CU);
+                              --  Same rule as for the Closure loop above:
+                              --  a unit coming from a "with"ed non-standalone
+                              --  library is only forced into the bind
+                              --  closure when there is no Roots restriction,
+                              --  or when it actually matches it. Otherwise
+                              --  it stays out of the bind unless it is
+                              --  independently reached through an actual
+                              --  Ada dependency.
+                              if Main.View.Attributes (PRA.Roots).Is_Empty
+                                or else Main.View.Is_Roots
+                                  (Source.Path_Name, Source.Language, CU.Name)
+                              then
+                                 Bind (Idx).Add_Root_Unit (CU);
+                              end if;
                            end loop;
                         end if;
                      end;
