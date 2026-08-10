@@ -1,0 +1,16 @@
+project Hello_From_Rust is
+   for Languages use ("Rust");
+   for Source_Dirs use ("rust/src");
+
+   package Naming is
+      for Body_Suffix ("Rust") use ".rs";
+   end Naming;
+
+   package Cargo is
+      --  Relative, and so read against this project file's directory
+      --  rather than against whatever directory gprbuild was started
+      --  in
+
+      for Root use "rust";
+   end Cargo;
+end Hello_From_Rust;

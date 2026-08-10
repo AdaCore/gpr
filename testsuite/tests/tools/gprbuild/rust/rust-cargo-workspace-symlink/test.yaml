@@ -1,0 +1,6 @@
+description: Test that symbolic links in in root dir path behaves correctly with the underlying cargo commands
+
+driver: python_script
+control:
+- [ SKIP, "not env.rust", "requires a Rust/Cargo toolchain" ]
+- [ SKIP, "'windows' in env.host.platform", "needs symbolic links" ]

@@ -1,0 +1,4 @@
+description: Check that cargo crate does not have both static and shared library set
+driver: python_script
+control:
+- [ SKIP, "not env.rust", "requires a Rust/Cargo toolchain" ]

@@ -1,0 +1,1 @@
+error: need cdylib or staticlib crate type in Cargo.toml

@@ -1,0 +1,5 @@
+description: A Rust project declaring Main that must match the ones in the Cargo manifest
+
+driver: python_script
+control:
+- [ SKIP, "not env.rust", "requires a Rust/Cargo toolchain" ]

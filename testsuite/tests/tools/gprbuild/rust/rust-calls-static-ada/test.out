@@ -1,0 +1,1 @@
+project Main is built by Cargo and cannot link against Ada library Math_Lib, which is not encapsulated: Cargo is handed the library file alone, without the elaboration code and the Ada runtime a GPR link would add; declare Library_Standalone as "encapsulated" in math_lib.gpr

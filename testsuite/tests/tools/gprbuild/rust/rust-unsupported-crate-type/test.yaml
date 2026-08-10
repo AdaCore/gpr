@@ -1,0 +1,4 @@
+description: Reject unsupported crate type if not coupled with supported ones
+driver: python_script
+control:
+- [ SKIP, "not env.rust", "requires a Rust/Cargo toolchain" ]

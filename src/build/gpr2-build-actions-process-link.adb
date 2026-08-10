@@ -615,6 +615,7 @@ package body GPR2.Build.Actions.Process.Link is
                      end;
                   end loop;
                end if;
+
             end;
          end loop;
 

@@ -1,0 +1,1 @@
+error: Cargo.toml declares both a static and a shared library. Keep the one that matches Library_Kind

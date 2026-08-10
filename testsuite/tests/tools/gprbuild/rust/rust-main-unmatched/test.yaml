@@ -1,0 +1,4 @@
+description: Check that unmatching Main between GPR and the Cargo manifest raises an error
+driver: python_script
+control:
+- [ SKIP, "not env.rust", "requires a Rust/Cargo toolchain" ]

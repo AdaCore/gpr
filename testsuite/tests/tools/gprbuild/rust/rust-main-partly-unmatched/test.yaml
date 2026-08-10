@@ -1,0 +1,4 @@
+description: Check that all mains specified in the GPR project file match the ones in Cargo manifest
+driver: python_script
+control:
+- [ SKIP, "not env.rust", "requires a Rust/Cargo toolchain" ]
