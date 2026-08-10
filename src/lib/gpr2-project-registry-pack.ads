@@ -54,6 +54,7 @@ package GPR2.Project.Registry.Pack is
 
    Binder   : constant Package_Id := +"binder";
    Builder  : constant Package_Id := +"builder";
+   Cargo    : constant Package_Id := +"cargo";
    Clean    : constant Package_Id := +"clean";
    Compiler : constant Package_Id := +"compiler";
    Gnatls   : constant Package_Id := +"gnatls";

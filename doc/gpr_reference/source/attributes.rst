@@ -715,6 +715,33 @@ Package Builder Attributes
   File name of a configuration pragmas file passed to the Ada compiler for every
   Ada source in the project tree.
 
+.. _Package_Cargo_Attributes:
+
+Package Cargo Attributes
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index:: Attributes - Package Cargo Attributes; Profile
+
+* **Profile**: single value
+
+  Cargo profile to build this project with, either ``"dev"`` or ``"release"``.
+  Defaults to ``"release"``.
+
+.. index:: Attributes - Package Cargo Attributes; Root
+
+* **Root**: single value
+
+  Path to the directory containing the ``Cargo.toml`` manifest for this project.
+  Defaults to the project directory.
+
+.. index:: Attributes - Package Cargo Attributes; Rust_Target
+
+* **Rust_Target**: single value
+
+  Rust target triple for this project (e.g. ``"aarch64-unknown-linux-gnu"``).
+  Defaults to the standard triple for the GPR target. Must be one of the triples
+  recognised for the current GPR target.
+
 .. _Package_Clean_Attributes:
 
 Package Clean Attributes
@@ -1093,9 +1120,9 @@ Package Install Attributes
 
 * **Mode**: single value
 
-  Installation mode. Accepted values (case-insensitive): ``"dev"`` (default) -
+  Installation mode. Accepted values (case-insensitive): ``"dev"`` (default) —
   full developer installation including sources, ALI files, and libraries;
-  ``"usage"`` - end-user installation including only shared libraries and
+  ``"usage"`` — end-user installation including only shared libraries and
   executables.
 
 .. index:: Attributes - Package Install Attributes; Project_Subdir

@@ -100,6 +100,17 @@
 			]
 		},
 		{
+			"package_name": "Cargo",
+			"package_to_display": true,
+			"categories": [
+				{
+					"category_name": "Default",
+					"category_to_display": true,
+					"attributes": [{"attribute_name": "Profile"},{"attribute_name": "Root"},{"attribute_name": "Rust_Target"}]
+				}
+			]
+		},
+		{
 			"package_name": "Check",
 			"package_to_display": true,
 			"categories": [

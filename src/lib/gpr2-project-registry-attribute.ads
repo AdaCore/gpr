@@ -660,6 +660,12 @@ package GPR2.Project.Registry.Attribute is
 
    --  Gnatls attribute qualified names
 
+   package Cargo is
+      Profile     : constant Q_Attribute_Id := (Pack.Cargo, +"profile");
+      Root        : constant Q_Attribute_Id := (Pack.Cargo, +"root");
+      Rust_Target : constant Q_Attribute_Id := (Pack.Cargo, +"rust_target");
+   end Cargo;
+
    package Gnatls is
       Switches : constant Q_Attribute_Id := (Pack.Gnatls, +"switches");
    end Gnatls;
