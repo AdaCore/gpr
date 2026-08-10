@@ -28,6 +28,11 @@ class Testsuite(e3.testsuite.Testsuite):
             help="Run test executable under valgrind.")
 
         parser.add_argument(
+            "--rust",
+            action="store_true",
+            help="Enable the Rust tests (requires a Rust/Cargo toolchain).")
+
+        parser.add_argument(
             "--from-gnat",
             action="store_true",
             help="If provided, means gnat packages are available")
@@ -47,6 +52,7 @@ class Testsuite(e3.testsuite.Testsuite):
     def set_up(self):
         super(Testsuite, self).set_up()
         self.env.valgrind = self.main.args.valgrind
+        self.env.rust = self.main.args.rust
         self.env.from_gnat = self.main.args.from_gnat
 
         os.environ["VALGRIND_TEST"] = "YES" if self.env.valgrind else "NO"
