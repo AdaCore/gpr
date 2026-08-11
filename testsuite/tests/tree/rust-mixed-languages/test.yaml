@@ -1,0 +1,3 @@
+description:
+    Rust cannot be combined with another language in the same project
+driver: basic
