@@ -242,10 +242,6 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
                Attrs : GNATCOLL.OS.Stat.File_Attributes;
 
             begin
-               Compile.Ada.Object
-                 (Self.Tree.Action_Id_To_Reference (C_Id).Element.all)
-                 .Change_Intf_Ali_File (To);
-
                if not Self.Ctxt.Is_Library_Standalone then
                   --  Just copy the ali file for standard libraries: they
                   --  need elaboration by the caller.
@@ -610,6 +606,41 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
    begin
       return Register_Artifacts (Self, Units, Db);
    end On_Tree_Insertion;
+
+   --------------------
+   -- Post_Execution --
+   --------------------
+
+   overriding
+   function Post_Execution
+     (Self   : in out Object;
+      Status : Execution_Status;
+      Stdout : Unbounded_String := Null_Unbounded_String;
+      Stderr : Unbounded_String := Null_Unbounded_String) return Boolean
+   is
+      pragma Unreferenced (Status, Stdout, Stderr);
+      use GPR2.Build.Actions.Process;
+   begin
+      --  Update the interface ALI file. This must be done outside the
+      --  Execute subprogram to prevent tampering issues.
+
+      for U of Self.Interface_Units loop
+         declare
+            C_Id : constant Compile.Ada.Ada_Compile_Id :=
+              Compile.Ada.Create (U);
+            From : constant Path_Name.Object :=
+              Compile.Object (Self.Tree.Action (C_Id)).Dependency_File.Path;
+            To   : constant Path_Name.Object :=
+              Self.Ctxt.Library_Ali_Directory.Compose (From.Simple_Name);
+         begin
+            Compile.Ada.Object
+              (Self.Tree.Action_Id_To_Reference (C_Id).Element.all)
+              .Change_Intf_Ali_File (To);
+         end;
+      end loop;
+
+      return True;
+   end Post_Execution;
 
    ------------------------
    -- Register_Artifacts --
