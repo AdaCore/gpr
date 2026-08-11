@@ -621,7 +621,7 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
       pragma Unreferenced (Status, Stdout, Stderr);
       use GPR2.Build.Actions.Process;
    begin
-      --  Update the interface ALI file. This can not be done in the
+      --  Update the interface ALI file. This must be done outside the
       --  Execute subprogram to prevent tampering issues.
 
       for U of Self.Interface_Units loop
