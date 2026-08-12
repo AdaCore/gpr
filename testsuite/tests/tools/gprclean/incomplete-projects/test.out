@@ -1,0 +1,5 @@
+gprclean status: 0
+obj/iface.ali: absent
+obj/extra.ali: present
+gprclean --src-subdirs status: 0
+obj/extra.ali: absent
