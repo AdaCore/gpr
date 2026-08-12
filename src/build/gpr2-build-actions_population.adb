@@ -113,13 +113,6 @@ package body GPR2.Build.Actions_Population is
       --  action DAG population. If unsolvable (cycle in the dependencies),
       --  then Has_Cycle is set and a flat list is returned.
 
-      function Shortest_Cycle
-        (Static_Libs : View_Ids.Set.Set;
-         Cache       : View_Id_Library_Map.Map) return Library_Vector.Vector;
-      --  In case the call to Order_Libs above sets the Has_Cycle parameter,
-      --  this function will show the shortest cycle found in the library
-      --  dependencies.
-
    private
 
       use GNATCOLL.Directed_Graph;
@@ -142,10 +135,6 @@ package body GPR2.Build.Actions_Population is
          Values  : View_Id_Library_Map.Map;
       end record;
 
-      function Contains
-        (Self : Map; Key : GPR2.Project.View.Object) return Boolean
-      is (Self.Values.Contains (Key.Id));
-
       procedure Include
         (Self    : in out Map;
          Element : LH.Object);
@@ -154,10 +143,6 @@ package body GPR2.Build.Actions_Population is
         (Self      : in out Map;
          Key       : GPR2.Project.View.Object;
          Successor : GPR2.Project.View.Object);
-
-      procedure Replace
-        (Self    : in out Map;
-         Element : LH.Object);
 
       function Serialize
         (Self       : in out Map;
@@ -298,17 +283,6 @@ package body GPR2.Build.Actions_Population is
          return Self.Serialize (Has_Cycle);
       end Order_Libs;
 
-      -------------
-      -- Replace --
-      -------------
-
-      procedure Replace
-        (Self    : in out Map;
-         Element : LH.Object) is
-      begin
-         Self.Values.Replace (Element.View.Id, Element);
-      end Replace;
-
       ---------------
       -- Serialize --
       ---------------
@@ -343,24 +317,6 @@ package body GPR2.Build.Actions_Population is
             end return;
       end Serialize;
 
-      ---------------------
-      -- Shortest_Circle --
-      ---------------------
-
-      function Shortest_Cycle
-        (Static_Libs : View_Ids.Set.Set;
-         Cache       : View_Id_Library_Map.Map) return Library_Vector.Vector
-      is
-         Self : Map;
-      begin
-         Self.Initialize (Static_Libs, Cache);
-
-         return Result : Library_Vector.Vector do
-            for Node of Self.DAG.Shortest_Cycle loop
-               Result.Append (Cache (Self.To_View (Node)));
-            end loop;
-         end return;
-      end Shortest_Cycle;
    end Library_Map;
 
    ----------------------
@@ -1677,42 +1633,8 @@ package body GPR2.Build.Actions_Population is
                end loop;
 
                if Has_Cycle then
-                  declare
-                     Msg   : Unbounded_String;
-                     Prev  : LH.Object;
-                     First : Boolean := True;
-                  begin
-                     Tree_Db.Reporter.Report
-                       (GPR2.Message.Create
-                          (GPR2.Message.Warning,
-                           "circular library dependency detected",
-                           GPR2.Source_Reference.Create
-                             (View.Path_Name.Value, 0, 0)));
-
-                     for Lib of
-                       Library_Map.Shortest_Cycle (Static_Libs, Libs_Cache)
-                     loop
-                        if First then
-                           First := False;
-                        else
-                           Msg := +Prev.View.Library_Filename.Simple_Name;
-                           Append (Msg, " depends on ");
-                           Append
-                             (Msg,
-                              String (Lib.View.Library_Filename.Simple_Name));
-
-                           Tree_Db.Reporter.Report
-                             (GPR2.Message.Create
-                                (GPR2.Message.Warning,
-                                 -Msg,
-                                 GPR2.Source_Reference.Create
-                                   (Prev.View.Path_Name.Value, 0, 0)));
-                        end if;
-
-                        Prev := Lib;
-                     end loop;
-                  end;
-
+                  --  Only valid cycles with "limited with" are reported here,
+                  --  invalid one are caught before during project parsing.
                   --  Make the linker action generate --start-group --end-group
                   --  to resolve recursively the symbols in the libraries.
 

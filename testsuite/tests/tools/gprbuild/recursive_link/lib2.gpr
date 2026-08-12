@@ -1,4 +1,4 @@
-limited with "lib1";
+with "lib1";
 
 library project Lib2 is
    for Languages use ("C");
