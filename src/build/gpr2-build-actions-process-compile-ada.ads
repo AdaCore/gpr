@@ -14,10 +14,17 @@ with GPR2.Path_Name;
 
 package GPR2.Build.Actions.Process.Compile.Ada is
 
+   package BCU renames GPR2.Build.Compilation_Unit;
+
    type Ada_Compile_Id is new Actions.Process.Compile.Compile_Id with private;
 
    function Create
-     (Src : GPR2.Build.Compilation_Unit.Object) return Ada_Compile_Id;
+     (Src : BCU.Object;
+      Loc : BCU.Unit_Location) return Ada_Compile_Id;
+   --  Create an Action_Id without having to create the full action object
+
+   function Create
+     (Src : BCU.Object) return Ada_Compile_Id;
    --  Create an Action_Id without having to create the full action object
 
    type Object is new Compile.Object with private;
@@ -31,16 +38,13 @@ package GPR2.Build.Actions.Process.Compile.Ada is
 
    procedure Initialize
      (Self     : in out Object;
-      Src      : GPR2.Build.Compilation_Unit.Object;
+      Src      : BCU.Object;
       Kind     : Unit_Kind := S_Body;
-      Sep_Name : Optional_Name_Type := "");
-   --  Initialize all object fields according to Src.
-   --  If Kind is S_Spec, compile only the spec source file.
-   --  If Kind is S_Separate, compile only the separate source file Sep_Name
-   --  Otherwise, compile the main unit's part.
+      Sep_Name : Optional_Name_Type := No_Name);
+   --  Initialize all object fields according to Src and Loc
 
    function Unit
-     (Self : Object) return GPR2.Build.Compilation_Unit.Object;
+     (Self : Object) return BCU.Object;
    --  Return the compilation unit contained in the source file
 
    function Intf_Ali_File (Self : Object) return Artifacts.Files.Object;
@@ -120,21 +124,12 @@ private
 
    type Ada_Compile_Id is new Compile_Id with record
       Index : Unit_Index;
-      CU    : GPR2.Build.Compilation_Unit.Object;
+      CU    : BCU.Object;
+      UL    : BCU.Unit_Location;
    end record;
 
    overriding function Action_Parameter
      (Self : Ada_Compile_Id) return Value_Type;
-
-   function Create
-     (Src : GPR2.Build.Compilation_Unit.Object) return Ada_Compile_Id
-   is (Compile_Id
-         (Compile.Create
-            (Main_Src => Src.Main_Part.Source.Simple_Name,
-             Lang     => Ada_Language,
-             View     => Src.Owning_View))
-       with Index => Src.Main_Part.Index,
-            CU    => Src);
 
    package File_Sets is new Standard.Ada.Containers.Hashed_Sets
      (Artifacts.Files.Object, Artifacts.Files.Hash,
@@ -152,8 +147,11 @@ private
       In_Library            : GPR2.Project.View.Object;
       --  The library, if any, that will contain the result of the compilation
 
-      CU                    : GPR2.Build.Compilation_Unit.Object;
+      CU                    : BCU.Object;
       --  The Unit to build
+
+      UL                    : BCU.Unit_Location;
+      --  The exact Unit location of the unit to build
 
       Local_Config_Pragmas  : Path_Name.Object;
       --  The local config file as specified by the view's
@@ -177,7 +175,7 @@ private
    Undefined : constant Object := (others => <>);
 
    function Unit
-     (Self : Object) return GPR2.Build.Compilation_Unit.Object
+     (Self : Object) return BCU.Object
    is (Self.CU);
 
    overriding function Is_Defined (Self : Object) return Boolean is
@@ -190,7 +188,7 @@ private
      (Self.Dep_File);
 
    overriding function UID (Self : Object) return Actions.Action_Id'Class is
-     (Create (Src => Self.CU));
+     (Create (Src => Self.CU, Loc => Self.UL));
 
    function ALI (Self : Object) return GPR2.Build.ALI_Parser.Object
    is (Self.ALI_Object);

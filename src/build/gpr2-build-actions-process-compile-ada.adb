@@ -30,12 +30,11 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
    package PAI renames GPR2.Project.Attribute_Index;
    package Actions renames GPR2.Build.Actions;
 
-   function Artifacts_Base_Name
-     (Unit : GPR2.Build.Compilation_Unit.Object) return Simple_Name;
+   function Artifacts_Base_Name (Loc : BCU.Unit_Location) return Simple_Name;
 
    function Can_Unit_Be_Imported
      (Self : Object;
-      CU   : GPR2.Build.Compilation_Unit.Object) return Boolean;
+      CU   : BCU.Object) return Boolean;
    --  Ensure that a unit coming from another project can be imported.
    --  It is the case, if the unit is part of the Interfaces or the
    --  Library_Interface attributes. Otherwise, this units is reserved for
@@ -70,21 +69,18 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
    -- Artifacts_Base_Name --
    -------------------------
 
-   function Artifacts_Base_Name
-     (Unit : GPR2.Build.Compilation_Unit.Object) return Simple_Name
+   function Artifacts_Base_Name (Loc : BCU.Unit_Location) return Simple_Name
    is
-      Main : constant Compilation_Unit.Unit_Location := Unit.Main_Part;
-      BN   : constant Simple_Name := Simple_Name (Main.Source.Base_Name);
-
+      BN  : constant Simple_Name := Simple_Name (Loc.Source.Base_Name);
    begin
-      if Main.Index = No_Index then
+      if Loc.Index = No_Index then
          return BN;
       else
          declare
-            Img : constant String := Main.Index'Image;
+            Img : constant String := Loc.Index'Image;
             Sep : constant String :=
               Get_Attr
-                (Main.View, PRA.Compiler.Multi_Unit_Object_Separator,
+                (Loc.View, PRA.Compiler.Multi_Unit_Object_Separator,
                  Ada_Language, "~");
          begin
             return BN & Simple_Name (Sep & Img (Img'First + 1 .. Img'Last));
@@ -98,7 +94,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
 
    function Can_Unit_Be_Imported
      (Self : Object;
-      CU   : GPR2.Build.Compilation_Unit.Object) return Boolean
+      CU   : BCU.Object) return Boolean
    is
       use GPR2.Project.View;
 
@@ -271,7 +267,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
       Version : Artifacts.Key_Value.Object;
    begin
 
-      GPR2.Build.Compilation_Unit.For_All_Part
+      BCU.For_All_Part
         (Self.CU, Add_To_Signature'Access);
 
       if Stop then
@@ -439,6 +435,26 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
       end if;
    end Compute_Signature;
 
+   ------------
+   -- Create --
+   ------------
+
+   function Create
+     (Src : BCU.Object; Loc : BCU.Unit_Location) return Ada_Compile_Id is
+   begin
+      return (Compile_Id
+              (Compile.Create
+                 (Main_Src => Loc.Source.Simple_Name,
+                  Lang     => Ada_Language,
+                  View     => Src.Owning_View))
+              with Index    => Loc.Index,
+                   CU       => Src,
+                   UL       => Loc);
+   end Create;
+
+   function Create (Src : BCU.Object) return Ada_Compile_Id is
+      (Create (Src, Src.Main_Part));
+
    ------------------
    -- Dependencies --
    ------------------
@@ -499,41 +515,45 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
 
    procedure Initialize
      (Self     : in out Object;
-      Src      : GPR2.Build.Compilation_Unit.Object;
+      Src      : BCU.Object;
       Kind     : Unit_Kind := S_Body;
-      Sep_Name : Optional_Name_Type := "")
+      Sep_Name : Optional_Name_Type := No_Name)
    is
+      function Resolve_Location return Compilation_Unit.Unit_Location;
+      function Resolve_Location return Compilation_Unit.Unit_Location is
+      begin
+         if Kind = S_Spec and then Src.Has_Part (S_Spec) then
+            return Src.Get (S_Spec);
+         elsif Kind = S_Separate and then Src.Has_Part (S_Separate) then
+            return Src.Get (S_Separate, Sep_Name);
+         else
+            return Src.Main_Part;
+         end if;
+      end Resolve_Location;
+
       View    : constant GPR2.Project.View.Object := Src.Owning_View;
       No_Obj  : constant Boolean :=
                   (View.Is_Library and then View.Is_Externally_Built)
                     or else View.Is_Runtime;
       Attr    : GPR2.Project.Attribute.Object;
       Closure : GPR2.Project.View.Set.Object;
+
+      Loc     : constant BCU.Unit_Location := Resolve_Location;
    begin
       --  Ensure the object wasn't previously initialized prior to this call
       Self := Undefined;
 
       Self.Ctxt := Src.Owning_View;
-
-      if Kind = S_Spec and then Src.Has_Part (S_Spec) then
-         Self.Src :=
-           Src.Owning_View.Source (Src.Get (S_Spec).Source.Simple_Name);
-      elsif Kind = S_Separate and then Src.Has_Part (S_Separate) then
-         Self.Src :=
-           Src.Owning_View.Source
-             (Src.Get (S_Separate, Sep_Name).Source.Simple_Name);
-      else
-         Self.Src := Src.Owning_View.Source (Src.Main_Part.Source.Simple_Name);
-      end if;
-
       Self.Lang := Ada_Language;
       Self.CU   := Src;
+      Self.UL   := Loc;
+      Self.Src  := Src.Owning_View.Source (Loc.Source.Simple_Name);
 
       --  ??? For Standalone libraries, we should probably not lookup for
       --  previous compilation artifacts, since we need to amend the ali
       --  file from the library directory.
       declare
-         BN        : constant Simple_Name := Artifacts_Base_Name (Src);
+         BN        : constant Simple_Name := Artifacts_Base_Name (Loc);
          Ali_BN    : constant Simple_Name := BN & Self.Dep_File_Suffix;
          O_Suff    : constant Simple_Name :=
                        Simple_Name
@@ -753,7 +773,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          Db.Add_Input (UID, Artifacts.Source_Files.Create (Path));
       end Add_Input_For;
    begin
-      GPR2.Build.Compilation_Unit.For_All_Part (Self.CU, Add_Input_For'Access);
+      BCU.For_All_Part (Self.CU, Add_Input_For'Access);
 
       if Self.Obj_File.Is_Defined then
          if not Db.Add_Output (UID, Self.Obj_File) then
@@ -791,7 +811,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          if Self.Inh_From.Is_Defined then
             declare
                BN        : constant Simple_Name :=
-                             Artifacts_Base_Name (Self.CU);
+                 Artifacts_Base_Name (Self.UL);
                O_Suff    : constant Simple_Name :=
                              Simple_Name
                                (Get_Attr

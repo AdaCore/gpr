@@ -1,0 +1,6 @@
+$ gprbuild -c -P prj.gpr -u main.adb main-test_proc.adb -gnatc
+"obj" created
+[Ada Compile]     main-test_proc.adb
+[Ada Compile]     main.adb
+$ ls obj
+['main-test_proc.ali', 'main.ali']

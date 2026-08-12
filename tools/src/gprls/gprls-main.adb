@@ -477,7 +477,7 @@ begin
                     (GPR2.Message.Create
                        (GPR2.Message.Warning,
                         "Can not find Ada compile action for source file "
-                        & String (File)));
+                        & File));
                else
                   Actions_Of_Interest.Include (Act.UID);
                end if;

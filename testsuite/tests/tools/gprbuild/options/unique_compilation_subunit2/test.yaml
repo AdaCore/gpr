@@ -1,0 +1,2 @@
+description: "gprbuild -u <unit> <subunit> compiles both the unit and subunit"
+driver: python_script
