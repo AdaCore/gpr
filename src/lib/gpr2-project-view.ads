@@ -542,6 +542,16 @@ package GPR2.Project.View is
    --  an existing compilation unit from Self or the Theorical Simple_Name of
    --  the unit if it does not exist.
 
+   function Unit_Name_For_Filename
+     (Self     : Object;
+      Filename : Simple_Name;
+      Success  : out Boolean) return Optional_Name_Type;
+   --  Given an Ada Filename, computes the Unit_Name of an existing or
+   --  hypothetical compilation unit for that file would have under Self's
+   --  naming scheme.
+   --  Success is False if Filename matches neither a naming exception nor
+   --  a the naming scheme.
+
    function Units
      (Self                  : Object;
       With_Externally_Built : Boolean := False)

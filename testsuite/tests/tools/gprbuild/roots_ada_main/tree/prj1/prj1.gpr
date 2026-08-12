@@ -1,4 +1,5 @@
 with "../prj2/prj2.gpr";
+with "../prj3/prj3.gpr";
 
 project Prj1 is
 	for Languages   use ("Ada", "C");

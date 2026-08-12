@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Characters.Handling;
 with Ada.Strings.Fixed;
 
 with GNAT.OS_Lib;
@@ -3455,6 +3456,166 @@ package body GPR2.Project.View is
          return Build.Compilation_Unit.Undefined;
       end if;
    end Unit;
+
+   -----------------------------
+   -- Unit_Name_For_Filename --
+   -----------------------------
+
+   function Unit_Name_For_Filename
+     (Self     : Object;
+      Filename : Simple_Name;
+      Success  : out Boolean) return Optional_Name_Type
+   is
+      package ACH renames Ada.Characters.Handling;
+
+      function Ends_With (S, Suffix : String) return Boolean is
+        (Suffix'Length > 0
+         and then S'Length >= Suffix'Length
+         and then S (S'Last - Suffix'Length + 1 .. S'Last) = Suffix);
+   begin
+      Success := False;
+
+      --  Filename may be explicitly listed as the Spec or Body/Implementation
+      --  of some unit, regardless of the naming scheme.
+
+      for Attr of Self.Attributes (PRA.Naming.Spec) loop
+         if Filename_Type (Attr.Value.Text) = Filename_Type (Filename) then
+            Success := True;
+            return Name_Type (Attr.Index.Value);
+         end if;
+      end loop;
+
+      for Attr of Self.Attributes (PRA.Naming.Body_N) loop
+         if Filename_Type (Attr.Value.Text) = Filename_Type (Filename) then
+            Success := True;
+            return Name_Type (Attr.Index.Value);
+         end if;
+      end loop;
+
+      --  Otherwise, strip whichever of Spec/Body/Separate_Suffix matches
+      --  Filename (the longest one, if several do -- e.g. Body_Suffix and
+      --  Separate_Suffix are equal in the default naming scheme, and which
+      --  one it technically is doesn't matter here: only how many
+      --  characters to strip does), then decode the remainder the same
+      --  way Filename_For_Unit constructs it, in reverse: split on
+      --  Dot_Replacement instead of ".".
+
+      declare
+         FN       : constant String := String (Filename);
+         Has_Spec : constant Boolean := Self.Has_Spec_Suffix (Ada_Language);
+         Has_Body : constant Boolean := Self.Has_Body_Suffix (Ada_Language);
+         Has_Sep  : constant Boolean := Self.Has_Separate_Suffix;
+         Spec_Suf : constant String :=
+                      (if Has_Spec
+                       then Self.Spec_Suffix (Ada_Language).Value.Text
+                       else "");
+         Body_Suf : constant String :=
+                      (if Has_Body
+                       then Self.Body_Suffix (Ada_Language).Value.Text
+                       else "");
+         Sep_Suf  : constant String :=
+                      (if Has_Sep
+                       then Self.Separate_Suffix.Value.Text
+                       else "");
+
+         Suffix_Len : Natural := 0;
+
+      begin
+         if Has_Spec
+           and then Ends_With (FN, Spec_Suf)
+           and then Spec_Suf'Length > Suffix_Len
+         then
+            Suffix_Len := Spec_Suf'Length;
+         end if;
+
+         if Has_Body
+           and then Ends_With (FN, Body_Suf)
+           and then Body_Suf'Length > Suffix_Len
+         then
+            Suffix_Len := Body_Suf'Length;
+         end if;
+
+         if Has_Sep
+           and then Ends_With (FN, Sep_Suf)
+           and then Sep_Suf'Length > Suffix_Len
+         then
+            Suffix_Len := Sep_Suf'Length;
+         end if;
+
+         if Suffix_Len = 0 then
+            --  Filename doesn't match any known Ada naming-scheme suffix
+            return No_Name;
+         end if;
+
+         --  The suffix must leave at least one character for the unit
+         --  name itself: a filename that is exactly the suffix (e.g.
+         --  ".ads") matches the naming scheme but names no unit.
+
+         if Suffix_Len >= FN'Length then
+            return No_Name;
+         end if;
+
+         declare
+            Base     : constant String :=
+                         FN (FN'First .. FN'Last - Suffix_Len);
+            Dot_Repl : constant String :=
+                         Self.Attribute
+                           (PRA.Naming.Dot_Replacement).Value.Text;
+            Result   : Unbounded_String;
+            Start    : Positive := Base'First;
+            Idx      : Natural;
+
+         begin
+            --  Undo Dot_Replacement (each occurrence becomes "."). Every
+            --  component between separators (or before the first / after
+            --  the last) must be nonempty: a leading, trailing, or
+            --  doubled separator (e.g. "foo-.adb", "foo--bar.adb" with
+            --  "-" as Dot_Replacement) does not name a valid unit.
+
+            loop
+               Idx := (if Dot_Repl'Length = 0 then 0
+                       else Ada.Strings.Fixed.Index
+                         (Base (Start .. Base'Last), Dot_Repl));
+
+               if Idx = Start then
+                  --  Empty component: a separator sits right at the start
+                  --  of this segment (leading separator, or two adjacent
+                  --  separators). Base (Start .. Idx - 1) below would be
+                  --  a null slice in this case (Ada permits this without
+                  --  raising Constraint_Error, since the bounds-in-range
+                  --  check only applies to non-null slices), so this
+                  --  check is not required to avoid a crash -- it's
+                  --  purely to make the empty-component rejection
+                  --  explicit before the slice is built, rather than
+                  --  relying on the Part'Length = 0 check just below.
+                  return No_Name;
+               end if;
+
+               declare
+                  Part : constant String :=
+                           Base (Start .. (if Idx = 0 then Base'Last
+                                           else Idx - 1));
+               begin
+                  if Part'Length = 0 then
+                     return No_Name;
+                  end if;
+
+                  if Length (Result) > 0 then
+                     Append (Result, ".");
+                  end if;
+
+                  Append (Result, ACH.To_Lower (Part));
+               end;
+
+               exit when Idx = 0;
+               Start := Idx + Dot_Repl'Length;
+            end loop;
+
+            Success := True;
+            return Name_Type (To_String (Result));
+         end;
+      end;
+   end Unit_Name_For_Filename;
 
    ---------------
    -- Unit_Part --
