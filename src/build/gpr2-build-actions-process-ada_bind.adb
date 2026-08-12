@@ -1062,9 +1062,23 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
          for U of Scope loop
             if not Self.Itf_Analyzed.Contains (U) then
-               To_Analyze.Include
-                 (Self.Ctxt.Namespace_Roots.First_Element.Unit (U),
-                  Comp.Unit.Name);
+               declare
+                  CU : constant Compilation_Unit.Object :=
+                         Self.Ctxt.Namespace_Roots.First_Element.Unit (U);
+               begin
+                  --  The unit may be unknown to the namespace root when the
+                  --  tree is not loaded with the same options as the ones used
+                  --  to build it: one classical example would be calling
+                  --  gprbuild to do some coverage with the --src-subdirs and
+                  --  --implicit-with switches: ALI files are produced from
+                  --  instrumented files. Calling gprclean without these
+                  --  same switches modify the detected units, despite relying
+                  --  on the same ALI files.
+
+                  if CU.Is_Defined then
+                     To_Analyze.Include (CU, Comp.Unit.Name);
+                  end if;
+               end;
             end if;
          end loop;
 

@@ -1,0 +1,2 @@
+description: gprclean without the --src-subdirs used to build a library interface
+driver: python_script
