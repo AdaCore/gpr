@@ -25,6 +25,10 @@ package GPR2.Build.Source is
    function Is_Compilable (Self : Object) return Boolean;
    --  Whether the source's language has a defined compiler driver
 
+   function Is_Compilation_Enabled (Self : Object) return Boolean;
+   --  Whether the source's language has an undefined or a non-empty compiler
+   --  driver.
+
    function Owning_View (Self : Object) return Project.View.Object
      with Pre  => Self.Is_Defined,
           Post => Owning_View'Result.Is_Defined;
@@ -73,6 +77,9 @@ private
 
    function Is_Compilable (Self : Object) return Boolean is
      (Self.Owning_View.Is_Compilable (Self.Language));
+
+   function Is_Compilation_Enabled (Self : Object) return Boolean is
+     (Self.Owning_View.Is_Compilation_Enabled (Self.Language));
 
    function Owning_View (Self : Object) return Project.View.Object is
      (Self.Owning_View);

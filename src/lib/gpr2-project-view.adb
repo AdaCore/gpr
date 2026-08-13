@@ -106,6 +106,11 @@ package body GPR2.Project.View is
       Data : Build.Source.Sets.Filter_Data'Class) return Boolean;
    --  Function used to filter the sources in the Sources subprogram
 
+   function Driver_Status
+     (Self : Object;
+      Lang : Language_Id) return View_Internal.Driver_Status;
+   --  Computes and caches the compilation driver status for Lang once
+
    ----------------
    -- Aggregated --
    ----------------
@@ -1287,6 +1292,38 @@ package body GPR2.Project.View is
       return View_Internal.Get_RO (Self).Context;
    end Context;
 
+   -------------------
+   -- Driver_Status --
+   -------------------
+
+   function Driver_Status
+     (Self : Object;
+      Lang : Language_Id) return View_Internal.Driver_Status
+   is
+      Ref : constant View_Internal.Ref := View_Internal.Get_RW (Self);
+      C   : constant View_Internal.Lang_Driver_Status_Map.Cursor :=
+        Ref.Compilable_Languages.Find (Lang);
+   begin
+      if View_Internal.Lang_Driver_Status_Map.Has_Element (C) then
+         return View_Internal.Lang_Driver_Status_Map.Element (C);
+      end if;
+
+      declare
+         Attr    : constant GPR2.Project.Attribute.Object :=
+           Self.Attribute
+             (PRA.Compiler.Driver, Project.Attribute_Index.Create (Lang));
+         Defined : constant Boolean := Attr.Is_Defined;
+         Empty   : constant Boolean :=
+           Defined and then Length (Attr.Value.Unchecked_Text) = 0;
+         Status  : constant View_Internal.Driver_Status :=
+           (Defined => Defined,
+            Enabled => not Empty);
+      begin
+         Ref.Compilable_Languages.Insert (Lang, Status);
+         return Status;
+      end;
+   end Driver_Status;
+
    ----------------
    -- Executable --
    ----------------
@@ -1998,28 +2035,22 @@ package body GPR2.Project.View is
 
    function Is_Compilable
      (Self : Object;
-      Lang : Language_Id) return Boolean
-   is
-      Ref  : constant View_Internal.Ref := View_Internal.Get_RW (Self);
-      C    : constant View_Internal.Lang_Boolean_Map.Cursor :=
-               Ref.Compilable_Languages.Find (Lang);
-      Attr : GPR2.Project.Attribute.Object;
-      Res  : Boolean;
+      Lang : Language_Id) return Boolean is
    begin
-      if not View_Internal.Lang_Boolean_Map.Has_Element (C) then
-         Attr := Self.Attribute
-           (PRA.Compiler.Driver, Project.Attribute_Index.Create (Lang));
-         Res := Attr.Is_Defined
-           and then Length (Attr.Value.Unchecked_Text) > 0;
-
-         Ref.Compilable_Languages.Insert (Lang, Res);
-
-         return Res;
-
-      else
-         return View_Internal.Lang_Boolean_Map.Element (C);
-      end if;
+      return (Self.Driver_Status (Lang).Defined
+              and then Self.Driver_Status (Lang).Enabled);
    end Is_Compilable;
+
+   -----------------------------
+   -- Is_Compilation_Enabled --
+   -----------------------------
+
+   function Is_Compilation_Enabled
+     (Self    : Object;
+      Lang    : Language_Id) return Boolean is
+   begin
+      return Self.Driver_Status (Lang).Enabled;
+   end Is_Compilation_Enabled;
 
    -----------------
    -- Is_Extended --

@@ -65,8 +65,13 @@ private package GPR2.View_Internal is
 
    type Dir_Cache_List is array (Cacheable_Dir_Attrs) of Dir_Cache_Value;
 
-   package Lang_Boolean_Map is new Ada.Containers.Hashed_Maps
-     (Language_Id, Boolean, Hash, "=");
+   type Driver_Status is record
+      Defined : Boolean;
+      Enabled : Boolean;
+   end record;
+
+   package Lang_Driver_Status_Map is new Ada.Containers.Hashed_Maps
+     (Language_Id, Driver_Status, Hash, "=");
 
    --  Data contains a project view data. We have all the attributes, variables
    --  and packages with the final values as parsed with the project's context
@@ -129,7 +134,7 @@ private package GPR2.View_Internal is
 
       Languages            : Containers.Language_Set;
       --  Languages as Language_Ids defined for the view
-      Compilable_Languages : Lang_Boolean_Map.Map;
+      Compilable_Languages : Lang_Driver_Status_Map.Map;
       --  For languages in the view this lists whether they have a proper
       --  compiler driver definition.
       Interface_Sources    : Containers.Source_Path_To_Sloc.Map;

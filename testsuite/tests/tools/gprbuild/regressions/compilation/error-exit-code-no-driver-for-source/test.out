@@ -1,0 +1,7 @@
+$ gprbuild -P prj.gpr -j1
+"obj" created
+[Ada Compile]     main.adb
+prj.gpr: error: no compiler for language "Bla", cannot compile "main.bla"
+[Bla Compile] main.bla (prj.gpr) failed.
+
+OK: correctly raised a fatal exit code (7)

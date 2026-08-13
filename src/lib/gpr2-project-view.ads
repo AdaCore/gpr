@@ -378,6 +378,13 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Whether the language has a compiler driver defined for the view
 
+   function Is_Compilation_Enabled
+     (Self : Object;
+      Lang : Language_Id) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Whether the language have an undefined driver or a non-empty driver for
+   --  the view.
+
    function View_Db (Self : Object) return GPR2.Build.View_Db.Object
      with Pre => Self.Is_Defined, Inline;
    --  Return the artifacts database for the view. If the view don't have

@@ -1,0 +1,2 @@
+description: Regression test - gprbuild doesn't report any error when there are undefined compiler for a source
+driver: python_script
