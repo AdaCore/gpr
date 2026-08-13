@@ -273,8 +273,10 @@ package body GPRinstall.Options is
       Parser.Add_Argument
         (Install_Group,
          Create
-           (Name => "--uninstall",
-            Help => "Remove all previously installed files"));
+           (Name      => "--uninstall",
+            Help      => "Remove previously installed files",
+            Delimiter => Space,
+            Parameter => "<manifest file>"));
       Parser.Add_Argument
         (Install_Group,
          Create
