@@ -933,7 +933,7 @@ package body GPR2.Build.Actions_Population is
             begin
                for Src of V.Sources loop
                   if not Src.Has_Units
-                    and then Src.Is_Compilable
+                    and then Src.Is_Compilation_Enabled
                     and then Src.Kind = S_Body
                   then
                      Comp.Initialize (Src);
@@ -1222,7 +1222,7 @@ package body GPR2.Build.Actions_Population is
       for V of Closure loop
          for Src of V.Sources loop
             if not Src.Has_Units
-              and then Src.Is_Compilable
+              and then Src.Is_Compilation_Enabled
               and then Src.Kind = S_Body
             then
                declare
@@ -1380,7 +1380,7 @@ package body GPR2.Build.Actions_Population is
                Direct_Import := False;
 
                if Src.Has_Units
-                 or else not Src.Is_Compilable
+                 or else not Src.Is_Compilation_Enabled
                  or else Src.Kind /= S_Body
                then
                   Skip := True;
@@ -1739,7 +1739,7 @@ package body GPR2.Build.Actions_Population is
                Direct_Import := False;
 
                if Src.Has_Units
-                 or else not Src.Is_Compilable
+                 or else not Src.Is_Compilation_Enabled
                  or else Src.Kind /= S_Body
                then
                   Skip := True;
