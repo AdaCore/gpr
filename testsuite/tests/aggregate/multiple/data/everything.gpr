@@ -1,0 +1,3 @@
+aggregate project Everything is
+  for Project_Files use ("everything_spark.gpr", "general_spark.gpr");
+end Everything;

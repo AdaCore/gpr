@@ -1,0 +1,2 @@
+description: Ensure multiply included aggregates are processed correctly
+driver: basic
