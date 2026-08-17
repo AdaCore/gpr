@@ -30,9 +30,10 @@ package GPR2.Build.Actions.Process.Archive_Table_List is
 
    --  Initializes the action to add link options to the build process.
    procedure Initialize
-     (Self    : in out Object;
-      Archive : GPR2.Build.Artifacts.Library.Object;
-      View    : GPR2.Project.View.Object);
+     (Self         : in out Object;
+      Archive      : GPR2.Build.Artifacts.Library.Object;
+      View         : GPR2.Project.View.Object;
+      Library_View : GPR2.Project.View.Object);
 
    --  Handles the insertion of the action into the build tree database.
    overriding
@@ -86,6 +87,9 @@ private
    is (Archive'Length, View, Archive);
 
    type Object is new Actions.Process.Object with record
+      Library_View : GPR2.Project.View.Object;
+      --  View of the archive that lead to this action
+
       Archive : GPR2.Build.Artifacts.Library.Object;
       --  The archive file to which the new section, holding the provided
       --  arguments, will be added.

@@ -30,19 +30,22 @@ package GPR2.Build.Actions.Process.Link_Options_Extract is
    function Is_Defined (Self : Object) return Boolean;
 
    procedure Initialize
-     (Self        : in out Object;
-      Object_File : Simple_Name;
-      View        : GPR2.Project.View.Object);
+     (Self         : in out Object;
+      Object_File  : Simple_Name;
+      View         : GPR2.Project.View.Object;
+      Library_View : GPR2.Project.View.Object);
    --  Initialize the action.
    --  @param Self The action to initialize
    --  @param Object_File The object file containing the linker options
    --                      to be extracted.
    --  @param View The view that contains the action
+   --  @param Library_View The view that drove the creation of the action
 
    procedure Initialize
-     (Self    : in out Object;
-      Archive : GPR2.Build.Artifacts.Library.Object;
-      View    : GPR2.Project.View.Object);
+     (Self         : in out Object;
+      Archive      : GPR2.Build.Artifacts.Library.Object;
+      View         : GPR2.Project.View.Object;
+      Library_View : GPR2.Project.View.Object);
    --  Initialize the action to extract linker options directly from the whole
    --  library archive rather than from a single, known object file member.
    --  This is used as a fallback for libraries that do not embed the options
@@ -52,6 +55,7 @@ package GPR2.Build.Actions.Process.Link_Options_Extract is
    --  @param Self The action to initialize
    --  @param Archive The library archive to scan for the linker options.
    --  @param View The view that contains the action
+   --  @param Library_View The view that drove the creation of the action
 
    overriding
    function On_Tree_Insertion
@@ -108,6 +112,9 @@ private
       --  previous object file was not found. It is to keep the backward
       --  compatibility between gprbuild1 and gprbuild2, as gprbuild1 did
       --  not rely on o__<lib>.o files.
+
+      Library_View : GPR2.Project.View.Object;
+      --  View of the archive that lead to this action
 
       Object_File  : GPR2.Build.Artifacts.Object_File.Object;
       --  The provided object file containing the link option to be extracted,

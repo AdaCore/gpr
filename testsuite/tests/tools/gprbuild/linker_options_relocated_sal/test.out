@@ -1,0 +1,7 @@
+Direct (non-relocated, non-installed) SAL consumption works
+Embedded linker_options section is portable (bare -lgnat/-lgnarl)
+Tasking fixture's -lgnarl is portable too
+Encapsulated fixture embeds no absolute runtime archive path
+Relocated tasking SAL resolves -lgnat/-lgnarl and runs correctly
+Relocated encapsulated SAL resolves to the _pic runtime and runs
+Relocated, gprinstall-installed SAL linked and ran successfully

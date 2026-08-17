@@ -81,15 +81,17 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
    ----------------
 
    procedure Initialize
-     (Self        : in out Object;
-      Object_File : Simple_Name;
-      View        : GPR2.Project.View.Object) is
+     (Self         : in out Object;
+      Object_File  : Simple_Name;
+      View         : GPR2.Project.View.Object;
+      Library_View : GPR2.Project.View.Object) is
    begin
       --  Ensure the object wasn't previously initialized prior to this call
       Self := Undefined;
 
-      Self.Ctxt := View;
-      Self.Object_File :=
+      Self.Ctxt         := View;
+      Self.Library_View := Library_View;
+      Self.Object_File  :=
         GPR2.Build.Artifacts.Object_File.Create (Object_File);
    end Initialize;
 
@@ -98,14 +100,16 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
    ----------------
 
    procedure Initialize
-     (Self    : in out Object;
-      Archive : GPR2.Build.Artifacts.Library.Object;
-      View    : GPR2.Project.View.Object) is
+     (Self         : in out Object;
+      Archive      : GPR2.Build.Artifacts.Library.Object;
+      View         : GPR2.Project.View.Object;
+      Library_View : GPR2.Project.View.Object) is
    begin
       --  Ensure the object wasn't previously initialized prior to this call
       Self := Undefined;
 
       Self.Ctxt         := View;
+      Self.Library_View := Library_View;
       Self.Archive      := Archive;
       Self.From_Archive := True;
    end Initialize;
@@ -237,6 +241,13 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
          Sliced_Options : Slice_Set;
          Separators     : constant String := ASCII.LF & "";
          Linkers_UID    : Action_Id_Sets.Set := Action_Id_Sets.Empty_Set;
+
+         Static_Libs : Boolean := True;
+
+         Adalib_Dir : constant GPR2.Path_Name.Object :=
+           (if Self.View.Tree.Runtime_Project.Is_Defined
+            then Self.View.Tree.Runtime_Project.Object_Directory
+            else GPR2.Path_Name.Undefined);
       begin
 
          for Act of Self.Tree.Successors (Self.UID_Artifact) loop
@@ -275,83 +286,63 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
                     Left  => Blanks,
                     Right => Blanks);
 
-               Opt          : Unbounded_String := To_Unbounded_String (Raw);
-               Archive_Ctxt : GPR2.Project.View.Object;
+               Opt : Unbounded_String := To_Unbounded_String (Raw);
 
-               use GPR2.Project;
+               use type Project.Standalone_Library_Kind;
             begin
-               if Self.From_Archive then
-                  declare
-                     Static_Libs : Boolean := True;
-                     Adalib_Dir  : constant GPR2.Path_Name.Object :=
-                       (if Self.View.Tree.Runtime_Project.Is_Defined
-                        then Self.View.Tree.Runtime_Project.Object_Directory
-                        else GPR2.Path_Name.Undefined);
-                  begin
+               --  Resolution below runs unconditionally, regardless of
+               --  From_Archive: a directly-extracted o__<lib>.o carries
+               --  exactly the same bare -lgnat/-lgnarl tokens as a
+               --  whole-archive scan does, and needs the same treatment.
 
-                     --  Linker options insertion already transforms -lgnat and
-                     --  -lgnarl options as absolute path to the runtime
-                     --  archives. However, if linker options are coming from a
-                     --  library that has been built with gprbuild1, the linker
-                     --  options may contain raw -lgnat and -lgnarl that need
-                     --  to be processed.
+               pragma Assert (Adalib_Dir.Is_Defined);
 
-                     pragma Assert (Self.Tree.Has_Predecessor (Self.Archive));
-                     pragma Assert (Adalib_Dir.Is_Defined);
+               if Raw = "-shared" then
+                  Static_Libs := False;
+               end if;
 
-                     Archive_Ctxt := Self.Tree.Predecessor (Self.Archive).View;
-
-                     if Raw = "-shared" then
-                        Static_Libs := False;
+               --  This is a direct duplicate of the logic applied in ada_bind
+               --  the proper solution would be to have an unique helper
+               --  between all actions that needs this.
+               if Raw = "-lgnat" then
+                  if Static_Libs
+                    and then Self.Library_View.Library_Support /= None
+                  then
+                     if Self.Library_View.Is_Library
+                       and then Self.Library_View.Library_Standalone
+                         = Project.Encapsulated
+                     then
+                        Opt :=
+                          To_Unbounded_String
+                            (Adalib_Dir.Compose ("libgnat_pic.a")
+                             .String_Value);
+                     else
+                        Opt :=
+                          To_Unbounded_String
+                            (Adalib_Dir.Compose ("libgnat.a")
+                             .String_Value);
                      end if;
+                  end if;
 
-                     if Raw = "-lgnat" then
-                        if Static_Libs
-                          and then Archive_Ctxt.Library_Support /= None
-                        then
-                           if Archive_Ctxt.Is_Library
-                             and then
-                               Archive_Ctxt.Library_Standalone
-                               = GPR2.Project.Encapsulated
-                           then
-                              Opt :=
-                                To_Unbounded_String
-                                  (Adalib_Dir.Compose ("libgnat_pic.a")
-                                     .String_Value);
-                           else
-                              Opt :=
-                                To_Unbounded_String
-                                  (Adalib_Dir.Compose ("libgnat.a")
-                                     .String_Value);
-                           end if;
-                        else
-                           Opt := To_Unbounded_String (Raw);
-                        end if;
-
-                     elsif Raw = "-lgnarl" then
-                        if Static_Libs
-                          and then Archive_Ctxt.Library_Support /= None
-                        then
-                           if Archive_Ctxt.Is_Library
-                             and then
-                               Archive_Ctxt.Library_Standalone
-                               = GPR2.Project.Encapsulated
-                           then
-                              Opt :=
-                                To_Unbounded_String
-                                  (Adalib_Dir.Compose ("libgnarl_pic.a")
-                                     .String_Value);
-                           else
-                              Opt :=
-                                To_Unbounded_String
-                                  (Adalib_Dir.Compose ("libgnarl.a")
-                                     .String_Value);
-                           end if;
-                        else
-                           Opt := To_Unbounded_String (Raw);
-                        end if;
+               elsif Raw = "-lgnarl" then
+                  if Static_Libs
+                    and then Self.Library_View.Library_Support /= None
+                  then
+                     if Self.Library_View.Is_Library
+                       and then Self.Library_View.Library_Standalone
+                         = Project.Encapsulated
+                     then
+                        Opt :=
+                          To_Unbounded_String
+                            (Adalib_Dir.Compose ("libgnarl_pic.a")
+                             .String_Value);
+                     else
+                        Opt :=
+                          To_Unbounded_String
+                            (Adalib_Dir.Compose ("libgnarl.a")
+                             .String_Value);
                      end if;
-                  end;
+                  end if;
                end if;
 
                if To_String (Opt) /= "" then

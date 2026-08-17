@@ -1,0 +1,15 @@
+library project Worker_Encapsulated_Lib is
+   for Library_Name use "worker_encapsulated";
+   for Library_Dir use "lib";
+   for Library_Ali_Dir use "ali";
+   for Library_Src_Dir use "srcs";
+   for Object_Dir use "obj";
+   for Source_Dirs use ("src");
+   for Library_Interface use ("worker");
+   for Library_Standalone use "encapsulated";
+   for Library_Auto_Init use "True";
+   --  Do NOT set "for Library_Partial_Linker use ();" -- see tree/lib.gpr
+   --  for why an empty override breaks auto-init. Encapsulated SALs need
+   --  partial linking to fold the runtime in, even more so than a
+   --  standard standalone library.
+end Worker_Encapsulated_Lib;

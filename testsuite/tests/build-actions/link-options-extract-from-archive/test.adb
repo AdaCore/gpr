@@ -1,6 +1,5 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Text_IO;
-with Ada.Strings.Fixed;
 
 with GPR2.Build.Actions; use GPR2.Build.Actions;
 with GPR2.Build.Actions.Process.Archive_Table_List;
@@ -108,7 +107,7 @@ begin
            GBA.Process.Link_Options_Extract.Create
              (Root.Library_Filename.Simple_Name, Root);
       begin
-         Table_List.Initialize (Archive, Root);
+         Table_List.Initialize (Archive, Root, Root);
 
          if not Tree.Artifacts_Database.Add_Action (Table_List) then
             Ada.Text_IO.Put_Line

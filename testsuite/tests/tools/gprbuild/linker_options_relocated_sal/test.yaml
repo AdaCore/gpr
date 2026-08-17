@@ -1,0 +1,6 @@
+description: SAL built by gprbuild2 embeds portable (bare) -lgnat/-lgnarl in its
+  .GPR.linker_options section, and a main built against a relocated copy of that
+  SAL still links and runs correctly.
+driver: python_script
+control:
+- [SKIP, "'windows' in env.host.platform", "DEAD on windows"]
