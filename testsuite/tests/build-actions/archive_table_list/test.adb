@@ -31,7 +31,7 @@ procedure Test is
       GPR2.Build.Artifacts.Library.Create (GPR2.Path_Name.Create_File ("tree/lib/libmylib.a"));
    begin
       for Root of Tree.Namespace_Root_Projects loop
-         Action.Initialize (Archive, Root);
+         Action.Initialize (Archive, Root, Root);
 
          if not (Tree.Artifacts_Database.Add_Action (Action)) then
             Ada.Text_IO.Put_Line ("Failed to insert the action to the DB");

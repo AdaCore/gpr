@@ -62,15 +62,17 @@ package body GPR2.Build.Actions.Process.Archive_Table_List is
    ----------------
 
    procedure Initialize
-     (Self    : in out Object;
-      Archive : GPR2.Build.Artifacts.Library.Object;
-      View    : GPR2.Project.View.Object) is
+     (Self         : in out Object;
+      Archive      : GPR2.Build.Artifacts.Library.Object;
+      View         : GPR2.Project.View.Object;
+      Library_View : GPR2.Project.View.Object) is
    begin
       --  Ensure the object wasn't previously initialized prior to this call
       Self := Undefined;
 
-      Self.Ctxt := View;
-      Self.Archive := Archive;
+      Self.Ctxt         := View;
+      Self.Library_View := Library_View;
+      Self.Archive      := Archive;
    end Initialize;
 
    -----------------------
@@ -139,7 +141,9 @@ package body GPR2.Build.Actions.Process.Archive_Table_List is
                end if;
 
                Link_Options_Extract.Initialize
-                 (Simple_Name (Object_To_Extract), Self.Ctxt);
+                 (Simple_Name (Object_To_Extract),
+                  Self.Ctxt,
+                  Self.Library_View);
 
                if not Self.Tree.Add_Action (Link_Options_Extract) then
                   return False;
@@ -164,7 +168,8 @@ package body GPR2.Build.Actions.Process.Archive_Table_List is
       --  reports the ".GPR.linker_options" section from whichever member
       --  carries it, so no name guessing is required.
 
-      Link_Options_Extract.Initialize (Self.Archive, Self.Ctxt);
+      Link_Options_Extract.Initialize
+        (Self.Archive, Self.Ctxt, Self.Library_View);
 
       if not Self.Tree.Add_Action (Link_Options_Extract) then
          return False;

@@ -1629,7 +1629,8 @@ package body GPR2.Build.Actions_Population is
                begin
                   Archive_Table_List.Initialize
                     (Artifacts.Library.Object (Lib.Final_Link_Action.Output),
-                     Main.View);
+                     Main.View,
+                     Lib.View);
 
                   if not Tree_Db.Add_Action (Archive_Table_List) then
                      return;

@@ -1,0 +1,6 @@
+with "worker_tasking_lib.gpr";
+
+project Main_Tasking is
+   for Object_Dir use "obj";
+   for Main use ("main_tasking.adb");
+end Main_Tasking;

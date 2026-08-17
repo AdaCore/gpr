@@ -1,0 +1,6 @@
+with "worker_encapsulated_lib.gpr";
+
+project Main_Encapsulated is
+   for Object_Dir use "obj";
+   for Main use ("main_encapsulated.adb");
+end Main_Encapsulated;

@@ -1,0 +1,6 @@
+with "../tree/lib.gpr";
+
+project Control_Main is
+   for Object_Dir use "obj";
+   for Main use ("control_main.adb");
+end Control_Main;
