@@ -1,0 +1,2 @@
+description: Test that the standard error output of a thread action is reported
+driver: python_script

@@ -13,16 +13,12 @@ with GPR2.Build.Actions.Process.Compile.Ada;
 with GPR2.Build.Artifacts.Source_Files;
 with GPR2.Build.Source;
 with GPR2.Message;
-with GPR2.Project.Attribute;
-with GPR2.Project.Registry.Attribute;
 with GPR2.Reporter;
 with GPR2.Source_Reference;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Tree_Db;
 
 package body GPR2.Build.Actions.Thread.Lib_Copy is
-
-   package PRA renames GPR2.Project.Registry.Attribute;
 
    Traces : constant GNATCOLL.Traces.Trace_Handle :=
      GNATCOLL.Traces.Create
@@ -214,10 +210,33 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
       Stdout : in out Unbounded_String;
       Stderr : in out Unbounded_String) return Integer
    is
-      use GPR2.Build.Actions.Process;
+      procedure Report_Error (Text : String);
+      --  Append an error to Stderr. This subprogram runs in a dedicated task,
+      --  so it must not use the tree's reporter, which is owned by the main
+      --  task: just like a process action, it reports through its standard
+      --  error output, which the scheduler displays when the action is
+      --  collected.
+
+      ------------------
+      -- Report_Error --
+      ------------------
+
+      procedure Report_Error (Text : String) is
+      begin
+         if Length (Stderr) > 0 then
+            Append (Stderr, ASCII.LF);
+         end if;
+
+         Append (Stderr, "error: " & Text);
+      end Report_Error;
+
    begin
       declare
-         Units : constant Compilation_Unit.Maps.Map := Self.Interface_Units;
+         --  Note: this subprogram is executed in a dedicated task, so it must
+         --  not query the tree database. Everything it needs from it has been
+         --  gathered by Pre_Execution, which runs in the main task.
+
+         Units_Info : Interface_Unit_Info_Maps.Map renames Self.Units_Info;
       begin
          --  Copy the ali files to the library dir
 
@@ -225,24 +244,15 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
          --  be copied, and regular libraries where all units need to be taken
          --  into account.
 
-         for U of Units loop
+         for Info of Units_Info loop
             declare
-               C_Id  : constant Compile.Ada.Ada_Compile_Id :=
-                 Compile.Ada.Create (U);
-               pragma
-                 Assert
-                   (Self.Tree.Has_Action (C_Id),
-                    "interface unit '"
-                    & String (U.Name)
-                    & "' doesn't have an associated compile action");
-               From  : constant Path_Name.Object :=
-                 Compile.Object (Self.Tree.Action (C_Id)).Dependency_File.Path;
+               From  : constant Path_Name.Object := Info.Dependency_File;
                To    : constant Path_Name.Object :=
-                 Self.Ctxt.Library_Ali_Directory.Compose (From.Simple_Name);
+                 Self.Ali_Dir.Compose (From.Simple_Name);
                Attrs : GNATCOLL.OS.Stat.File_Attributes;
 
             begin
-               if not Self.Ctxt.Is_Library_Standalone then
+               if not Self.Standalone then
                   --  Just copy the ali file for standard libraries: they
                   --  need elaboration by the caller.
 
@@ -256,15 +266,10 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
                   if not GNATCOLL.OS.FSUtil.Copy_File
                            (From.String_Value, To.String_Value)
                   then
-                     Self.Tree.Reporter.Report
-                       (GPR2.Message.Create
-                          (GPR2.Message.Error,
-                           "could not copy ali file "
-                           & String (From.Simple_Name)
-                           & " to the library directory",
-                           GPR2.Source_Reference.Object
-                             (GPR2.Source_Reference.Create
-                                (Self.Ctxt.Path_Name.Value, 0, 0))));
+                     Report_Error
+                       ("could not copy ali file "
+                        & String (From.Simple_Name)
+                        & " to the library directory");
 
                      return 1;
                   end if;
@@ -308,15 +313,10 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
                      Input := FS.Open (From.String_Value, FS.Read_Mode);
 
                      if Input = FS.Invalid_FD then
-                        Self.Tree.Reporter.Report
-                          (GPR2.Message.Create
-                             (GPR2.Message.Error,
-                              "could not read the ali file """
-                              & String (From.Simple_Name)
-                              & '"',
-                              GPR2.Source_Reference.Object
-                                (GPR2.Source_Reference.Create
-                                   (Self.Ctxt.Path_Name.Value, 0, 0))));
+                        Report_Error
+                          ("could not read the ali file """
+                           & String (From.Simple_Name)
+                           & '"');
 
                         return 2;
                      end if;
@@ -324,15 +324,10 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
                      Output := FS.Open (To.String_Value, FS.Write_Mode);
 
                      if Output = FS.Invalid_FD then
-                        Self.Tree.Reporter.Report
-                          (GPR2.Message.Create
-                             (GPR2.Message.Error,
-                              "could not create the ali file """
-                              & String (To.Simple_Name)
-                              & '"',
-                              GPR2.Source_Reference.Object
-                                (GPR2.Source_Reference.Create
-                                   (Self.Ctxt.Path_Name.Value, 0, 0))));
+                        Report_Error
+                          ("could not create the ali file """
+                           & String (To.Simple_Name)
+                           & '"');
                         FS.Close (Input);
 
                         return 3;
@@ -344,7 +339,7 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
                         & """ to """
                         & To.Containing_Directory.String_Value
                         & """ as library interface for "
-                        & String (Self.Ctxt.Name));
+                        & To_String (Self.Lib_Name));
 
                      Offset := Long_Long_Integer (FS.Read (Input, Buffer));
 
@@ -393,27 +388,18 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
                      FS.Close (Output);
 
                      if not Found then
-                        Self.Tree.Reporter.Report
-                          (GPR2.Message.Create
-                             (GPR2.Message.Error,
-                              "incorrectly formatted ali file """
-                              & From.String_Value
-                              & '"',
-                              GPR2.Source_Reference.Create
-                                (Self.Ctxt.Path_Name.Value, 0, 0)));
+                        Report_Error
+                          ("incorrectly formatted ali file """
+                           & From.String_Value
+                           & '"');
 
                         if not GNATCOLL.OS.FSUtil.Copy_File
                                  (From.String_Value, To.String_Value)
                         then
-                           Self.Tree.Reporter.Report
-                             (GPR2.Message.Create
-                                (GPR2.Message.Error,
-                                 "could not copy ali file "
-                                 & String (From.Simple_Name)
-                                 & " to the library directory",
-                                 GPR2.Source_Reference.Object
-                                   (GPR2.Source_Reference.Create
-                                      (Self.Ctxt.Path_Name.Value, 0, 0))));
+                           Report_Error
+                             ("could not copy ali file "
+                              & String (From.Simple_Name)
+                              & " to the library directory");
 
                            return 4;
                         end if;
@@ -425,12 +411,11 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
 
          --  Copy the interface sources in Library_Src_Dir
 
-         if Self.Ctxt.Has_Library_Src_Directory then
+         if Self.Src_Dir.Is_Defined then
             declare
-               Src_Dir : constant Path_Name.Object :=
-                 Self.Ctxt.Library_Src_Directory;
+               Src_Dir : Path_Name.Object renames Self.Src_Dir;
             begin
-               for CU of Units loop
+               for Info of Units_Info loop
                   declare
                      procedure On_Unit_Part
                        (Kind     : Unit_Kind;
@@ -439,6 +424,7 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
                         Index    : Unit_Index;
                         Sep_Name : Optional_Name_Type);
 
+                     CU        : Compilation_Unit.Object renames Info.Unit;
                      Has_Error : Boolean := False;
 
                      ------------------
@@ -460,25 +446,18 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
                         if not GNATCOLL.OS.FSUtil.Copy_File
                                  (Path.String_Value, Dest.String_Value)
                         then
-                           Self.Tree.Reporter.Report
-                             (Message.Create
-                                (Message.Error,
-                                 "Cannot copy """
-                                 & String (Path.Simple_Name)
-                                 & """ to the Library_Src_Dir """
-                                 & Src_Dir.String_Value
-                                 & '"',
-                                 Self.Ctxt.Attribute (PRA.Library_Src_Dir)
-                                   .Value));
+                           Report_Error
+                             ("Cannot copy """
+                              & String (Path.Simple_Name)
+                              & """ to the Library_Src_Dir """
+                              & Src_Dir.String_Value
+                              & '"');
                            Has_Error := True;
                         end if;
                      end On_Unit_Part;
 
-                     Comp : Compile.Ada.Object :=
-                       Compile.Ada.Object
-                         (Self.Tree.Action (Compile.Ada.Create (CU)));
                   begin
-                     if Comp.Spec_Needs_Body or else not CU.Has_Part (S_Spec)
+                     if Info.Spec_Needs_Body or else not CU.Has_Part (S_Spec)
                      then
                         CU.For_All_Part (On_Unit_Part'Access);
                      else
@@ -498,33 +477,22 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
 
                --  Also add the non-ada sources
 
-               for C in Self.Ctxt.Interface_Sources.Iterate loop
+               for Src of Self.Other_Srcs loop
                   declare
-                     Path : constant Filename_Type :=
-                       GPR2.Containers.Source_Path_To_Sloc.Key (C);
-                     Src  : constant GPR2.Build.Source.Object :=
-                       Self.Ctxt.Visible_Source (Path);
-                     Dest : Path_Name.Object;
+                     Dest : constant Path_Name.Object :=
+                       Src_Dir.Compose (Src.Simple_Name);
                   begin
-                     if Src.Language /= Ada_Language then
-                        Dest := Src_Dir.Compose (Src.Path_Name.Simple_Name);
+                     if not GNATCOLL.OS.FSUtil.Copy_File
+                              (Src.String_Value, Dest.String_Value)
+                     then
+                        Report_Error
+                          ("Cannot copy """
+                           & String (Src.Simple_Name)
+                           & """ to the Library_Src_Dir """
+                           & Src_Dir.String_Value
+                           & '"');
 
-                        if not GNATCOLL.OS.FSUtil.Copy_File
-                                 (Src.Path_Name.String_Value,
-                                  Dest.String_Value)
-                        then
-                           Self.Tree.Reporter.Report
-                             (Message.Create
-                                (Message.Error,
-                                 "Cannot copy """
-                                 & String (Src.Path_Name.Simple_Name)
-                                 & """ to the Library_Src_Dir """
-                                 & Src_Dir.String_Value
-                                 & '"',
-                                 Self.Ctxt.Attribute (PRA.Library_Src_Dir)
-                                   .Value));
-                           return 6;
-                        end if;
+                        return 6;
                      end if;
                   end;
                end loop;
@@ -641,6 +609,83 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
 
       return True;
    end Post_Execution;
+
+   -------------------
+   -- Pre_Execution --
+   -------------------
+
+   overriding
+   function Pre_Execution (Self : in out Object) return Boolean is
+      use GPR2.Build.Actions.Process;
+
+      Units     : constant Compilation_Unit.Maps.Map := Self.Interface_Units;
+      With_Srcs : constant Boolean := Self.Ctxt.Has_Library_Src_Directory;
+
+   begin
+      --  Execute runs in a dedicated task while the main task keeps
+      --  scheduling and collecting actions. To prevent tampering issues,
+      --  all the information required by Execute are computed during
+      --  Pre_Execution and stored in Self.
+
+      Self.Standalone := Self.Ctxt.Is_Library_Standalone;
+      Self.Lib_Name   := To_Unbounded_String (String (Self.Ctxt.Name));
+      Self.Ali_Dir    := Self.Ctxt.Library_Ali_Directory;
+
+      if With_Srcs then
+         Self.Src_Dir := Self.Ctxt.Library_Src_Directory;
+      else
+         Self.Src_Dir := Path_Name.Undefined;
+      end if;
+
+      Self.Units_Info.Clear;
+      Self.Other_Srcs.Clear;
+
+      if With_Srcs then
+         --  The Ada interface sources are copied from the units themselves,
+         --  the others from the view's interface sources
+
+         for C in Self.Ctxt.Interface_Sources.Iterate loop
+            declare
+               Path : constant Filename_Type :=
+                 GPR2.Containers.Source_Path_To_Sloc.Key (C);
+               Src  : constant GPR2.Build.Source.Object :=
+                 Self.Ctxt.Visible_Source (Path);
+            begin
+               if Src.Language /= Ada_Language then
+                  Self.Other_Srcs.Append (Src.Path_Name);
+               end if;
+            end;
+         end loop;
+      end if;
+
+      for U of Units loop
+         declare
+            C_Id : constant Compile.Ada.Ada_Compile_Id :=
+              Compile.Ada.Create (U);
+            pragma
+              Assert
+                (Self.Tree.Has_Action (C_Id),
+                 "interface unit '"
+                 & String (U.Name)
+                 & "' doesn't have an associated compile action");
+            Comp : Compile.Ada.Object :=
+              Compile.Ada.Object (Self.Tree.Action (C_Id));
+            Info : Interface_Unit_Info;
+
+         begin
+            Info.Unit            := U;
+            Info.Dependency_File := Comp.Dependency_File.Path;
+
+            if With_Srcs then
+               Info.Spec_Needs_Body := Comp.Spec_Needs_Body;
+            end if;
+
+            Self.Units_Info.Include (U.Name, Info);
+         end;
+      end loop;
+
+      return True;
+   end Pre_Execution;
 
    ------------------------
    -- Register_Artifacts --

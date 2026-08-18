@@ -36,7 +36,7 @@ $ chmod 0x555 lib/lib
 $ gprbuild -Plib -j1 --temp-dir=obj
 [Ada Compile]     pkg2.ads
 [Library-Files-Copy] Lib
-lib.gpr: error: could not create the ali file "pkg2.ali"
+error: could not create the ali file "pkg2.ali"
 [Library-Files-Copy] Lib (lib.gpr) failed.
 $ chmod 0x777 lib/lib
 $ gprbuild -Plib -q --temp-dir=obj

@@ -3,8 +3,11 @@
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
+with Ada.Containers.Indefinite_Ordered_Maps;
+
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Compilation_Unit.Maps;
+with GPR2.Path_Name.Set;
 
 package GPR2.Build.Actions.Thread.Lib_Copy is
 
@@ -88,13 +91,55 @@ private
    function Action_Parameter (Self : Lib_Copy_Id) return Value_Type
    is (Value_Type (Self.Ctxt.Name));
 
+   type Interface_Unit_Info is record
+      Unit            : Compilation_Unit.Object;
+      Dependency_File : Path_Name.Object;
+      --  Path of the ALI file produced by the compile action of Unit
+
+      Spec_Needs_Body : Boolean := False;
+      --  Whether the spec of Unit requires a body. Only computed when the
+      --  view has a Library_Src_Dir, as this is the only case where Execute
+      --  needs it.
+   end record;
+
+   package Interface_Unit_Info_Maps is new
+     Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Interface_Unit_Info);
+
    type Object is new GPR2.Build.Actions.Thread.Object with record
+      --  Information fetched during the Pre_Execution to be used during
+      --  during the Execute phase.
+
       Extended_Interface : Compilation_Unit.Maps.Map;
+
+      Units_Info : Interface_Unit_Info_Maps.Map;
+      --  Unit informations
+
+      Standalone : Boolean := False;
+      --  Whether the view is a standalone library
+
+      Lib_Name : Unbounded_String;
+      --  Name of the view, used by the execution traces
+
+      Ali_Dir : Path_Name.Object;
+      --  Library_Ali_Directory of the view
+
+      Src_Dir : Path_Name.Object;
+      --  Library_Src_Directory of the view, undefined when it has none
+
+      Other_Srcs : Path_Name.Set.Object;
+      --  The non-Ada interface sources, to copy to Src_Dir
+
+      --  The above are gathered by Pre_Execution as well: the project tree is
+      --  no more task safe than the tree database, so Execute cannot query
+      --  the view either.
    end record;
 
    overriding
    procedure Compute_Signature
      (Self : in out Object; Check_Checksums : Boolean);
+
+   overriding
+   function Pre_Execution (Self : in out Object) return Boolean;
 
    overriding
    function Extended (Self : Object) return Object
