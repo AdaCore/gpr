@@ -8,6 +8,7 @@ with GNATCOLL.OS.FS;
 with GNATCOLL.Traces;
 with GPR2.Message;
 with GPR2.Build.Actions.Process.Link;
+with GPR2.Project.Tree;
 
 package body GPR2.Build.Actions.Process.Link_Options_Insert is
 
@@ -175,13 +176,60 @@ package body GPR2.Build.Actions.Process.Link_Options_Insert is
    is
       Successors : Tree_Db.Actions_List'Class :=
         Self.Tree.Successors (Self.Output_Object_File);
+
+      Static_Libs : Boolean := True;
+
+      function Resolve_Runtime_Lib (Opt : String) return String;
+      --  For a number of archives, we need to indicate the full path of
+      --  the archive, if we find it, to be sure that the correct
+      --  archive is used by the linker.
+
+      -------------------------
+      -- Resolve_Runtime_Lib --
+      -------------------------
+
+      function Resolve_Runtime_Lib (Opt : String) return String
+      is
+         Adalib_Dir : constant Path_Name.Object :=
+           Self.View.Tree.Runtime_Project.Object_Directory;
+
+         use type Project.Standalone_Library_Kind;
+      begin
+         if Static_Libs and then Self.View.Library_Support /= None then
+            if Opt = "-lgnat" then
+               return (if Self.View.Is_Library
+                       and then Self.View.Library_Standalone =
+                         Project.Encapsulated
+                       then Adalib_Dir.Compose ("libgnat_pic.a").String_Value
+                       else Adalib_Dir.Compose ("libgnat.a").String_Value);
+            elsif Opt = "-lgnarl" then
+               return (if Self.View.Is_Library
+                       and then Self.View.Library_Standalone =
+                         Project.Encapsulated
+                       then Adalib_Dir.Compose ("libgnarl_pic.a").String_Value
+                       else Adalib_Dir.Compose ("libgnarl.a").String_Value);
+            end if;
+         end if;
+
+         return Opt;
+      end Resolve_Runtime_Lib;
    begin
       for Act of Successors loop
          if Act in Link.Object'Class then
             for Opt of Self.Options loop
-               Traces.Trace
-                 ("Adding option """ & Opt & """ to " & Act.UID.Image);
-               Link.Object'Class (Act).Add_Option_From_Binder (Opt);
+               if Opt = "-shared" then
+                  Static_Libs := False;
+               end if;
+
+               declare
+                  Resolved_Opt : constant String := Resolve_Runtime_Lib (Opt);
+               begin
+                  Traces.Trace
+                    ("Adding option """ & Resolved_Opt
+                     & """ to " & Act.UID.Image);
+                  Link.Object'Class (Act).Add_Option_From_Binder
+                    (Resolved_Opt);
+               end;
             end loop;
          end if;
       end loop;

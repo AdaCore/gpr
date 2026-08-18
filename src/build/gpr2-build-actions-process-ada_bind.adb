@@ -1547,10 +1547,14 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          --  stage.
          Traces.Trace ("Options passed to " & Link.UID.Image & ":");
          for Opt of Self.Linker_Opts loop
-            Traces.Trace ("* '" & Opt & "'");
-            Actions.Process.Link.Object'Class
-              (Self.Tree.Action_Id_To_Reference (Link.UID).Element.all)
-              .Add_Option_From_Binder (Resolve_Runtime_Lib (Opt));
+            declare
+               Resolved_Opt : constant String := Resolve_Runtime_Lib (Opt);
+            begin
+               Traces.Trace ("* '" & Resolved_Opt & "'");
+               Actions.Process.Link.Object'Class
+                 (Self.Tree.Action_Id_To_Reference (Link.UID).Element.all)
+                   .Add_Option_From_Binder (Resolved_Opt);
+            end;
          end loop;
 
          if Link_Opt_Insert.Is_Defined then

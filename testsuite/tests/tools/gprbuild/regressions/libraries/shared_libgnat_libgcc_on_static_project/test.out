@@ -1,0 +1,19 @@
+$ gprbuild -P tree/p.gpr -j1
+"obj/mylib" created
+"lib/mylib" created
+"obj/p" created
+[Ada Compile]     mylib.adb
+[Ada Bind]        mylib
+[Library-Files-Copy] Mylib
+[Ada Post-Bind]   b__mylib.adb
+[Link-Options-Insert] o__mylib.o
+[Partial Link]    p__mylib.o
+[Archive]         libmylib.a
+[Ada Compile]     main.adb
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main
+$ ldd tree/obj/p/main
+ld-linux-x86-64.so
+libc.so
+linux-vdso.so
