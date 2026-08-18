@@ -13,16 +13,12 @@ with GPR2.Build.Actions.Process.Compile.Ada;
 with GPR2.Build.Artifacts.Source_Files;
 with GPR2.Build.Source;
 with GPR2.Message;
-with GPR2.Project.Attribute;
-with GPR2.Project.Registry.Attribute;
 with GPR2.Reporter;
 with GPR2.Source_Reference;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Tree_Db;
 
 package body GPR2.Build.Actions.Thread.Lib_Copy is
-
-   package PRA renames GPR2.Project.Registry.Attribute;
 
    Traces : constant GNATCOLL.Traces.Trace_Handle :=
      GNATCOLL.Traces.Create
@@ -214,6 +210,26 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
       Stdout : in out Unbounded_String;
       Stderr : in out Unbounded_String) return Integer
    is
+      procedure Report_Error (Text : String);
+      --  Append an error to Stderr. This subprogram runs in a dedicated task,
+      --  so it must not use the tree's reporter, which is owned by the main
+      --  task: just like a process action, it reports through its standard
+      --  error output, which the scheduler displays when the action is
+      --  collected.
+
+      ------------------
+      -- Report_Error --
+      ------------------
+
+      procedure Report_Error (Text : String) is
+      begin
+         if Length (Stderr) > 0 then
+            Append (Stderr, ASCII.LF);
+         end if;
+
+         Append (Stderr, "error: " & Text);
+      end Report_Error;
+
    begin
       declare
          --  Note: this subprogram is executed in a dedicated task, so it must
@@ -250,15 +266,10 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
                   if not GNATCOLL.OS.FSUtil.Copy_File
                            (From.String_Value, To.String_Value)
                   then
-                     Self.Tree.Reporter.Report
-                       (GPR2.Message.Create
-                          (GPR2.Message.Error,
-                           "could not copy ali file "
-                           & String (From.Simple_Name)
-                           & " to the library directory",
-                           GPR2.Source_Reference.Object
-                             (GPR2.Source_Reference.Create
-                                (Self.Ctxt.Path_Name.Value, 0, 0))));
+                     Report_Error
+                       ("could not copy ali file "
+                        & String (From.Simple_Name)
+                        & " to the library directory");
 
                      return 1;
                   end if;
@@ -302,15 +313,10 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
                      Input := FS.Open (From.String_Value, FS.Read_Mode);
 
                      if Input = FS.Invalid_FD then
-                        Self.Tree.Reporter.Report
-                          (GPR2.Message.Create
-                             (GPR2.Message.Error,
-                              "could not read the ali file """
-                              & String (From.Simple_Name)
-                              & '"',
-                              GPR2.Source_Reference.Object
-                                (GPR2.Source_Reference.Create
-                                   (Self.Ctxt.Path_Name.Value, 0, 0))));
+                        Report_Error
+                          ("could not read the ali file """
+                           & String (From.Simple_Name)
+                           & '"');
 
                         return 2;
                      end if;
@@ -318,15 +324,10 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
                      Output := FS.Open (To.String_Value, FS.Write_Mode);
 
                      if Output = FS.Invalid_FD then
-                        Self.Tree.Reporter.Report
-                          (GPR2.Message.Create
-                             (GPR2.Message.Error,
-                              "could not create the ali file """
-                              & String (To.Simple_Name)
-                              & '"',
-                              GPR2.Source_Reference.Object
-                                (GPR2.Source_Reference.Create
-                                   (Self.Ctxt.Path_Name.Value, 0, 0))));
+                        Report_Error
+                          ("could not create the ali file """
+                           & String (To.Simple_Name)
+                           & '"');
                         FS.Close (Input);
 
                         return 3;
@@ -387,27 +388,18 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
                      FS.Close (Output);
 
                      if not Found then
-                        Self.Tree.Reporter.Report
-                          (GPR2.Message.Create
-                             (GPR2.Message.Error,
-                              "incorrectly formatted ali file """
-                              & From.String_Value
-                              & '"',
-                              GPR2.Source_Reference.Create
-                                (Self.Ctxt.Path_Name.Value, 0, 0)));
+                        Report_Error
+                          ("incorrectly formatted ali file """
+                           & From.String_Value
+                           & '"');
 
                         if not GNATCOLL.OS.FSUtil.Copy_File
                                  (From.String_Value, To.String_Value)
                         then
-                           Self.Tree.Reporter.Report
-                             (GPR2.Message.Create
-                                (GPR2.Message.Error,
-                                 "could not copy ali file "
-                                 & String (From.Simple_Name)
-                                 & " to the library directory",
-                                 GPR2.Source_Reference.Object
-                                   (GPR2.Source_Reference.Create
-                                      (Self.Ctxt.Path_Name.Value, 0, 0))));
+                           Report_Error
+                             ("could not copy ali file "
+                              & String (From.Simple_Name)
+                              & " to the library directory");
 
                            return 4;
                         end if;
@@ -454,16 +446,12 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
                         if not GNATCOLL.OS.FSUtil.Copy_File
                                  (Path.String_Value, Dest.String_Value)
                         then
-                           Self.Tree.Reporter.Report
-                             (Message.Create
-                                (Message.Error,
-                                 "Cannot copy """
-                                 & String (Path.Simple_Name)
-                                 & """ to the Library_Src_Dir """
-                                 & Src_Dir.String_Value
-                                 & '"',
-                                 Self.Ctxt.Attribute (PRA.Library_Src_Dir)
-                                   .Value));
+                           Report_Error
+                             ("Cannot copy """
+                              & String (Path.Simple_Name)
+                              & """ to the Library_Src_Dir """
+                              & Src_Dir.String_Value
+                              & '"');
                            Has_Error := True;
                         end if;
                      end On_Unit_Part;
