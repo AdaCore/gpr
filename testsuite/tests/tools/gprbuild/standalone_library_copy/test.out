@@ -1,0 +1,9 @@
+$ ls tree/ali
+config.ali
+fast.ali
+greeter.ali
+$ ls tree/libsrc
+config.ads
+fast.adb
+fast.ads
+greeter.ads
