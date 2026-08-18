@@ -1,0 +1,7 @@
+library project Mylib is
+   for Source_Files use ("mylib.ads", "mylib.adb");
+   for Object_Dir use "obj/mylib";
+   for Library_Dir use "lib/mylib";
+   for Library_Name use "mylib";
+   for Library_Interface use ("mylib");
+end Mylib;
