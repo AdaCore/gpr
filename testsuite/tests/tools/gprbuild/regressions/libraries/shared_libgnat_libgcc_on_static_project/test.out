@@ -13,7 +13,5 @@ $ gprbuild -P tree/p.gpr -j1
 [Ada Bind]        main
 [Ada Post-Bind]   b__main.adb
 [Link]            main
-$ ldd tree/obj/p/main
-ld-linux-x86-64.so
-libc.so
-linux-vdso.so
+$ check-static-libgcc tree/obj/p/main
+libgcc_s: static-or-absent
