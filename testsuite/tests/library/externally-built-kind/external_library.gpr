@@ -1,0 +1,10 @@
+--  A wrapper around a library built outside of the project tree: it has no
+--  sources of its own, but it is a library project all the same.
+
+project External_Library is
+   for Externally_Built use "true";
+   for Library_Dir use "lib";
+   for Library_Name use "ReproProvider";
+   for Library_Kind use "static";
+   for Source_Dirs use ();
+end External_Library;

@@ -1,0 +1,5 @@
+with "external_library.gpr";
+
+abstract project Root is
+   for Source_Dirs use ();
+end Root;

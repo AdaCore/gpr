@@ -1,0 +1,5 @@
+description:
+    An externally built project with the library attributes is a library
+driver: build_and_run
+project_file: test
+main: main

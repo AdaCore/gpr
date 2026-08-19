@@ -1,0 +1,11 @@
+--  No qualifier and no sources of its own: this is an implicit library
+--  project, recognized as such because it is externally built and holds the
+--  library attributes.
+
+project External_Library is
+   for Externally_Built use "true";
+   for Library_Dir use "lib";
+   for Library_Name use "ReproProvider";
+   for Library_Kind use "static";
+   for Source_Dirs use ();
+end External_Library;
