@@ -2768,7 +2768,15 @@ package body GPR2.Tree_Internal is
             end if;
 
             if P_Data.Kind = K_Standard then
-               if Is_Implicitly_Abstract (View) then
+               --  An externally built project holding the library attributes
+               --  describes a library that is built elsewhere, so it has no
+               --  source of its own: it is a library project, not an abstract
+               --  one.
+
+               if Is_Implicitly_Abstract (View)
+                 and then not (View.Is_Externally_Built
+                               and then Is_Implicitly_Library (View))
+               then
                   if P_Data.Trees.Project.Explicit_Qualifier then
                      --  Error message depend on Tmp_Attr because this
                      --  attribute was used to detect that project has no

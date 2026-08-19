@@ -1,0 +1,9 @@
+with "external_library.gpr";
+
+project Main is
+   for Languages use ("C");
+   for Source_Dirs use ("src", "include");
+   for Object_Dir use "obj";
+   for Exec_Dir use ".";
+   for Main use ("main.c");
+end Main;

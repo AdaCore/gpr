@@ -1,0 +1,2 @@
+description: Build against an externally built library declared without a qualifier
+driver: python_script

@@ -1,0 +1,6 @@
+$ gprbuild -q -Pprovider/provider.gpr -p
+$ gprbuild -q -Pmain.gpr -p
+$ ./main
+answer = 42
+double = 42
+
