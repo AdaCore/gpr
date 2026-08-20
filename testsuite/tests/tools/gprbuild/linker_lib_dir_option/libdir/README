@@ -1,0 +1,2 @@
+This directory only needs to exist so that the -L options of prj.gpr point to
+a real library directory.

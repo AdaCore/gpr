@@ -133,12 +133,42 @@ package body GPR2.Build.Actions.Process.Link is
                   (if In_Signature
                    then Build.Command_Line.In_Signature
                    else Build.Command_Line.Ignore);
+         Next_Arg_Is_Lib_Dir : Boolean := False;
+         --  Set when the library directory option was given on its own, its
+         --  path being the next value of the list. So, ("-L", "/my/path")
+         --  instead of ("-L/my/path")
 
          procedure Add (Arg : String);
          --  Check for full path whenever possible
 
          procedure Add (Arg : String) is
+            Lib_Dir_Expected : constant Boolean := Next_Arg_Is_Lib_Dir;
          begin
+            Next_Arg_Is_Lib_Dir := False;
+
+            if Arg'Length = 0 then
+               --  There is nothing to resolve, and Filename_Type rejects an
+               --  empty name, so hand the value over untouched.
+
+               Cmd_Line.Add_Argument (Arg, Mode);
+
+               return;
+            end if;
+
+            if Lib_Dir_Expected and then Arg (Arg'First) /= '-' then
+               --  This value is the path of the option added just before. A
+               --  value starting with '-' is another option instead, so the
+               --  previous one was left without a path: handle this one
+               --  normally below.
+
+               Cmd_Line.Add_Argument
+                 (Path_Name.Create_Directory
+                    (Filename_Type (Arg), Self.Ctxt.Dir_Name.Value),
+                  Mode);
+
+               return;
+            end if;
+
             if Arg (Arg'First) = '-' then
                if GNATCOLL.Utils.Starts_With
                  (Arg, Self.Tree.Linker_Lib_Dir_Option)
@@ -149,14 +179,29 @@ package body GPR2.Build.Actions.Process.Link is
                                (Arg'First +
                                   Self.Tree.Linker_Lib_Dir_Option'Length
                                     .. Arg'Last);
-                     Path : constant Path_Name.Object :=
-                              Path_Name.Create_Directory
-                                (Filename_Type (Sub),
-                                 Self.Ctxt.Dir_Name.Value);
                   begin
-                     Cmd_Line.Add_Argument
-                       (Self.Tree.Linker_Lib_Dir_Option &
-                          Path.String_Value);
+                     if Sub'Length > 0 then
+                        declare
+                           Path : constant Path_Name.Object :=
+                                    Path_Name.Create_Directory
+                                      (Filename_Type (Sub),
+                                       Self.Ctxt.Dir_Name.Value);
+                        begin
+                           Cmd_Line.Add_Argument
+                             (Self.Tree.Linker_Lib_Dir_Option &
+                                Path.String_Value,
+                              Mode);
+                        end;
+
+                     else
+                        --  The option was given on its own, so its path is
+                        --  the next value of the list: emit the option as is
+                        --  and resolve that path when it comes in. Creating a
+                        --  directory out of the empty suffix would raise.
+
+                        Cmd_Line.Add_Argument (Arg, Mode);
+                        Next_Arg_Is_Lib_Dir := True;
+                     end if;
                   end;
                else
                   Cmd_Line.Add_Argument (Arg, Mode);

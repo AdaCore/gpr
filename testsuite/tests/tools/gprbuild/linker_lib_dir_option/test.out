@@ -1,0 +1,14 @@
+OK: joined: the link command line was computed
+OK: joined: the path is absolute
+OK: split: the link command line was computed
+OK: split: the option is passed on its own
+OK: split: the next value is the absolute path
+OK: option_after: the link command line was computed
+OK: option_after: the option without a path is passed as is
+OK: option_after: the following option is not turned into a path
+OK: option_after: the following option keeps its own absolute path
+OK: repeated: the link command line was computed
+OK: repeated: a run of options without a path is passed as is
+OK: repeated: none of them is turned into a path
+OK: repeated: the last one keeps its own absolute path
+OK: dangling: the link command line was computed

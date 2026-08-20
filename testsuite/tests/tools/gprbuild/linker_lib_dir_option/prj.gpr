@@ -1,0 +1,30 @@
+project Prj is
+
+   type Case_Kind is
+     ("joined", "split", "option_after", "repeated", "dangling");
+   Case_Name : Case_Kind := external ("CASE", "joined");
+
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj-" & Case_Name;
+   for Main use ("main.adb");
+
+   package Linker is
+      case Case_Name is
+         when "joined" =>
+            for Switches ("main.adb") use ("-Llibdir");
+
+         when "split" =>
+            for Switches ("main.adb") use ("-L", "libdir");
+
+         when "option_after" =>
+            for Switches ("main.adb") use ("-L", "-Llibdir");
+
+         when "repeated" =>
+            for Switches ("main.adb") use ("-L", "-L", "-Llibdir");
+
+         when "dangling" =>
+            for Switches ("main.adb") use ("-L");
+      end case;
+   end Linker;
+
+end Prj;

@@ -1,0 +1,2 @@
+description: Check the resolution of the linker library directory option (-L)
+driver: python_script
