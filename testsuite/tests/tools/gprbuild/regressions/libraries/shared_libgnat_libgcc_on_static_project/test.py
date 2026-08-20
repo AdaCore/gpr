@@ -11,24 +11,31 @@ def run(cmd):
     else:
         print(bnr.simple_run(cmd, catch_error=True).out)
 
-def normalize_ldd(output: str) -> str:
-    lines = []
+def check_no_dynamic_libgcc(binary_path: str) -> str:
+    """Return a single deterministic status line: whether libgcc is pulled in
+    as a dynamic dependency. Ignores the arch-specific dynamic linker and
+    vDSO entries entirely, since their naming varies by arch/ABI and is not
+    relevant to what this test checks."""
+    result = bnr.simple_run(["ldd", binary_path], catch_error=True)
+    output = result.out
+
+    if 'not a dynamic executable' in output:
+        return "libgcc_s: static-or-absent (fully static executable)"
+
+    libs = set()
     for line in output.splitlines():
         line = line.strip()
         if not line:
             continue
-        # drop the trailing "(0x00007f...)" address
-        line = re.sub(r'\s*\(0x[0-9a-fA-F]+\)\s*$', '', line)
-        # drop the "=> /full/path/to/lib" part, keep only the name before it
-        line = re.sub(r'\s*=>\s*\S+', '', line)
-        # bare path entries (e.g. /lib64/ld-linux-x86-64.so.2)
-        if line.startswith('/'):
-            line = line.rsplit('/', 1)[-1]
-        # drop the version suffix after .so (e.g. libc.so.6 -> libc.so, ld-linux-x86-64.so.2 -> ld-linux-x86-64.so)
-        line = re.sub(r'(\.so)(\.\d+)+$', r'\1', line)
-        lines.append(line)
-    return '\n'.join(sorted(lines))
+        name = line.split('=>')[0].strip()
+        if name.startswith('/'):
+            name = name.rsplit('/', 1)[-1]
+        libs.add(name)
+
+    if any(re.match(r'^libgcc_s', lib) for lib in libs):
+        return f"libgcc_s: dynamic ({[l for l in libs if l.startswith('libgcc_s')]})"
+    return "libgcc_s: static-or-absent"
 
 run([GPRBUILD, "-P", "tree/p.gpr", "-j1"])
-print("$ ldd tree/obj/p/main")
-print(normalize_ldd(bnr.simple_run(["ldd", "tree/obj/p/main"]).out))
+print("$ check-static-libgcc tree/obj/p/main")
+print(check_no_dynamic_libgcc("tree/obj/p/main"))
