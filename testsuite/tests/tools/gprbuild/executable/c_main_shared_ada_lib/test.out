@@ -1,0 +1,11 @@
+$ gprbuild -P tree/prj.gpr
+"obj_lib" created
+"lib_lib" created
+"obj" created
+[Ada Compile]     mylib.adb
+[C Compile]       main.c
+[Library-Files-Copy] Mylib
+[Link]            libmylib<shared-lib-suffix>
+[Ada Bind]        main
+[Ada Post-Bind]   b__main.adb
+[Link]            main

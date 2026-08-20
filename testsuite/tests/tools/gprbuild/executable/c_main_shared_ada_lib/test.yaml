@@ -1,0 +1,4 @@
+description: gprbuild2 omits the compatibility bind
+  phase (and therefore -lgnat/adalib rpath-link) when a non-Ada main
+  depends only on a shared, non-standalone Ada library.
+driver: python_script
