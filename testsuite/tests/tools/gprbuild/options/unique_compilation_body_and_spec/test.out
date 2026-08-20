@@ -1,0 +1,3 @@
+$ gprbuild -P tree/prj.gpr -u main.adb main.ads
+"obj" created
+[Ada Compile]     main.adb

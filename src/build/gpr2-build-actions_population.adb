@@ -616,49 +616,120 @@ package body GPR2.Build.Actions_Population is
                      end if;
                   end if;
                else
-                  --  Only compile the given sources
+                  --  Only compile the given sources.
+                  --
+                  --  When both the spec and the body of the same unit are
+                  --  named on the command line (e.g. "-u foo.ads foo.adb"),
+                  --  only the unit's Main_Part must actually be compiled:
+                  --  Object_File is always derived from Main_Part, so
+                  --  creating one Compile.Ada action per named source would
+                  --  produce two actions targeting the same object file,
+                  --  which Tree_Db.Add_Action rightly rejects as a
+                  --  conflicting output. A lone "-u foo.ads" (without
+                  --  foo.adb) must still compile the spec alone, so the
+                  --  filtering below only applies when a unit is named more
+                  --  than once.
 
-                  for M of Mains loop
-                     Src := V.Visible_Source (M.Source);
+                  declare
+                     Spec_Units : GPR2.Containers.Name_Set;
+                     Body_Units : GPR2.Containers.Name_Set;
+                  begin
+                     --  First pass: record, for each named unit, whether
+                     --  its spec and/or its body was explicitly given.
 
-                     --  Src may not be part of the current subtree
+                     for M of Mains loop
+                        Src := V.Visible_Source (M.Source);
 
-                     if Src.Is_Defined then
-                        if Src.Language = Ada_Language then
-                           declare
-                              Comp : Compile.Ada.Object;
-                           begin
-                              --  Compile exactly the source named on the
-                              --  command line: when the spec is given, compile
-                              --  the spec even ifthe unit also has a body.
-                              --  When a separate is given, compile the
-                              --  separate
-
-                              Comp.Initialize
-                                (V.Unit (Src.Unit (M.Index).Name),
-                                 Src.Kind (M.Index),
-                                 (if Src.Kind (M.Index) = S_Separate
-                                  then Src.Unit (M.Index).Separate_Name
-                                  else No_Name));
-
-                              if not Tree_Db.Add_Action (Comp) then
-                                 return False;
-                              end if;
-                           end;
-
-                        else
-                           declare
-                              Comp : Compile.Object;
-                           begin
-                              Comp.Initialize (Src);
-
-                              if not Tree_Db.Add_Action (Comp) then
-                                 return False;
-                              end if;
-                           end;
+                        if Src.Is_Defined
+                          and then Src.Language = Ada_Language
+                          and then Src.Kind (M.Index) /= S_Separate
+                        then
+                           case Src.Kind (M.Index) is
+                              when S_Spec =>
+                                 Spec_Units.Include
+                                   (Src.Unit (M.Index).Name);
+                              when S_Body =>
+                                 Body_Units.Include
+                                   (Src.Unit (M.Index).Name);
+                              when others =>
+                                 null;
+                           end case;
                         end if;
-                     end if;
-                  end loop;
+                     end loop;
+
+                     --  Second pass: create the compile actions, skipping
+                     --  the non-Main_Part entry whenever both parts of a
+                     --  unit were named.
+
+                     for M of Mains loop
+                        Src := V.Visible_Source (M.Source);
+
+                        --  Src may not be part of the current subtree
+
+                        if Src.Is_Defined then
+                           if Src.Language = Ada_Language then
+                              declare
+                                 Unit_Name : constant Name_Type :=
+                                               Src.Unit (M.Index).Name;
+                                 Unit      : constant
+                                   Compilation_Unit.Object :=
+                                     V.Unit (Unit_Name);
+                                 Kind      : constant Valid_Unit_Kind :=
+                                               Src.Kind (M.Index);
+                                 Skip      : Boolean := False;
+                              begin
+                                 if Kind /= S_Separate
+                                   and then Spec_Units.Contains (Unit_Name)
+                                   and then Body_Units.Contains (Unit_Name)
+                                   and then Kind /= Unit.Main_Part
+                                 then
+                                    --  Both spec and body were named on
+                                    --  the command line: only the
+                                    --  Main_Part (the body) is compiled.
+
+                                    Skip := True;
+                                 end if;
+
+                                 if not Skip then
+                                    declare
+                                       Comp : Compile.Ada.Object;
+                                    begin
+                                       --  Compile exactly the source named
+                                       --  on the command line: when the
+                                       --  spec is given alone, compile the
+                                       --  spec even if the unit also has a
+                                       --  body. When a separate is given,
+                                       --  compile the separate
+
+                                       Comp.Initialize
+                                         (Unit,
+                                          Kind,
+                                          (if Kind = S_Separate
+                                           then Src.Unit (M.Index)
+                                                  .Separate_Name
+                                           else No_Name));
+
+                                       if not Tree_Db.Add_Action (Comp) then
+                                          return False;
+                                       end if;
+                                    end;
+                                 end if;
+                              end;
+
+                           else
+                              declare
+                                 Comp : Compile.Object;
+                              begin
+                                 Comp.Initialize (Src);
+
+                                 if not Tree_Db.Add_Action (Comp) then
+                                    return False;
+                                 end if;
+                              end;
+                           end if;
+                        end if;
+                     end loop;
+                  end;
                end if;
 
             else
