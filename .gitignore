@@ -21,6 +21,7 @@ bindings/c/build
 # GnatStudio artifacts
 .clang-format
 .clangd
+tools/gpsauto.cgpr
 
 # Python binding artifacts
 bindings/python/.coverage
@@ -31,3 +32,6 @@ bindings/python/src/*egg*
 
 # Alire artifacts
 /alire/
+
+# File index
+tools/.gpr*
