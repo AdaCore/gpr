@@ -1167,9 +1167,9 @@ package body GPR2.Tree_Internal is
       --  Used to check for duplicate project names possibly in
       --  different (inconsistent naming) filenames.
 
-      Final_Search_Paths : Path_Name.Set.Object := Self.Search_Paths.All_Paths;
+      Search_Paths : Path_Name.Set.Object := Self.Search_Paths.All_Paths;
       --  Search path to be complemented later with values from the
-      --  Project_Path attribute as well as the root project file directory.
+      --  Project_Path attribute.
 
       Project_Path_Attr : Attribute.Object;
 
@@ -1596,6 +1596,9 @@ package body GPR2.Tree_Internal is
            GPR2.Project_Parser.Undefined;
          Data        : View_Internal.Data;
 
+         Final_Search_Paths : Path_Name.Set.Object := Search_Paths;
+         --  Search path to be complemented with the project directory
+
          function Get_Missing_Project_Err_Msg
            (File : Path_Name.Object; Message_Prefix : String) return String;
          --  Return the error message to display when dealing with a missing
@@ -1885,9 +1888,9 @@ package body GPR2.Tree_Internal is
                      Starting_From.Dir_Name.Value);
 
                   if Prepend then
-                     Final_Search_Paths.Prepend (Path);
+                     Search_Paths.Prepend (Path);
                   else
-                     Final_Search_Paths.Append (Path);
+                     Search_Paths.Append (Path);
                   end if;
 
                   Project_Path_Attr_Search_Paths.Append (Path);

@@ -1,0 +1,7 @@
+with "installed";
+with "dep";
+with "c";
+
+abstract project P is
+   for Source_Dirs use ();
+end P;

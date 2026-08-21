@@ -1,0 +1,5 @@
+--  Homonym of lib_c/c.gpr, must never be selected
+
+abstract project C is
+   for Source_Dirs use ();
+end C;

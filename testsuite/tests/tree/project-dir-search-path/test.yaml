@@ -1,0 +1,8 @@
+description:
+    The directory of a project is a search path for its own dependencies only.
+    Here Installed is loaded first and comes from a directory that also holds
+    a homonym of C, and that directory must not take precedence over the
+    project path when Dep, loaded afterwards, looks for C.
+driver: build_and_run
+project_file: project_dir_search_path
+main: main
