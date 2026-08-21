@@ -1,0 +1,2 @@
+description: "gprbuild -u <spec> <body> compiles only the unit's main part, not both"
+driver: python_script
