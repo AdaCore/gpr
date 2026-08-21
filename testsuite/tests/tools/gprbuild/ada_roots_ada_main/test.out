@@ -1,0 +1,3 @@
+OK: gprbuild succeeded
+OK: main.ali (the declared Main) is listed before bla.ali on the gnatbind command line
+OK: b__main.adb imports "_ada_main" as the Ada_Main_Program

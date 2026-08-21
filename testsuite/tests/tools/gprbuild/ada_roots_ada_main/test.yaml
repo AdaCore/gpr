@@ -1,0 +1,10 @@
+description:
+  When an executable project declares both an Ada Main and an additional
+  Ada entry point through the Roots attribute, the Main's ALI must always
+  be listed first on the gnatbind command line, regardless of how the
+  Roots unit's name sorts relative to the Main's. GNATbind selects the
+  first library-level procedure it is given as the Ada main, so if the
+  Roots unit precedes the Main on the command line, gnatbind silently
+  binds the wrong unit as the program's entry point and the link fails
+  with an undefined reference to the Roots unit's "_ada_" symbol.
+driver: python_script

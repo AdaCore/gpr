@@ -99,6 +99,14 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
       procedure Add_Mapping_File;
 
+      function Root_Ali
+        (Unit : GPR2.Build.Compilation_Unit.Object) return Path_Name.Object;
+      --  Returns the ALI to bind against for Unit: its interface ALI when
+      --  Unit belongs to an imported non-standalone library, its local ALI
+      --  otherwise. Path_Name.Undefined if Unit has no associated compile
+      --  action. Shared by the Main_Unit and Self.Roots handling below so
+      --  both always resolve the ALI the same way.
+
       Lang_Ada_Idx      : constant PAI.Object :=
                             PAI.Create (GPR2.Ada_Language);
       Binder_Driver     : Unbounded_String;
@@ -281,6 +289,31 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          end;
       end Resolve_Binder;
 
+      --------------
+      -- Root_Ali --
+      --------------
+
+      function Root_Ali
+        (Unit : GPR2.Build.Compilation_Unit.Object) return Path_Name.Object
+      is
+         UID  : constant Compile.Ada.Ada_Compile_Id :=
+           Compile.Ada.Create (Unit);
+         Comp : constant Compile.Ada.Object :=
+           Compile.Ada.Object (Self.Tree.Action (UID));
+
+         use type Project.View.Object;
+      begin
+         if not Comp.Is_Defined then
+            return Path_Name.Undefined;
+         elsif Unit.Owning_View /= Self.Ctxt
+           and then Unit.Owning_View.Is_Library
+         then
+            return Comp.Intf_Ali_File.Path;
+         else
+            return Comp.Local_Ali_File.Path;
+         end if;
+      end Root_Ali;
+
       -----------------------
       -- Set_Binder_Driver --
       -----------------------
@@ -390,27 +423,35 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          Cmd_Line.Add_Argument ("-a");
       end if;
 
-      for Unit of Self.Roots loop
-         declare
-            UID  : constant Compile.Ada.Ada_Compile_Id :=
-              Compile.Ada.Create (Unit);
-            Comp : constant Compile.Ada.Object :=
-              Compile.Ada.Object (Self.Tree.Action (UID));
+      --  GNATbind selects the Ada main as the first library-level
+      --  procedure found in its argument list. Self.Roots is a Map
+      --  ordered by unit name, so it must never be relied upon to keep
+      --  Main_Unit first when extra entry points from the Roots
+      --  attribute are present. Emit the declared Main explicitly,
+      --  first, then the remaining roots.
 
-            use type Project.View.Object;
+      if Self.Main_Unit.Is_Defined then
+         declare
+            Ali : constant Path_Name.Object := Root_Ali (Self.Main_Unit);
          begin
-            if Comp.Is_Defined then
-               if Unit.Owning_View /= Self.Ctxt
-                 and then Unit.Owning_View.Is_Library
-               then
-                  Cmd_Line.Add_Argument
-                    (Comp.Intf_Ali_File.Path, Build.Command_Line.Simple);
-               else
-                  Cmd_Line.Add_Argument
-                    (Comp.Local_Ali_File.Path, Build.Command_Line.Simple);
-               end if;
+            if Ali.Is_Defined then
+               Cmd_Line.Add_Argument (Ali, Build.Command_Line.Simple);
             end if;
          end;
+      end if;
+
+      for Unit of Self.Roots loop
+         if not Self.Main_Unit.Is_Defined
+           or else Unit.Name /= Self.Main_Unit.Name
+         then
+            declare
+               Ali : constant Path_Name.Object := Root_Ali (Unit);
+            begin
+               if Ali.Is_Defined then
+                  Cmd_Line.Add_Argument (Ali, Build.Command_Line.Simple);
+               end if;
+            end;
+         end if;
       end loop;
 
       --  For standalone libraries, we need to give the full list of ALIs that

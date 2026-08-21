@@ -1,0 +1,6 @@
+project Prj is
+   for Source_Dirs use ("src");
+   for Object_Dir  use "obj";
+   for Main use ("main.adb");
+   for Roots ("Ada") use ("bla");
+end Prj;
