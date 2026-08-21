@@ -1,0 +1,5 @@
+with "c";
+
+abstract project Dep is
+   for Source_Dirs use ();
+end Dep;
