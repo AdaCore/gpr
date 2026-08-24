@@ -466,7 +466,8 @@ package body GPR2.Build.Tree_Db is
    function Execute
      (Self              : in out Object;
       Actions_Scheduler : in out GPR2.Build.Actions_Scheduler.Object'Class;
-      Options           : GPR2.Build.Actions_Scheduler.Options'Class)
+      Options           : GPR2.Build.Actions_Scheduler.Options'Class;
+      Make_JS           : in out GPR2.Build.Jobserver.Object)
       return GPR2.Build.Actions_Scheduler.Execution_Status
    is
    begin
@@ -477,7 +478,8 @@ package body GPR2.Build.Tree_Db is
          Actions_Scheduler.Execute
            (Self.Self,
             Context => Self.Exec_Ctxt'Access,
-            Options => Options);
+            Options => Options,
+            Make_JS => Make_JS);
 
          Self.Executing := False;
          Self.Exec_Ctxt.Graph.Clear;
@@ -499,7 +501,7 @@ package body GPR2.Build.Tree_Db is
       return Self.Exec_Ctxt.Status;
    end Execute;
 
-   ----------------------
+   -------------------------
    -- Execute_Next_Action --
    -------------------------
 

@@ -5,6 +5,7 @@
 --
 
 with GNATCOLL.Directed_Graph;
+with GPR2.Build.Jobserver;
 with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
 
@@ -25,7 +26,8 @@ package GPR2.Build.Actions_Scheduler.JSON is
      (Self    : in out Object;
       Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       Context : access GPR2.Build.Actions_Scheduler.Context;
-      Options : GPR2.Build.Actions_Scheduler.Options'Class);
+      Options : GPR2.Build.Actions_Scheduler.Options'Class;
+      Make_JS : in out GPR2.Build.Jobserver.Object);
 
 private
 

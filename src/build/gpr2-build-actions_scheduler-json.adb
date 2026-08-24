@@ -125,14 +125,15 @@ package body GPR2.Build.Actions_Scheduler.JSON is
      (Self    : in out Object;
       Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       Context : access GPR2.Build.Actions_Scheduler.Context;
-      Options : GPR2.Build.Actions_Scheduler.Options'Class)
+      Options : GPR2.Build.Actions_Scheduler.Options'Class;
+      Make_JS : in out GPR2.Build.Jobserver.Object)
    is
       use GNATCOLL.OS.FS;
       File : GNATCOLL.OS.FS.File_Descriptor;
       Repr : Unbounded_String;
    begin
       GPR2.Build.Actions_Scheduler.Object (Self).Execute
-        (Tree_Db, Context, Options);
+        (Tree_Db, Context, Options, Make_JS);
 
       if not Self.JSON_File.Is_Defined then
          return;

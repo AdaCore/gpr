@@ -6,6 +6,7 @@ with GNATCOLL.OS.Process;
 with GPR2.Build.Actions_Population;
 with GPR2.Build.Options;
 with GPR2.Build.Actions_Scheduler;
+with GPR2.Build.Jobserver;
 with GPR2.Build.Source.Sets;
 with GPR2.Options;
 with GPR2.Project.Tree;
@@ -28,6 +29,8 @@ procedure Main is
       Build_Opts : constant GPR2.Build.Options.Build_Options := (others => <>);
       Exec_Opts  : constant GPR2.Build.Actions_Scheduler.Options := (others => <>);
       Scheduler  : GPR2.Build.Actions_Scheduler.Object;
+      Make_JS    : GPR2.Build.Jobserver.Object;
+      --  Never connected: this test does not run under make
       Reporter   : GPR2.Reporter.Console.Object :=
                      GPR2.Reporter.Console.Create
                        (Regular,
@@ -63,7 +66,9 @@ procedure Main is
 
       --  Tree.Set_Reporter (GPR2.Reporter.Console.Create (Quiet));
 
-      if Tree.Artifacts_Database.Execute (Scheduler, Exec_Opts) /= GPR2.Build.Actions_Scheduler.Success then
+      if Tree.Artifacts_Database.Execute (Scheduler, Exec_Opts, Make_JS)
+        /= GPR2.Build.Actions_Scheduler.Success
+      then
          return;
       end if;
 

@@ -9,6 +9,7 @@ with Ada.Text_IO;
 
 with GPR2.Build.Actions.Thread.Report_Messages;
 with GPR2.Build.Actions_Scheduler;
+with GPR2.Build.Jobserver;
 
 with GPR2.Options;
 
@@ -24,6 +25,8 @@ function Test return Integer is
    Opts      : GPR2.Options.Object;
    Project   : constant String := "tree/main.gpr";
    Scheduler : GPR2.Build.Actions_Scheduler.Object;
+   Make_JS   : GPR2.Build.Jobserver.Object;
+   --  Never connected: this test does not run under make
    Root_View : GPR2.Project.View.Object;
    Exec_Opts : GPR2.Build.Actions_Scheduler.Options;
    Ret_Code  : Integer := 0;
@@ -64,7 +67,7 @@ begin
 
    Exec_Opts.Force := True;
 
-   if Tree.Artifacts_Database.Execute (Scheduler, Exec_Opts) =
+   if Tree.Artifacts_Database.Execute (Scheduler, Exec_Opts, Make_JS) =
         GPR2.Build.Actions_Scheduler.Success
    then
       Ada.Text_IO.Put_Line ("execution succeeded");

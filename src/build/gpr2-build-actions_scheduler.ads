@@ -111,10 +111,13 @@ package GPR2.Build.Actions_Scheduler is
      (Self    : in out Object;
       Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       Context : access GPR2.Build.Actions_Scheduler.Context;
-      Options : GPR2.Build.Actions_Scheduler.Options'Class);
+      Options : GPR2.Build.Actions_Scheduler.Options'Class;
+      Make_JS : in out GPR2.Build.Jobserver.Object);
    --  Execute the actions scheduler. Iterates over the
    --  directed graph in Context, launching and collecting
    --  actions according to the given Options.
+   --  Make_JS is the make jobserver to obey. One that was never connected
+   --  simply reports itself unavailable, and the build then runs without one.
 
    -----------------------------
    -- SINGLE ACTION EXECUTION --
@@ -189,9 +192,6 @@ private
    type Object is tagged limited record
       Previous_Progress : Natural := 0;
       Tree_Db           : access GPR2.Build.Tree_Db.Object;
-      Make_JS           : GPR2.Build.Jobserver.Object;
-      --  When used from make, the make job server to limit our number of
-      --  simultaneous processes to what make accepts.
    end record;
 
    type Action_Status is
