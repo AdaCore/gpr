@@ -50,7 +50,8 @@ package body GPR2.Build.Actions_Scheduler is
      (Self    : in out Object;
       Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       Context : access GPR2.Build.Actions_Scheduler.Context;
-      Options : GPR2.Build.Actions_Scheduler.Options'Class);
+      Options : GPR2.Build.Actions_Scheduler.Options'Class;
+      Make_JS : in out GPR2.Build.Jobserver.Object);
    --  Execute the actions scheduler, which occurs after an option cast
 
    procedure Launch_Process
@@ -402,9 +403,10 @@ package body GPR2.Build.Actions_Scheduler is
      (Self    : in out Object;
       Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       Context : access GPR2.Build.Actions_Scheduler.Context;
-      Options : GPR2.Build.Actions_Scheduler.Options'Class) is
+      Options : GPR2.Build.Actions_Scheduler.Options'Class;
+      Make_JS : in out GPR2.Build.Jobserver.Object) is
    begin
-      Internal_Execute (Self, Tree_Db, Context, Options);
+      Internal_Execute (Self, Tree_Db, Context, Options, Make_JS);
    end Execute;
 
    -------------------------
@@ -705,7 +707,8 @@ package body GPR2.Build.Actions_Scheduler is
      (Self    : in out Object;
       Tree_Db : GPR2.Build.Tree_Db.Object_Access;
       Context : access GPR2.Build.Actions_Scheduler.Context;
-      Options : GPR2.Build.Actions_Scheduler.Options'Class)
+      Options : GPR2.Build.Actions_Scheduler.Options'Class;
+      Make_JS : in out GPR2.Build.Jobserver.Object)
    is
       use FS;
       use type Ada.Containers.Count_Type;
@@ -900,8 +903,8 @@ package body GPR2.Build.Actions_Scheduler is
                Release_Slot (Action_Slot => Handler.Action_Slot);
                Nb_Executed := Nb_Executed + 1;
 
-               if Self.Make_JS.Is_Available then
-                  Self.Make_JS.Release_Token;
+               if Make_JS.Is_Available then
+                  Make_JS.Release_Token;
                end if;
 
                --  Report the progress if requested
@@ -1338,13 +1341,11 @@ package body GPR2.Build.Actions_Scheduler is
          Initialize_Script_FD (Script_FD);
       end if;
 
-      Self.Make_JS.Initialize_Protocol;
-
-      if Self.Make_JS.Dry_Run then
+      if Make_JS.Dry_Run then
          return;
       end if;
 
-      if Options.Force_Jobserver and then Self.Make_JS.Has_Protocol_Error then
+      if Options.Force_Jobserver and then Make_JS.Has_Protocol_Error then
          Tree_Db.Reporter.Report
            ("error: jobserver fifo protocol not supported, please use "
             & "--jobserver-style=pipe on your make command");
@@ -1439,8 +1440,8 @@ package body GPR2.Build.Actions_Scheduler is
 
                if Status in Pending | Ready_To_Run then
                   --  We are waiting for a token to become available
-                  if Self.Make_JS.Is_Available
-                    and then not Self.Make_JS.Request_Token
+                  if Make_JS.Is_Available
+                    and then not Make_JS.Request_Token
                   then
                      --  No token available, we need to wait for one
                      --  before launching the job
@@ -1471,8 +1472,8 @@ package body GPR2.Build.Actions_Scheduler is
                              (Self, Natural (Context.Nodes.Length));
                         end if;
                      else
-                        if Self.Make_JS.Is_Available then
-                           Self.Make_JS.Release_Token;
+                        if Make_JS.Is_Available then
+                           Make_JS.Release_Token;
                         end if;
 
                         Status := Failed_Pre_Execution;

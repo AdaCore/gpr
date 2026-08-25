@@ -15,6 +15,7 @@ with GPR2.Build.Actions;
 with GPR2.Build.Actions_Scheduler;
 with GPR2.Build.Artifacts;
 with GPR2.Build.External_Options;
+with GPR2.Build.Jobserver;
 with GPR2.Build.Options;
 with GPR2.Build.View_Db;
 with GPR2.Log;
@@ -136,7 +137,8 @@ package GPR2.Build.Tree_Db is
    function Execute
      (Self              : in out Object;
       Actions_Scheduler : in out GPR2.Build.Actions_Scheduler.Object'Class;
-      Options           : GPR2.Build.Actions_Scheduler.Options'Class)
+      Options           : GPR2.Build.Actions_Scheduler.Options'Class;
+      Make_JS           : in out GPR2.Build.Jobserver.Object)
       return GPR2.Build.Actions_Scheduler.Execution_Status;
 
    function Execute_Next_Action

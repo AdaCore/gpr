@@ -26,6 +26,7 @@ with GPR2.Build.Actions_Population;
 with GPR2.Build.Actions_Scheduler;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.External_Options;
+with GPR2.Build.Jobserver;
 with GPR2.Build.Actions_Scheduler.JSON;
 with GPR2.Build.Source;
 with GPR2.Message;
@@ -68,6 +69,8 @@ procedure GPRbuild.Main is
 
    Opt  : Options.Object;
 
+   Make_JS : GPR2.Build.Jobserver.Object;
+
    -------------
    -- Execute --
    -------------
@@ -76,7 +79,9 @@ procedure GPRbuild.Main is
      (PM : in out GPR2.Build.Actions_Scheduler.Object'Class)
       return Exit_Code_Type is
    begin
-      case Opt.Tree.Artifacts_Database.Execute (PM, Opt.PM_Options) is
+      case Opt.Tree.Artifacts_Database.Execute
+             (PM, Opt.PM_Options, Make_JS)
+      is
          when GPR2.Build.Actions_Scheduler.Success =>
             return E_Success;
          when GPR2.Build.Actions_Scheduler.Errors =>
@@ -95,6 +100,15 @@ procedure GPRbuild.Main is
    use GPR2.Build;
 
 begin
+
+   Make_JS.Initialize_Protocol;
+
+   --  Must stay the very first statement: MAKEFLAGS advertises the jobserver
+   --  as bare descriptor numbers when relying on simple UNIX pipes, and make
+   --  may have closed them behind our back.
+   --  Any file or pipe we open before connecting to it would be given
+   --  those very numbers, and we would end up reading a pipe of our own,
+   --  waiting forever for a token nobody can write.
 
    GNATCOLL.Traces.Parse_Config_File;
 

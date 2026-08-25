@@ -8,6 +8,7 @@ with Ada.Text_IO;
 
 with GPR2.Build.Actions.Thread.Trigger;
 with GPR2.Build.Actions_Scheduler;
+with GPR2.Build.Jobserver;
 with GPR2.Options;
 with GPR2.Project.Tree;
 
@@ -23,6 +24,8 @@ function Test return Integer is
    Tree      : GPR2.Project.Tree.Object;
    Action    : GPR2.Build.Actions.Thread.Trigger.Object;
    Scheduler : GPR2.Build.Actions_Scheduler.Object;
+   Make_JS   : GPR2.Build.Jobserver.Object;
+   --  Never connected: this test does not run under make
    Status    : GPR2.Build.Actions_Scheduler.Execution_Status;
 begin
    Opts.Add_Switch (GPR2.Options.P, "tree/main.gpr");
@@ -47,7 +50,7 @@ begin
       return 1;
    end if;
 
-   Status := Tree.Artifacts_Database.Execute (Scheduler, Exec_Opts);
+   Status := Tree.Artifacts_Database.Execute (Scheduler, Exec_Opts, Make_JS);
 
    if Status /= GPR2.Build.Actions_Scheduler.Success then
       Ada.Text_IO.Put_Line ("Scheduler failed");
