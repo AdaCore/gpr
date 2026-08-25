@@ -1318,11 +1318,70 @@ package body GPR2.Build.Actions_Population is
       use type GPR2.Path_Name.Object;
       use type Ada.Containers.Count_Type;
 
+      function Overridden_Runtime_Deps
+        (Root    : Compilation_Unit.Object;
+         NS_Root : GPR2.Project.View.Object) return Compilation_Unit.Maps.Map;
+      --  Units in Root's transitive closure (via Known_Dependencies) that are
+      --  Overridden_From_Runtime. Ensures only reachable overrides get
+      --  recompiled, not every override in the project.
+
       A_Comp       : Compile.Ada.Object;
       Comp         : Compile.Object;
       Source       : GPR2.Build.Source.Object;
       Archive      : Link.Object;
       Actual_Mains : Compilation_Unit.Unit_Location_Vector;
+
+      -----------------------------
+      -- Overridden_Runtime_Deps --
+      -----------------------------
+
+      function Overridden_Runtime_Deps
+        (Root    : Compilation_Unit.Object;
+         NS_Root : GPR2.Project.View.Object) return Compilation_Unit.Maps.Map
+      is
+         Result   : Compilation_Unit.Maps.Map;
+         --  Only the Overridden_From_Runtime units found in Root's transitive
+         --  closure.
+
+         Visited  : GPR2.Containers.Name_Set;
+         --  Every unit visited during traversal, overridden or not: needed
+         --  purely to stop recursion, since an overridden unit may only be
+         --  reachable through several ordinary (non-overridden) units.
+
+         Worklist : GPR2.Containers.Name_Set;
+      begin
+         Worklist.Include (Root.Name);
+
+         while not Worklist.Is_Empty loop
+            declare
+               Name     : constant Name_Type := Worklist.First_Element;
+               CU       : Compilation_Unit.Object;
+               Pos      : GPR2.Containers.Name_Type_Set.Cursor;
+               Inserted : Boolean;
+            begin
+               Worklist.Delete_First;
+               Visited.Insert (Name, Pos, Inserted);
+
+               if Inserted then
+                  CU := NS_Root.Unit (Name);
+
+                  if CU.Is_Defined then
+                     if CU.Overridden_From_Runtime then
+                        Result.Include (Name, CU);
+                     end if;
+
+                     for Dep of CU.Known_Dependencies loop
+                        if not Visited.Contains (Dep) then
+                           Worklist.Include (Dep);
+                        end if;
+                     end loop;
+                  end if;
+               end if;
+            end;
+         end loop;
+
+         return Result;
+      end Overridden_Runtime_Deps;
 
    begin
       if Mains.Is_Empty then
@@ -1499,41 +1558,45 @@ package body GPR2.Build.Actions_Population is
                   if not Tree_Db.Add_Action (Bind (Idx)) then
                      return False;
                   end if;
-               end;
 
-               --  We must detect all units from the main view that overrides
-               --  the runtime in order to properly discover other overriden
-               --  dependencies to compile and link to them.
-               declare
-                  Units : constant Compilation_Unit.Maps.Map :=
-                            Main.View.Own_Units
-                              (Overridden_From_Runtime => True);
-               begin
-                  for U of Units loop
-                     declare
-                        R_Comp : Compile.Ada.Object;
-                     begin
-                        R_Comp.Initialize (U);
+                  --  We must detect all units from the main view that
+                  --  overrides the runtime in order to properly discover
+                  --  other overriden dependencies to compile and link to
+                  --  them. Only do so for units actually reachable from the
+                  --  main, to avoid forcing a recompile of every override
+                  --  in the project regardless of whether it's used.
+                  declare
+                     Reachable_Overrides : constant Compilation_Unit.Maps.Map
+                       := Overridden_Runtime_Deps
+                         (Unit, View.Namespace_Roots.First_Element);
+                  begin
 
-                        if not Tree_Db.Add_Action (R_Comp) then
-                           return False;
-                        end if;
+                     for U of Reachable_Overrides loop
+                        declare
+                           R_Comp : Compile.Ada.Object;
+                        begin
+                           R_Comp.Initialize (U);
 
-                        --  Add the overriden unit dependency file to discover
-                        --  other potential overriden dependencies.
-                        Tree_Db.Add_Input
-                          (Bind (Idx).UID, R_Comp.Local_Ali_File);
-                        Ada_Bind.Object'Class
-                          (Tree_Db.Action_Id_To_Reference (Bind (Idx).UID)
-                             .Element.all)
-                          .Track_ALI_Input (U, R_Comp.Local_Ali_File, True);
+                           if not Tree_Db.Add_Action (R_Comp) then
+                              return False;
+                           end if;
 
-                        --  Add the resulting object file to the final link to
-                        --  resolve their symbols before the runtime for proper
-                        --  overriding.
-                        Tree_Db.Add_Input (Link (Idx).UID, R_Comp.Object_File);
-                     end;
-                  end loop;
+                           Tree_Db.Add_Input
+                             (Bind (Idx).UID, R_Comp.Local_Ali_File);
+                           Ada_Bind.Object'Class
+                             (Tree_Db.Action_Id_To_Reference
+                                (Bind (Idx).UID).Element.all)
+                               .Track_ALI_Input
+                                 (U, R_Comp.Local_Ali_File, False);
+
+                           --  Add the resulting object file to the final
+                           --  link to resolve their symbols before the
+                           --  runtime for proper overriding.
+                           Tree_Db.Add_Input
+                             (Link (Idx).UID, R_Comp.Object_File);
+                        end;
+                     end loop;
+                  end;
                end;
 
                Tree_Db.Add_Input (Bind (Idx).UID, A_Comp.Local_Ali_File);

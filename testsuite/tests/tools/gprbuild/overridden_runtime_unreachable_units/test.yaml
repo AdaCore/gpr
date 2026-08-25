@@ -1,0 +1,8 @@
+description: >
+  Regression test for gpr#917: a project overriding part of the runtime
+  must only recompile units reachable from the main (not every override
+  in the project), and units reachable only via ALI D-line data (no
+  with-clause, e.g. compiler-implicit System.Concat_N) must be listed
+  explicitly to gnatbind exactly once, without duplicating units already
+  discoverable via real with-clauses.
+driver: python_script

@@ -1,0 +1,10 @@
+json summary found: True
+helper compiled (expected True): True
+s-crc32 compiled (expected True): True
+s-conca3 compiled (expected True): True
+s-regpat compiled (expected False): False
+number of bind actions (expected 1): 1
+s-conca3.ali occurrences on bind command line (expected 0): 0
+s-crc32.ali occurrences on bind command line (expected 0): 0
+s-regpat.ali on bind command line (expected False): False
+local override executed (expected True): True
