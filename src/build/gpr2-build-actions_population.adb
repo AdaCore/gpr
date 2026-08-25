@@ -1556,7 +1556,7 @@ package body GPR2.Build.Actions_Population is
 
                if (for some Lib of Closure =>
                      Lib.Has_Source_Of_Language (Ada_Language))
-                 or else (for some Lib of Static_Libs =>
+                 or else (for some Lib of Static_Libs.Union (Shared_Libs) =>
                             Tree.Get_View
                               (Lib).Has_Source_Of_Language (Ada_Language)
                           and then
@@ -1587,7 +1587,7 @@ package body GPR2.Build.Actions_Population is
                      end loop;
                   end loop;
 
-                  for Lib of Static_Libs loop
+                  for Lib of Static_Libs.Union (Shared_Libs) loop
                      declare
                         V : constant Project.View.Object :=
                               Tree.Get_View (Lib);
