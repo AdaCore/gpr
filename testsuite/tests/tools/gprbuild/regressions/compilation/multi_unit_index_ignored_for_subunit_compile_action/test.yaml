@@ -1,0 +1,2 @@
+description: Regression test - wrong unit index passed to the compiler for a separate (subunit) reached through an indexed Naming exception
+driver: python_script
