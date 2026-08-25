@@ -163,7 +163,7 @@ private
    end record;
 
    overriding function Src_Index (Self : Object) return Unit_Index is
-     (Self.CU.Main_Part.Index);
+     (Self.UL.Index);
 
    overriding procedure Compute_Signature
      (Self            : in out Object;

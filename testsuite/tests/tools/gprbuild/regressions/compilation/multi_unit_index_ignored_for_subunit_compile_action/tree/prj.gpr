@@ -1,0 +1,11 @@
+project Prj is
+   for Main use ("main.adb");
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj";
+
+   package Naming is
+      for Body ("Separates_Pkg.Func_1") use "separates.adb" at 1;
+      for Body ("Separates_Pkg.Func_2") use "separates.adb" at 2;
+      for Body ("Separates_Pkg.Func_3") use "separates.adb" at 3;
+   end Naming;
+end Prj;
