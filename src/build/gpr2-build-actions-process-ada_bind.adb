@@ -1086,6 +1086,71 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          return False;
       end if;
 
+      declare
+         D_Line_Only : GPR2.Containers.Name_Set;
+         --  Units this compilation semantically depends on (per the ALI's
+         --  D-lines) that never appear as a with-clause anywhere -- the
+         --  compiler references them implicitly (e.g. System.Concat_N for
+         --  multi-operand string concatenation, System.Scalar_Values for
+         --  certain range checks). gnatbind's own closure discovery expands
+         --  via with-clauses only, so it would never find such a unit on its
+         --  own.
+         --
+         --  This matters only for units the project itself overrides
+         --  (Overridden_From_Runtime): if such a unit is never compiled, both
+         --  gnatbind and the linker silently fall back to the toolchain's
+         --  installed, un-overridden copy instead of the project's own --
+         --  no error, just wrong code silently linked in. For an ordinary
+         --  project unit this problem cannot occur: it is not shadowing
+         --  anything, so whichever copy gets used is the only copy that
+         --  exists, and it is already reached through the project's normal
+         --  with-clause-driven compilation regardless of D-lines. That is
+         --  why every candidate found here is filtered down to
+         --  Overridden_From_Runtime units only, below.
+      begin
+         for Dep_File of Comp.ALI.Dependencies loop
+            if GPR2.Is_Simple_Name (Dep_File) then
+               declare
+                  Src : constant GPR2.Build.Source.Object :=
+                          Self.Ctxt.Visible_Source
+                            (GPR2.Simple_Name (Dep_File));
+               begin
+                  if Src.Is_Defined and then Src.Has_Units then
+                     for U of Src.Units loop
+                        case U.Kind is
+                           when S_No_Body | S_Separate =>
+                              null;
+
+                           when S_Spec | S_Body =>
+                              if U.Name'Length > 0 then
+                                 declare
+                                    CU : constant Compilation_Unit.Object :=
+                                      Self.Ctxt.Namespace_Roots.
+                                        First_Element.Unit
+                                          (Name_Type (U.Name));
+                                 begin
+                                    if CU.Is_Defined
+                                      and then CU.Overridden_From_Runtime
+                                    then
+                                       D_Line_Only.Include
+                                         (Name_Type (U.Name));
+                                    end if;
+                                 end;
+                              end if;
+                        end case;
+                     end loop;
+                  end if;
+               end;
+            end if;
+         end loop;
+
+         if not D_Line_Only.Is_Empty
+           and then not Self.On_Ada_Dependencies (D_Line_Only, True)
+         then
+            return False;
+         end if;
+      end;
+
       --  Second stage: look if the library interface needs to be adjusted with
       --  a required new dependency
 
