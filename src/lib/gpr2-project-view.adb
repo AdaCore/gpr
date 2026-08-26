@@ -126,7 +126,7 @@ package body GPR2.Project.View is
 
          for Agg of View_Internal.Get_RO (Self).Aggregated loop
             if Agg.Kind /= Self.Kind or else not Recursive then
-               Set.Insert (Agg);
+               Set.Include (Agg);
             elsif not Analyzed.Contains (Agg) then
                Analyzed.Insert (Agg);
                Set.Union (Agg.Aggregated);
