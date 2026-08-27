@@ -236,6 +236,18 @@ package body GPR2.Build.Actions_Population is
    --  needs neither, so it qualifies whatever its kind. The restriction is
    --  not one of Cargo but of what the artifact model carries today.
 
+   function Mains_Of
+     (Mains : Compilation_Unit.Unit_Location_Vector;
+      View  : GPR2.Project.View.Object)
+      return Compilation_Unit.Unit_Location_Vector;
+   --  The entries of Mains that belong to View.
+   --
+   --  Mains holds what was named on the command line, for the whole tree, so
+   --  a main selected in one view says nothing about another. Testing the
+   --  vector as a whole would have every Rust view take itself as asked for,
+   --  and a view with no entry of its own would then find its selection empty
+   --  and build every binary its package declares.
+
    function Populate_Withed_Projects
      (Tree_Db               : GPR2.Build.Tree_Db.Object_Access;
       Options               : Build.Options.Build_Options;
@@ -590,6 +602,28 @@ package body GPR2.Build.Actions_Population is
       return False;
    end Check_Linkable_By_Cargo;
 
+   --------------
+   -- Mains_Of --
+   --------------
+
+   function Mains_Of
+     (Mains : Compilation_Unit.Unit_Location_Vector;
+      View  : GPR2.Project.View.Object)
+      return Compilation_Unit.Unit_Location_Vector
+   is
+      use type GPR2.View_Ids.View_Id;
+
+      Result : Compilation_Unit.Unit_Location_Vector;
+   begin
+      for Loc of Mains loop
+         if Loc.View.Id = View.Id then
+            Result.Append (Loc);
+         end if;
+      end loop;
+
+      return Result;
+   end Mains_Of;
+
    ----------------------
    -- Populate_Actions --
    ----------------------
@@ -831,14 +865,25 @@ package body GPR2.Build.Actions_Population is
                case V.Kind is
                   when K_Standard | K_Abstract =>
                      if V.Language_Ids.Contains (Rust_Language) then
-                        if V.Has_Mains
-                          or else not Mains.Is_Empty
-                          or else not Populate_Mains_Only
-                        then
-                           Result := Populate_Rust_Executable
-                             (Tree_Db, V, Mains, Options,
-                              With_Externally_Built);
-                        end if;
+                        declare
+                           Wanted : constant Boolean :=
+                             (if Mains.Is_Empty
+                              then V.Has_Mains
+                                   or else not Populate_Mains_Only
+                              else not Mains_Of (Mains, V).Is_Empty);
+                           --  If no main has been specified, it means that
+                           --  each Rust view is free to manage their own
+                           --  build.
+                           --  If mains have been specified, we need to check
+                           --  first if the wanted mains are part of this view.
+
+                        begin
+                           if Wanted then
+                              Result := Populate_Rust_Executable
+                                (Tree_Db, V, Mains, Options,
+                                 With_Externally_Built);
+                           end if;
+                        end;
                      elsif V.Has_Mains or else not Mains.Is_Empty then
                         Result := Populate_Mains
                           (Tree_Db, V, Mains, Options, With_Externally_Built);
@@ -2075,18 +2120,12 @@ package body GPR2.Build.Actions_Population is
       Has_SAL     : Boolean := False;
       CM          : Actions.Process.Cargo_Metadata.Object;
 
-      use type GPR2.View_Ids.View_Id;
-
       Actual_Mains : Compilation_Unit.Unit_Location_Vector;
    begin
       if Mains.Is_Empty then
          Actual_Mains := View.Mains;
       else
-         for Loc of Mains loop
-            if Loc.View.Id = View.Id then
-               Actual_Mains.Append (Loc);
-            end if;
-         end loop;
+         Actual_Mains := Mains_Of (Mains, View);
       end if;
 
       Closure.Include (View);
