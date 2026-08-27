@@ -438,6 +438,10 @@ package body GPR2.Build.Actions.Process.Cargo_Metadata is
    is
       pragma Unreferenced (Stderr);
       use GNATCOLL.JSON;
+
+      Root : JSON_Value;
+      --  What "cargo metadata" reported, once it has been parsed
+
    begin
       pragma Assert
         (Self.Force_Execution and then Stdout /= Null_Unbounded_String);
@@ -481,6 +485,8 @@ package body GPR2.Build.Actions.Process.Cargo_Metadata is
       declare
          Target_Dir_Str : constant String := Root.Get ("target_directory");
          Cargo_Build    : Actions.Process.Cargo_Build.Object;
+         Cargo_Clean    : Actions.Process.Cargo_Clean.Object;
+         Has_Libraries  : Boolean := False;
       begin
          Traces.Trace ("target_directory: " & Target_Dir_Str);
 
@@ -568,16 +574,60 @@ package body GPR2.Build.Actions.Process.Cargo_Metadata is
            ("created Cargo_Build action: " & Cargo_Build.UID.Image);
 
          --  Carry over the library dependencies that were temporarily saved as
-         --  inputs to this Cargo_Metadata action while waiting for the*
+         --  inputs to this Cargo_Metadata action while waiting for the
          --  Cargo_Build action to be created.
+
+         Has_Libraries := False;
 
          for Input of Self.Tree.Inputs (Self.UID) loop
             if Input in Artifacts.Library.Object'Class then
+               Has_Libraries := True;
                Traces.Trace
                  ("wiring " & Input.Image & " to " & Cargo_Build.UID.Image);
                Self.Tree.Add_Input (Cargo_Build.UID, Input);
             end if;
          end loop;
+
+         if Has_Libraries then
+            declare
+               Cargo_Package : constant JSON_Value :=
+                 Cargo_Support.Cargo_Package_Of (Root, Self.Cargo_Toml);
+            begin
+               if Cargo_Package.Kind /= JSON_Null_Type
+                 and then Cargo_Package.Has_Field ("name")
+               then
+                  --  A change in a library also triggers a Cargo_Clean action
+                  --  that ensures that the project built by Cargo_Build is
+                  --  up-to-date during the next build. External libraries are
+                  --  not taken into account by Cargo, a change in one of them
+                  --  does not retrigger a link.
+
+                  Cargo_Clean.Initialize
+                    (View         => Self.Ctxt,
+                     Package_Name =>
+                       Filename_Type (String'(Cargo_Package.Get ("name"))),
+                     Mode         => Self.Mode);
+
+                  if not Self.Tree.Add_Action (Cargo_Clean) then
+                     return False;
+                  end if;
+
+                  Traces.Trace
+                    ("created Cargo_Clean action: " & Cargo_Clean.UID.Image);
+
+                  for Input of Self.Tree.Inputs (Self.UID) loop
+                     if Input in Artifacts.Library.Object'Class then
+                        Self.Tree.Add_Input (Cargo_Clean.UID, Input);
+                     end if;
+                  end loop;
+
+                  --  Ensure that Cargo_Clean is run before Cargo_Build
+
+                  Self.Tree.Add_Input
+                    (Cargo_Build.UID, Cargo_Clean.UID_Artifact);
+               end if;
+            end;
+         end if;
 
          --  Do the same for the outputs of Cargo_Metadata, which were
          --  temporarily saved in the Cargo_Metadata action.

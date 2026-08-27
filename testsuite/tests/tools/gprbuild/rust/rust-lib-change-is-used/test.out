@@ -1,0 +1,4 @@
+ada_compute (10, 32) = 42
+
+ada_compute (10, 32) = -22
+
