@@ -430,7 +430,8 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
    function On_Tree_Insertion
      (Self : Object; Db : in out GPR2.Build.Tree_Db.Object) return Boolean
    is
-      GPR_Target : constant GPR2.Name_Type := Self.View.Tree.Target;
+      GPR_Target : constant GPR2.Name_Type :=
+                     Self.View.Tree.Target (Canonical => True);
    begin
       if Self.Rust_Triple = Null_Unbounded_String then
          Db.Reporter.Report

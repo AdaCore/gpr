@@ -18,6 +18,7 @@ with GNATCOLL.Utils;
 
 with GPR2.Build.Actions.Process.Post_Bind;
 with GPR2.Build.Actions.Process.Compile.Ada;
+with GPR2.Build.Actions.Process.Cargo_Support;
 with GPR2.Build.Actions.Process.Link.Partial;
 with GPR2.Build.ALI_Parser;
 with GPR2.Build.External_Options;
@@ -366,6 +367,8 @@ package body GPR2.Build.Actions.Process.Link is
       Dash_l_Opts  : GPR2.Containers.Value_List;
       --  -l needs to be last in the command line, so we add them here and
       --  then append to the command line in the end
+      Links_Rust   : Boolean := False;
+      --  Whether the closure holds a Rust view
 
    begin
       Objects := Self.Embedded_Objects;
@@ -620,8 +623,28 @@ package body GPR2.Build.Actions.Process.Link is
                   end loop;
                end if;
 
+               if C.Language_Ids.Contains (Rust_Language) then
+                  Links_Rust := True;
+               end if;
             end;
          end loop;
+
+         if Links_Rust then
+
+            --  A link mixing Rust and GPR code needs switches of its own,
+            --  which depend on the target only. This should be moved to the
+            --  KB, but probably with a new attribute, since these options must
+            --  be added only when linking a Rust view, and Linker_Options is
+            --  not an indexed attribute.
+
+            for Opt of Cargo_Support.Link_Options (Self.View.Tree.Target) loop
+               if GNATCOLL.Utils.Starts_With (Opt, "-l") then
+                  Dash_l_Opts.Append (Opt);
+               else
+                  Cmd_Line.Add_Argument (Opt);
+               end if;
+            end loop;
+         end if;
 
          for Arg of Dash_l_Opts loop
             Cmd_Line.Add_Argument (Arg);

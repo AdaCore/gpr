@@ -1,0 +1,4 @@
+description: Check that Rust specific link options are correctly added for transitive dependencies
+driver: python_script
+control:
+- [ SKIP, "not env.rust", "requires a Rust/Cargo toolchain" ]
