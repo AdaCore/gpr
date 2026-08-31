@@ -4,3 +4,6 @@ $ gprbuild -c -P prj.gpr -u main.adb main-test_proc.adb -gnatc
 [Ada Compile]     main.adb
 $ ls obj
 ['main-test_proc.ali', 'main.ali']
+$ gprclean -P prj.gpr -q -r main.adb main-test_proc.adb
+$ ls obj
+[]

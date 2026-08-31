@@ -959,7 +959,10 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
             Self.Track_ALI_Input (CU, Comp.Intf_Ali_File, False);
          end if;
 
-         if Comp.Valid_Signature or else Comp.View.Is_Externally_Built then
+         if Comp.Valid_Signature
+           or else Self.Tree.Is_Static_Completion
+           or else Comp.View.Is_Externally_Built
+         then
             --  If the new dependency has a valid signature, that's necessarily
             --  because it has been just compiled (or skipped because the
             --  signature has been checked). We can thus rely on its ALI file
@@ -1255,7 +1258,8 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
                   end if;
 
                   if New_Comp.Is_Defined
-                    and then New_Comp.Valid_Signature
+                    and then (New_Comp.Valid_Signature
+                              or else Self.Tree.Is_Static_Completion)
                   then
                      if New_Comp.Spec_Needs_Body then
                         Scope := New_Comp.Withed_Units;

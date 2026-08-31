@@ -341,6 +341,17 @@ package GPR2.Build.Tree_Db is
    --  returns -L for ld and family, or whatever option for the linker
    --  in use for the build.
 
+   -------------------------------------------------------------------
+   -- Helper for tools that processes the DAG without the Scheduler --
+   -------------------------------------------------------------------
+
+   function Is_Static_Completion (Self : Object) return Boolean;
+   --  True while running a static-completion pass (used by gprclean/gprinstall
+   --  /gprls, never by gprbuild).
+
+   procedure Set_Static_Completion (Self : in out Object; Active : Boolean);
+   --  Mark the start/end of a static-completion pass.
+
 private
 
    use type GPR2.Build.Actions.Action_Id'Class;
@@ -406,6 +417,8 @@ private
       File_Index         : aliased GPR2.Utils.Hash.Object;
 
       Linker_Lib_Dir_Opt : Unbounded_String;
+
+      Static_Completion  : Boolean := False;
    end record;
 
    procedure Create
@@ -417,6 +430,9 @@ private
 
    function Is_Defined (Self : Object) return Boolean is
      (Self.Self /= null);
+
+   function Is_Static_Completion (Self : Object) return Boolean is
+     (Self.Static_Completion);
 
    function Ref (Self : Object) return access Object is
      (Self.Self);
