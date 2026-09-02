@@ -113,6 +113,35 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
          Flags : GPR2.Containers.Value_List;
          --  The options generated for the library dependencies, one flag per
          --  element so that none of them can be split further
+
+         function Static_Link_Name
+           (Path : GPR2.Path_Name.Object) return String;
+         --  Base name of Path without the archive prefix
+
+         ----------------------
+         -- Static_Link_Name --
+         ----------------------
+
+         function Static_Link_Name
+           (Path : GPR2.Path_Name.Object) return String
+         is
+            Attr   : constant GPR2.Project.Attribute.Object :=
+              Self.Ctxt.Attribute (PRA.Archive_Prefix);
+            Prefix : constant String :=
+              (if Attr.Is_Defined then Attr.Value.Text else "");
+            Base   : constant String := String (Path.Base_Name);
+         begin
+            if Prefix'Length > 0
+              and then Base'Length > Prefix'Length
+              and then Base (Base'First .. Base'First + Prefix'Length - 1)
+                       = Prefix
+            then
+               return Base (Base'First + Prefix'Length .. Base'Last);
+            else
+               return Base;
+            end if;
+         end Static_Link_Name;
+
       begin
          for Input of Self.Tree.Inputs (Object'Class (Self).UID) loop
             if Input in Artifacts.Library.Object'Class then
@@ -123,9 +152,21 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
                     Lib.Path.Containing_Directory.String_Value;
                begin
                   if Lib.Is_Static then
-                     Flags.Append ("-C");
+                     --  On Windows, the C runtime is normally
+                     --  accessed through an import library such as
+                     --  libmsvcrt.a at link time. The import library provides
+                     --  the linker with the symbols needed to reference
+                     --  functions and data exported by the corresponding
+                     --  runtime DLL, which is then loaded by the Windows
+                     --  loader at runtime. So, when using GNU-style archive
+                     --  linking, static libraries that depend on symbols
+                     --  from other static libraries need to appear before
+                     --  their dependencies on the link command line.
+                     --  This is done with the -lstatic= option.
+                     Flags.Append (Value_Type ("-L" & Dir));
                      Flags.Append
-                       (Value_Type ("link-arg=" & Lib.Path.String_Value));
+                       (Value_Type
+                          ("-lstatic=" & Static_Link_Name (Lib.Path)));
                   else
                      pragma Assert
                        (Lib.Link_Name /= "",
