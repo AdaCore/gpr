@@ -105,14 +105,20 @@ def build_libgpr2_bindings():
     anod_build("libgpr2-bindings-py")
 
 
+# ??? To remove once windows tests for Rust are fixed
+def rust_qualifier():
+    """The Rust tests need a Rust toolchain, only available on linux."""
+    return {"rust": True} if env.host.os.name == "linux" else {}
+
+
 def test_gpr2():
     test_install()
-    anod_test("gpr2", qualifier={"rust": True})
+    anod_test("gpr2", qualifier=rust_qualifier())
 
 
 def test_gpr2_cov():
     anod_build("gpr2", qualifier={"coverage": True})
-    anod_test("gpr2", qualifier={"coverage": True, "rust": True})
+    anod_test("gpr2", qualifier={"coverage": True, **rust_qualifier()})
 
 
 def test_gpr2_valgrind():
