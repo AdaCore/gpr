@@ -753,9 +753,17 @@ package body GPR2.Build.Actions.Process.Compile is
       --  Add -cargs and -cargs:<lang>
 
       for Arg of Self.Tree.External_Options.Fetch
-                   (External_Options.Compiler, Self.Lang)
+        (External_Options.Compiler, Self.Lang)
       loop
-         Cmd_Line.Add_Argument (Arg);
+         declare
+            CF : constant Path_Name.Object :=
+              Self.Config_File_From_Option (Arg);
+         begin
+            if not (CF.Is_Defined and then Self.CLI_Config_File.Contains (CF))
+            then
+               Cmd_Line.Add_Argument (Arg);
+            end if;
+         end;
       end loop;
 
       --  Add -fPIC when compiling in the context of a shared or static-pic
@@ -1123,6 +1131,31 @@ package body GPR2.Build.Actions.Process.Compile is
          return;
       end if;
    end Compute_Signature;
+
+   -----------------------------
+   -- Config_File_From_Option --
+   -----------------------------
+
+   function Config_File_From_Option
+     (Self : Object'Class; Option : Value_Type) return Path_Name.Object
+   is
+      Attr : constant GPR2.Project.Attribute.Object :=
+        Self.View.Attribute
+          (PRA.Compiler.Config_File_Switches,
+           PAI.Create (Self.Lang));
+   begin
+      if Attr.Is_Defined then
+         for V of Attr.Values loop
+            if GNATCOLL.Utils.Starts_With (Option, V.Text) then
+               return Path_Name.Create_File
+                 (Filename_Type
+                    (Option (Option'First + V.Text'Length .. Option'Last)));
+            end if;
+         end loop;
+      end if;
+
+      return Path_Name.Undefined;
+   end Config_File_From_Option;
 
    ---------------------
    -- Dep_File_Suffix --

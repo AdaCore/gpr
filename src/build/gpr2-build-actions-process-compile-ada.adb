@@ -11,6 +11,7 @@ with GNATCOLL.Traces;
 with GPR2.Build.Actions.Process.Ada_Bind;
 with GPR2.Build.Artifacts.Key_Value;
 with GPR2.Build.Artifacts.Source_Files;
+with GPR2.Build.External_Options;
 with GPR2.Build.Tree_Db;
 with GPR2.Message;
 with GPR2.Project.Attribute;
@@ -200,6 +201,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
 
       if Self.Global_Config_Pragmas.Is_Defined
         or else Self.Local_Config_Pragmas.Is_Defined
+        or else not Self.CLI_Config_File.Is_Empty
       then
          Attr := Self.View.Attribute
            (PRA.Compiler.Config_File_Switches, PAI.Create (Ada_Language));
@@ -228,6 +230,20 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
               Self.Local_Config_Pragmas.String_Value,
             Build.Command_Line.Ignore);
       end if;
+
+      for CF of Self.CLI_Config_File loop
+         if CF.Is_Defined then
+            for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
+               Cmd_Line.Add_Argument
+                 (Attr.Values.Element (J).Text, Build.Command_Line.Ignore);
+            end loop;
+
+            Cmd_Line.Add_Argument
+              (Attr.Values.Last_Element.Text & CF.String_Value,
+               Build.Command_Line.Ignore);
+         end if;
+      end loop;
+
    end Compute_Command;
 
    -----------------------
@@ -365,6 +381,10 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
                        or else
                          (Self.Local_Config_File.Is_Defined
                           and then Dep = Self.Local_Config_File.Simple_Name)
+                       or else
+                         (not Self.CLI_Config_File.Is_Empty
+                          and then (for some CF of Self.CLI_Config_File =>
+                                          Dep = CF.Simple_Name))
                      then
                         Traces.Trace
                           ("config pragma file reported as dependency, " &
@@ -390,6 +410,14 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
             end if;
          end loop;
       end;
+
+      for CF of Self.CLI_Config_File loop
+         if not Self.Signature.Add_Input
+           (Artifacts.Files.Create (CF), Check_Checksums)
+         then
+            return;
+         end if;
+      end loop;
 
       if Self.Local_Config_Pragmas.Is_Defined
         and then not Self.Signature.Add_Input
@@ -787,6 +815,35 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
 
       return True;
    end On_Tree_Insertion;
+
+   -------------------------
+   -- On_Tree_Propagation --
+   -------------------------
+
+   overriding function On_Tree_Propagation
+     (Self : in out Object) return Boolean is
+   begin
+      for Opt of Self.Tree.External_Options.Fetch
+        (External_Options.Compiler, Self.Lang)
+      loop
+         declare
+            CF : constant Path_Name.Object :=
+              Self.Config_File_From_Option (Opt);
+         begin
+            if CF.Is_Defined then
+               Self.CLI_Config_File.Append (CF);
+
+               if not Self.Signature.Add_Input
+                 (Artifacts.Files.Create (CF), False)
+               then
+                  return False;
+               end if;
+            end if;
+         end;
+      end loop;
+
+      return True;
+   end On_Tree_Propagation;
 
    --------------------
    -- Post_Execution --
