@@ -1,0 +1,4 @@
+description: Check Cargo_Clean action command line construction and execution
+driver: basic
+control:
+- [SKIP, "not env.rust", "requires a Rust/Cargo toolchain"]

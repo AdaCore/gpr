@@ -117,6 +117,7 @@ begin
    Add (Builder,         Everywhere);
    Add (Install,         (K_Aggregate => False, others => True));
    Add (Gnatls,          Everywhere);
+   Add (Cargo,           No_Aggregates);
 
    Predefined := GPR2.Project.Registry.Pack.All_Packages;
    Predefined.Insert (GPR2.Project_Level_Scope);

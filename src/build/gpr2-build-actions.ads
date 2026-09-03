@@ -213,6 +213,11 @@ package GPR2.Build.Actions is
    procedure Deactivate (Self : in out Object);
    --  Deactivates the action manually
 
+   function Force_Execution (Self : Object) return Boolean;
+   --  Returns True if the action must always be executed regardless of its
+   --  signature. Defaults to False; override in derived types to force
+   --  unconditional execution.
+
    function Display_Output (Action : Object) return Boolean;
    --  Indicates whether the action output needs to be displayed by the
    --  actions scheduler. By default, this returns True, meaning the output
@@ -303,7 +308,7 @@ private
       Deactivated    : Boolean := False;
       --  Set when the action is deactivated
       Force          : Boolean := False;
-      --  Force the action no matter the state of its signature
+      --  Set at runtime to force re-execution regardless of signature validity
    end record;
 
    function "<" (L, R : Action_Id'Class) return Boolean is
@@ -354,6 +359,9 @@ private
 
    function Is_Deactivated (Self : Object) return Boolean
    is (Self.Deactivated);
+
+   function Force_Execution (Self : Object) return Boolean
+   is (False);
 
    function Display_Output (Action : Object) return Boolean
    is (True);

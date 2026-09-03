@@ -29,6 +29,7 @@ package GPRclean.Options is
       Remove_Empty_Dirs : Boolean := False;
       Force_Deletions   : Boolean := False;
       Remove_Config     : Boolean := False;
+      Remove_Cargo_Build_Dir : Boolean := False;
    end record;
 
    procedure Setup (Parser : out GPRtools.Options.Command_Line_Parser);

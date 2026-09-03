@@ -11,6 +11,8 @@ with GNATCOLL.Traces;
 
 with GPR2.Build.Actions.Process.Ada_Bind;
 with GPR2.Build.Actions.Process.Archive_Table_List;
+with GPR2.Build.Actions.Process.Cargo_Build;
+with GPR2.Build.Actions.Process.Cargo_Metadata;
 with GPR2.Build.Actions.Process.Compile.Ada;
 with GPR2.Build.Actions.Process.Link;
 with GPR2.Build.Actions.Process.Link_Options_Insert;
@@ -71,6 +73,8 @@ package body GPR2.Build.Actions_Population is
          Link_Options_Insert : Actions.Process.Link_Options_Insert.Object;
          Partial_Link        : Link.Partial.Object;
          Main_Link           : Link.Object;
+         Cargo_Metadata_Act  : Actions.Process.Cargo_Metadata.Object;
+         --  Set when the library is a Rust project managed by Cargo.
       end record;
 
       function Initial_Link_Action
@@ -182,6 +186,67 @@ package body GPR2.Build.Actions_Population is
       Mains                 : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
       Options               : Build.Options.Build_Options;
       With_Externally_Built : Boolean) return Boolean;
+
+   function Populate_Cargo_Metadata
+     (Tree_Db     : GPR2.Build.Tree_Db.Object_Access;
+      View        : GPR2.Project.View.Object;
+      Cache       : View_Id_Library_Map.Map;
+      Static_Libs : View_Ids.Set.Set;
+      Shared_Libs : View_Ids.Set.Set;
+      Act         : in out Actions.Process.Cargo_Metadata.Object;
+      Mains       : Compilation_Unit.Unit_Location_Vector :=
+                      Compilation_Unit.Empty_Vector)
+      return Boolean;
+   --  Create the Cargo_Metadata action for the Rust view View, and wire the
+   --  library dependencies Static_Libs and Shared_Libs to it.
+   --  Mains names the mains explicitly asked to build, if any.
+   --
+   --  Cargo drives the whole build, so this is the only action a Rust view
+   --  gets while the tree is populated, whether it produces a library or an
+   --  executable. The Cargo build itself is created later, by Post_Execution,
+   --  once "cargo metadata" has reported what the package builds and where.
+   --  The dependencies are wired here and carried over there, because the
+   --  action that consumes them does not exist yet.
+
+   function Populate_Rust_Executable
+     (Tree_Db               : GPR2.Build.Tree_Db.Object_Access;
+      View                  : GPR2.Project.View.Object;
+      Mains                 : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
+      Options               : Build.Options.Build_Options;
+      With_Externally_Built : Boolean) return Boolean;
+   --  Populate actions for a standard view whose sole language is Rust.
+   --  Mains names the mains explicitly asked to build, if any.
+   --  Creates a single Cargo_Metadata action and wires library dependencies
+   --  as its inputs. The Cargo build itself is created by that action once
+   --  "cargo metadata" has reported what the package really builds.
+
+   function Check_Linkable_By_Cargo
+     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      View    : GPR2.Project.View.Object;
+      Dep     : GPR2.Project.View.Object) return Boolean;
+   --  Whether Cargo can link View against the library dependency Dep, which
+   --  means Dep is encapsulated, or holds no Ada at all. Reports why not
+   --  when it cannot, so a False result is already diagnosed.
+   --
+   --  Cargo is handed the library file and nothing else: the binder options
+   --  and the archive table that the GPR2 link action derives from a view do
+   --  not reach it. An Ada library therefore has to be encapsulated, the one
+   --  kind that carries both its elaboration code and the Ada runtime;
+   --  anything else would be linked without them. A library holding no Ada
+   --  needs neither, so it qualifies whatever its kind. The restriction is
+   --  not one of Cargo but of what the artifact model carries today.
+
+   function Mains_Of
+     (Mains : Compilation_Unit.Unit_Location_Vector;
+      View  : GPR2.Project.View.Object)
+      return Compilation_Unit.Unit_Location_Vector;
+   --  The entries of Mains that belong to View.
+   --
+   --  Mains holds what was named on the command line, for the whole tree, so
+   --  a main selected in one view says nothing about another. Testing the
+   --  vector as a whole would have every Rust view take itself as asked for,
+   --  and a view with no entry of its own would then find its selection empty
+   --  and build every binary its package declares.
 
    function Populate_Withed_Projects
      (Tree_Db               : GPR2.Build.Tree_Db.Object_Access;
@@ -499,6 +564,66 @@ package body GPR2.Build.Actions_Population is
       return Res;
    end As_Unit_Location;
 
+   -----------------------------
+   -- Check_Linkable_By_Cargo --
+   -----------------------------
+
+   function Check_Linkable_By_Cargo
+     (Tree_Db : GPR2.Build.Tree_Db.Object_Access;
+      View    : GPR2.Project.View.Object;
+      Dep     : GPR2.Project.View.Object) return Boolean
+   is
+      use GPR2.Project;
+
+      Holds_Ada : constant Boolean :=
+        Dep.Has_Source_Of_Language (Ada_Language)
+        or else (Dep.Kind = K_Aggregate_Library
+                 and then (for some Agg of Dep.Aggregated =>
+                             Agg.Has_Source_Of_Language (Ada_Language)));
+   begin
+      if not Holds_Ada
+        or else Dep.Library_Standalone = Encapsulated
+      then
+         return True;
+      end if;
+
+      Tree_Db.Reporter.Report
+        (Message.Create
+           (Message.Error,
+            "project " & String (View.Name) & " is built by Cargo and "
+            & "cannot link against Ada library " & String (Dep.Name)
+            & ", which is not encapsulated: Cargo is handed the library "
+            & "file alone, without the elaboration code and the Ada "
+            & "runtime a GPR link would add; declare "
+            & "Library_Standalone as ""encapsulated"" in "
+            & String (Dep.Path_Name.Simple_Name),
+            Source_Reference.Create (View.Path_Name.Value, 0, 0)));
+
+      return False;
+   end Check_Linkable_By_Cargo;
+
+   --------------
+   -- Mains_Of --
+   --------------
+
+   function Mains_Of
+     (Mains : Compilation_Unit.Unit_Location_Vector;
+      View  : GPR2.Project.View.Object)
+      return Compilation_Unit.Unit_Location_Vector
+   is
+      use type GPR2.View_Ids.View_Id;
+
+      Result : Compilation_Unit.Unit_Location_Vector;
+   begin
+      for Loc of Mains loop
+         if Loc.View.Id = View.Id then
+            Result.Append (Loc);
+         end if;
+      end loop;
+
+      return Result;
+   end Mains_Of;
+
    ----------------------
    -- Populate_Actions --
    ----------------------
@@ -739,7 +864,27 @@ package body GPR2.Build.Actions_Population is
 
                case V.Kind is
                   when K_Standard | K_Abstract =>
-                     if V.Has_Mains or else not Mains.Is_Empty then
+                     if V.Language_Ids.Contains (Rust_Language) then
+                        declare
+                           Wanted : constant Boolean :=
+                             (if Mains.Is_Empty
+                              then V.Has_Mains
+                                   or else not Populate_Mains_Only
+                              else not Mains_Of (Mains, V).Is_Empty);
+                           --  If no main has been specified, it means that
+                           --  each Rust view is free to manage their own
+                           --  build.
+                           --  If mains have been specified, we need to check
+                           --  first if the wanted mains are part of this view.
+
+                        begin
+                           if Wanted then
+                              Result := Populate_Rust_Executable
+                                (Tree_Db, V, Mains, Options,
+                                 With_Externally_Built);
+                           end if;
+                        end;
+                     elsif V.Has_Mains or else not Mains.Is_Empty then
                         Result := Populate_Mains
                           (Tree_Db, V, Mains, Options, With_Externally_Built);
                      elsif not Populate_Mains_Only then
@@ -978,6 +1123,68 @@ package body GPR2.Build.Actions_Population is
       return True;
    end Populate_All;
 
+   -----------------------------
+   -- Populate_Cargo_Metadata --
+   -----------------------------
+
+   function Populate_Cargo_Metadata
+     (Tree_Db     : GPR2.Build.Tree_Db.Object_Access;
+      View        : GPR2.Project.View.Object;
+      Cache       : View_Id_Library_Map.Map;
+      Static_Libs : View_Ids.Set.Set;
+      Shared_Libs : View_Ids.Set.Set;
+      Act         : in out Actions.Process.Cargo_Metadata.Object;
+      Mains       : Compilation_Unit.Unit_Location_Vector :=
+                      Compilation_Unit.Empty_Vector)
+      return Boolean
+   is
+      package Cargo_Build renames GPR2.Build.Actions.Process.Cargo_Build;
+
+      Sorted_Libs : Library_Vector.Vector;
+      Has_Cycle   : Boolean;
+
+      Profile : constant GPR2.Project.Attribute.Object :=
+                  View.Attribute (PRA.Cargo.Profile);
+      --  Which Cargo profile to build with. Defaulted, and its value list
+      --  keeps it to one Cargo knows.
+
+      Mode : constant Cargo_Build.Cargo_Mode :=
+               (if Profile.Is_Defined
+                  and then Ada.Characters.Handling.To_Lower
+                             (Profile.Value.Text) = "dev"
+                then Cargo_Build.Debug
+                else Cargo_Build.Release);
+
+   begin
+      Act.Initialize (View, Mode => Mode, Mains => Mains);
+
+      if not Tree_Db.Add_Action (Act) then
+         return False;
+      end if;
+
+      Sorted_Libs := Library_Map.Order_Libs (Static_Libs, Cache, Has_Cycle);
+
+      for Id of Shared_Libs loop
+         Sorted_Libs.Append (Cache.Element (Id));
+      end loop;
+
+      for Lib of Sorted_Libs loop
+         if not Check_Linkable_By_Cargo (Tree_Db, View, Lib.View) then
+            return False;
+         end if;
+
+         if Lib.View.Language_Ids.Contains (Rust_Language) then
+            Tree_Db.Add_Input (Act.UID, Lib.Cargo_Metadata_Act.UID_Artifact);
+         else
+            Tree_Db.Add_Input
+              (Act.UID,
+               Artifacts.Library.Object (Lib.Final_Link_Action.Output));
+         end if;
+      end loop;
+
+      return True;
+   end Populate_Cargo_Metadata;
+
    ----------------------
    -- Populate_Library --
    ----------------------
@@ -1033,6 +1240,41 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       Self.View := View;
+
+      if View.Language_Ids.Contains (Rust_Language) then
+
+         --  Rust library: only populate withed projects, then create a
+         --  Cargo_Metadata action. No GPR2 link, archive or compile actions
+         --  are created — Cargo drives the full build.
+
+         --  Add to cache first to prevent infinite recursion.
+         Cache.Include (View.Id, Self);
+
+         if View.Kind /= K_Aggregate_Library then
+            Closure.Include (View);
+         else
+            for V of View.Aggregated loop
+               Closure.Include (V);
+            end loop;
+         end if;
+
+         if not Populate_Withed_Projects
+           (Tree_Db, Options, Closure, Cache, Static_Libs, Shared_Libs,
+            Has_SAL, With_Externally_Built)
+         then
+            return False;
+         end if;
+
+         if not Populate_Cargo_Metadata
+           (Tree_Db, View, Cache, Static_Libs, Shared_Libs,
+            Self.Cargo_Metadata_Act)
+         then
+            return False;
+         end if;
+
+         Cache.Replace (View.Id, Self);
+         return True;
+      end if;
 
       Self.Main_Link.Initialize
         (Kind     => Link.Library,
@@ -1290,9 +1532,15 @@ package body GPR2.Build.Actions_Population is
             if (not Self.Final_Link_Action.Is_Static_Library)
               or else Encaps
             then
-               Tree_Db.Add_Input
-                 (Self.Initial_Link_Action.UID,
-                  Sublib.Final_Link_Action.Output);
+               if Sublib.View.Language_Ids.Contains (Rust_Language) then
+                  Tree_Db.Add_Input
+                    (Self.Initial_Link_Action.UID,
+                     Sublib.Cargo_Metadata_Act.UID_Artifact);
+               else
+                  Tree_Db.Add_Input
+                    (Self.Initial_Link_Action.UID,
+                     Sublib.Final_Link_Action.Output);
+               end if;
             end if;
          end;
       end loop;
@@ -1743,26 +1991,36 @@ package body GPR2.Build.Actions_Population is
                end if;
 
                for Lib of Sorted_Libs loop
-                  Tree_Db.Add_Input
-                    (Link (Idx).UID, Lib.Final_Link_Action.Output);
+                  if Lib.View.Language_Ids.Contains (Rust_Language) then
+                     --  Rust library: wire cargo_metadata's UID artifact so
+                     --  Post_Execution can add cargo_build's output once the
+                     --  target directory is known.
+                     Tree_Db.Add_Input
+                       (Link (Idx).UID,
+                        Lib.Cargo_Metadata_Act.UID_Artifact);
+                  else
+                     Tree_Db.Add_Input
+                       (Link (Idx).UID, Lib.Final_Link_Action.Output);
 
-                  --  For standalone static libraries, linker options must
-                  --  be updated to ensure proper elaboration of the library.
-                  --  There are two possible scenarios:
-                  --  * If the library is not externally built, the linker
-                  --    options can be directly retrieved from the associated
-                  --    action.
-                  --  * If the library is externally built, the linker
-                  --    options are embedded within the library itself,
-                  --    typically in a custom section of the object file
-                  --    generated by the binder. An action is created
-                  --    to extract this information, as demonstrated above.
+                     --  For standalone static libraries, linker options must
+                     --  be updated to ensure proper elaboration of the
+                     --  library.
+                     --  There are two possible scenarios:
+                     --  * If the library is not externally built, the linker
+                     --    options can be directly retrieved from the
+                     --  associated action.
+                     --  * If the library is externally built, the linker
+                     --    options are embedded within the library itself,
+                     --    typically in a custom section of the object file
+                     --    generated by the binder. An action is created
+                     --    to extract this information, as demonstrated above.
 
-                  if Lib.View.Is_Library_Standalone
-                    and then Lib.View.Is_Static_Library
-                    and then Lib.View.Is_Externally_Built
-                  then
-                     Add_Archive_Table_List_Action (Lib, Idx);
+                     if Lib.View.Is_Library_Standalone
+                       and then Lib.View.Is_Static_Library
+                       and then Lib.View.Is_Externally_Built
+                     then
+                        Add_Archive_Table_List_Action (Lib, Idx);
+                     end if;
                   end if;
                end loop;
 
@@ -1843,6 +2101,46 @@ package body GPR2.Build.Actions_Population is
 
       return True;
    end Populate_Mains;
+
+   ------------------------------
+   -- Populate_Rust_Executable --
+   ------------------------------
+
+   function Populate_Rust_Executable
+     (Tree_Db               : GPR2.Build.Tree_Db.Object_Access;
+      View                  : GPR2.Project.View.Object;
+      Mains                 : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
+      Options               : Build.Options.Build_Options;
+      With_Externally_Built : Boolean) return Boolean
+   is
+      Closure     : GPR2.Project.View.Set.Object;
+      Libs_Cache  : View_Id_Library_Map.Map;
+      Static_Libs : View_Ids.Set.Set;
+      Shared_Libs : View_Ids.Set.Set;
+      Has_SAL     : Boolean := False;
+      CM          : Actions.Process.Cargo_Metadata.Object;
+
+      Actual_Mains : Compilation_Unit.Unit_Location_Vector;
+   begin
+      if Mains.Is_Empty then
+         Actual_Mains := View.Mains;
+      else
+         Actual_Mains := Mains_Of (Mains, View);
+      end if;
+
+      Closure.Include (View);
+
+      if not Populate_Withed_Projects
+        (Tree_Db, Options, Closure, Libs_Cache,
+         Static_Libs, Shared_Libs, Has_SAL, With_Externally_Built)
+      then
+         return False;
+      end if;
+
+      return Populate_Cargo_Metadata
+        (Tree_Db, View, Libs_Cache, Static_Libs, Shared_Libs, CM,
+         Mains => Actual_Mains);
+   end Populate_Rust_Executable;
 
    ------------------------------
    -- Populate_Withed_Projects --

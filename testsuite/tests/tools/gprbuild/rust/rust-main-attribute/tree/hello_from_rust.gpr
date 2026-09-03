@@ -1,0 +1,13 @@
+project Hello_From_Rust is
+   for Languages use ("Rust");
+   for Source_Dirs use ("rust/src");
+   for Main use ("main.rs");
+
+   package Naming is
+      for Body_Suffix ("Rust") use ".rs";
+   end Naming;
+
+   package Cargo is
+      for Root use Project'Project_Dir & "rust";
+   end Cargo;
+end Hello_From_Rust;

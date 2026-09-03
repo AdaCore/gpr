@@ -16,20 +16,24 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Characters.Handling;
 with Ada.Command_Line;
 with Ada.Directories;
 with Ada.Exceptions;
+with Ada.Strings.Unbounded;
 
 with GNAT.OS_Lib;
 with GNATCOLL.OS.Dir;
 
 with GNATCOLL.OS.FSUtil;
+with GNATCOLL.OS.Process;
 with GNATCOLL.OS.Stat;
 with GNATCOLL.Traces;
 with GNATCOLL.Utils;
 
 with GPR2.Build.Actions.Process.Post_Bind;
 with GPR2.Build.Actions_Population;
+with GPR2.Build.Actions.Process.Cargo_Support;
 with GPR2.Build.Actions.Process.Compile;
 with GPR2.Build.Actions.Process.Compile.Ada;
 with GPR2.Build.Actions.Process.Link;
@@ -44,6 +48,7 @@ with GPR2.Project.Attribute_Index;
 with GPR2.Project.Configuration;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
+with GPR2.Project.View.Set;
 with GPR2.Project.View.Vector;
 with GPR2.Reporter;
 with GPR2.Source_Reference;
@@ -67,6 +72,13 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    package PRA renames GPR2.Project.Registry.Attribute;
    package PAI renames GPR2.Project.Attribute_Index;
 
+   procedure Clean_Rust_Views (Opts : GPRclean.Options.Object);
+   --  For every in-scope view that uses the Rust language, run
+   --  "cargo clean --target <triple>" so Cargo removes the artifacts it
+   --  produced. These live under Cargo's own "target" directory (rooted at
+   --  Cargo.Root, outside the GPR object/library/exec directories) and so are
+   --  not covered by the artifact-driven cleanup loop.
+
    procedure Delete_File
      (Name : String; Opts : GPRclean.Options.Object);
    --  Remove file if exists.
@@ -84,6 +96,173 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
    procedure Remove_Artifacts_Dirs
      (View : GPR2.Project.View.Object; Opts : GPRclean.Options.Object);
    --  Removes the empty obj/lib/exec dirs of View
+
+   ----------------------
+   -- Clean_Rust_Views --
+   ----------------------
+
+   procedure Clean_Rust_Views (Opts : GPRclean.Options.Object) is
+      Unknown_Package : constant String := "<package named by cargo metadata>";
+      --  Package name can only be obtained with the cargo metadata command.
+      --  Because we do not execute commands in dry run, this is the substitute
+      --  of the package name displayed in the command line.
+
+      Rust_Views : GPR2.Project.View.Set.Object;
+   begin
+      for Action of Opts.Tree.Artifacts_Database.All_Actions loop
+         if not Action.View.Is_Externally_Built
+           and then
+             (Opts.All_Projects
+              or else Opts.Tree.Namespace_Root_Projects.Contains (Action.View))
+           and then Action.View.Language_Ids.Contains (Rust_Language)
+         then
+            Rust_Views.Include (Action.View);
+         end if;
+      end loop;
+
+      for View of Rust_Views loop
+         declare
+            Driver : constant String :=
+              GPR2.Build.Actions.Process.Cargo_Support.Driver (View);
+            Triple : constant String :=
+              GPR2.Build.Actions.Process.Cargo_Support.Rust_Triple (View);
+            Remove_All : constant Boolean := Opts.Remove_Cargo_Build_Dir;
+            --  Set when the whole Cargo target directory must be cleaned.
+
+            Pkg    : constant String :=
+              (if Remove_All
+               then ""
+               elsif Opts.Dry_Run
+               then Unknown_Package
+               else GPR2.Build.Actions.Process.Cargo_Support.Package_Name
+                      (View));
+            Root   : constant GPR2.Project.Attribute.Object :=
+              View.Attribute (PRA.Cargo.Root);
+         begin
+            pragma Assert (Root.Is_Defined);
+
+            if Driver = "" then
+               Opts.Tree.Reporter.Report
+                 ("cannot clean Rust project """
+                  & String (View.Name)
+                  & """: Rust driver is not defined");
+
+            elsif Triple = "" then
+               Opts.Tree.Reporter.Report
+                 ("cannot clean Rust project """
+                  & String (View.Name)
+                  & """: no Rust target triple known for GPR target """
+                  & String (Opts.Tree.Target)
+                  & """");
+
+            elsif Pkg = "" and then not Remove_All then
+               Opts.Tree.Reporter.Report
+                 ("cannot clean Rust project """
+                  & String (View.Name)
+                  & """: ""cargo metadata"" reports no package for its "
+                  & "manifest");
+
+            else
+               declare
+                  package Cargo_Support renames
+                    GPR2.Build.Actions.Process.Cargo_Support;
+
+                  use GNAT.OS_Lib;
+
+                  Exe : String_Access :=
+                    (if Is_Absolute_Path (Driver)
+                     then new String'(Driver)
+                     else Locate_Exec_On_Path (Driver));
+                  Manifest : constant String :=
+                    Cargo_Support.Manifest (View).String_Value;
+                  Prof     : constant GPR2.Project.Attribute.Object :=
+                    View.Attribute (PRA.Cargo.Profile);
+                  Profile  : constant String :=
+                    (if Prof.Is_Defined
+                     then Ada.Characters.Handling.To_Lower (Prof.Value.Text)
+                     else "release");
+                  --  The profile the build used, so the clean removes what it
+                  --  produced.
+
+                  Cmd      : constant String :=
+                    Driver
+                    & " clean"
+                    & (if Remove_All
+                       then ""
+                       else " -p " & Pkg
+                            & " --profile " & Profile
+                            & " --target=" & Triple)
+                    & " --manifest-path="
+                    & Manifest;
+               begin
+                  Opts.Tree.Reporter.Report (Cmd);
+
+                  if Exe = null then
+                     Opts.Tree.Reporter.Report
+                       ("cargo executable """ & Driver & """ not found");
+
+                  elsif not Opts.Dry_Run then
+                     declare
+                        Root_Dir : constant String :=
+                          Cargo_Support.Root_Directory (View).String_Value;
+                        Args     : GNATCOLL.OS.Process.Argument_List;
+                        Output   : Ada.Strings.Unbounded.Unbounded_String;
+                        Status   : Integer := 0;
+                     begin
+                        Args.Append (Exe.all);
+                        Args.Append ("clean");
+
+                        if not Remove_All then
+                           --  Clean only this package, so the other
+                           --  members of the workspace are not impacted.
+
+                           Args.Append ("-p");
+                           Args.Append (Pkg);
+                           Args.Append ("--profile");
+                           Args.Append (Profile);
+                           Args.Append ("--target=" & Triple);
+                        end if;
+
+                        --  Remove all Cargo artifacts otherwise, no matter
+                        --  the target, profile or package.
+
+                        Args.Append ("--manifest-path=" & Manifest);
+
+                        begin
+                           Output := GNATCOLL.OS.Process.Run
+                             (Args   => Args,
+                              Cwd    => Root_Dir,
+                              Stdin  => GNATCOLL.OS.Process.FS.Null_FD,
+                              Stderr => GNATCOLL.OS.Process.FS.To_Stdout,
+                              Status => Status);
+
+                        exception
+                           when GNATCOLL.OS.OS_Error =>
+                              Status := -1;
+                        end;
+
+                        if Status /= 0 then
+                           Opts.Tree.Reporter.Report
+                             ("cannot clean Rust project """
+                              & String (View.Name)
+                              & """: ""cargo clean"" failed"
+                              & (if Ada.Strings.Unbounded.Length (Output) = 0
+                                 then ""
+                                 else ASCII.LF
+                                      & Ada.Strings.Unbounded.To_String
+                                          (Output)));
+                        end if;
+                     end;
+                  end if;
+
+                  if Exe /= null then
+                     Free (Exe);
+                  end if;
+               end;
+            end if;
+         end;
+      end loop;
+   end Clean_Rust_Views;
 
    -----------------
    -- Delete_File --
@@ -442,6 +621,11 @@ begin
             Opt);
       end if;
    end loop;
+
+   --  Because Rust projects are entirely managed by Cargo, we also rely on
+   --  it for the cleaning.
+
+   Clean_Rust_Views (Opt);
 
    if Opt.Remove_Config then
       Delete_File (Opt.Config_Project.String_Value, Opt);

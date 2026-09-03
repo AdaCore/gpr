@@ -26,7 +26,8 @@ procedure Test is
    procedure Init_Action
    is
       Archive : GPR2.Build.Artifacts.Library.Object :=
-      GPR2.Build.Artifacts.Library.Create (GPR2.Path_Name.Create_File ("tree/lib/libmylib.a"));
+      GPR2.Build.Artifacts.Library.Create_Static
+        (GPR2.Path_Name.Create_File ("tree/lib/libmylib.a"));
    begin
       for Root of Tree.Namespace_Root_Projects loop
          Action.Initialize (Archive, "pkg2.o", Root);

@@ -55,6 +55,10 @@ package body GPR2.Project.Registry.Attribute is
      with Pre => Left.Kind = D_Value and then Right.Kind = D_Value;
    --  Concatenate 2 default values for different indexes into one container
 
+   function Default_Cargo_Root
+     (View : Project.View.Object) return Value_Type
+   is (View.Dir_Name.String_Value);
+
    function Default_Library_Standalone
      (View : Project.View.Object) return Value_Type
    is (if View.Is_Library and then View.Has_Any_Interfaces
@@ -1685,6 +1689,42 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere);
+
+   --  cargo.root
+   Add
+     (Name                 => Cargo.Root,
+      Index_Type           => No_Index,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Is_Allowed_In        => No_Aggregates,
+      Default              => (D_Callback, Default_Cargo_Root'Access),
+      Has_Default_In       => No_Aggregates);
+
+   --  cargo.rust_target
+   Add
+     (Name                 => Cargo.Rust_Target,
+      Index_Type           => No_Index,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Is_Allowed_In        => No_Aggregates);
+
+   --  cargo.profile
+   declare
+      Type_Def : Attribute_Type;
+   begin
+      Type_Def.Include ("dev");
+      Type_Def.Include ("release");
+
+      Add
+        (Name                 => Cargo.Profile,
+         Index_Type           => No_Index,
+         Value                => Single,
+         Value_Case_Sensitive => False,
+         Is_Allowed_In        => No_Aggregates,
+         Default              => Create ("release"),
+         Has_Default_In       => No_Aggregates,
+         Type_Def             => Type_Def);
+   end;
 
    --  gnatls.switches
    Add

@@ -2909,6 +2909,20 @@ package body GPR2.Tree_Internal is
             return;
          end if;
 
+         --  The build of a Rust project is entirely driven by cargo, which
+         --  produces the whole library or executable by itself. There is thus
+         --  no way to also compile and link the sources of another language
+         --  in such a project.
+
+         if View.Language_Ids.Contains (Rust_Language)
+           and then Natural (View.Language_Ids.Length) > 1
+         then
+            Self.Error
+              ("language Rust cannot be combined with other languages, as the"
+               & " build of a Rust project is entirely driven by cargo",
+               Source_Reference.Create (View.Path_Name.Value, 0, 0));
+         end if;
+
          --  Check no concrete view is in the closure of an aggregate project
 
          if Self.Root_Project.Kind = K_Aggregate

@@ -1,0 +1,4 @@
+description: Check mismatch of library kind between cargo and gpr
+driver: python_script
+control:
+- [ SKIP, "not env.rust", "requires a Rust/Cargo toolchain" ]

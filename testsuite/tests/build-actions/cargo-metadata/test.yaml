@@ -1,0 +1,4 @@
+description: Check Cargo_Metadata action execution and Cargo_Build action creation via Post_Execution
+driver: basic
+control:
+- [SKIP, "not env.rust", "requires a Rust/Cargo toolchain"]

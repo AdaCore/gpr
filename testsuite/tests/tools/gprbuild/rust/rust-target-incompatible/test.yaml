@@ -1,0 +1,5 @@
+description: Check that incompatible Target and Rust_Target raise an error
+driver: python_script
+control:
+- [ SKIP, "not env.rust", "requires a Rust/Cargo toolchain" ]
+- [ SKIP, "env.host.platform != 'x86_64-linux'", "triples are hardcoded" ]

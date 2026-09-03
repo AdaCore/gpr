@@ -1,0 +1,4 @@
+description: Check that both cargo and rust share the same library name. Dashes for cargo are turned into underscores in the final name
+driver: python_script
+control:
+- [ SKIP, "not env.rust", "requires a Rust/Cargo toolchain" ]

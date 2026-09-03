@@ -1,0 +1,14 @@
+description: |
+  A GPR project wrapping one member of a Cargo workspace. "cargo metadata"
+  reports every workspace member, not just the one --manifest-path names, so
+  GPR2 has to pick ours out of the list by its manifest path. The other member
+  is deliberately named so that it comes first, which is what a naive "take
+  the first package" would pick: its crate is called alpha, so the library
+  advertised would be libalpha.a and the Library_Name check would reject a
+  project that is in fact correct.
+
+  It also covers the workspace target directory: the artifact lands under the
+  workspace root's target/, not under the member's.
+driver: python_script
+control:
+- [SKIP, "not env.rust", "requires a Rust/Cargo toolchain"]

@@ -1276,4 +1276,27 @@ begin
      (Key         => PRA.Naming.Body_N,
       Description => "Indexed by unit name. File name of the unit's body.");
 
+   --  Cargo.Profile
+   Set_Attribute_Description
+     (Key         => PRA.Cargo.Profile,
+      Description =>
+        "Cargo profile to build this project with, either ``""dev""`` or "
+      & "``""release""``. Defaults to ``""release""``.");
+
+   --  Cargo.Root
+   Set_Attribute_Description
+     (Key         => PRA.Cargo.Root,
+      Description =>
+        "Path to the directory containing the ``Cargo.toml`` manifest for "
+      & "this project. Defaults to the project directory.");
+
+   --  Cargo.Rust_Target
+   Set_Attribute_Description
+     (Key         => PRA.Cargo.Rust_Target,
+      Description =>
+        "Rust target triple for this project "
+      & "(e.g. ``""aarch64-unknown-linux-gnu""``). Defaults to the standard "
+      & "triple for the GPR target. Must be one of the triples recognised for "
+      & "the current GPR target.");
+
 end GPR2.Project.Registry.Attribute.Description;

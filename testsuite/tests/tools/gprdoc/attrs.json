@@ -3283,6 +3283,128 @@
         {
           "attribute_def": {
             "builtin": false,
+            "config_concatenable": false,
+            "default": {
+              "default_value_kind": "value",
+              "value": "release"
+            },
+            "empty_value": "ALLOW",
+            "has_default_in": {
+              "abstract": true,
+              "aggregate": false,
+              "aggregate_library": false,
+              "configuration": true,
+              "library": true,
+              "standard": true
+            },
+            "index_optional": false,
+            "index_type": "NO_INDEX",
+            "inherit_from_extended": "NOT_INHERITED",
+            "is_allowed_in": {
+              "abstract": true,
+              "aggregate": false,
+              "aggregate_library": false,
+              "configuration": true,
+              "library": true,
+              "standard": true
+            },
+            "is_toolchain_config": false,
+            "type_def": [
+              "dev",
+              "release"
+            ],
+            "value": "SINGLE",
+            "value_case_sensitive": false,
+            "value_is_set": false
+          },
+          "attribute_descr": "Cargo profile to build this project with, either ``\"dev\"`` or ``\"release\"``. Defaults to ``\"release\"``.",
+          "attribute_name": "Profile"
+        },
+        {
+          "attribute_def": {
+            "builtin": false,
+            "config_concatenable": false,
+            "default": {
+              "callback": "special",
+              "default_value_kind": "callback"
+            },
+            "empty_value": "ALLOW",
+            "has_default_in": {
+              "abstract": true,
+              "aggregate": false,
+              "aggregate_library": false,
+              "configuration": true,
+              "library": true,
+              "standard": true
+            },
+            "index_optional": false,
+            "index_type": "NO_INDEX",
+            "inherit_from_extended": "NOT_INHERITED",
+            "is_allowed_in": {
+              "abstract": true,
+              "aggregate": false,
+              "aggregate_library": false,
+              "configuration": true,
+              "library": true,
+              "standard": true
+            },
+            "is_toolchain_config": false,
+            "value": "SINGLE",
+            "value_case_sensitive": true,
+            "value_is_set": false
+          },
+          "attribute_descr": "Path to the directory containing the ``Cargo.toml`` manifest for this project. Defaults to the project directory.",
+          "attribute_name": "Root"
+        },
+        {
+          "attribute_def": {
+            "builtin": false,
+            "config_concatenable": false,
+            "empty_value": "ALLOW",
+            "has_default_in": {
+              "abstract": false,
+              "aggregate": false,
+              "aggregate_library": false,
+              "configuration": false,
+              "library": false,
+              "standard": false
+            },
+            "index_optional": false,
+            "index_type": "NO_INDEX",
+            "inherit_from_extended": "NOT_INHERITED",
+            "is_allowed_in": {
+              "abstract": true,
+              "aggregate": false,
+              "aggregate_library": false,
+              "configuration": true,
+              "library": true,
+              "standard": true
+            },
+            "is_toolchain_config": false,
+            "value": "SINGLE",
+            "value_case_sensitive": true,
+            "value_is_set": false
+          },
+          "attribute_descr": "Rust target triple for this project (e.g. ``\"aarch64-unknown-linux-gnu\"``). Defaults to the standard triple for the GPR target. Must be one of the triples recognised for the current GPR target.",
+          "attribute_name": "Rust_Target"
+        }
+      ],
+      "package_descr": "",
+      "package_name": "Cargo",
+      "projects_kind": {
+        "abstract": true,
+        "aggregate": false,
+        "aggregate_library": false,
+        "configuration": true,
+        "library": true,
+        "standard": true
+      }
+    },
+    {
+      "attributes": [
+        {
+          "attribute_def": {
+            "builtin": false,
             "config_concatenable": true,
             "empty_value": "ALLOW",
             "has_default_in": {

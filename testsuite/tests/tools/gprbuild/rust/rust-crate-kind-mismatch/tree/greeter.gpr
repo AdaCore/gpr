@@ -1,0 +1,15 @@
+library project Greeter is
+   for Languages use ("Rust");
+   for Library_Name use "greeter";
+   for Library_Dir use "lib";
+   for Source_Dirs use ("rust/src");
+   for Library_Kind use "static";
+
+   package Naming is
+      for Body_Suffix ("Rust") use ".rs";
+   end Naming;
+
+   package Cargo is
+      for Root use Project'Project_Dir & "rust";
+   end Cargo;
+end Greeter;

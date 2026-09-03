@@ -1,0 +1,14 @@
+library project Rust_Lib is
+   for Languages use ("Rust");
+   for Library_Name use "rust_lib";
+   for Library_Dir use "lib";
+   for Source_Dirs use ("rustlib/src");
+
+   package Naming is
+      for Body_Suffix ("Rust") use ".rs";
+   end Naming;
+
+   package Cargo is
+      for Root use Project'Project_Dir & "rustlib";
+   end Cargo;
+end Rust_Lib;

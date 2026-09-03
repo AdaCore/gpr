@@ -1,0 +1,11 @@
+description: |
+  Two Rust views under one aggregate, each declaring a binary, with a main
+  named on the command line that belongs to the first of them.
+
+  A main names a view as much as an executable. The second view was asked for
+  nothing, so it must be left alone: its own selection comes back empty, and
+  an empty selection otherwise means every binary the manifest declares, so
+  it would have built a binary nobody asked for.
+driver: python_script
+control:
+- [SKIP, "not env.rust", "requires a Rust/Cargo toolchain"]

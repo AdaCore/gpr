@@ -1,0 +1,2 @@
+description: Test that an action with Force_Execution = True is executed even when its signature is valid
+driver: python_script

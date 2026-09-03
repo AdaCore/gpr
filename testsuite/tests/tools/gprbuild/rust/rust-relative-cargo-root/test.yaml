@@ -1,0 +1,4 @@
+description: A relative Cargo.Root resolves against the project file directory
+driver: python_script
+control:
+- [ SKIP, "not env.rust", "requires a Rust/Cargo toolchain" ]

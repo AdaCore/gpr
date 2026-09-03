@@ -1,0 +1,12 @@
+project Wrapped is
+   for Languages use ("Rust");
+   for Source_Dirs use ("rust/wrapped/src");
+
+   package Naming is
+      for Body_Suffix ("Rust") use ".rs";
+   end Naming;
+
+   package Cargo is
+      for Root use Project'Project_Dir & "rust/wrapped";
+   end Cargo;
+end Wrapped;

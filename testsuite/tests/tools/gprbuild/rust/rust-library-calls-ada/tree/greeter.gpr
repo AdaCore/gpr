@@ -1,0 +1,17 @@
+with "math_lib";
+
+library project Greeter is
+   for Languages use ("Rust");
+   for Library_Name use "greeter";
+   for Library_Dir use "lib";
+   for Library_Kind use "dynamic";
+   for Source_Dirs use ("rust/src");
+
+   package Naming is
+      for Body_Suffix ("Rust") use ".rs";
+   end Naming;
+
+   package Cargo is
+      for Root use Project'Project_Dir & "rust";
+   end Cargo;
+end Greeter;

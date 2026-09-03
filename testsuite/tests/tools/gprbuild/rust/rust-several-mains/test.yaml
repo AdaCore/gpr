@@ -1,0 +1,4 @@
+description: Rust project declaring several mains
+driver: python_script
+control:
+- [ SKIP, "not env.rust", "requires a Rust/Cargo toolchain" ]

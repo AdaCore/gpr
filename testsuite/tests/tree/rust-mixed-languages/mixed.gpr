@@ -1,0 +1,8 @@
+--  A project declaring Rust together with another language. Loading it must
+--  be rejected: cargo builds the whole project by itself, so the Ada sources
+--  could never be compiled and linked.
+
+project Mixed is
+   for Languages use ("Ada", "Rust");
+   for Source_Dirs use ("src");
+end Mixed;
