@@ -74,7 +74,11 @@ package body GPR2.Build.Actions.Process.Link is
 
    procedure Add_Option_From_Binder (Self : in out Object; Option : String) is
    begin
-      Self.Options_From_Binder.Append (Option);
+      --  An empty option carries nothing to the link
+
+      if Option /= "" then
+         Self.Options_From_Binder.Append (Option);
+      end if;
    end Add_Option_From_Binder;
 
    ---------------------
@@ -699,6 +703,7 @@ package body GPR2.Build.Actions.Process.Link is
         or else Self.View.Is_Shared_Library
       then
          for Option of Self.Options_From_Binder loop
+
             --  ??? Weird bug on windows happening when a backslash is ending
             --  the argument, and the arg contains a space, then ld reacts just
             --  as if there was some hidden \" ending the argument and thus

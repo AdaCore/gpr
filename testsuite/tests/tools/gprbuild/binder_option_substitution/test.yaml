@@ -1,0 +1,2 @@
+description: Check that empty binder options are not passed to the link
+driver: python_script

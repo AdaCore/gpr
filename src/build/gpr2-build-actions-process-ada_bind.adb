@@ -1495,7 +1495,9 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
          elsif Attr.Is_Defined then
             for V of Attr.Values loop
-               Self.Linker_Opts.Append (V.Text);
+               if V.Text /= "" then
+                  Self.Linker_Opts.Append (V.Text);
+               end if;
             end loop;
 
          else
