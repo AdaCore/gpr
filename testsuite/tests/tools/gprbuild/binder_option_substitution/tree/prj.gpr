@@ -1,0 +1,11 @@
+project Prj is
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj";
+   for Exec_Dir use ".";
+   for Main use ("main.adb");
+
+   package Binder is
+      for Bindfile_Option_Substitution ("-static") use ("");
+      for Bindfile_Option_Substitution ("-shared") use ("");
+   end Binder;
+end Prj;
