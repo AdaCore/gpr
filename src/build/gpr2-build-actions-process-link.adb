@@ -73,7 +73,9 @@ package body GPR2.Build.Actions.Process.Link is
    -- Add_Option_From_Binder --
    ----------------------------
 
-   procedure Add_Option_From_Binder (Self : in out Object; Option : String) is
+   overriding
+   procedure Add_Option_From_Binder
+     (Self : in out Object; Option : String) is
    begin
       --  An empty option carries nothing to the link
 

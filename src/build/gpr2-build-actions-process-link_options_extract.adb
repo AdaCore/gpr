@@ -8,7 +8,7 @@ with GNAT.String_Split;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
 with GNATCOLL.Traces;
-with GPR2.Build.Actions.Process.Link;
+with GPR2.Build.Actions.Link_Options_Consumer;
 with GPR2.Message;
 with GPR2.Project.Tree;
 
@@ -251,7 +251,7 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
       begin
 
          for Act of Self.Tree.Successors (Self.UID_Artifact) loop
-            if Act in Link.Object'Class then
+            if Act in Link_Options_Consumer.Object'Class then
                GNATCOLL.Traces.Trace
                  (Traces,
                   "Inserting "
@@ -347,7 +347,7 @@ package body GPR2.Build.Actions.Process.Link_Options_Extract is
 
                if To_String (Opt) /= "" then
                   for Linker_UID of Linkers_UID loop
-                     Link.Object'Class
+                     Link_Options_Consumer.Object'Class
                        (Self.Tree.Action_Id_To_Reference (Linker_UID)
                           .Element.all)
                        .Add_Option_From_Binder (To_String (Opt));
