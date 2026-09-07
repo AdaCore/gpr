@@ -132,6 +132,9 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
          --  The options generated for the library dependencies, one flag per
          --  element so that none of them can be split further
 
+         Links_Library : Boolean := False;
+         --  Whether a library built by GPR is linked
+
          Options_From_Ada_Binder : GPR2.Containers.Value_List :=
            Self.Binder_Opts;
          --  What the libraries recorded they need, extracted from the ones
@@ -200,6 +203,8 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
                   Dir : constant String :=
                     Lib.Path.Containing_Directory.String_Value;
                begin
+                  Links_Library := True;
+
                   if Lib.Is_Static then
 
                      --  What the library recorded it needs. An externally
@@ -323,6 +328,27 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
                end if;
             end;
          end loop;
+
+         --  Cargo's linker driver uses -nodefaultlibs, naming only the
+         --  libraries needed by the Rust code. System dependencies may also
+         --  be needed by the static/static-pic libraries linked by Cargo,
+         --  but Cargo is not aware of those dependencies and only sees the
+         --  libraries themselves as link arguments, so system dependencies
+         --  are systematically added in these cases.
+
+         if Links_Library then
+            for Opt of Cargo_Support.Link_Options (Self.View.Tree.Target)
+            loop
+               if Opt'Length > 2
+                 and then Opt (Opt'First .. Opt'First + 1) = "-l"
+               then
+                  Flags.Append (Opt);
+               else
+                  Flags.Append ("-C");
+                  Flags.Append (Value_Type ("link-arg=" & String (Opt)));
+               end if;
+            end loop;
+         end if;
 
          if not Flags.Is_Empty then
             declare
