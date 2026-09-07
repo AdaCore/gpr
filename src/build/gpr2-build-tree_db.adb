@@ -1110,6 +1110,15 @@ package body GPR2.Build.Tree_Db is
       Self.External_Options := Options;
    end Set_External_Options;
 
+   ----------------------------
+   -- Set_Static_Completion --
+   ----------------------------
+
+   procedure Set_Static_Completion (Self : in out Object; Active : Boolean) is
+   begin
+      Self.Static_Completion := Active;
+   end Set_Static_Completion;
+
    ------------
    -- Unload --
    ------------

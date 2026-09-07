@@ -1009,6 +1009,8 @@ package body GPR2.Build.Actions_Population is
          --  tree, we thus need to manually iterate on the actions to allow
          --  them to perform this post-processing.
 
+         Tree_Db.Set_Static_Completion (True);
+
          declare
             New_Actions  : GPR2.Build.Actions.Action_Id_Sets.Set;
             Done_Actions : GPR2.Build.Actions.Action_Id_Sets.Set;
@@ -1050,6 +1052,8 @@ package body GPR2.Build.Actions_Population is
                end loop;
             end loop;
          end;
+
+         Tree_Db.Set_Static_Completion (False);
       end if;
 
       return Result;
@@ -1758,6 +1762,51 @@ package body GPR2.Build.Actions_Population is
                end if;
             end loop;
          end loop Non_Ada_Archive_Loop;
+
+         --  A named main that is actually a subunit has no Main_Part of its
+         --  own and cannot be linked - compile it directly instead.
+
+         declare
+            Real_Mains : Compilation_Unit.Unit_Location_Vector;
+         begin
+            for Loc of Actual_Mains loop
+               declare
+                  Src : constant GPR2.Build.Source.Object :=
+                    Loc.View.Visible_Source (Loc.Source);
+               begin
+                  if Src.Is_Defined
+                    and then Src.Kind (Loc.Index) = S_Separate
+                  then
+                     declare
+                        Unit_Name : constant Name_Type :=
+                          Src.Unit (Loc.Index).Name;
+                        Unit      : constant Compilation_Unit.Object :=
+                          Loc.View.Unit (Unit_Name);
+                        Comp      : Compile.Ada.Object;
+                     begin
+                        Comp.Initialize
+                          (Unit, S_Separate,
+                           Src.Unit (Loc.Index).Separate_Name);
+
+                        --  There is no need to add the output to any
+                        --  bind/link action as this compilation will fail.
+                        --  But this is required when invoked with -gnatc
+                        --  where the ALI will be generated but not the .o
+                        --  In this case "-c" is required as well as bind/link
+                        --  will fail.
+
+                        if not Tree_Db.Add_Action (Comp) then
+                           return False;
+                        end if;
+                     end;
+                  else
+                     Real_Mains.Append (Loc);
+                  end if;
+               end;
+            end loop;
+
+            Actual_Mains := Real_Mains;
+         end;
 
          --  Process the mains one by one
 

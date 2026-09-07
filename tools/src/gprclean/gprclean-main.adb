@@ -410,7 +410,8 @@ function GPRclean.Main return Ada.Command_Line.Exit_Status is
          Remove_Dir (View.Object_Directory);
 
          if View.Is_Namespace_Root
-           and then View.Has_Mains
+           and then (View.Has_Mains
+                     or else not Opts.Build_Options.Mains.Is_Empty)
            and then View.Executable_Directory /= View.Object_Directory
          then
             Remove_Dir (View.Executable_Directory);

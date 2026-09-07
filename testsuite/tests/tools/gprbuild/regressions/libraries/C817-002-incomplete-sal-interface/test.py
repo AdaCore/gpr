@@ -11,3 +11,8 @@ def run(cmd):
         print(bnr.simple_run([cmd], catch_error=True).out)
 
 run([GPRBUILD, "-P", "prj.gpr", "-q"])
+run([GPRCLEAN, "-P", "prj.gpr", "-q", "-r"])
+
+import os
+print("$ lib/ contents after clean")
+print(sorted(os.listdir("lib")) if os.path.isdir("lib") else "<removed>")

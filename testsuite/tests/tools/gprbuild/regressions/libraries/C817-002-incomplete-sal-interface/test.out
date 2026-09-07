@@ -1,3 +1,6 @@
 $ gprbuild -P prj.gpr -q
 prj.gpr: warning: unit "A" is not in the interface set, but it is needed by "PKG"
 prj.gpr: warning: unit "B" is not in the interface set, but it is needed by "A"
+$ gprclean -P prj.gpr -q -r
+$ lib/ contents after clean
+[]
