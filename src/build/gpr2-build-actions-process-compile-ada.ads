@@ -71,6 +71,9 @@ package GPR2.Build.Actions.Process.Compile.Ada is
      (Self : Object;
       Db   : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
+   overriding
+   function On_Tree_Propagation (Self : in out Object) return Boolean;
+
    overriding function Post_Execution
      (Self   : in out Object;
       Status : Execution_Status;

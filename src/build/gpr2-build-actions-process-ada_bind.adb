@@ -1112,8 +1112,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
             if GPR2.Is_Simple_Name (Dep_File) then
                declare
                   Src : constant GPR2.Build.Source.Object :=
-                          Self.Ctxt.Visible_Source
-                            (GPR2.Simple_Name (Dep_File));
+                          Self.Ctxt.Visible_Source (Dep_File);
                begin
                   if Src.Is_Defined and then Src.Has_Units then
                      for U of Src.Units loop

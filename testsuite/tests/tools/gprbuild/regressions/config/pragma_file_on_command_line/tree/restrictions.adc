@@ -1,0 +1,2 @@
+pragma Warnings (Off, "[enabled by default]");
+pragma Restriction_Warnings (No_Access_Subprograms);

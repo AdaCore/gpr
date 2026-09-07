@@ -1,0 +1,12 @@
+$ gprbuild -c -P tree/prj.gpr -gnatec=/tree/restrictions.adc
+"obj" created
+[Ada Compile]     main.adb
+main.adb:4:15: warning: violation of restriction "No_Access_Subprograms" at /tree/restrictions.adc:2 [restriction warning]
+$ gprbuild -c -P tree/prj.gpr -gnatec=/tree/restrictions.adc
+main.adb:4:15: warning: violation of restriction "No_Access_Subprograms" at /tree/restrictions.adc:2 [restriction warning]
+$ editing restrictions.adc: now restricts No_Calendar instead
+$ gprbuild -c -P tree/prj.gpr -gnatec=/tree/restrictions.adc
+[Ada Compile]     main.adb
+main.adb:1:06: warning: violation of restriction "No_Calendar" at /tree/restrictions.adc:2 [restriction warning]
+$ gprbuild -c -P tree/prj.gpr -gnatec=/tree/restrictions.adc
+main.adb:1:06: warning: violation of restriction "No_Calendar" at /tree/restrictions.adc:2 [restriction warning]

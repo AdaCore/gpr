@@ -8,6 +8,7 @@ with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.Object_File;
 with GPR2.Build.Source;
 with GPR2.Path_Name;
+with GPR2.Path_Name.Set;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Attribute_Index;
 
@@ -104,6 +105,12 @@ private
                    Ctxt     => View,
                    Src_Name => Main_Src));
 
+   function Config_File_From_Option
+     (Self : Object'Class; Option : Value_Type) return Path_Name.Object;
+   --  If Option matches one of the compiler's Config_File_Switches prefixes,
+   --  returns the path it encodes. Returns an undefined Path_Name.Object
+   --  otherwise.
+
    type Object is new Actions.Process.Object with record
       Obj_File           : Artifacts.Object_File.Object;
       --  Compiled object file, can be undefined if not compiled yet
@@ -127,6 +134,9 @@ private
       Global_Config_File : Path_Name.Object;
       --  The global configuration pragma file specified by the root project
       --  Global_Configuration_Pragmas attribute
+
+      CLI_Config_File    : Path_Name.Set.Object;
+      --  Configuration files given directly on the command line.
    end record;
 
    overriding function Post_Execution

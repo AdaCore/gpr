@@ -1,0 +1,7 @@
+description:
+    a config pragmas file passed via -gnatec=<path> directly
+    on the gprbuild command line (as opposed to the Builder.Global_Config_File
+    / Compiler.Local_Config_File project attributes) must be tracked for
+    staleness. Editing its content should trigger a rebuild on the next
+    gprbuild invocation, without needing -f or gprclean.
+driver: python_script
