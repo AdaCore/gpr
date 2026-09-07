@@ -4,7 +4,10 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GNATCOLL.Utils;
+
 with GPR2.Build.Actions.Process.Cargo_Support;
+with GPR2.Build.Actions.Process.Link;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Containers;
 with GPR2.Environment;
@@ -24,6 +27,21 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
       View : GPR2.Project.View.Object;
       Mode : Cargo_Mode);
    --  The part of the initialization that is common to every kind of view
+
+   ----------------------------
+   -- Add_Option_From_Binder --
+   ----------------------------
+
+   overriding
+   procedure Add_Option_From_Binder
+     (Self : in out Object; Option : String) is
+   begin
+      --  An empty option carries nothing to the link
+
+      if Option /= "" then
+         Self.Binder_Opts.Append (Value_Type (Option));
+      end if;
+   end Add_Option_From_Binder;
 
    ---------------------
    -- Compute_Command --
@@ -114,9 +132,33 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
          --  The options generated for the library dependencies, one flag per
          --  element so that none of them can be split further
 
+         Options_From_Ada_Binder : GPR2.Containers.Value_List :=
+           Self.Binder_Opts;
+         --  What the libraries recorded they need, extracted from the ones
+         --  built elsewhere and read below from the ones built here
+
+         function Is_Archive (Path : GPR2.Path_Name.Object) return Boolean;
+         --  Whether Path names a static library, as "-lstatic=" can only
+         --  name one: prefix and suffix of the target must both be there
+
          function Static_Link_Name
            (Path : GPR2.Path_Name.Object) return String;
          --  Base name of Path without the archive prefix
+
+         ----------------
+         -- Is_Archive --
+         ----------------
+
+         function Is_Archive (Path : GPR2.Path_Name.Object) return Boolean is
+            Prefix : constant String :=
+                       Self.Ctxt.Attribute (PRA.Archive_Prefix).Value.Text;
+            Suffix : constant String :=
+                       Self.Ctxt.Attribute (PRA.Archive_Suffix).Value.Text;
+            Base   : constant String := String (Path.Simple_Name);
+         begin
+            return GNATCOLL.Utils.Starts_With (Base, Prefix)
+                   and then GNATCOLL.Utils.Ends_With (Base, Suffix);
+         end Is_Archive;
 
          ----------------------
          -- Static_Link_Name --
@@ -125,10 +167,8 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
          function Static_Link_Name
            (Path : GPR2.Path_Name.Object) return String
          is
-            Attr   : constant GPR2.Project.Attribute.Object :=
-              Self.Ctxt.Attribute (PRA.Archive_Prefix);
             Prefix : constant String :=
-              (if Attr.Is_Defined then Attr.Value.Text else "");
+              Self.Ctxt.Attribute (PRA.Archive_Prefix).Value.Text;
             Base   : constant String := String (Path.Base_Name);
          begin
             if Prefix'Length > 0
@@ -142,6 +182,15 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
             end if;
          end Static_Link_Name;
 
+         function Is_Ada_Runtime (Name : String) return Boolean
+         is (Name in "gnat" | "gnarl" | "gnat_pic" | "gnarl_pic"
+             or else (Name'Length > 5
+                      and then Name (Name'First .. Name'First + 4) = "gnat-")
+             or else (Name'Length > 6
+                      and then Name (Name'First .. Name'First + 5)
+                               = "gnarl-"));
+         --  Whether Name is the Ada runtime
+
       begin
          for Input of Self.Tree.Inputs (Object'Class (Self).UID) loop
             if Input in Artifacts.Library.Object'Class then
@@ -152,6 +201,24 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
                     Lib.Path.Containing_Directory.String_Value;
                begin
                   if Lib.Is_Static then
+
+                     --  What the library recorded it needs. An externally
+                     --  built one had it extracted from its archive, one
+                     --  built here still has its link action.
+
+                     if Self.Tree.Has_Predecessor (Input)
+                       and then Self.Tree.Predecessor (Input)
+                                  in Link.Object'Class
+                     then
+                        for Opt of Link.Object'Class
+                                     (Self.Tree.Predecessor (Input))
+                                     .Options_From_Binder
+                        loop
+                           Options_From_Ada_Binder.Append
+                             (Value_Type (Opt));
+                        end loop;
+                     end if;
+
                      --  On Windows, the C runtime is normally
                      --  accessed through an import library such as
                      --  libmsvcrt.a at link time. The import library provides
@@ -200,6 +267,61 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
                   end if;
                end;
             end if;
+         end loop;
+
+         for Raw of Options_From_Ada_Binder loop
+            declare
+               --  A trailing backslash has ld escape the rest of the command
+               --  line when the argument also holds a space, so drop it.
+
+               Opt : constant Value_Type :=
+                 (if Raw'Length > 0 and then Raw (Raw'Last) = '\'
+                  then Raw (Raw'First .. Raw'Last - 1)
+                  else Raw);
+            begin
+               if Opt in "-static" | "-shared" then
+                  --  Would redefine the link rustc arranged
+
+                  null;
+
+               elsif Opt'Length > 2
+                 and then Opt (Opt'First .. Opt'First + 1) = "-l"
+                 and then Is_Ada_Runtime (Opt (Opt'First + 2 .. Opt'Last))
+               then
+                  --  An encapsulated library holds the runtime already,
+                  --  and Check_Linkable_By_Cargo rejects any other Ada
+                  --  library, so nothing here can need it
+
+                  null;
+
+               elsif Opt'Length >= 2
+                 and then Opt (Opt'First .. Opt'First + 1) in "-l" | "-L"
+               then
+                  Flags.Append (Opt);
+
+               elsif Opt'Length > 0
+                 and then Opt (Opt'First) /= '-'
+                 and then Is_Archive
+                            (GPR2.Path_Name.Create_File (Filename_Type (Opt)))
+               then
+                  declare
+                     Path : constant GPR2.Path_Name.Object :=
+                       GPR2.Path_Name.Create_File (Filename_Type (Opt));
+                     Name : constant String := Static_Link_Name (Path);
+                  begin
+                     if not Is_Ada_Runtime (Name) then
+                        Flags.Append
+                          (Value_Type
+                             ("-L" & Path.Containing_Directory.String_Value));
+                        Flags.Append (Value_Type ("-lstatic=" & Name));
+                     end if;
+                  end;
+
+               else
+                  Flags.Append ("-C");
+                  Flags.Append (Value_Type ("link-arg=" & String (Opt)));
+               end if;
+            end;
          end loop;
 
          if not Flags.Is_Empty then

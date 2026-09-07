@@ -1,0 +1,6 @@
+description: |
+  A Rust executable linking an externally built static encapsulated Ada
+  library: the options its binder recorded are extracted from the archive
+driver: python_script
+control:
+- [ SKIP, "not env.rust", "requires a Rust/Cargo toolchain" ]

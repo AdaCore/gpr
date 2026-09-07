@@ -1196,9 +1196,36 @@ package body GPR2.Build.Actions_Population is
          if Lib.View.Language_Ids.Contains (Rust_Language) then
             Tree_Db.Add_Input (Act.UID, Lib.Cargo_Metadata_Act.UID_Artifact);
          else
-            Tree_Db.Add_Input
-              (Act.UID,
-               Artifacts.Library.Object (Lib.Final_Link_Action.Output));
+            declare
+               Lib_Artifact : constant Artifacts.Library.Object :=
+                 Artifacts.Library.Object (Lib.Final_Link_Action.Output);
+            begin
+               Tree_Db.Add_Input (Act.UID, Lib_Artifact);
+
+               if Lib.View.Is_Library_Standalone
+                 and then Lib.View.Is_Static_Library
+                 and then Lib.View.Is_Externally_Built
+               then
+                  --  Such a library holds its options in a
+                  --  ".GPR.linker_options" section: listing the archive
+                  --  creates the action extracting them. An archive built
+                  --  here needs none of this, Cargo_Build reads them off its
+                  --  link action.
+
+                  declare
+                     Table_List :
+                       Actions.Process.Archive_Table_List.Object;
+                  begin
+                     Table_List.Initialize (Lib_Artifact, View, Lib.View);
+
+                     if not Tree_Db.Add_Action (Table_List) then
+                        return False;
+                     end if;
+
+                     Tree_Db.Add_Input (Act.UID, Table_List.UID_Artifact);
+                  end;
+               end if;
+            end;
          end if;
       end loop;
 

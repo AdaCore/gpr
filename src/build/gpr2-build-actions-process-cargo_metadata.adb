@@ -148,6 +148,21 @@ package body GPR2.Build.Actions.Process.Cargo_Metadata is
       Kinds        : GPR2.Containers.Value_List) return Boolean;
    --  Whether the "kind" of Cargo_Target names one of Kinds
 
+   ----------------------------
+   -- Add_Option_From_Binder --
+   ----------------------------
+
+   overriding
+   procedure Add_Option_From_Binder
+     (Self : in out Object; Option : String) is
+   begin
+      --  An empty option carries nothing to the link
+
+      if Option /= "" then
+         Self.Binder_Opts.Append (Value_Type (Option));
+      end if;
+   end Add_Option_From_Binder;
+
    ------------------
    -- Binary_Names --
    ------------------
@@ -565,6 +580,13 @@ package body GPR2.Build.Actions.Process.Cargo_Metadata is
                   Mode             => Self.Mode);
             end;
          end if;
+
+         --  Hand over the options the libraries recorded, collected while
+         --  this action was the only stand-in for the Cargo build.
+
+         for Opt of Self.Binder_Opts loop
+            Cargo_Build.Add_Option_From_Binder (String (Opt));
+         end loop;
 
          if not Self.Tree.Add_Action (Cargo_Build) then
             return False;
