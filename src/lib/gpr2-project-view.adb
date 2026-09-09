@@ -2146,6 +2146,31 @@ package body GPR2.Project.View is
       return Attr.Is_Defined and then Attr.Value_Equal ("true");
    end Is_Externally_Built;
 
+   -----------------------
+   -- Is_Interface_Unit --
+   -----------------------
+
+   function Is_Interface_Unit
+     (Self : Object; Unit : Name_Type) return Boolean
+   is
+      Db : constant GPR2.Build.View_Db.Object :=
+             (if Self.Kind in K_Aggregate | K_Configuration
+              then GPR2.Build.View_Db.Undefined
+              else Self.View_Db);
+
+   begin
+      if Db.Is_Defined and then Db.Interface_Closure_Computed then
+         --  Query the cached closure in place, without copying the map
+
+         return Db.Interface_Closure_Contains (Unit);
+      end if;
+
+      --  Not computed yet: Interface_Closure fills the cache, so subsequent
+      --  calls take the branch above.
+
+      return Self.Interface_Closure.Contains (Unit);
+   end Is_Interface_Unit;
+
    --------------------------
    -- Is_Library_Supported --
    --------------------------

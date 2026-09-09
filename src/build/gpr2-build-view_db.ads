@@ -146,6 +146,14 @@ package GPR2.Build.View_Db is
    --  stored in the database. Note that this says nothing about the closure
    --  itself: a view with no interface has an empty, yet computed, closure.
 
+   function Interface_Closure_Contains
+     (Self : Object;
+      Unit : Name_Type) return Boolean
+     with Pre => Self.Is_Defined and then Self.Interface_Closure_Computed;
+   --  Whether Unit is part of the cached interface closure. Unlike
+   --  Interface_Closure above this does not return a copy of the map, so it
+   --  can be used on the hot paths of the build graph population.
+
    procedure Set_Interface_Closure
      (Self    : Object;
       Closure : Build.Compilation_Unit.Maps.Map)

@@ -174,6 +174,15 @@ package body GPR2.Build.View_Db is
    function Interface_Closure_Computed (Self : Object) return Boolean is
      (Ref (Self).Interface_Closure_Computed);
 
+   --------------------------------
+   -- Interface_Closure_Contains --
+   --------------------------------
+
+   function Interface_Closure_Contains
+     (Self : Object;
+      Unit : Name_Type) return Boolean is
+     (Ref (Self).Interface_Closure.Contains (Unit));
+
    --------------
    -- Own_Unit --
    --------------
