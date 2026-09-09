@@ -1,0 +1,18 @@
+package Pkg is
+   Level : constant Integer := 2;
+end Pkg;
+preprocessed source after the build: True
+preprocessed source after gprclean: False
+preprocessed source left over: True
+package Pkg is
+   #if LEVEL = 2 then
+   Level : constant Integer := 2;
+   #else
+   Level : constant Integer := 1;
+   #end if;
+end Pkg;
+left over after gprclean: False
+preprocessed source from -cargs: True
+package Pkg is
+   Level : constant Integer := 2;
+end Pkg;

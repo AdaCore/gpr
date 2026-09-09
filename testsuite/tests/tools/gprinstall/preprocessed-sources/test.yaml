@@ -1,0 +1,4 @@
+description: |
+  A source the compiler preprocessed is installed in its preprocessed form,
+  under the name of the source
+driver: python_script

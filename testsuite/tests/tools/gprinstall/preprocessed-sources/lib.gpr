@@ -1,0 +1,15 @@
+library project Lib is
+   for Languages use ("Ada");
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj";
+   for Library_Dir use "lib";
+   for Library_Name use "prep";
+   for Library_Kind use "static";
+
+   package Compiler is
+      --  Integrated preprocessing: a single -gnateD makes every Ada source
+      --  preprocessed, and -gnateG keeps the result beside the object as
+      --  "<source name>.prep".
+      for Default_Switches ("Ada") use ("-gnateDLEVEL=2", "-gnateG");
+   end Compiler;
+end Lib;
