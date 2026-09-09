@@ -841,6 +841,13 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
    is
       Link                : constant Actions.Process.Link.Object'Class :=
                               Self.Link;
+      NS_Root             : constant GPR2.Project.View.Object :=
+                              Self.Ctxt.Namespace_Roots.First_Element;
+      Ctxt_Closure        : constant GPR2.Project.View.Vector.Object :=
+                              Self.Ctxt.Closure (False, True, True);
+      --  Both Namespace_Roots and Closure build a new container on each call,
+      --  so compute them once here rather than for every analyzed dependency.
+
       To_Analyze_From_Ali : GPR2.Containers.Name_Set;
       To_Analyze_From_Ada : GPR2.Containers.Name_Set;
       --  We need to differentiate dependencies found from Ali and the ones
@@ -866,7 +873,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          use type GPR2.Project.View.Object;
 
       begin
-         CU := Self.Ctxt.Namespace_Roots.First_Element.Unit (Unit);
+         CU := NS_Root.Unit (Unit);
 
          if not CU.Is_Defined then
             return True;
@@ -890,8 +897,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          Same_Scope := CU.Owning_View = Self.Ctxt
            or else
              (not CU.Owning_View.Is_Library and then
-              Self.Ctxt.Closure (False, True, True).Contains (CU.Owning_View)
-              );
+              Ctxt_Closure.Contains (CU.Owning_View));
 
          declare
             Comp_Id : constant Compile.Ada.Ada_Compile_Id :=
