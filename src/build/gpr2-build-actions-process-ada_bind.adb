@@ -986,9 +986,22 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
                return False;
             end if;
 
-            To_Analyze_From_Ali.Union (Comp.ALI.Withed_From_Spec);
-            To_Analyze_From_Ali.Union (Comp.ALI.Withed_From_Body);
-            To_Analyze_From_Ali.Difference (Self.Analyzed);
+            --  Only queue the dependencies that still need to be analyzed.
+            --  Pruning the whole queue with a set Difference against
+            --  Self.Analyzed instead would cost O (Self.Analyzed'Length) on
+            --  each analyzed unit, hence quadratic in the size of the closure.
+
+            for Dep of Comp.ALI.Withed_From_Spec loop
+               if not Self.Analyzed.Contains (Dep) then
+                  To_Analyze_From_Ali.Include (Dep);
+               end if;
+            end loop;
+
+            for Dep of Comp.ALI.Withed_From_Body loop
+               if not Self.Analyzed.Contains (Dep) then
+                  To_Analyze_From_Ali.Include (Dep);
+               end if;
+            end loop;
 
          elsif not From_ALI then
             --  If From_ALI is unset, this means we're in the initial actions
@@ -998,8 +1011,12 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
             --  using the Ada parser.
 
             S_Deps := CU.Known_Dependencies;
-            To_Analyze_From_Ada.Union (S_Deps);
-            To_Analyze_From_Ada.Difference (Self.Pre_Analyzed);
+
+            for Dep of S_Deps loop
+               if not Self.Pre_Analyzed.Contains (Dep) then
+                  To_Analyze_From_Ada.Include (Dep);
+               end if;
+            end loop;
          end if;
 
          return True;
