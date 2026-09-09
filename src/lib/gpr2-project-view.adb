@@ -1923,7 +1923,13 @@ package body GPR2.Project.View is
    function Interface_Closure
      (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
    is
-      CU : Build.Compilation_Unit.Object;
+      CU  : Build.Compilation_Unit.Object;
+      Agg : constant Set.Object :=
+              (if Self.Kind = K_Aggregate_Library
+               then Self.Aggregated
+               else Set.Empty_Set);
+      --  Computed once: Aggregated builds a new set of views on each call, so
+      --  it must not be called from within the loops below.
    begin
       return Result : GPR2.Build.Compilation_Unit.Maps.Map do
          if Self.Is_Library then
@@ -1933,7 +1939,7 @@ package body GPR2.Project.View is
                     Containers.Unit_Name_To_Sloc.Key (C);
                begin
                   if Self.Kind = K_Aggregate_Library then
-                     for V of Self.Aggregated loop
+                     for V of Agg loop
                         CU := V.Own_Unit (U_Name);
                         exit when CU.Is_Defined;
                      end loop;
@@ -1961,7 +1967,7 @@ package body GPR2.Project.View is
                if Self.Kind /= K_Aggregate_Library then
                   Closure.Insert (Self);
                else
-                  Closure := Self.Aggregated;
+                  Closure := Agg;
                end if;
 
                for V of Closure loop
@@ -1990,7 +1996,7 @@ package body GPR2.Project.View is
                if Src.Has_Units then
                   for U of Src.Units loop
                      if Self.Kind = K_Aggregate_Library then
-                        for V of Self.Aggregated loop
+                        for V of Agg loop
                            CU := V.Own_Unit (U.Name);
                            exit when CU.Is_Defined;
                         end loop;
