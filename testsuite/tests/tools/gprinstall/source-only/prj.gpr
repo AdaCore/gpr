@@ -1,0 +1,7 @@
+project Prj is
+
+   for Languages use ("Ada");
+   for Source_Dirs use ("src");
+   for Source_Files use ("g-os_lib.adb", "g-os_lib.ads");
+
+end Prj;
