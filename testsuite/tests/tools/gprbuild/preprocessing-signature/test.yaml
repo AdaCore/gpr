@@ -1,0 +1,4 @@
+description: |
+  A preprocessor data file cannot be located back from the ALI, so the Ada
+  source is compiled on every build
+driver: python_script
