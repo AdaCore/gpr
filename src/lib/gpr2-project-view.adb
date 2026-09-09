@@ -1976,26 +1976,32 @@ package body GPR2.Project.View is
             --  apps can use instrumented libraries without having to change
             --  the project file.
 
-            declare
-               Closure : GPR2.Project.View.Set.Object;
-            begin
-               if Self.Kind /= K_Aggregate_Library then
-                  Closure.Insert (Self);
-               else
-                  Closure := Agg;
-               end if;
+            if Self.Tree_Int.all.Has_Src_Subdirs then
+               --  No source can come from a source subdirectory when none is
+               --  set on the tree, so don't scan all the sources of the
+               --  closure in that case.
 
-               for V of Closure loop
-                  for S of V.Sources loop
-                     if S.From_Src_Subdirs and then S.Has_Units then
-                        for U of S.Units loop
-                           CU := Self.Own_Unit (U.Name);
-                           Result.Include (U.Name, CU);
-                        end loop;
-                     end if;
+               declare
+                  Closure : GPR2.Project.View.Set.Object;
+               begin
+                  if Self.Kind /= K_Aggregate_Library then
+                     Closure.Insert (Self);
+                  else
+                     Closure := Agg;
+                  end if;
+
+                  for V of Closure loop
+                     for S of V.Sources loop
+                        if S.From_Src_Subdirs and then S.Has_Units then
+                           for U of S.Units loop
+                              CU := Self.Own_Unit (U.Name);
+                              Result.Include (U.Name, CU);
+                           end loop;
+                        end if;
+                     end loop;
                   end loop;
-               end loop;
-            end;
+               end;
+            end if;
          end if;
 
          for C in Self.Interface_Sources.Iterate loop
