@@ -178,7 +178,12 @@ package body GPR2.Build.Actions_Population is
       View                  : GPR2.Project.View.Object;
       Single_View           : Boolean;
       Options               : Build.Options.Build_Options;
+      Populated             : in out View_Ids.Set.Set;
       With_Externally_Built : Boolean) return Boolean;
+   --  Populated holds the views whose sources have already been turned into
+   --  compilation actions. In an aggregate project the namespace roots share
+   --  most of their closure, so without it each shared view is processed once
+   --  per root and all but the first are dropped by Add_Action.
 
    function Populate_Mains
      (Tree_Db               : GPR2.Build.Tree_Db.Object_Access;
@@ -640,6 +645,9 @@ package body GPR2.Build.Actions_Population is
                       Tree.Artifacts_Database;
       Result      : Boolean := True;
       Visited     : View_Ids.Set.Set;
+      Populated   : View_Ids.Set.Set;
+      --  The views already turned into compilation actions, shared by all the
+      --  namespace roots (see Populate_All).
       Pos         : View_Ids.Set.Cursor;
       Inserted    : Boolean;
       Cache       : View_Id_Library_Map.Map;
@@ -730,12 +738,14 @@ package body GPR2.Build.Actions_Population is
                   --  compile all sources, recursively in case -U is set
                      if Options.Unique_Compilation then
                         Result := Populate_All
-                        (Tree_Db, V, True, Options, With_Externally_Built);
+                        (Tree_Db, V, True, Options, Populated,
+                         With_Externally_Built);
 
                      else
                         for C of V.Closure (True, False, True) loop
                            Result := Populate_All
-                           (Tree_Db, C, True, Options, With_Externally_Built);
+                           (Tree_Db, C, True, Options, Populated,
+                            With_Externally_Built);
                            exit when not Result;
                         end loop;
                      end if;
@@ -889,7 +899,8 @@ package body GPR2.Build.Actions_Population is
                           (Tree_Db, V, Mains, Options, With_Externally_Built);
                      elsif not Populate_Mains_Only then
                         Result := Populate_All
-                          (Tree_Db, V, False, Options, With_Externally_Built);
+                          (Tree_Db, V, False, Options, Populated,
+                           With_Externally_Built);
                      end if;
 
                   when K_Library | K_Aggregate_Library =>
@@ -1068,6 +1079,7 @@ package body GPR2.Build.Actions_Population is
       View                  : GPR2.Project.View.Object;
       Single_View           : Boolean;
       Options               : Build.Options.Build_Options;
+      Populated             : in out View_Ids.Set.Set;
       With_Externally_Built : Boolean) return Boolean
    is
       Closure     : GPR2.Project.View.Set.Object;
@@ -1091,7 +1103,11 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       for V of Closure loop
-         if not V.Is_Externally_Built or else With_Externally_Built then
+         if (not V.Is_Externally_Built or else With_Externally_Built)
+           and then not Populated.Contains (V.Id)
+         then
+            Populated.Insert (V.Id);
+
             declare
                Comp : Compile.Ada.Object;
             begin
