@@ -135,6 +135,25 @@ package GPR2.Build.View_Db is
                    and then Self.View.Is_Namespace_Root
                    and then Self.Source_Option >= Sources_Units;
 
+   function Interface_Closure
+     (Self : Object) return Build.Compilation_Unit.Maps.Map
+     with Pre => Self.Is_Defined and then Self.Interface_Closure_Computed;
+   --  The cached interface closure of the view
+
+   function Interface_Closure_Computed (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Whether the interface closure of the view has already been computed and
+   --  stored in the database. Note that this says nothing about the closure
+   --  itself: a view with no interface has an empty, yet computed, closure.
+
+   procedure Set_Interface_Closure
+     (Self    : Object;
+      Closure : Build.Compilation_Unit.Maps.Map)
+     with Pre  => Self.Is_Defined,
+          Post => Self.Interface_Closure_Computed;
+   --  Store the interface closure of the view in the database. The cache is
+   --  reset whenever the sources of the tree are refreshed.
+
    function Own_Unit
      (Self : Object;
       Name : Name_Type) return Build.Compilation_Unit.Object

@@ -1923,6 +1923,12 @@ package body GPR2.Project.View is
    function Interface_Closure
      (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
    is
+      Db  : constant GPR2.Build.View_Db.Object :=
+              (if Self.Kind in K_Aggregate | K_Configuration
+               then GPR2.Build.View_Db.Undefined
+               else Self.View_Db);
+      --  The view's build database, used to cache the result
+
       CU  : Build.Compilation_Unit.Object;
       Agg : constant Set.Object :=
               (if Self.Kind = K_Aggregate_Library
@@ -1930,7 +1936,16 @@ package body GPR2.Project.View is
                else Set.Empty_Set);
       --  Computed once: Aggregated builds a new set of views on each call, so
       --  it must not be called from within the loops below.
+
    begin
+      --  The interface closure is queried once per action while populating the
+      --  build graph, so keep it in the view database rather than recomputing
+      --  it every time. The cache is reset when the sources are refreshed.
+
+      if Db.Is_Defined and then Db.Interface_Closure_Computed then
+         return Db.Interface_Closure;
+      end if;
+
       return Result : GPR2.Build.Compilation_Unit.Maps.Map do
          if Self.Is_Library then
             for C in Self.Interface_Units.Iterate loop
@@ -2012,6 +2027,10 @@ package body GPR2.Project.View is
                end if;
             end;
          end loop;
+
+         if Db.Is_Defined then
+            Db.Set_Interface_Closure (Result);
+         end if;
       end return;
    end Interface_Closure;
 

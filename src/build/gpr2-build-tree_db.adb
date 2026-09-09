@@ -849,6 +849,21 @@ package body GPR2.Build.Tree_Db is
    begin
       Self.Src_Option := Option;
 
+      --  Invalidate the interface closure caches: they depend on the sources
+      --  of the view and of its aggregated views.
+
+      for V of Self.Tree.Ordered_Views loop
+         if V.Kind in GPR2.Build.View_Tables.With_View_Db then
+            declare
+               Db : constant View_Tables.View_Data_Ref :=
+                      View_Tables.Get_Data (Self.Self, V);
+            begin
+               Db.Interface_Closure.Clear;
+               Db.Interface_Closure_Computed := False;
+            end;
+         end if;
+      end loop;
+
       --  Refresh each tree's views
 
       for V of Self.Tree.Ordered_Views loop
