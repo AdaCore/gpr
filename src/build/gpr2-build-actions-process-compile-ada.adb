@@ -23,6 +23,17 @@ with GPR2.Source_Reference;
 
 package body GPR2.Build.Actions.Process.Compile.Ada is
 
+   Save_Preprocessed_Option : constant Value_Type := "-gnateG";
+   --  The switch that makes the compiler save the preprocessed form of the
+   --  source it compiles
+
+   Prep_Suffix : constant Filename_Type := ".prep";
+   --  Suffix the compiler gives preprocessed files
+
+   function Preprocessed_Source (Self : Object) return Artifacts.Files.Object;
+   --  The preprocessed form of the source, or Undefined when the compiler is
+   --  not asked to save it.
+
    Traces : constant GNATCOLL.Traces.Trace_Handle :=
               GNATCOLL.Traces.Create
                 ("GPR.BUILD.ACTIONS.COMPILE.ADA", GNATCOLL.Traces.Off);
@@ -451,6 +462,16 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          return;
       end if;
 
+      declare
+         Prep : constant Artifacts.Files.Object := Self.Preprocessed_Source;
+      begin
+         if Prep.Is_Defined
+           and then not Self.Signature.Add_Output (Prep, Check_Checksums)
+         then
+            return;
+         end if;
+      end;
+
       --  Object file checksum is the heaviest to compute since those are
       --  pretty large compared to the other artifacts involved in this
       --  signature. So compute it last so that if there's any other
@@ -813,6 +834,16 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          return False;
       end if;
 
+      declare
+         Prep : constant Artifacts.Files.Object := Self.Preprocessed_Source;
+      begin
+         if Prep.Is_Defined
+           and then not Db.Add_Output (UID, Prep)
+         then
+            return False;
+         end if;
+      end;
+
       return True;
    end On_Tree_Insertion;
 
@@ -844,6 +875,77 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
 
       return True;
    end On_Tree_Propagation;
+
+   -------------------------
+   -- Preprocessed_Source --
+   -------------------------
+
+   function Preprocessed_Source (Self : Object) return Artifacts.Files.Object
+   is
+      function Is_Saved return Boolean;
+      --  Whether "-gnateG" is among the switches of this compilation
+
+      --------------
+      -- Is_Saved --
+      --------------
+
+      function Is_Saved return Boolean is
+
+         function Has_Preproc_Opt
+           (Id : Q_Attribute_Id; Index : PAI.Object) return Boolean;
+         --  Whether that attribute of the view holds the "-gnateG" option
+
+         ---------------------
+         -- Has_Preproc_Opt --
+         ---------------------
+
+         function Has_Preproc_Opt
+           (Id : Q_Attribute_Id; Index : PAI.Object) return Boolean
+         is
+            Attr : constant GPR2.Project.Attribute.Object :=
+                     Self.View.Attribute (Id, Index);
+         begin
+            return Attr.Is_Defined
+                   and then Attr.Has_Value (Save_Preprocessed_Option);
+         end Has_Preproc_Opt;
+
+         Lang_Idx : constant PAI.Object := PAI.Create (Self.Lang);
+         Src_Idx  : constant PAI.Object :=
+                      PAI.Create_Source (Self.Input.Path_Name.Simple_Name);
+
+      begin
+         if Has_Preproc_Opt (PRA.Compiler.Leading_Required_Switches, Lang_Idx)
+           or else Has_Preproc_Opt (PRA.Compiler.Required_Switches, Lang_Idx)
+           or else Has_Preproc_Opt (PRA.Compiler.Switches, Src_Idx)
+           or else Has_Preproc_Opt
+                     (PRA.Compiler.Trailing_Required_Switches, Lang_Idx)
+         then
+            return True;
+         end if;
+
+         --  Then the command line, "-cargs" and the switches gprbuild
+         --  registers from Builder'Global_Compilation_Switches
+
+         for Opt of Self.Tree.External_Options.Fetch
+                      (External_Options.Compiler, Self.Lang)
+         loop
+            if Opt = Save_Preprocessed_Option then
+               return True;
+            end if;
+         end loop;
+
+         return False;
+      end Is_Saved;
+
+   begin
+      if not Is_Saved then
+         return Artifacts.Files.Undefined;
+      end if;
+
+      return Artifacts.Files.Create
+               (Self.View.Object_Directory.Compose
+                  (Self.Input.Path_Name.Simple_Name & Prep_Suffix));
+   end Preprocessed_Source;
 
    --------------------
    -- Post_Execution --
