@@ -1261,7 +1261,9 @@ package body GPR2.Build.Actions.Process.Link is
             GNATCOLL.OS.FS.Close (FD);
 
             while First < Buffer'Last loop
-               Last := GNATCOLL.Utils.Line_End (Buffer, First + 1);
+               --  Look from the First index instead of First + 1 to not match
+               --  an empty line as an empty symbol.
+               Last := GNATCOLL.Utils.Line_End (Buffer, First);
 
                declare
                   Line : constant String :=

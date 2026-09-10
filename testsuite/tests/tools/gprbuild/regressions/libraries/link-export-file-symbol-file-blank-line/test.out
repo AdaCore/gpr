@@ -1,0 +1,8 @@
+$ gprbuild -P hello.gpr
+"obj" created
+"lib" created
+[Ada Compile]     hello.adb
+[Ada Bind]        hello
+[Library-Files-Copy] Hello
+[Ada Post-Bind]   b__hello.adb
+[Link]            libhello<shared-lib-suffix>
