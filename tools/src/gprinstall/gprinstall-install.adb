@@ -1977,10 +1977,13 @@ package body GPRinstall.Install is
                end if;
             end Gen_Dir_Name;
 
+            Standalone : constant GPR2.Project.Standalone_Library_Kind :=
+                           (if Project.Is_Library
+                            then Project.Library_Standalone
+                            else GPR2.Project.No);
             V          : String_Vector.Vector;
             Line       : Unbounded_String;
             Attr       : GPR2.Project.Attribute.Object;
-            Standalone : GPR2.Project.Standalone_Library_Kind;
 
          begin
             V.Append ("      when """ & (-Options.Build_Name) & """ =>");
@@ -2060,15 +2063,11 @@ package body GPRinstall.Install is
                  ("         for Library_Kind use """
                   & String (Project.Library_Kind) & """;");
 
-               Standalone := Project.Library_Standalone;
-
                if Standalone /= GPR2.Project.No then
-                  if not Project.Is_Static_Library then
-                     V.Append
-                       ("         for Library_Standalone use """
-                        & Characters.Handling.To_Lower (Standalone'Image)
-                        & """;");
-                  end if;
+                  V.Append
+                     ("         for Library_Standalone use """
+                     & Characters.Handling.To_Lower (Standalone'Image)
+                     & """;");
 
                   --  And then generates the interfaces
 

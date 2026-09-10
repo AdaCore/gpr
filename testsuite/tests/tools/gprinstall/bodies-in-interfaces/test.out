@@ -9,6 +9,7 @@ library project Mylib is
          for Source_Dirs use ("../../include/mylib");
          for Library_Dir use "../../lib/mylib";
          for Library_Kind use "static";
+         for Library_Standalone use "standard";
          for Interfaces use ("mylib.ads");
    end case;
 

@@ -281,37 +281,6 @@ encapsulated_env["GPR_PROJECT_PATH"] = (
     + encapsulated_env.get("GPR_PROJECT_PATH", "")
 )
 
-def ensure_library_standalone_encapsulated(generated_gpr_path):
-    """gprinstall does not currently round-trip 'Library_Standalone' into
-    the project it generates for an externally-built consumer -- it
-    preserves Library_Kind/Library_Interface/Library_Name but silently
-    drops Library_Standalone, so an encapsulated SAL's installed project
-    resolves as an ordinary standalone library once installed. This is a
-    gprinstall bug, separate from the Link_Options_Extract/Archive_Table_List
-    fix this test otherwise targets. Work around it here so this test can
-    still exercise the encapsulated resolution path in the meantime: insert
-    the missing attribute directly into the generated project if it isn't
-    already there.
-    """
-    with open(generated_gpr_path) as f:
-        content = f.read()
-
-    if "Library_Standalone" in content:
-        return
-
-    match = re.search(r"^end (\w+);\s*$", content, re.MULTILINE)
-    assert match is not None, (
-        "could not find the closing 'end <Project>;' line in "
-        + generated_gpr_path + " to patch Library_Standalone into"
-    )
-
-    insertion = '   for Library_Standalone use "encapsulated";\n'
-    patched = content[: match.start()] + insertion + content[match.start():]
-
-    with open(generated_gpr_path, "w") as f:
-        f.write(patched)
-
-
 encapsulated_generated = glob.glob(
     os.path.join(encapsulated_relocated, "share", "gpr", "*.gpr")
 )
@@ -320,8 +289,6 @@ assert len(encapsulated_generated) == 1, (
     + repr(encapsulated_generated)
 )
 encapsulated_generated_name = os.path.basename(encapsulated_generated[0])
-
-ensure_library_standalone_encapsulated(encapsulated_generated[0])
 
 with open(os.path.join("main_encapsulated", "main_encapsulated.gpr")) as f:
     content = f.read()
