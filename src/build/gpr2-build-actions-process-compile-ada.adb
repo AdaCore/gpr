@@ -114,7 +114,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          --   not be imported.
 
          if CU_View.Has_Any_Interfaces
-           and then not CU_View.Interface_Closure.Contains (CU.Name)
+           and then not CU_View.Is_Interface_Unit (CU.Name)
          then
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
@@ -676,7 +676,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
 
       for V of Closure loop
          if not V.Is_Library_Standalone
-           or else V.Interface_Closure.Contains (Self.CU.Name)
+           or else V.Is_Interface_Unit (Self.CU.Name)
          then
             Self.In_Library := V;
             exit;

@@ -1923,8 +1923,29 @@ package body GPR2.Project.View is
    function Interface_Closure
      (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
    is
-      CU : Build.Compilation_Unit.Object;
+      Db  : constant GPR2.Build.View_Db.Object :=
+              (if Self.Kind in K_Aggregate | K_Configuration
+               then GPR2.Build.View_Db.Undefined
+               else Self.View_Db);
+      --  The view's build database, used to cache the result
+
+      CU  : Build.Compilation_Unit.Object;
+      Agg : constant Set.Object :=
+              (if Self.Kind = K_Aggregate_Library
+               then Self.Aggregated
+               else Set.Empty_Set);
+      --  Computed once: Aggregated builds a new set of views on each call, so
+      --  it must not be called from within the loops below.
+
    begin
+      --  The interface closure is queried once per action while populating the
+      --  build graph, so keep it in the view database rather than recomputing
+      --  it every time. The cache is reset when the sources are refreshed.
+
+      if Db.Is_Defined and then Db.Interface_Closure_Computed then
+         return Db.Interface_Closure;
+      end if;
+
       return Result : GPR2.Build.Compilation_Unit.Maps.Map do
          if Self.Is_Library then
             for C in Self.Interface_Units.Iterate loop
@@ -1933,7 +1954,7 @@ package body GPR2.Project.View is
                     Containers.Unit_Name_To_Sloc.Key (C);
                begin
                   if Self.Kind = K_Aggregate_Library then
-                     for V of Self.Aggregated loop
+                     for V of Agg loop
                         CU := V.Own_Unit (U_Name);
                         exit when CU.Is_Defined;
                      end loop;
@@ -1955,26 +1976,32 @@ package body GPR2.Project.View is
             --  apps can use instrumented libraries without having to change
             --  the project file.
 
-            declare
-               Closure : GPR2.Project.View.Set.Object;
-            begin
-               if Self.Kind /= K_Aggregate_Library then
-                  Closure.Insert (Self);
-               else
-                  Closure := Self.Aggregated;
-               end if;
+            if Self.Tree_Int.all.Has_Src_Subdirs then
+               --  No source can come from a source subdirectory when none is
+               --  set on the tree, so don't scan all the sources of the
+               --  closure in that case.
 
-               for V of Closure loop
-                  for S of V.Sources loop
-                     if S.From_Src_Subdirs and then S.Has_Units then
-                        for U of S.Units loop
-                           CU := Self.Own_Unit (U.Name);
-                           Result.Include (U.Name, CU);
-                        end loop;
-                     end if;
+               declare
+                  Closure : GPR2.Project.View.Set.Object;
+               begin
+                  if Self.Kind /= K_Aggregate_Library then
+                     Closure.Insert (Self);
+                  else
+                     Closure := Agg;
+                  end if;
+
+                  for V of Closure loop
+                     for S of V.Sources loop
+                        if S.From_Src_Subdirs and then S.Has_Units then
+                           for U of S.Units loop
+                              CU := Self.Own_Unit (U.Name);
+                              Result.Include (U.Name, CU);
+                           end loop;
+                        end if;
+                     end loop;
                   end loop;
-               end loop;
-            end;
+               end;
+            end if;
          end if;
 
          for C in Self.Interface_Sources.Iterate loop
@@ -1990,7 +2017,7 @@ package body GPR2.Project.View is
                if Src.Has_Units then
                   for U of Src.Units loop
                      if Self.Kind = K_Aggregate_Library then
-                        for V of Self.Aggregated loop
+                        for V of Agg loop
                            CU := V.Own_Unit (U.Name);
                            exit when CU.Is_Defined;
                         end loop;
@@ -2006,6 +2033,10 @@ package body GPR2.Project.View is
                end if;
             end;
          end loop;
+
+         if Db.Is_Defined then
+            Db.Set_Interface_Closure (Result);
+         end if;
       end return;
    end Interface_Closure;
 
@@ -2120,6 +2151,31 @@ package body GPR2.Project.View is
    begin
       return Attr.Is_Defined and then Attr.Value_Equal ("true");
    end Is_Externally_Built;
+
+   -----------------------
+   -- Is_Interface_Unit --
+   -----------------------
+
+   function Is_Interface_Unit
+     (Self : Object; Unit : Name_Type) return Boolean
+   is
+      Db : constant GPR2.Build.View_Db.Object :=
+             (if Self.Kind in K_Aggregate | K_Configuration
+              then GPR2.Build.View_Db.Undefined
+              else Self.View_Db);
+
+   begin
+      if Db.Is_Defined and then Db.Interface_Closure_Computed then
+         --  Query the cached closure in place, without copying the map
+
+         return Db.Interface_Closure_Contains (Unit);
+      end if;
+
+      --  Not computed yet: Interface_Closure fills the cache, so subsequent
+      --  calls take the branch above.
+
+      return Self.Interface_Closure.Contains (Unit);
+   end Is_Interface_Unit;
 
    --------------------------
    -- Is_Library_Supported --

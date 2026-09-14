@@ -841,6 +841,13 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
    is
       Link                : constant Actions.Process.Link.Object'Class :=
                               Self.Link;
+      NS_Root             : constant GPR2.Project.View.Object :=
+                              Self.Ctxt.Namespace_Roots.First_Element;
+      Ctxt_Closure        : constant GPR2.Project.View.Vector.Object :=
+                              Self.Ctxt.Closure (False, True, True);
+      --  Both Namespace_Roots and Closure build a new container on each call,
+      --  so compute them once here rather than for every analyzed dependency.
+
       To_Analyze_From_Ali : GPR2.Containers.Name_Set;
       To_Analyze_From_Ada : GPR2.Containers.Name_Set;
       --  We need to differentiate dependencies found from Ali and the ones
@@ -866,7 +873,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          use type GPR2.Project.View.Object;
 
       begin
-         CU := Self.Ctxt.Namespace_Roots.First_Element.Unit (Unit);
+         CU := NS_Root.Unit (Unit);
 
          if not CU.Is_Defined then
             return True;
@@ -890,8 +897,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          Same_Scope := CU.Owning_View = Self.Ctxt
            or else
              (not CU.Owning_View.Is_Library and then
-              Self.Ctxt.Closure (False, True, True).Contains (CU.Owning_View)
-              );
+              Ctxt_Closure.Contains (CU.Owning_View));
 
          declare
             Comp_Id : constant Compile.Ada.Ada_Compile_Id :=
@@ -980,9 +986,22 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
                return False;
             end if;
 
-            To_Analyze_From_Ali.Union (Comp.ALI.Withed_From_Spec);
-            To_Analyze_From_Ali.Union (Comp.ALI.Withed_From_Body);
-            To_Analyze_From_Ali.Difference (Self.Analyzed);
+            --  Only queue the dependencies that still need to be analyzed.
+            --  Pruning the whole queue with a set Difference against
+            --  Self.Analyzed instead would cost O (Self.Analyzed'Length) on
+            --  each analyzed unit, hence quadratic in the size of the closure.
+
+            for Dep of Comp.ALI.Withed_From_Spec loop
+               if not Self.Analyzed.Contains (Dep) then
+                  To_Analyze_From_Ali.Include (Dep);
+               end if;
+            end loop;
+
+            for Dep of Comp.ALI.Withed_From_Body loop
+               if not Self.Analyzed.Contains (Dep) then
+                  To_Analyze_From_Ali.Include (Dep);
+               end if;
+            end loop;
 
          elsif not From_ALI then
             --  If From_ALI is unset, this means we're in the initial actions
@@ -992,8 +1011,12 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
             --  using the Ada parser.
 
             S_Deps := CU.Known_Dependencies;
-            To_Analyze_From_Ada.Union (S_Deps);
-            To_Analyze_From_Ada.Difference (Self.Pre_Analyzed);
+
+            for Dep of S_Deps loop
+               if not Self.Pre_Analyzed.Contains (Dep) then
+                  To_Analyze_From_Ada.Include (Dep);
+               end if;
+            end loop;
          end if;
 
          return True;

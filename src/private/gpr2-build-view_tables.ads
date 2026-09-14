@@ -18,6 +18,7 @@ with GPR2.Project.View.Set;
 with GPR2.Project.View.Vector;
 
 with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Source_Base;
 with GPR2.Build.Source;
 with GPR2.View_Ids;
@@ -187,6 +188,13 @@ private package GPR2.Build.View_Tables is
       --  The list of views to consider during source lookup: the current view
       --  and its dependencies recursively, together with the extended
       --  view's dependencies if any.
+
+      Interface_Closure          : GPR2.Build.Compilation_Unit.Maps.Map;
+      Interface_Closure_Computed : Boolean := False;
+      --  Cache for GPR2.Project.View.Interface_Closure, which is costly to
+      --  compute (in particular for aggregate libraries) and is queried once
+      --  per action during the build graph population. Reset whenever the
+      --  sources of the tree are refreshed.
 
       case Is_Root is
          when True =>

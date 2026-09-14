@@ -159,6 +159,30 @@ package body GPR2.Build.View_Db is
       return False;
    end Has_Source_Of_Language;
 
+   -----------------------
+   -- Interface_Closure --
+   -----------------------
+
+   function Interface_Closure
+     (Self : Object) return Build.Compilation_Unit.Maps.Map is
+     (Ref (Self).Interface_Closure);
+
+   --------------------------------
+   -- Interface_Closure_Computed --
+   --------------------------------
+
+   function Interface_Closure_Computed (Self : Object) return Boolean is
+     (Ref (Self).Interface_Closure_Computed);
+
+   --------------------------------
+   -- Interface_Closure_Contains --
+   --------------------------------
+
+   function Interface_Closure_Contains
+     (Self : Object;
+      Unit : Name_Type) return Boolean is
+     (Ref (Self).Interface_Closure.Contains (Unit));
+
    --------------
    -- Own_Unit --
    --------------
@@ -213,6 +237,20 @@ package body GPR2.Build.View_Db is
 
       return Res;
    end Own_Units;
+
+   ---------------------------
+   -- Set_Interface_Closure --
+   ---------------------------
+
+   procedure Set_Interface_Closure
+     (Self    : Object;
+      Closure : Build.Compilation_Unit.Maps.Map)
+   is
+      Db : constant View_Tables.View_Data_Ref := Ref (Self);
+   begin
+      Db.Interface_Closure          := Closure;
+      Db.Interface_Closure_Computed := True;
+   end Set_Interface_Closure;
 
    -------------
    -- Sources --

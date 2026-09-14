@@ -534,6 +534,15 @@ package GPR2.Project.View is
    --  If no interface is defined for the library, then the returned map is
    --  empty.
 
+   function Is_Interface_Unit
+     (Self : Object; Unit : Name_Type) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Equivalent to Self.Interface_Closure.Contains (Unit), but answers from
+   --  the closure cached in the view's build database instead of returning a
+   --  copy of the whole map. To be used whenever only the membership of a
+   --  single unit is needed, as is the case once per action while populating
+   --  the build graph.
+
    --  Some common attributes redefined here and when some pathname are
    --  relative to the view, the proper value is returned. Following
    --  routines are for internal use only and convert from a View unique Id.

@@ -25,8 +25,39 @@ package body GPR2.View_Ids is
    -------
 
    function "<" (Self : View_Id; Other : View_Id) return Boolean is
+
+      function Rank (Id : View_Id) return Natural
+        is (case Id.Kind is
+               when Null_Id    => 0,
+               when Config_Id  => 1,
+               when Runtime_Id => 2,
+               when Project_Id =>
+                 (if Id.Context = Aggregate then 3 else 4));
+      --  Rank of the image prefix: "" < '!' (config, runtime) < '$'
+      --  (aggregate context) < '<' (root context).
+
+      R_Self  : constant Natural := Rank (Self);
+      R_Other : constant Natural := Rank (Other);
+
    begin
-      return Image (Self) < Image (Other);
+      --  Equivalent to Image (Self) < Image (Other), but without building
+      --  the images: this operator is used by all the ordered containers of
+      --  views/view ids and shows up as a major cost on large trees.
+
+      if R_Self /= R_Other then
+         return R_Self < R_Other;
+
+      elsif Self.Kind /= Project_Id then
+         --  Same kind, and no other component to compare
+
+         return False;
+
+      elsif Self.Id /= Other.Id then
+         return Self.Id < Other.Id;
+
+      else
+         return Self.Extending < Other.Extending;
+      end if;
    end "<";
 
    -------
