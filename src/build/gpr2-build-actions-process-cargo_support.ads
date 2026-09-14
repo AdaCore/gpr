@@ -97,19 +97,19 @@ package GPR2.Build.Actions.Process.Cargo_Support is
    --     and the empty string when no driver is defined
 
    function Link_Options
-     (GPR_Target : Name_Type) return GPR2.Containers.Value_List;
+     (View : GPR2.Project.View.Object) return GPR2.Containers.Value_List;
    --  The options a link needs when a Rust artifact is used outside of the
    --  Cargo ecosystem.
    --
-   --  @param GPR_Target The canonical GPR target the tree is built for
-   --  @return Empty when GPR_Target has no known Rust mapping or needs
-   --     nothing special
+   --  @param View Any view of the tree the link is made for
+   --  @return Empty when the target of that tree has no known Rust mapping
+   --     or needs nothing special
 
    function Is_Compatible
-     (GPR_Target : Name_Type; Triple : String) return Boolean;
-   --  @param GPR_Target The canonical GPR target the tree is built for
-   --  @param Triple The Rust triple to check against it
-   --  @return Whether Triple is one of the Rust triples known for GPR_Target
+     (View : GPR2.Project.View.Object; Triple : String) return Boolean;
+   --  @param View Any view of the tree the build is made for
+   --  @param Triple The Rust triple to check against the target of that tree
+   --  @return Whether Triple is one of the Rust triples known for the target
 
    function Rust_Triple (View : GPR2.Project.View.Object) return String;
    --  @param View The Rust view to build

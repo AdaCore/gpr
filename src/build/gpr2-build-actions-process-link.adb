@@ -639,7 +639,7 @@ package body GPR2.Build.Actions.Process.Link is
             --  be added only when linking a Rust view, and Linker_Options is
             --  not an indexed attribute.
 
-            for Opt of Cargo_Support.Link_Options (Self.View.Tree.Target) loop
+            for Opt of Cargo_Support.Link_Options (Self.View) loop
                if GNATCOLL.Utils.Starts_With (Opt, "-l") then
                   Dash_l_Opts.Append (Opt);
                else

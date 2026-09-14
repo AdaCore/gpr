@@ -337,8 +337,7 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
          --  are systematically added in these cases.
 
          if Links_Library then
-            for Opt of Cargo_Support.Link_Options (Self.View.Tree.Target)
-            loop
+            for Opt of Cargo_Support.Link_Options (Self.View) loop
                if Opt'Length > 2
                  and then Opt (Opt'First .. Opt'First + 1) = "-l"
                then
@@ -636,7 +635,7 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
       end if;
 
       if not Cargo_Support.Is_Compatible
-               (GPR_Target, To_String (Self.Rust_Triple))
+               (Self.View, To_String (Self.Rust_Triple))
       then
          Db.Reporter.Report
            (GPR2.Message.Create
