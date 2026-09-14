@@ -1106,6 +1106,7 @@ package body GPRinstall.Install is
                if Copy (Object)
                  and then Action in Compile.Object'Class
                  and then Action.View = Project
+                 and then not Options.Sources_Only
                then
                   Copy_File
                     (From => OC (Action).Object_File.Path,
@@ -1115,6 +1116,7 @@ package body GPRinstall.Install is
                --  Copy object artifacts like coverage or callgraph
 
                if (Copy (Object) or else Copy (Library))
+                 and then not Options.Sources_Only
                  and then Action in Compile.Object'Class
                  and then Action.View = Project
                then

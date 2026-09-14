@@ -1,0 +1,22 @@
+=== install 1
+['Install project Prj/n']
+|- include
+|   |- prj
+|   |   |- g-os_lib.adb
+|   |   |- g-os_lib.ads
+|- share
+|   |- gpr
+|   |   |- manifests
+|   |   |   |- prj
+|   |   |- prj.gpr
+=== install 2
+['Install project Prj/n']
+|- include
+|   |- prj
+|   |   |- g-os_lib.adb
+|   |   |- g-os_lib.ads
+|- share
+|   |- gpr
+|   |   |- manifests
+|   |   |   |- prj
+|   |   |- prj.gpr
