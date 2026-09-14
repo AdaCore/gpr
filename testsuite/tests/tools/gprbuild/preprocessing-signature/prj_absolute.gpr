@@ -1,0 +1,11 @@
+project Prj_Absolute is
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj_absolute";
+
+   package Compiler is
+      --  The preprocessor data file, named with its path so that the
+      --  compiler reports it as such among the dependencies of the unit.
+      for Default_Switches ("Ada") use
+        ("-gnatep=" & Project'Project_Dir & "prep/prep.def");
+   end Compiler;
+end Prj_Absolute;
