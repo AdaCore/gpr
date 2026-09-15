@@ -19,8 +19,8 @@ with GPR2.View_Internal;
 
 package body GPR2.Build.Actions.Process.Cargo_Support is
 
-   --  Static 1-to-n mapping from GPR target name to compatible Rust triples.
-   --  The first triple in each list is the default for automatic cross builds.
+   --  Static 1-to-n mapping from canonical GPR target name to compatible Rust
+   --  triples. The first triple in each list is the default one.
    --  This mapping and the Windows extra libs should eventually be moved to
    --  the knowledge base.
 
@@ -59,9 +59,6 @@ package body GPR2.Build.Actions.Process.Cargo_Support is
        Needs_Pthread => False),
       (US ("x86_64-windows"),
        (1 => US ("x86_64-pc-windows-gnu"), 2 => <>),
-       Needs_Pthread => False),
-      (US ("x86_64-windows64"),
-       (1 => US ("x86_64-pc-windows-gnu"), 2 => <>),
        Needs_Pthread => False));
 
    Windows_Extra_Libs :
@@ -78,6 +75,9 @@ package body GPR2.Build.Actions.Process.Cargo_Support is
         US ("-luser32"),
         US ("-luserenv"),
         US ("-lws2_32"));
+
+   function Canonical_Target (View : GPR2.Project.View.Object) return Name_Type
+   is (View.Tree.Target (Canonical => True));
 
    function Default_Triple (GPR_Target : Name_Type) return String;
    --  The first (default) Rust triple mapped from GPR_Target, or the empty
@@ -180,36 +180,6 @@ package body GPR2.Build.Actions.Process.Cargo_Support is
       end if;
    end Driver;
 
-   ------------------------
-   -- Extra_Link_Options --
-   ------------------------
-
-   function Extra_Link_Options
-     (Triple : String) return GPR2.Containers.Value_List
-   is
-      Result : GPR2.Containers.Value_List;
-   begin
-      for M of Mapping loop
-         for T of M.Triples loop
-            if To_String (T) = Triple then
-               if M.Needs_Pthread then
-                  Result.Append ("-pthread");
-               end if;
-
-               if Ada.Strings.Fixed.Index (Triple, "windows") > 0 then
-                  for Lib of Windows_Extra_Libs loop
-                     Result.Append (To_String (Lib));
-                  end loop;
-               end if;
-
-               return Result;
-            end if;
-         end loop;
-      end loop;
-
-      return Result;
-   end Extra_Link_Options;
-
    -----------
    -- Image --
    -----------
@@ -229,7 +199,9 @@ package body GPR2.Build.Actions.Process.Cargo_Support is
    -------------------
 
    function Is_Compatible
-     (GPR_Target : Name_Type; Triple : String) return Boolean is
+     (View : GPR2.Project.View.Object; Triple : String) return Boolean
+   is
+      GPR_Target : constant Name_Type := Canonical_Target (View);
    begin
       for M of Mapping loop
          if M.GPR = String (GPR_Target) then
@@ -282,6 +254,36 @@ package body GPR2.Build.Actions.Process.Cargo_Support is
 
       return Simple_Name (To_String (File_Name));
    end Library_File_Name;
+
+   ------------------
+   -- Link_Options --
+   ------------------
+
+   function Link_Options
+     (View : GPR2.Project.View.Object) return GPR2.Containers.Value_List
+   is
+      GPR_Target : constant Name_Type := Canonical_Target (View);
+      Result     : GPR2.Containers.Value_List;
+   begin
+      for M of Mapping loop
+         if M.GPR = String (GPR_Target) then
+            if M.Needs_Pthread then
+               Result.Append ("-pthread");
+            end if;
+
+            if Ada.Strings.Fixed.Index (String (GPR_Target), "windows") > 0
+            then
+               for Lib of Windows_Extra_Libs loop
+                  Result.Append (To_String (Lib));
+               end loop;
+            end if;
+
+            return Result;
+         end if;
+      end loop;
+
+      return Result;
+   end Link_Options;
 
    --------------
    -- Manifest --
@@ -458,7 +460,7 @@ package body GPR2.Build.Actions.Process.Cargo_Support is
       if Rust_Target_Attr.Is_Defined then
          return Rust_Target_Attr.Value.Text;
       else
-         return Default_Triple (View.Tree.Target);
+         return Default_Triple (Canonical_Target (View));
       end if;
    end Rust_Triple;
 

@@ -33,6 +33,10 @@ package GPR2.Build.Actions.Process.Link.Partial is
    overriding
    procedure Add_Option_From_Binder (Self : in out Object; Option : String);
 
+   overriding function Is_Defined (Self : Object) return Boolean;
+   --  The inherited one compares against the Undefined of the parent, which
+   --  an object of this type never equals.
+
    overriding function Output
      (Self : Object) return Artifacts.Files.Object'Class;
 
@@ -73,6 +77,9 @@ private
      (False);
 
    Undefined : constant Object := (others => <>);
+
+   overriding function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
    overriding function Output
      (Self : Object) return Artifacts.Files.Object'Class is

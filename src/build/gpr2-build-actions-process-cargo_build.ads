@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Build.Actions.Link_Options_Consumer;
 with GPR2.Build.Artifacts.Library;
 with GPR2.Build.Tree_Db;
 with GPR2.Path_Name;
@@ -23,7 +24,8 @@ package GPR2.Build.Actions.Process.Cargo_Build is
    --  @enum Debug Cargo's `dev` profile, written under `target/debug`
    --  @enum Release Cargo's `release` profile, written under `target/release`
 
-   type Object is new Actions.Process.Object with private;
+   type Object is new Actions.Process.Object
+     and Link_Options_Consumer.Object with private;
    --  A `cargo build` invocation for one Rust view
 
    procedure Initialize_Standard
@@ -109,6 +111,10 @@ package GPR2.Build.Actions.Process.Cargo_Build is
    --     signature
 
    overriding
+   procedure Add_Option_From_Binder (Self : in out Object; Option : String);
+   --  Add an option to hand to the linker Cargo runs
+
+   overriding
    function Force_Execution (Self : Object) return Boolean;
    --  Whether to run even when the signature is up to date.
    --  @param Self The action
@@ -143,7 +149,8 @@ private
    function Action_Parameter (Self : Cargo_Build_Id) return Value_Type
    is (Value_Type (Self.View.Name));
 
-   type Object is new Actions.Process.Object with record
+   type Object is new Actions.Process.Object
+     and Link_Options_Consumer.Object with record
       Mode : Cargo_Mode := Release;
       --  Whether to build in release or debug mode
 
@@ -170,6 +177,10 @@ private
       Cargo_Toml : GPR2.Path_Name.Object;
       --  Path to the Cargo.toml manifest, derived from the Cargo.Root
       --  project attribute.
+
+      Binder_Opts : GPR2.Containers.Value_List;
+      --  Options extracted from the libraries this action links, see
+      --  Add_Option_From_Binder.
    end record;
 
    overriding

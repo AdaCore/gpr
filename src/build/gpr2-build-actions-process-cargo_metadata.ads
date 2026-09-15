@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Build.Actions.Link_Options_Consumer;
 with GPR2.Build.Actions.Process.Cargo_Build;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Tree_Db;
@@ -16,7 +17,8 @@ with GPR2.Path_Name;
 
 package GPR2.Build.Actions.Process.Cargo_Metadata is
 
-   type Object is new Actions.Process.Object with private;
+   type Object is new Actions.Process.Object
+     and Link_Options_Consumer.Object with private;
    --  A `cargo metadata` invocation for one Rust view
 
    overriding
@@ -76,6 +78,11 @@ package GPR2.Build.Actions.Process.Cargo_Metadata is
    --     between the cargo manifest and the project file
 
    overriding
+   procedure Add_Option_From_Binder (Self : in out Object; Option : String);
+   --  Add an option to hand to the linker Cargo runs, carried over to the
+   --  Cargo_Build action once it exists
+
+   overriding
    function Force_Execution (Self : Object) return Boolean;
    --  Whether to run even when the signature is up to date.
    --  @param Self The action
@@ -104,7 +111,8 @@ private
    function Action_Parameter (Self : Cargo_Metadata_Id) return Value_Type
    is (Value_Type (Self.View.Name));
 
-   type Object is new Actions.Process.Object with record
+   type Object is new Actions.Process.Object
+     and Link_Options_Consumer.Object with record
       Mode : Cargo_Build.Cargo_Mode := Cargo_Build.Release;
       --  Whether to build in release or debug mode
 
@@ -113,6 +121,9 @@ private
 
       Mains : GPR2.Build.Compilation_Unit.Unit_Location_Vector;
       --  Mains binaries to build explicitly, if specified
+
+      Binder_Opts : GPR2.Containers.Value_List;
+      --  Options recorded by the libraries this view links
    end record;
 
    overriding

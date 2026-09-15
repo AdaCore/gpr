@@ -1,0 +1,14 @@
+library project Hello_From_Rust is
+   for Languages use ("Rust");
+   for Library_Name use "hello_from_rust";
+   for Library_Dir use "lib";
+   for Source_Dirs use ("rust/src");
+
+   package Naming is
+      for Body_Suffix ("Rust") use ".rs";
+   end Naming;
+
+   package Cargo is
+      for Root use Project'Project_Dir & "rust";
+   end Cargo;
+end Hello_From_Rust;

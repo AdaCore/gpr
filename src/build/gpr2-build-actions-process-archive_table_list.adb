@@ -8,8 +8,8 @@ with Ada.Strings.Fixed;
 
 with GNAT.String_Split;
 
+with GPR2.Build.Actions.Link_Options_Consumer;
 with GPR2.Build.Actions.Process.Archive_Extract;
-with GPR2.Build.Actions.Process.Link;
 with GPR2.Build.Actions.Process.Link_Options_Extract;
 with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
@@ -110,7 +110,7 @@ package body GPR2.Build.Actions.Process.Archive_Table_List is
    begin
 
       for Act of Self.Tree.Successors (Self.UID_Artifact) loop
-         if Act in Link.Object'Class then
+         if Act in Link_Options_Consumer.Object'Class then
             Linkers_UID.Insert (Act.UID);
          end if;
       end loop;

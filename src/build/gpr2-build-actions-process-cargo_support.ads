@@ -96,18 +96,20 @@ package GPR2.Build.Actions.Process.Cargo_Support is
    --     compiler if any, otherwise the `Compiler.Driver ("Rust")` attribute,
    --     and the empty string when no driver is defined
 
-   function Extra_Link_Options
-     (Triple : String) return GPR2.Containers.Value_List;
-   --  @param Triple The Rust target triple the library was built for
-   --  @return The extra linker options a static library built for Triple
-   --     requires, `-pthread` or the MinGW import libraries for instance.
-   --     Empty when Triple is unknown or needs nothing special
+   function Link_Options
+     (View : GPR2.Project.View.Object) return GPR2.Containers.Value_List;
+   --  The options a link needs when a Rust artifact is used outside of the
+   --  Cargo ecosystem.
+   --
+   --  @param View Any view of the tree the link is made for
+   --  @return Empty when the target of that tree has no known Rust mapping
+   --     or needs nothing special
 
    function Is_Compatible
-     (GPR_Target : Name_Type; Triple : String) return Boolean;
-   --  @param GPR_Target The GPR target the tree is built for
-   --  @param Triple The Rust triple to check against it
-   --  @return Whether Triple is one of the Rust triples known for GPR_Target
+     (View : GPR2.Project.View.Object; Triple : String) return Boolean;
+   --  @param View Any view of the tree the build is made for
+   --  @param Triple The Rust triple to check against the target of that tree
+   --  @return Whether Triple is one of the Rust triples known for the target
 
    function Rust_Triple (View : GPR2.Project.View.Object) return String;
    --  @param View The Rust view to build

@@ -1,0 +1,13 @@
+--  The library of provider/, seen as already built. Cargo then has no link
+--  action to read the recorded options from: they are extracted from the
+--  ".GPR.linker_options" section of the archive itself.
+
+project Ext_Math is
+   for Externally_Built use "true";
+   for Library_Name use "mathlib";
+   for Library_Dir use "provider/lib";
+   for Library_Kind use "static";
+   for Library_Interface use ("Math_Lib");
+   for Library_Standalone use "encapsulated";
+   for Source_Dirs use ("provider/src");
+end Ext_Math;

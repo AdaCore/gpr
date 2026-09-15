@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Build.Actions.Link_Options_Consumer;
 with GPR2.Build.Actions.Process.Ada_Bind;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.Library;
@@ -20,7 +21,8 @@ package GPR2.Build.Actions.Process.Link is
 
    type Link_Id (<>) is new Actions.Action_Id with private;
 
-   type Object is new Actions.Process.Object with private;
+   type Object is new Actions.Process.Object
+     and Link_Options_Consumer.Object with private;
    --  Action responsible for linking Ada sources
 
    Undefined : constant Object;
@@ -38,6 +40,7 @@ package GPR2.Build.Actions.Process.Link is
       No_Rpath : Boolean                        := True;
       Output   : Filename_Optional              := "");
 
+   overriding
    procedure Add_Option_From_Binder (Self : in out Object; Option : String)
      with Pre => Self.Is_Defined;
    --  Add an option to the linking command line
@@ -142,7 +145,8 @@ private
    overriding function Action_Parameter (Self : Link_Id) return Value_Type
    is (Value_Type (Self.Exec_Name));
 
-   type Object is new Actions.Process.Object with record
+   type Object is new Actions.Process.Object
+     and Link_Options_Consumer.Object with record
       Is_Library     : Boolean := False;
       Is_Static      : Boolean := False;
       In_Obj         : Boolean := False;

@@ -1,0 +1,9 @@
+ada_root (1764.0) = 42
+
+cargo build jobs: 1
+archive listed: 1
+the library directory handed to Cargo: True
+the Ada library handed as an archive: True
+the binder option handed to Cargo: True
+the target link options handed to Cargo: True
+the archive comes before the target libraries: True

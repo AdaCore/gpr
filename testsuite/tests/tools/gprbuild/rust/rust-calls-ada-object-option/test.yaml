@@ -1,0 +1,6 @@
+description: |
+  An option recorded by the binder that is not a library is handed to Cargo
+  as a link argument, not turned into a search for an archive
+driver: python_script
+control:
+- [ SKIP, "not env.rust", "requires a Rust/Cargo toolchain" ]

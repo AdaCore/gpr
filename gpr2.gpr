@@ -39,6 +39,7 @@ library project GPR2 extends "gpr2_shared.gpr" is
             "GPR2.Build.Actions.Process.Compile.Ada",
             "GPR2.Build.Actions.Process.Link",
             "GPR2.Build.Actions.Process.Post_Bind",
+            "GPR2.Build.Actions.Link_Options_Consumer",
             "GPR2.Build.Actions_Population",
             "GPR2.Build.Actions.Thread",
             "GPR2.Build.Ali_Parser",

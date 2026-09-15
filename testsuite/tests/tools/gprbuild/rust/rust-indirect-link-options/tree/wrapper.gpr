@@ -1,0 +1,12 @@
+with "hello_from_rust";
+
+--  Plain Ada library, not standalone: it is the executable's only direct
+--  dependency, and the Rust one is reached through it.
+
+library project Wrapper is
+   for Languages use ("Ada");
+   for Library_Name use "wrapper";
+   for Library_Dir use "wrapper/lib";
+   for Object_Dir use "wrapper/obj";
+   for Source_Dirs use ("wrapper/src");
+end Wrapper;
