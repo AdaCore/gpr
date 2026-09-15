@@ -915,12 +915,12 @@ package body GPR2.Build.Actions.Process.Compile is
 
             if Self.Global_Config_File.Is_Defined then
                Add_Options_With_Arg
-                 (Sw, Self.Global_Config_File.String_Value, False);
+                 (Sw, Self.Global_Config_File.String_Value, True);
             end if;
 
             if Self.Local_Config_File.Is_Defined then
                Add_Options_With_Arg
-                 (Sw, Self.Local_Config_File.String_Value, False);
+                 (Sw, Self.Local_Config_File.String_Value, True);
             end if;
          end;
       end if;

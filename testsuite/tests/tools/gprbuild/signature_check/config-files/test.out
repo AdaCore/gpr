@@ -1,0 +1,156 @@
+---- 1: initial build, no configuration file
+   [Ada Bind] main (proj.gpr): 0
+   [Ada Compile] main.adb (proj.gpr): 0
+   [Ada Compile] module.adb (imp.gpr): 0
+   [Ada Post-Bind] b__main.adb (proj.gpr): 0
+   [Link] main (proj.gpr): 0
+---- 2: nothing changed, everything skipped
+   [Ada Bind] main (proj.gpr): SKIPPED
+   [Ada Compile] main.adb (proj.gpr): SKIPPED
+   [Ada Compile] module.adb (imp.gpr): SKIPPED
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 3: -gnatec= added on the command line
+   [Ada Bind] main (proj.gpr): 0
+   [Ada Compile] main.adb (proj.gpr): 0
+   [Ada Compile] module.adb (imp.gpr): 0
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 4: same command line, everything skipped
+   [Ada Bind] main (proj.gpr): SKIPPED
+   [Ada Compile] main.adb (proj.gpr): SKIPPED
+   [Ada Compile] module.adb (imp.gpr): SKIPPED
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 5: pragmas.adc edited, same command line
+   [Ada Bind] main (proj.gpr): 0
+   [Ada Compile] main.adb (proj.gpr): 0
+   [Ada Compile] module.adb (imp.gpr): 0
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 6: nothing changed, everything skipped
+   [Ada Bind] main (proj.gpr): SKIPPED
+   [Ada Compile] main.adb (proj.gpr): SKIPPED
+   [Ada Compile] module.adb (imp.gpr): SKIPPED
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 7: -gnatec= now names another file
+   [Ada Bind] main (proj.gpr): 0
+   [Ada Compile] main.adb (proj.gpr): 0
+   [Ada Compile] module.adb (imp.gpr): 0
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 8: -gnatec= removed from the command line
+   [Ada Bind] main (proj.gpr): 0
+   [Ada Compile] main.adb (proj.gpr): 0
+   [Ada Compile] module.adb (imp.gpr): 0
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 9: ADC gone from the ALI too, everything skipped
+   [Ada Bind] main (proj.gpr): SKIPPED
+   [Ada Compile] main.adb (proj.gpr): SKIPPED
+   [Ada Compile] module.adb (imp.gpr): SKIPPED
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 10: Builder.Global_Configuration_Pragmas added
+   [Ada Bind] main (proj.gpr): 0
+   [Ada Compile] main.adb (proj.gpr): 0
+   [Ada Compile] module.adb (imp.gpr): 0
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 11: attributes unchanged, everything skipped
+   [Ada Bind] main (proj.gpr): SKIPPED
+   [Ada Compile] main.adb (proj.gpr): SKIPPED
+   [Ada Compile] module.adb (imp.gpr): SKIPPED
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 12: pragmas.adc edited, attribute unchanged
+   [Ada Bind] main (proj.gpr): 0
+   [Ada Compile] main.adb (proj.gpr): 0
+   [Ada Compile] module.adb (imp.gpr): 0
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 13: nothing changed, everything skipped
+   [Ada Bind] main (proj.gpr): SKIPPED
+   [Ada Compile] main.adb (proj.gpr): SKIPPED
+   [Ada Compile] module.adb (imp.gpr): SKIPPED
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 14: Compiler.Local_Configuration_Pragmas added on top
+   [Ada Bind] main (proj.gpr): 0
+   [Ada Compile] main.adb (proj.gpr): 0
+   [Ada Compile] module.adb (imp.gpr): SKIPPED
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 15: both configuration pragmas attributes removed
+   [Ada Bind] main (proj.gpr): 0
+   [Ada Compile] main.adb (proj.gpr): 0
+   [Ada Compile] module.adb (imp.gpr): 0
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 16: ADCs gone from the ALI too, everything skipped
+   [Ada Bind] main (proj.gpr): SKIPPED
+   [Ada Compile] main.adb (proj.gpr): SKIPPED
+   [Ada Compile] module.adb (imp.gpr): SKIPPED
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 17: Builder.Global_Config_File (Ada) added
+   [Ada Bind] main (proj.gpr): 0
+   [Ada Compile] main.adb (proj.gpr): 0
+   [Ada Compile] module.adb (imp.gpr): 0
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 18: attributes unchanged, everything skipped
+   [Ada Bind] main (proj.gpr): SKIPPED
+   [Ada Compile] main.adb (proj.gpr): SKIPPED
+   [Ada Compile] module.adb (imp.gpr): SKIPPED
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 19: pragmas.adc edited, Global_Config_File unchanged
+   [Ada Bind] main (proj.gpr): 0
+   [Ada Compile] main.adb (proj.gpr): 0
+   [Ada Compile] module.adb (imp.gpr): 0
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 20: nothing changed, everything skipped
+   [Ada Bind] main (proj.gpr): SKIPPED
+   [Ada Compile] main.adb (proj.gpr): SKIPPED
+   [Ada Compile] module.adb (imp.gpr): SKIPPED
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 21: Compiler.Local_Config_File (Ada) added on top
+   [Ada Bind] main (proj.gpr): 0
+   [Ada Compile] main.adb (proj.gpr): 0
+   [Ada Compile] module.adb (imp.gpr): SKIPPED
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 22: attributes unchanged, everything skipped
+   [Ada Bind] main (proj.gpr): SKIPPED
+   [Ada Compile] main.adb (proj.gpr): SKIPPED
+   [Ada Compile] module.adb (imp.gpr): SKIPPED
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 23: pragmas2.adc edited, Local_Config_File unchanged
+   [Ada Bind] main (proj.gpr): 0
+   [Ada Compile] main.adb (proj.gpr): 0
+   [Ada Compile] module.adb (imp.gpr): SKIPPED
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 24: nothing changed, everything skipped
+   [Ada Bind] main (proj.gpr): SKIPPED
+   [Ada Compile] main.adb (proj.gpr): SKIPPED
+   [Ada Compile] module.adb (imp.gpr): SKIPPED
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 25: both configuration file attributes removed
+   [Ada Bind] main (proj.gpr): 0
+   [Ada Compile] main.adb (proj.gpr): 0
+   [Ada Compile] module.adb (imp.gpr): 0
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED
+---- 26: ADCs gone from the ALI too, everything skipped
+   [Ada Bind] main (proj.gpr): SKIPPED
+   [Ada Compile] main.adb (proj.gpr): SKIPPED
+   [Ada Compile] module.adb (imp.gpr): SKIPPED
+   [Ada Post-Bind] b__main.adb (proj.gpr): SKIPPED
+   [Link] main (proj.gpr): SKIPPED

@@ -1,0 +1,6 @@
+with "imp/imp.gpr";
+project Proj is
+
+   for Main use ("main.adb");
+
+end Proj;

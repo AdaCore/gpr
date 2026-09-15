@@ -1,0 +1,14 @@
+with "imp/imp.gpr";
+project Proj is
+
+   for Main use ("main.adb");
+
+   package Builder is
+      for Global_Config_File ("Ada") use "pragmas.adc";
+   end Builder;
+
+   package Compiler is
+      for Local_Config_File ("Ada") use "pragmas2.adc";
+   end Compiler;
+
+end Proj;
