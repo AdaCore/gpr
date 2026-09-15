@@ -387,8 +387,8 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
                                           Dep = CF.Simple_Name))
                      then
                         Traces.Trace
-                          ("config pragma file reported as dependency, " &
-                             "ignoring : " & String (Dep));
+                          ("configuration pragmas or config file reported "
+                           & "as dependency, ignoring : " & String (Dep));
                      else
                         --  A dependency that is either a preprocessor data
                         --  file or a symbol definition file. The ALI names it
