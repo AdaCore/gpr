@@ -1,0 +1,13 @@
+library project Lib is
+
+   type Library_Type is ("static", "static-pic", "relocatable");
+   Kind : Library_Type := external ("LIBRARY_TYPE", "static");
+
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj-" & Kind;
+   for Library_Dir use "lib-" & Kind;
+   for Library_Name use "sal";
+   for Library_Kind use Kind;
+   for Library_Interface use ("pkg");
+
+end Lib;

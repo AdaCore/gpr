@@ -204,12 +204,6 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
    begin
       Compile.Object (Self).Compute_Command (Slot, Cmd_Line, Signature_Only);
 
-      if Signature_Only then
-         --  Ignore the config pragmas commands since they're already part
-         --  of the signature
-         return;
-      end if;
-
       if Self.Global_Config_Pragmas.Is_Defined
         or else Self.Local_Config_Pragmas.Is_Defined
         or else not Self.CLI_Config_File.Is_Empty
@@ -220,38 +214,32 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
 
       if Self.Global_Config_Pragmas.Is_Defined then
          for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
-            Cmd_Line.Add_Argument
-              (Attr.Values.Element (J).Text, Build.Command_Line.Ignore);
+            Cmd_Line.Add_Argument (Attr.Values.Element (J).Text);
          end loop;
 
          Cmd_Line.Add_Argument
            (Attr.Values.Last_Element.Text &
-              Self.Global_Config_Pragmas.String_Value,
-            Build.Command_Line.Ignore);
+              Self.Global_Config_Pragmas.String_Value);
       end if;
 
       if Self.Local_Config_Pragmas.Is_Defined then
          for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
-            Cmd_Line.Add_Argument
-              (Attr.Values.Element (J).Text, Build.Command_Line.Ignore);
+            Cmd_Line.Add_Argument (Attr.Values.Element (J).Text);
          end loop;
 
          Cmd_Line.Add_Argument
            (Attr.Values.Last_Element.Text &
-              Self.Local_Config_Pragmas.String_Value,
-            Build.Command_Line.Ignore);
+              Self.Local_Config_Pragmas.String_Value);
       end if;
 
       for CF of Self.CLI_Config_File loop
          if CF.Is_Defined then
             for J in Attr.Values.First_Index .. Attr.Values.Last_Index - 1 loop
-               Cmd_Line.Add_Argument
-                 (Attr.Values.Element (J).Text, Build.Command_Line.Ignore);
+               Cmd_Line.Add_Argument (Attr.Values.Element (J).Text);
             end loop;
 
             Cmd_Line.Add_Argument
-              (Attr.Values.Last_Element.Text & CF.String_Value,
-               Build.Command_Line.Ignore);
+              (Attr.Values.Last_Element.Text & CF.String_Value);
          end if;
       end loop;
 
@@ -399,8 +387,8 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
                                           Dep = CF.Simple_Name))
                      then
                         Traces.Trace
-                          ("config pragma file reported as dependency, " &
-                             "ignoring : " & String (Dep));
+                          ("configuration pragmas or config file reported "
+                           & "as dependency, ignoring : " & String (Dep));
                      else
                         --  A dependency that is either a preprocessor data
                         --  file or a symbol definition file. The ALI names it
@@ -913,6 +901,12 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
 
    begin
       if Status /= Skipped then
+         --  An already existing ALI parsed before the compilation can contain
+         --  deprecated dependencies, such as now unused pragma config files.
+         --  Ensure that up-to-date version of the ALI file is used.
+
+         Self.ALI_Object.Reset;
+
          --  If the .o and .ali stored in this action were inherited, and we
          --  finally decided to compile, we need to now redirect to the new .o
          --  and .ali
@@ -979,8 +973,21 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
       --  Now that we know the ALI file is correct, let the bind action know
       --  the actual list of imported units from this dependency file.
 
-      elsif not Self.Update_Binds_From_ALI then
-         return False;
+      else
+         if not Self.ALI_Object.Parse then
+            Self.Tree.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  "failed to analyze the ALI file",
+                  GPR2.Source_Reference.Object
+                    (GPR2.Source_Reference.Create
+                       (Self.ALI_Object.Path_Name.Value, 0, 0))));
+            return False;
+         end if;
+
+         if not Self.Update_Binds_From_ALI then
+            return False;
+         end if;
       end if;
 
       --  Check if the dependencies of the just compiled unit are allowed

@@ -1,0 +1,6 @@
+description: |
+  A standalone library whose interface closure reaches units only through
+  bodies, installed once per library kind as langkit does. The interface
+  walk gprinstall runs must not assume every unit it reaches has a compile
+  action.
+driver: python_script

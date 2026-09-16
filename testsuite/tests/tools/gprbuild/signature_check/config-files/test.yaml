@@ -1,0 +1,7 @@
+description: |
+    Configuration pragmas files and configuration files, whether set by
+    attribute or passed as -gnatec= on the command line, must be part of the
+    compilation signature: adding one, editing its content, pointing it at
+    another file and removing it must each trigger a recompilation.
+driver: python_script
+timeout: 800
