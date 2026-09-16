@@ -1100,7 +1100,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
       begin
          for Action of Self.Tree.Successors (Comp.Local_Ali_File) loop
             if Action in Actions.Thread.Lib_Copy.Object'Class then
-               return Action_Id_Holder.To_Holder (Action.UID);
+               return +Action.UID;
             end if;
          end loop;
 
@@ -1336,20 +1336,21 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
                      if not Lib_Copy.Is_Empty then
                         declare
-                           Dep : constant Path_Name.Object :=
-                                   New_Comp.Dependency_File.Path;
-                           Lib : constant GPR2.Project.View.Object :=
-                                   Lib_Copy.Element.View;
-                           Old : constant Artifacts.Files.Object :=
-                                   New_Comp.Intf_Ali_File;
-                           Copy : constant Artifacts.Files.Object :=
-                                    Artifacts.Files.Create
-                                      (Lib.Library_Ali_Directory.Compose
-                                         (Dep.Simple_Name));
+                           Copy_Id : constant Action_Id'Class := -Lib_Copy;
+                           Dep     : constant Path_Name.Object :=
+                                       New_Comp.Dependency_File.Path;
+                           Lib     : constant GPR2.Project.View.Object :=
+                                       Copy_Id.View;
+                           Old     : constant Artifacts.Files.Object :=
+                                       New_Comp.Intf_Ali_File;
+                           Copy    : constant Artifacts.Files.Object :=
+                                       Artifacts.Files.Create
+                                         (Lib.Library_Ali_Directory.Compose
+                                            (Dep.Simple_Name));
                         begin
                            if not Actions.Thread.Lib_Copy.Object'Class
                                     (Self.Tree.Action_Id_To_Reference
-                                       (Lib_Copy.Element).Element.all)
+                                       (Copy_Id).Element.all)
                                     .Add_Interface_Unit (CU, Dep)
                            then
                               return False;

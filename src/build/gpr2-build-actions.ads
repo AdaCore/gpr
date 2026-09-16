@@ -41,6 +41,10 @@ package GPR2.Build.Actions is
 
    package Action_Id_Holder is new Ada.Containers.Indefinite_Holders
      (Action_Id'Class, "=");
+   function "-" (Holder : Action_Id_Holder.Holder) return Action_Id'Class
+     renames Action_Id_Holder.Element;
+   function "+" (Id : Action_Id'Class) return Action_Id_Holder.Holder
+     renames Action_Id_Holder.To_Holder;
 
    function Image
      (Self        : Action_Id'Class;
