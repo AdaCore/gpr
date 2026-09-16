@@ -391,7 +391,7 @@ package body GPR2.Build.ALI_Parser is
       begin
 
          --  Clear the object, to remove potential obsolete values
-         Self := (Path => Self.Path, others => <>);
+         Self.Reset;
 
          --  Only the dependencies lines "D" are of interest, as they contain
          --  dependencies source names.
@@ -646,6 +646,15 @@ package body GPR2.Build.ALI_Parser is
 
       return R;
    end Parse_Flags;
+
+   -----------
+   -- Reset --
+   -----------
+
+   procedure Reset (Self : in out Object) is
+   begin
+      Self := (Path => Self.Path, others => <>);
+   end Reset;
 
    --------------
    -- Switches --

@@ -29,6 +29,11 @@ package GPR2.Build.ALI_Parser is
    function Is_Parsed (Self : Object) return Boolean;
    --  Returns true when a valid ali file has been parsed.
 
+   procedure Reset (Self : in out Object)
+     with Pre  => Self.Is_Defined,
+          Post => not Self.Is_Parsed;
+   --  Empty the parser cache
+
    function Path_Name (Self : Object) return Path_Name.Object
    with Pre => Self.Is_Defined;
    --  Path the the ali file represented by Self
