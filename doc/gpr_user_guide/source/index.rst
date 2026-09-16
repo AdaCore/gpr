@@ -16,6 +16,7 @@ GPR User Guide
    building_executables
    scenarios
    libraries
+   rust_projects
    multi_project_systems
    project_extension
    aggregate_projects
