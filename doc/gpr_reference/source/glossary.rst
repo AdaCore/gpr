@@ -36,6 +36,15 @@ Glossary
       statements inside a project file or package. See the
       :ref:`Attributes` chapter.
 
+   Canonical target
+      The name under which the knowledge base groups all the target names
+      designating the same platform. For instance ``aarch64-linux-gnu`` and
+      ``aarch64-unknown-linux-gnu`` both have ``aarch64-linux`` as canonical
+      name. Recorded by
+      the configuration project in the ``Canonical_Target`` attribute, while
+      ``Target`` keeps the name as it was requested. See
+      :ref:`Target_Normalization`.
+
    Build database
       A persistent store written by GPRbuild2 that records the signature of
       every action executed. On subsequent builds, GPRbuild2 compares current
