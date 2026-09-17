@@ -1442,7 +1442,7 @@ package body GPR2.Build.Actions_Population is
             Context        => View,
             Main_Unit      => Compilation_Unit.Undefined,
             SAL_In_Closure => Has_SAL,
-            Skip           => Options.No_SAL_Binding);
+            No_Op          => Options.No_SAL_Binding);
 
          if not Tree_Db.Add_Action (Self.Bind) then
             return False;

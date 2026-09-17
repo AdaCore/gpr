@@ -1628,7 +1628,7 @@ package body GPR2.Build.Actions.Process.Link is
 
    overriding function Is_Deactivated (Self : Object) return Boolean is
    begin
-      if Self.Deactivated then
+      if Actions.Object (Self).Is_Deactivated then
          return True;
       end if;
 
@@ -2030,6 +2030,15 @@ package body GPR2.Build.Actions.Process.Link is
    begin
       Self.Mapping_File := To_Unbounded_String (String (Mapping_File));
    end Set_Mapping_File;
+
+   ---------------
+   -- Set_No_Op --
+   ---------------
+
+   procedure Set_No_Op (Self : in out Object) is
+   begin
+      Self.No_Op := True;
+   end Set_No_Op;
 
    ---------
    -- UID --

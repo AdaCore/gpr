@@ -211,7 +211,14 @@ package GPR2.Build.Actions is
    --  the overridden action.
 
    procedure Deactivate (Self : in out Object);
-   --  Deactivates the action manually
+   --  Deactivates the action manually. Its successors are unblocked only if
+   --  Valid_Signature holds, so use Is_No_Op instead when they must run.
+
+   function Is_No_Op (Self : Object) return Boolean;
+   --  Whether the action has nothing to do and is to be considered
+   --  successful: it is not executed, and its successors still run.
+   --  True by default for an externally built view; derived types that add
+   --  their own cases must keep that one.
 
    function Force_Execution (Self : Object) return Boolean;
    --  Returns True if the action must always be executed regardless of its
@@ -331,9 +338,8 @@ private
       (L.UID < R.UID);
 
    function Valid_Signature (Self : Object) return Boolean is
-     (not Self.Force
-      and then (Object'Class (Self).View.Is_Externally_Built
-        or else Self.Signature.Valid));
+     (Object'Class (Self).Is_No_Op
+      or else (not Self.Force and then Self.Signature.Valid));
 
    function On_Tree_Propagation
      (Self : in out Object) return Boolean is
@@ -358,7 +364,11 @@ private
    is (Object'Class (Self).UID.Image & " failed.");
 
    function Is_Deactivated (Self : Object) return Boolean
-   is (Self.Deactivated);
+   is (Self.Deactivated or else Object'Class (Self).Is_No_Op);
+
+   function Is_No_Op (Self : Object) return Boolean
+   is (Object'Class (Self).View.Is_Defined
+       and then Object'Class (Self).View.Is_Externally_Built);
 
    function Force_Execution (Self : Object) return Boolean
    is (False);

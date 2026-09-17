@@ -730,7 +730,7 @@ package body GPR2.Build.Actions.Process.Compile is
       elsif Driver_Attr.Is_Defined then
          Cmd_Line.Set_Driver (Driver_Attr.Value.Text);
       else
-         if not Self.Deactivated then
+         if not Object'Class (Self).Is_Deactivated then
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
                  (GPR2.Message.Error,

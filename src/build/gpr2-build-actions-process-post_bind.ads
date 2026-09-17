@@ -26,7 +26,7 @@ package GPR2.Build.Actions.Process.Post_Bind is
      (Impl   : Artifacts.Files.Object;
       View   : GPR2.Project.View.Object;
       Binder : Ada_Bind.Object;
-      Skip   : Boolean) return Object;
+      No_Op  : Boolean) return Object;
 
    overriding function On_Tree_Insertion
      (Self     : Object;
@@ -46,10 +46,6 @@ private
       Input : Filename_Type (1 .. Name_Len);
       View  : Project.View.Object;
    end record;
-
-   overriding function Valid_Signature (Self : Object) return Boolean is
-     (Self.Is_Deactivated or else
-      GPR2.Build.Actions.Object (Self).Valid_Signature);
 
    overriding function View (Self : Post_Bind_Id) return Project.View.Object is
      (Self.View);
@@ -72,8 +68,11 @@ private
       --  we store the object (so that post-bind object is unconstrained) but
       --  need to access it via Tree_Db.Actions (Binder.UID) to make sure the
       --  information is up-to-date
-      Skip   : Boolean := False;
+      No_Op  : Boolean := False;
    end record;
+
+   overriding function Is_No_Op (Self : Object) return Boolean
+   is (Self.No_Op or else GPR2.Build.Actions.Object (Self).Is_No_Op);
 
    overriding function UID (Self : Object) return Action_Id'Class;
 

@@ -135,7 +135,7 @@ package body GPR2.Build.Actions.Process.Post_Bind is
      (Impl   : Artifacts.Files.Object;
       View   : GPR2.Project.View.Object;
       Binder : Ada_Bind.Object;
-      Skip   : Boolean) return Object
+      No_Op  : Boolean) return Object
    is
       Attr : constant GPR2.Project.Attribute.Object :=
                View.Attribute (PRA.Compiler.Object_File_Suffix,
@@ -155,11 +155,7 @@ package body GPR2.Build.Actions.Process.Post_Bind is
       Self.Ali    :=
         Artifacts.Files.Create
           (View.Object_Directory.Compose (Impl.Path.Base_Filename & ".ali"));
-      Self.Skip   := Skip;
-
-      if Skip then
-         Self.Deactivate;
-      end if;
+      Self.No_Op  := No_Op;
 
       return Self;
    end Create;
