@@ -1432,7 +1432,8 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
       Post_Bind :=
         Actions.Process.Post_Bind.Create
-          (Self.Output_Body, Self.View, Self,
+          (Self.Output_Body, Self.View,
+           Ada_Bind_Id (Object'Class (Self).UID),
            Object'Class (Self).State = No_Op);
 
       if not Db.Add_Action (Post_Bind) then

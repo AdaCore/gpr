@@ -9,6 +9,8 @@ with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.Object_File;
 with GPR2.Project.Registry.Attribute;
 
+private with GPR2.Project.Tree;
+
 package GPR2.Build.Actions.Process.Post_Bind is
 
    package PRA renames GPR2.Project.Registry.Attribute;
@@ -25,7 +27,7 @@ package GPR2.Build.Actions.Process.Post_Bind is
    function Create
      (Impl   : Artifacts.Files.Object;
       View   : GPR2.Project.View.Object;
-      Binder : Ada_Bind.Object;
+      Binder : Ada_Bind.Ada_Bind_Id;
       No_Op  : Boolean) return Object;
 
    overriding function On_Tree_Insertion
@@ -60,17 +62,18 @@ private
    is (Value_Type (Self.Input));
 
    type Object is new Actions.Process.Object with record
-      Input  : Artifacts.Files.Object;
-      Output : Artifacts.Object_File.Object;
-      Ali    : Artifacts.Files.Object;
-      Binder : Ada_Bind.Object;
-      --  ??? Ideally we store Ada_Bind_Id here, but it's unconstrained so
-      --  we store the object (so that post-bind object is unconstrained) but
-      --  need to access it via Tree_Db.Actions (Binder.UID) to make sure the
-      --  information is up-to-date
+      Input     : Artifacts.Files.Object;
+      Output    : Artifacts.Object_File.Object;
+      Ali       : Artifacts.Files.Object;
+      Binder_Id : Action_Id_Holder.Holder;
    end record;
 
    overriding function UID (Self : Object) return Action_Id'Class;
+
+   function Binder (Self : Object) return Ada_Bind.Object is
+     (Ada_Bind.Object
+        (Self.Ctxt.Tree.Artifacts_Database.Action_Id_To_Reference
+           (-Self.Binder_Id).Element.all));
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object
