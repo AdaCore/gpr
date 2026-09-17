@@ -1,0 +1,2 @@
+description: Linker group switches for a library with circular dependencies
+driver: python_script

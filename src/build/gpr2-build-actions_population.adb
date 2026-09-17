@@ -1575,7 +1575,13 @@ package body GPR2.Build.Actions_Population is
            Cache,
            Has_Cycle);
 
-      Self.Main_Link.Set_Has_Library_Dependency_Circle (Has_Cycle);
+      --  Through the database: Self.Main_Link is a copy made before the
+      --  action was inserted, so mutating it would have no effect.
+
+      Link.Object'Class
+        (Tree_Db.Action_Id_To_Reference (Self.Final_Link_Action.UID)
+           .Element.all)
+        .Set_Has_Library_Dependency_Circle (Has_Cycle);
 
       for Lib of Sorted_Libs loop
          declare
