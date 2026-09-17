@@ -178,16 +178,15 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
 
    procedure Change_Intf_Ali_File
      (Self : in out Object;
-      Path : Path_Name.Object)
-   is
-      From   : constant Artifacts.Files.Object := Self.Lib_Ali_File;
+      Path : Path_Name.Object) is
    begin
-      if From.Path = Path then
+      --  Usually already set by Initialize
+
+      if Self.Lib_Ali_File.Path = Path then
          return;
       end if;
 
       Self.Lib_Ali_File := Artifacts.Files.Create (Path);
-      Self.Tree.Replace_Artifact (From, Self.Lib_Ali_File);
    end Change_Intf_Ali_File;
 
    ---------------------

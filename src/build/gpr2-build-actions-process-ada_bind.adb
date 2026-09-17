@@ -1078,29 +1078,26 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
       Scope      : Containers.Name_Set;
       To_Analyze : Extended_Interface_Map.Map;
 
-      function Find_Lib_Copy
-        return Actions.Thread.Lib_Copy.Object;
-      --  Look for a Lib_Copy action among the successors of Comp's
-      --  Local_Ali_File output.
+      function Find_Lib_Copy return Action_Id_Holder.Holder;
+      --  The UID of the Lib_Copy action among the successors of Comp's
+      --  Local_Ali_File output, empty if there is none.
 
       -------------------
       -- Find_Lib_Copy --
       -------------------
 
-      function Find_Lib_Copy
-        return Actions.Thread.Lib_Copy.Object is
+      function Find_Lib_Copy return Action_Id_Holder.Holder is
       begin
          for Action of Self.Tree.Successors (Comp.Local_Ali_File) loop
             if Action in Actions.Thread.Lib_Copy.Object'Class then
-               return Actions.Thread.Lib_Copy.Object (Action);
+               return Action_Id_Holder.To_Holder (Action.UID);
             end if;
          end loop;
 
-         return Actions.Thread.Lib_Copy.Undefined;
+         return Action_Id_Holder.Empty_Holder;
       end Find_Lib_Copy;
 
-      Lib_Copy : Actions.Thread.Lib_Copy.Object :=
-        Actions.Thread.Lib_Copy.Undefined;
+      Lib_Copy : Action_Id_Holder.Holder;
    begin
       --  First pass: adjust the Db dependencies to take into account potential
       --  new dependencies between From_CU and the list of imports
@@ -1272,11 +1269,32 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
                      Lib_Copy := Find_Lib_Copy;
 
-                     if Lib_Copy.Is_Defined then
-                        Actions.Thread.Lib_Copy.Object'Class
-                          (Self.Tree.Action_Id_To_Reference
-                             (Lib_Copy.UID).Element.all)
-                          .Add_Unit_To_Lib_Interface (CU);
+                     if not Lib_Copy.Is_Empty then
+                        declare
+                           Dep : constant Path_Name.Object :=
+                                   New_Comp.Dependency_File.Path;
+                           Lib : constant GPR2.Project.View.Object :=
+                                   Lib_Copy.Element.View;
+                        begin
+                           if not Actions.Thread.Lib_Copy.Object'Class
+                                    (Self.Tree.Action_Id_To_Reference
+                                       (Lib_Copy.Element).Element.all)
+                                    .Add_Interface_Unit (CU, Dep)
+                           then
+                              return False;
+                           end if;
+
+                           --  The unit joins the interface here, after its
+                           --  compile action was created with the ALI of the
+                           --  object directory.
+
+                           Compile.Ada.Object'Class
+                             (Self.Tree.Action_Id_To_Reference
+                                (UID).Element.all)
+                             .Change_Intf_Ali_File
+                               (Lib.Library_Ali_Directory.Compose
+                                  (Dep.Simple_Name));
+                        end;
                      end if;
                   end if;
 
@@ -1351,7 +1369,13 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
      (Self : in out Object) return Boolean
    is
       use type GPR2.Project.View.Object;
-      Deps : Containers.Name_Set;
+      Deps         : Containers.Name_Set;
+      Has_Lib_Copy : constant Boolean :=
+        Self.Ctxt.Is_Library
+        and then
+          Self.Tree.Has_Action (Actions.Thread.Lib_Copy.Create (Self.Ctxt));
+      --  Whether the view has a library copy action to feed
+
    begin
       --  Now add our explicit inputs
 
@@ -1384,6 +1408,28 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
             if Link.Is_Defined and then Ada_Comp.Object_File.Is_Defined then
                Self.Tree.Add_Input (Link.UID, Ada_Comp.Object_File);
+            end if;
+
+            --  The compile action of a root is created here, so this is where
+            --  the library copy action is told about it
+
+            --  Roots is not the interface: the Roots attribute adds entry
+            --  points to it, and a standalone library must copy its
+            --  interface only.
+
+            if Has_Lib_Copy
+              and then (not Self.Ctxt.Is_Library_Standalone
+                        or else Self.Ctxt.Is_Interface_Unit (CU.Name))
+            then
+               if not Actions.Thread.Lib_Copy.Object'Class
+                        (Self.Tree.Action_Id_To_Reference
+                           (Actions.Thread.Lib_Copy.Create (Self.Ctxt))
+                           .Element.all)
+                        .Add_Interface_Unit
+                          (CU, Ada_Comp.Dependency_File.Path)
+               then
+                  return False;
+               end if;
             end if;
          end;
       end loop;
