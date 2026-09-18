@@ -4,7 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Strings.Hash;
+with GNATCOLL.Hash.xxHash;
 with GPR2.Project;
 
 package body GPR2.View_Ids is
@@ -121,7 +121,7 @@ package body GPR2.View_Ids is
 
    function Hash (Self : View_Id) return Ada.Containers.Hash_Type is
    begin
-      return Ada.Strings.Hash (String (Image (Self)));
+      return GNATCOLL.Hash.xxHash.XXH3 (String (Image (Self)));
    end Hash;
 
    -----------

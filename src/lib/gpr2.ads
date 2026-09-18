@@ -49,6 +49,7 @@ private with Ada.Strings.Equal_Case_Insensitive;
 private with Ada.Strings.Hash;
 private with Ada.Strings.Hash_Case_Insensitive;
 private with Ada.Strings.Unbounded;
+private with GNATCOLL.Hash.xxHash;
 private with GNATCOLL.Utils;
 
 pragma Warnings
@@ -383,8 +384,9 @@ private
 
    function Hash (Fname : Filename_Optional) return Ada.Containers.Hash_Type
    is (if File_Names_Case_Sensitive
-       then Ada.Strings.Hash (String (Fname))
+       then GNATCOLL.Hash.xxHash.XXH3 (String (Fname))
        else Ada.Strings.Hash_Case_Insensitive (String (Fname)));
+   --  The case-insensitive branch has no fast equivalent
 
    function Image (Kind : Valid_Unit_Kind) return String is
      (case Kind is

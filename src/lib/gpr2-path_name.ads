@@ -18,7 +18,7 @@ with GNATCOLL;
 with GNATCOLL.Utils;
 with GNATCOLL.VFS;
 
-private with Ada.Strings.Hash;
+private with GNATCOLL.Hash.xxHash;
 private with GNATCOLL.Refcount;
 
 package GPR2.Path_Name is
@@ -363,7 +363,8 @@ private
       else VFS.No_File);
 
    function Hash (Self : Object) return Ada.Containers.Hash_Type is
-     (Ada.Strings.Hash (Get (Self).Comparing));
+     (GNATCOLL.Hash.xxHash.XXH3 (Get (Self).Comparing));
+   --  Comparing is the case-folded form, so this holds either way
 
    function Ends_With
      (Filename : Filename_Optional; Suffix : String) return Boolean
