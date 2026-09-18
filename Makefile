@@ -182,15 +182,16 @@ endif
 
 # Gpr2 tools
 build-tools: build-lib-static coverage-instrument
-	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static ${GPR2TOOLS}
+	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
+		-XGPR2_TOOLS_BUILD=true ${GPR2TOOLS}
 
 # Gnatcov instrumentation
 coverage-instrument:
 ifeq (${GPR2_BUILD},gnatcov)
 # Remove artifacts from previous instrumentations, so that stale units
 # that are not overriden by new ones don't get in our way.
-	rm -rf "${BUILD_ROOT}/${GPR2_BUILD}/obj-*/*gnatcov-instr"
-	rm -rf "${BUILD_ROOT}/${GPR2_BUILD}/obj-*/*/*gnatcov-instr"
+	rm -rf "${BUILD_ROOT}/${GPR2_BUILD}"/obj-*/*gnatcov-instr
+	rm -rf "${BUILD_ROOT}/${GPR2_BUILD}"/obj-*/*/*gnatcov-instr
 	mkdir -p "${BUILD_ROOT}/${GPR2_BUILD}"
 	for gpr in ${ALL_GPR2TOOLS}; do \
 		${COVERAGE_INSTR} -P $$gpr; \
@@ -224,6 +225,7 @@ install-lib-%:
 
 install-tools: uninstall-tools
 	${INSTALLER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
+		-XGPR2_TOOLS_BUILD=true \
 		--build-name=static --mode=usage ${GPR2TOOLS} ${AP_GPR2}
 
 #########
