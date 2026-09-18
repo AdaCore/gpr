@@ -294,6 +294,11 @@ package body GPR2.Build.Actions_Scheduler is
                     ("signature writing failed for " & Action.UID.Image);
                   return Abort_Execution;
                end if;
+
+               --  Bound the staleness of the file index to the interval
+               --  between two actions completing.
+
+               Tree_Db.File_Indexer.Start_Generation;
             end if;
 
             --  Unlock depending actions. Note that deactivated action with an
@@ -406,6 +411,11 @@ package body GPR2.Build.Actions_Scheduler is
       Options : GPR2.Build.Actions_Scheduler.Options'Class;
       Make_JS : in out GPR2.Build.Jobserver.Object) is
    begin
+      --  Within a generation each file is stat'ed once rather than once per
+      --  query. Collect_Action opens a new one after each executed action.
+
+      Tree_Db.File_Indexer.Start_Generation;
+
       Internal_Execute (Self, Tree_Db, Context, Options, Make_JS);
    end Execute;
 
@@ -512,6 +522,7 @@ package body GPR2.Build.Actions_Scheduler is
    begin
       if not Context.Graph.Iterator_Started then
          Traces.Trace ("Starting the graph iterator");
+         Tree_Db.File_Indexer.Start_Generation;
          Context.Graph.Start_Iterator (Enable_Visiting_State => True);
       end if;
 
