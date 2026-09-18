@@ -82,9 +82,6 @@ private
    function Path (Self : Object) return GPR2.Path_Name.Object is
      (Self.Path);
 
-   overriding function Serialize (Self : Object) return String is
-     (Self.Path.String_Value);
-
    overriding function Hash (Self : Object) return Ada.Containers.Hash_Type is
      (Self.Path.Hash);
 
