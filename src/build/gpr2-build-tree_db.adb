@@ -684,6 +684,15 @@ package body GPR2.Build.Tree_Db is
 
    ---------------------------
    -- Linker_Lib_Dir_Option --
+   ------------------------------
+   -- Invalidate_Source_Caches --
+   ------------------------------
+
+   procedure Invalidate_Source_Caches (Self : in out Object) is
+   begin
+      Self.Src_Generation := Self.Src_Generation + 1;
+   end Invalidate_Source_Caches;
+
    ---------------------------
 
    function Linker_Lib_Dir_Option (Self : Object) return Value_Type is
@@ -1189,6 +1198,13 @@ package body GPR2.Build.Tree_Db is
 
    ------------
    -- Unload --
+   -----------------------
+   -- Source_Generation --
+   -----------------------
+
+   function Source_Generation (Self : Object) return Natural is
+     (Self.Src_Generation);
+
    ------------
 
    procedure Unload

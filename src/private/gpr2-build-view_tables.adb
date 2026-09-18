@@ -884,6 +884,10 @@ package body GPR2.Build.View_Tables is
    is
       Sources : Filename_Source_Maps.Map;
    begin
+      --  The sources are about to change
+
+      Data.Tree_Db.Invalidate_Source_Caches;
+
       Update_Sources_List.Process (Data, False, Messages, Matching_Units);
 
       --  Disambiguate unit kind for Ada bodies
@@ -1651,14 +1655,33 @@ package body GPR2.Build.View_Tables is
       Basename  : Simple_Name;
       Ambiguous : out Boolean) return Build.Source.Object
    is
-      C          : Basename_Source_Maps.Cursor :=
-                     Data.Basenames.Find (Basename);
+      Generation : constant Natural := Data.Tree_Db.Source_Generation;
+      C          : Basename_Source_Maps.Cursor;
+      Cached     : Visible_Source_Maps.Cursor;
       Candidate  : Build.Source.Object;
 
    begin
       --  First set the out value
 
       Ambiguous := False;
+
+      --  Resolving a name walks the whole closure, and the same names are
+      --  looked up repeatedly, so memoise until the sources change.
+
+      if Data.Visible_Src_Cache_Gen /= Generation then
+         Data.Visible_Src_Cache.Clear;
+         Data.Visible_Src_Cache_Gen := Generation;
+      else
+         Cached := Data.Visible_Src_Cache.Find (Basename);
+
+         if Visible_Source_Maps.Has_Element (Cached) then
+            Ambiguous := Visible_Source_Maps.Element (Cached).Ambiguous;
+
+            return Visible_Source_Maps.Element (Cached).Src;
+         end if;
+      end if;
+
+      C := Data.Basenames.Find (Basename);
 
       --  The view may own a source with this basename itself. Don't return
       --  it right away though: it still needs to be checked against the
@@ -1689,6 +1712,8 @@ package body GPR2.Build.View_Tables is
                         null;
                      else
                         Ambiguous := True;
+                        Data.Visible_Src_Cache.Include
+                          (Basename, (Src => Candidate, Ambiguous => True));
 
                         return Candidate;
                      end if;
@@ -1700,6 +1725,9 @@ package body GPR2.Build.View_Tables is
             end;
          end if;
       end loop;
+
+      Data.Visible_Src_Cache.Include
+        (Basename, (Src => Candidate, Ambiguous => False));
 
       return Candidate;
    end Visible_Source;
