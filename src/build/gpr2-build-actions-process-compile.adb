@@ -558,21 +558,21 @@ package body GPR2.Build.Actions.Process.Compile is
                            if S.Language = Ada_Language then
                               for U of S.Units loop
                                  if U.Kind /= S_No_Body then
-                                    declare
-                                       Key : constant String :=
-                                               To_Lower_Fast
-                                                 (String (U.Full_Name)) &
+                                    Append
+                                      (Content,
+                                       To_Lower_Fast (String (U.Full_Name)));
+                                    Append
+                                      (Content,
                                        (if U.Kind = S_Spec
-                                        then S_Suffix else B_Suffix);
-                                    begin
-                                       Append
-                                         (Content,
-                                          Key & ASCII.LF &
-                                          String (S.Path_Name.Simple_Name) &
-                                          ASCII.LF &
-                                          S.Path_Name.String_Value &
-                                          ASCII.LF);
-                                    end;
+                                        then S_Suffix else B_Suffix));
+                                    Append (Content, ASCII.LF);
+                                    Append
+                                      (Content,
+                                       String (S.Path_Name.Simple_Name));
+                                    Append (Content, ASCII.LF);
+                                    Append
+                                      (Content, S.Path_Name.String_Value);
+                                    Append (Content, ASCII.LF);
                                  end if;
                               end loop;
                            end if;
@@ -604,18 +604,17 @@ package body GPR2.Build.Actions.Process.Compile is
                                 and then (not U.Has_Part (S_Body)
                                           or else not U.Has_Part (S_Spec))
                               then
-                                 declare
-                                    Key : constant String :=
-                                            To_Lower_Fast (String (U.Name))
-                                            & (if U.Main_Part = S_Spec
-                                               then B_Suffix else S_Suffix);
-                                 begin
-                                    Append
-                                      (Content,
-                                       Key & ASCII.LF &
-                                       String (S.Simple_Name)
-                                       & ASCII.LF & "/" & ASCII.LF);
-                                 end;
+                                 Append
+                                   (Content, To_Lower_Fast (String (U.Name)));
+                                 Append
+                                   (Content,
+                                    (if U.Main_Part = S_Spec
+                                     then B_Suffix else S_Suffix));
+                                 Append (Content, ASCII.LF);
+                                 Append (Content, String (S.Simple_Name));
+                                 Append (Content, ASCII.LF);
+                                 Append (Content, "/");
+                                 Append (Content, ASCII.LF);
                               end if;
                            end;
                         end loop;
@@ -625,20 +624,20 @@ package body GPR2.Build.Actions.Process.Compile is
                            if S.Language = Ada_Language then
                               for U of S.Units loop
                                  if U.Kind /= S_No_Body then
-                                    declare
-                                       Key : constant String :=
-                                               To_Lower_Fast
-                                                 (String (U.Full_Name)) &
+                                    Append
+                                      (Content,
+                                       To_Lower_Fast (String (U.Full_Name)));
+                                    Append
+                                      (Content,
                                        (if U.Kind = S_Spec
-                                        then S_Suffix else B_Suffix);
-                                    begin
-                                       Append
-                                         (Content,
-                                          Key & ASCII.LF &
-                                          String (S.Path_Name.Simple_Name) &
-                                          ASCII.LF &
-                                          "/" & ASCII.LF);
-                                    end;
+                                        then S_Suffix else B_Suffix));
+                                    Append (Content, ASCII.LF);
+                                    Append
+                                      (Content,
+                                       String (S.Path_Name.Simple_Name));
+                                    Append (Content, ASCII.LF);
+                                    Append (Content, "/");
+                                    Append (Content, ASCII.LF);
                                  end if;
                               end loop;
                            end if;
