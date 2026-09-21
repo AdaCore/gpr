@@ -20,7 +20,6 @@ with GPR2.Build.Actions.Process.Link;
 with GPR2.Build.Actions.Process.Link_Options_Insert;
 with GPR2.Build.Actions.Process.Post_Bind;
 with GPR2.Build.Actions.Thread.Lib_Copy;
-with GPR2.Build.ALI_Parser;
 with GPR2.Build.Compilation_Unit;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
@@ -1188,8 +1187,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
       --  First pass: adjust the Db dependencies to take into account potential
       --  new dependencies between From_CU and the list of imports
 
-      if not (Comp.Withed_Units_From_Spec.Is_Empty
-              and then Comp.Withed_Units_From_Body.Is_Empty)
+      if Comp.ALI_Has_Imports
         and then not Self.On_Ada_Dependencies (Comp.Withed_Units, True)
       then
          return False;
@@ -1217,7 +1215,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          --  why every candidate found here is filtered down to
          --  Overridden_From_Runtime units only, below.
       begin
-         for Dep_File of Comp.ALI.Dependencies loop
+         for Dep_File of Comp.ALI_Dependencies loop
             if GPR2.Is_Simple_Name (Dep_File) then
                declare
                   Src : constant GPR2.Build.Source.Object :=

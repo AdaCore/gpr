@@ -74,6 +74,23 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
       end if;
    end Action_Parameter;
 
+   ---------------------
+   -- ALI_Has_Imports --
+   ---------------------
+
+   function ALI_Has_Imports (Self : in out Object) return Boolean is
+   begin
+      if not Self.ALI_Object.Parse then
+         Traces.Trace
+           ("Failed to parse the ALI file " &
+            Self.ALI_Object.Path_Name.String_Value);
+
+         return False;
+      end if;
+
+      return Self.ALI_Object.Has_Imports;
+   end ALI_Has_Imports;
+
    -------------------------
    -- Artifacts_Base_Name --
    -------------------------

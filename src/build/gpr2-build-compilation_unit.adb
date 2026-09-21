@@ -352,12 +352,13 @@ package body GPR2.Build.Compilation_Unit is
    begin
       if not Comp.Parse_Ali then
          Traces.Trace
-           ("Failed to parse " & String (Comp.ALI.Path_Name.Simple_Name) &
+           ("Failed to parse " &
+            String (Comp.ALI_Path_Name.Simple_Name) &
             " produced by " & Comp.UID.Image);
          return False;
       end if;
 
-      return Comp.ALI.Spec_Needs_Body;
+      return Comp.ALI_Spec_Needs_Body;
    end Is_Body_Needed_For_SAL;
 
    ------------------------

@@ -86,10 +86,38 @@ package GPR2.Build.Actions.Process.Compile.Ada is
       Stdout : Unbounded_String := Null_Unbounded_String;
       Stderr : Unbounded_String := Null_Unbounded_String) return Boolean;
 
-   function ALI (Self : Object) return GPR2.Build.ALI_Parser.Object
+   --  Accessors to the parsed ALI. ALI_Parser.Object holds several
+   --  containers, so each returns only what the caller needs rather than
+   --  the object as a whole.
+
+   function ALI_Is_Parsed (Self : Object) return Boolean
    with Inline;
-   --  ALI_Parser object containing the necessary parsed information about
-   --  the ali produced by this action.
+
+   function ALI_Path_Name (Self : Object) return GPR2.Path_Name.Object
+   with Inline;
+
+   function ALI_Has_Imports (Self : in out Object) return Boolean;
+   --  Whether the ALI declares any imported unit. Parses the ALI if needed
+   --  and returns False if it cannot be parsed.
+
+   function ALI_Withed_From_Spec
+     (Self : Object) return GPR2.Containers.Name_Set
+   with Inline, Pre => Self.ALI_Is_Parsed;
+
+   function ALI_Withed_From_Body
+     (Self : Object) return GPR2.Containers.Name_Set
+   with Inline, Pre => Self.ALI_Is_Parsed;
+
+   function ALI_Dependencies
+     (Self : Object) return GPR2.Containers.Filename_Set
+   with Inline, Pre => Self.ALI_Is_Parsed;
+
+   function ALI_Linker_Options
+     (Self : Object) return GPR2.Containers.Value_List
+   with Inline, Pre => Self.ALI_Is_Parsed;
+
+   function ALI_Spec_Needs_Body (Self : Object) return Boolean
+   with Inline, Pre => Self.ALI_Is_Parsed;
 
    function Parse_Ali (Self : in out Object) return Boolean;
    --  Parse the ALI file and store the result in the ALI_Parser object.
@@ -199,8 +227,30 @@ private
    overriding function UID (Self : Object) return Actions.Action_Id'Class is
      (Create (Src => Self.CU, Loc => Self.UL));
 
-   function ALI (Self : Object) return GPR2.Build.ALI_Parser.Object
-   is (Self.ALI_Object);
+   function ALI_Is_Parsed (Self : Object) return Boolean
+   is (Self.ALI_Object.Is_Parsed);
+
+   function ALI_Path_Name (Self : Object) return GPR2.Path_Name.Object
+   is (Self.ALI_Object.Path_Name);
+
+   function ALI_Withed_From_Spec
+     (Self : Object) return GPR2.Containers.Name_Set
+   is (Self.ALI_Object.Withed_From_Spec);
+
+   function ALI_Withed_From_Body
+     (Self : Object) return GPR2.Containers.Name_Set
+   is (Self.ALI_Object.Withed_From_Body);
+
+   function ALI_Dependencies
+     (Self : Object) return GPR2.Containers.Filename_Set
+   is (Self.ALI_Object.Dependencies);
+
+   function ALI_Linker_Options
+     (Self : Object) return GPR2.Containers.Value_List
+   is (Self.ALI_Object.Linker_Options);
+
+   function ALI_Spec_Needs_Body (Self : Object) return Boolean
+   is (Self.ALI_Object.Spec_Needs_Body);
 
    function Parse_Ali (Self : in out Object) return Boolean is
      (Self.ALI_Object.Parse);

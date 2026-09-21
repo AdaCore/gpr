@@ -21,7 +21,6 @@ with GPR2.Build.Actions.Thread.Lib_Copy;
 with GPR2.Build.Actions.Process.Compile.Ada;
 with GPR2.Build.Actions.Process.Cargo_Support;
 with GPR2.Build.Actions.Process.Link.Partial;
-with GPR2.Build.ALI_Parser;
 with GPR2.Build.External_Options;
 with GPR2.Build.Source;
 with GPR2.Build.View_Db;
@@ -343,8 +342,9 @@ package body GPR2.Build.Actions.Process.Link is
                            Compile.Ada.Object'Class
                              (Self.Tree.Predecessor (Obj));
                begin
-                  if Comp.ALI.Is_Parsed
-                    and then Comp.ALI.Dependencies.Contains ("s-osinte.ads")
+                  if Comp.ALI_Is_Parsed
+                    and then
+                      Comp.ALI_Dependencies.Contains ("s-osinte.ads")
                   then
                      Libgnarl := True;
 
@@ -768,7 +768,7 @@ package body GPR2.Build.Actions.Process.Link is
                then
                   for Opt of
                     Compile.Ada.Object (Self.Tree.Predecessor (Obj))
-                      .ALI.Linker_Options
+                      .ALI_Linker_Options
                   loop
                      declare
                         First : Natural := Opt'First;
