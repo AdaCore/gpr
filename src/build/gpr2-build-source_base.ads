@@ -8,6 +8,7 @@ with Ada.Calendar;
 
 limited with GPR2.Build.Tree_Db;
 with GPR2.Build.Unit_Info.List;
+with GPR2.Containers;
 with GPR2.Path_Name;
 
 package GPR2.Build.Source_Base is
@@ -114,6 +115,13 @@ package GPR2.Build.Source_Base is
    --  Return the unit object at specified index (use No_Index if the source
    --  is a single unit source.
 
+   function Unit_Dependencies
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return GPR2.Containers.Name_Set
+     with Pre => Self.Is_Defined
+                   and then Self.Has_Units and then Self.Has_Unit_At (Index);
+   --  The dependencies of that unit, without copying the unit itself
+
    function Units (Self : Object) return Unit_Info.List.Object
      with Inline,
           Pre  => Self.Is_Defined and then Self.Has_Units;
@@ -183,6 +191,11 @@ private
      (Self  : Object;
       Index : Unit_Index := No_Index) return Unit_Info.Object
    is (Self.CU_List.Element (Index));
+
+   function Unit_Dependencies
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return GPR2.Containers.Name_Set
+   is (Self.CU_List.Constant_Reference (Index).Dependencies);
 
    --  function Aggregated (Self : Object) return Project.View.Object is
    --    (Self.Aggregated);

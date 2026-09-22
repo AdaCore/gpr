@@ -142,6 +142,15 @@ package body GPR2.Build.View_Db is
 
    ----------------------------
    -- Has_Source_Of_Language --
+   -------------------
+   -- Has_Own_Units --
+   -------------------
+
+   function Has_Own_Units (Self : Object) return Boolean is
+   begin
+      return not Ref (Self).Own_CUs.Is_Empty;
+   end Has_Own_Units;
+
    ----------------------------
 
    function Has_Source_Of_Language
@@ -182,6 +191,13 @@ package body GPR2.Build.View_Db is
      (Self : Object;
       Unit : Name_Type) return Boolean is
      (Ref (Self).Interface_Closure.Contains (Unit));
+
+   --------------------------------
+   -- Interface_Closure_Is_Empty --
+   --------------------------------
+
+   function Interface_Closure_Is_Empty (Self : Object) return Boolean is
+     (Ref (Self).Interface_Closure.Is_Empty);
 
    --------------
    -- Own_Unit --

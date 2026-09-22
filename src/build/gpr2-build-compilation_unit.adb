@@ -12,7 +12,7 @@ with GNAT.UTF_32;
 with GPR2.Build.Actions.Process.Compile.Ada;
 use GPR2.Build.Actions.Process;
 with GPR2.Build.Tree_Db;
-with GPR2.Build.View_Db;
+with GPR2.Build.View_Tables;
 with GPR2.Message;
 with GPR2.Project.Tree;
 with GPR2.Tree_Internal;
@@ -382,12 +382,15 @@ package body GPR2.Build.Compilation_Unit is
       --------------
 
       procedure Add_Deps (Part : Unit_Location) is
-         Db : constant Build.View_Db.Object :=
-                Tree_Db.View_Database (Part.View);
       begin
-         Result := Result.Union
-           (Db.Source (Part.Source.Simple_Name).Unit
-              (Part.Index).Dependencies);
+         --  Going through Db.Source would build a Source object, copying the
+         --  source and every unit in it, for one unit's dependencies.
+
+         Result.Union
+           (View_Tables.Unit_Dependencies
+              (View_Tables.Get_Ref (Tree_Db.View_Database (Part.View)),
+               Part.Source.Simple_Name,
+               Part.Index));
       end Add_Deps;
 
    begin
