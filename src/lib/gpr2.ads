@@ -47,9 +47,7 @@ private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Containers.Indefinite_Vectors;
 private with Ada.Strings.Equal_Case_Insensitive;
 private with Ada.Strings.Hash;
-private with Ada.Strings.Hash_Case_Insensitive;
 private with Ada.Strings.Unbounded;
-private with GNATCOLL.Hash.xxHash;
 private with GNATCOLL.Utils;
 
 pragma Warnings
@@ -382,11 +380,6 @@ private
          Glob           => True,
          Case_Sensitive => File_Names_Case_Sensitive));
 
-   function Hash (Fname : Filename_Optional) return Ada.Containers.Hash_Type
-   is (if File_Names_Case_Sensitive
-       then GNATCOLL.Hash.xxHash.XXH3 (String (Fname))
-       else Ada.Strings.Hash_Case_Insensitive (String (Fname)));
-   --  The case-insensitive branch has no fast equivalent
 
    function Image (Kind : Valid_Unit_Kind) return String is
      (case Kind is
@@ -439,8 +432,6 @@ private
      (Name (Attr_Id_List, Natural (Id)));
    function Image (Id : Optional_Attribute_Id) return String is
      (Image (Attr_Id_List, Natural (Id)));
-   function Hash (N : Optional_Name_Type) return Ada.Containers.Hash_Type is
-     (Ada.Strings.Hash_Case_Insensitive (String (N)));
    function Hash
      (Id : Optional_Attribute_Id) return Ada.Containers.Hash_Type
    is
