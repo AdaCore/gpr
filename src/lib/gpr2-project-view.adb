@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Assertions;
 with Ada.Characters.Handling;
 with Ada.Strings.Fixed;
 
@@ -1474,13 +1475,18 @@ package body GPR2.Project.View is
 
       SN : Ada.Strings.Unbounded.Unbounded_String;
    begin
-      pragma Assert
-        (Build.Compilation_Unit.Check_Name_Validity
-           (Unit_Name,
-            Source_Reference.Undefined,
-            True,
-            Self.Tree.Log_Messages.all),
-         "invalid name for unit '" & String (Unit_Name) & "'");
+      if not Build.Compilation_Unit.Check_Name_Validity
+               (Unit_Name,
+                Source_Reference.Undefined,
+                True,
+                Self.Tree.Log_Messages.all)
+      then
+         --  explicit raise here since we want the exception raised even
+         --  without assertions:
+
+         raise Ada.Assertions.Assertion_Error with
+           "invalid name for unit '" & String (Unit_Name) & "'";
+      end if;
 
       Naming_Exception : declare
          Unit_Value : constant Value_Type := Value_Type (Unit_Name);
