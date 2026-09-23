@@ -1,0 +1,24 @@
+library project Lib is
+
+   for Source_Dirs use ("libsrc");
+
+   type Yes_No is ("yes", "no");
+   Standalone : Yes_No := external ("STANDALONE", "no");
+
+   type Kind_Type is ("static", "relocatable");
+   Kind : Kind_Type := external ("LIBRARY_KIND", "static");
+
+   for Object_Dir use "obj-" & Kind & "-" & Standalone;
+   for Library_Name use "demo";
+   for Library_Dir use "lib-" & Kind & "-" & Standalone;
+   for Library_Kind use Kind;
+
+   case Standalone is
+      when "yes" =>
+         for Library_Interface use ("Pkg");
+
+      when "no" =>
+         null;
+   end case;
+
+end Lib;

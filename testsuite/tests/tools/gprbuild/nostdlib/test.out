@@ -1,0 +1,45 @@
+== main ==
+$ gprbuild -q -p -f -Pmain.gpr --json-summary
+  none     - bind job: yes, bind -nostdlib: no, [Link] job: yes, [Link] -nostdlib: no, runtime linked: yes
+$ gprbuild -q -p -f -Pmain.gpr --json-summary -largs -nostdlib
+  linker   - bind job: yes, bind -nostdlib: no, [Link] job: yes, [Link] -nostdlib: yes, runtime linked: yes
+$ gprbuild -q -p -f -Pmain.gpr --json-summary -bargs -nostdlib
+  binder   - bind job: yes, bind -nostdlib: yes, [Link] job: yes, [Link] -nostdlib: no, runtime linked: no
+$ gprbuild -q -p -f -Pmain.gpr --json-summary -nostdlib
+  builder  - bind job: yes, bind -nostdlib: yes, [Link] job: yes, [Link] -nostdlib: yes, runtime linked: no
+== lib standalone=no kind=static ==
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=static -XSTANDALONE=no
+  none     - bind job: no, bind -nostdlib: no, [Archive] job: yes, [Archive] -nostdlib: no, runtime linked: no
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=static -XSTANDALONE=no -largs -nostdlib
+  linker   - bind job: no, bind -nostdlib: no, [Archive] job: yes, [Archive] -nostdlib: no, runtime linked: no
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=static -XSTANDALONE=no -bargs -nostdlib
+  binder   - bind job: no, bind -nostdlib: no, [Archive] job: yes, [Archive] -nostdlib: no, runtime linked: no
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=static -XSTANDALONE=no -nostdlib
+  builder  - bind job: no, bind -nostdlib: no, [Archive] job: yes, [Archive] -nostdlib: no, runtime linked: no
+== lib standalone=no kind=relocatable ==
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=relocatable -XSTANDALONE=no
+  none     - bind job: no, bind -nostdlib: no, [Link] job: yes, [Link] -nostdlib: no, runtime linked: yes
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=relocatable -XSTANDALONE=no -largs -nostdlib
+  linker   - bind job: no, bind -nostdlib: no, [Link] job: yes, [Link] -nostdlib: yes, runtime linked: yes
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=relocatable -XSTANDALONE=no -bargs -nostdlib
+  binder   - bind job: no, bind -nostdlib: no, [Link] job: yes, [Link] -nostdlib: no, runtime linked: no
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=relocatable -XSTANDALONE=no -nostdlib
+  builder  - bind job: no, bind -nostdlib: no, [Link] job: yes, [Link] -nostdlib: yes, runtime linked: no
+== lib standalone=yes kind=static ==
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=static -XSTANDALONE=yes
+  none     - bind job: yes, bind -nostdlib: no, [Archive] job: yes, [Archive] -nostdlib: no, runtime linked: no
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=static -XSTANDALONE=yes -largs -nostdlib
+  linker   - bind job: yes, bind -nostdlib: no, [Archive] job: yes, [Archive] -nostdlib: no, runtime linked: no
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=static -XSTANDALONE=yes -bargs -nostdlib
+  binder   - bind job: yes, bind -nostdlib: yes, [Archive] job: yes, [Archive] -nostdlib: no, runtime linked: no
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=static -XSTANDALONE=yes -nostdlib
+  builder  - bind job: yes, bind -nostdlib: yes, [Archive] job: yes, [Archive] -nostdlib: no, runtime linked: no
+== lib standalone=yes kind=relocatable ==
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=relocatable -XSTANDALONE=yes
+  none     - bind job: yes, bind -nostdlib: no, [Link] job: yes, [Link] -nostdlib: no, runtime linked: yes
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=relocatable -XSTANDALONE=yes -largs -nostdlib
+  linker   - bind job: yes, bind -nostdlib: no, [Link] job: yes, [Link] -nostdlib: yes, runtime linked: yes
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=relocatable -XSTANDALONE=yes -bargs -nostdlib
+  binder   - bind job: yes, bind -nostdlib: yes, [Link] job: yes, [Link] -nostdlib: no, runtime linked: no
+$ gprbuild -q -p -f -Plib.gpr --json-summary -XLIBRARY_KIND=relocatable -XSTANDALONE=yes -nostdlib
+  builder  - bind job: yes, bind -nostdlib: yes, [Link] job: yes, [Link] -nostdlib: yes, runtime linked: no
