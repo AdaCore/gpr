@@ -37,7 +37,7 @@ package body GPR2.Build.Actions.Process.Link is
 
    Traces : constant GNATCOLL.Traces.Trace_Handle :=
               GNATCOLL.Traces.Create
-                ("GPR.BUILD.ACTIONS.LINK", GNATCOLL.Traces.Off);
+                ("GPR.BUILD.ACTIONS.PROCESS.LINK", GNATCOLL.Traces.Off);
 
    function Generate_Export_File
      (Self : in out Object;
