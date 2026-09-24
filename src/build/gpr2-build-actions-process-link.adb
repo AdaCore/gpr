@@ -17,6 +17,7 @@ with GNATCOLL.Traces;
 with GNATCOLL.Utils;
 
 with GPR2.Build.Actions.Process.Post_Bind;
+with GPR2.Build.Actions.Thread.Lib_Copy;
 with GPR2.Build.Actions.Process.Compile.Ada;
 with GPR2.Build.Actions.Process.Cargo_Support;
 with GPR2.Build.Actions.Process.Link.Partial;
@@ -1739,6 +1740,67 @@ package body GPR2.Build.Actions.Process.Link is
 
       return True;
    end On_Tree_Insertion;
+
+   -------------------------
+   -- On_Tree_Propagation --
+   -------------------------
+
+   overriding function On_Tree_Propagation
+     (Self : in out Object) return Boolean
+   is
+      package LC renames Actions.Thread.Lib_Copy;
+   begin
+      --  The interface of a standalone library is fed by the bind action,
+      --  which is what creates the compile actions of its units
+
+      if not Self.Ctxt.Is_Library
+        or else Self.Ctxt.Is_Library_Standalone
+      then
+         return True;
+      end if;
+
+      declare
+         Copy_Id : constant LC.Lib_Copy_Id := LC.Create (Self.Ctxt);
+      begin
+         if not Self.Tree.Has_Action (Copy_Id) then
+            return True;
+         end if;
+
+         for U of Self.Interface_Units loop
+            declare
+               C_Id : constant Compile.Ada.Ada_Compile_Id :=
+                        Compile.Ada.Create (U);
+               Dep  : Path_Name.Object;
+
+            begin
+               if Self.Tree.Has_Action (C_Id) then
+                  --  Fetch the values in their own scope, so that no
+                  --  reference to the compile action is held while the copy
+                  --  action is updated.
+
+                  declare
+                     C_Ref : constant Tree_Db.Action_Reference_Type :=
+                               Self.Tree.Action_Id_To_Reference (C_Id);
+                     Comp  : Compile.Ada.Object'Class renames
+                               Compile.Ada.Object'Class (C_Ref.Element.all);
+                  begin
+                     Dep := Comp.Dependency_File.Path;
+                  end;
+
+                  if not LC.Object'Class
+                           (Self.Tree.Action_Id_To_Reference
+                              (Copy_Id).Element.all)
+                           .Add_Interface_Unit (U, Dep)
+                  then
+                     return False;
+                  end if;
+               end if;
+            end;
+         end loop;
+      end;
+
+      return True;
+   end On_Tree_Propagation;
 
    --------------------
    -- Post_Execution --

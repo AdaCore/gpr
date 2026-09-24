@@ -89,6 +89,10 @@ package GPR2.Build.Actions.Process.Link is
      with Pre => Self.Is_Defined;
    --  Set of library artifacts this action links against
 
+   overriding function On_Tree_Propagation
+     (Self : in out Object) return Boolean;
+   --  Feed the view's library copy action, if any, with the interface units
+
    overriding function On_Tree_Insertion
      (Self : Object;
       Db   : in out GPR2.Build.Tree_Db.Object) return Boolean

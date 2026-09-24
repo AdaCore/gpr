@@ -1,0 +1,2 @@
+description: An aggregate library publishes the ALI of every aggregated unit
+driver: python_script

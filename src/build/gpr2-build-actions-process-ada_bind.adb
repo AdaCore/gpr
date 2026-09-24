@@ -1078,29 +1078,93 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
       Scope      : Containers.Name_Set;
       To_Analyze : Extended_Interface_Map.Map;
 
-      function Find_Lib_Copy
-        return Actions.Thread.Lib_Copy.Object;
-      --  Look for a Lib_Copy action among the successors of Comp's
-      --  Local_Ali_File output.
+      function Find_Lib_Copy return Action_Id_Holder.Holder;
+      --  The UID of the Lib_Copy action among the successors of Comp's
+      --  Local_Ali_File output, empty if there is none.
+
+      Intf_CU   : Compilation_Unit.Object;
+      Intf_Old  : Artifacts.Files.Object;
+      Intf_Copy : Artifacts.Files.Object;
+      --  The unit that joins the library interface, its ALI in the object
+      --  directory and the copy in the library ALI directory, for
+      --  Redirect_Ali_Input
+
+      function Redirect_Ali_Input
+        (Action : in out Actions.Object'Class) return Boolean;
+      --  Whether Action tracks Intf_CU through Intf_Old and now takes
+      --  Intf_Copy
 
       -------------------
       -- Find_Lib_Copy --
       -------------------
 
-      function Find_Lib_Copy
-        return Actions.Thread.Lib_Copy.Object is
+      function Find_Lib_Copy return Action_Id_Holder.Holder is
       begin
          for Action of Self.Tree.Successors (Comp.Local_Ali_File) loop
             if Action in Actions.Thread.Lib_Copy.Object'Class then
-               return Actions.Thread.Lib_Copy.Object (Action);
+               return Action_Id_Holder.To_Holder (Action.UID);
             end if;
          end loop;
 
-         return Actions.Thread.Lib_Copy.Undefined;
+         return Action_Id_Holder.Empty_Holder;
       end Find_Lib_Copy;
 
-      Lib_Copy : Actions.Thread.Lib_Copy.Object :=
-        Actions.Thread.Lib_Copy.Undefined;
+      ------------------------
+      -- Redirect_Ali_Input --
+      ------------------------
+
+      function Redirect_Ali_Input
+        (Action : in out Actions.Object'Class) return Boolean
+      is
+         use GPR2.Project;
+         use type GPR2.Project.View.Object;
+
+         View : constant GPR2.Project.View.Object := Intf_CU.Owning_View;
+
+      begin
+         if Action not in Object'Class then
+            return False;
+         end if;
+
+         declare
+            Bind : Object'Class renames Object'Class (Action);
+            Pos  : constant ALI_Input_Maps.Cursor :=
+                     Bind.ALI_Inputs.Find (Intf_CU.Name);
+         begin
+            if not ALI_Input_Maps.Has_Element (Pos)
+              or else ALI_Input_Maps.Element (Pos).Ali.Path /= Intf_Old.Path
+            then
+               return False;
+            end if;
+
+            --  The bind action has the old local Ali as input, so we need to
+            --  update it to the one in the Library_ALI_Dir, but only if used
+            --  as an external library: within the library the binder needs to
+            --  use the local version.
+            --  We also ignore the encapsulated case, since the library cannot
+            --  be used as external library for an Ada binder.
+
+            if View = Bind.Ctxt
+              or else (Bind.Ctxt.Is_Library
+                       and then Bind.Ctxt.Library_Standalone = Encapsulated)
+              or else (not View.Is_Library
+                       and then Bind.Ctxt.Closure
+                                  (False, True, True).Contains (View))
+            then
+               return False;
+            end if;
+
+            Bind.ALI_Inputs.Replace_Element
+              (Pos,
+               (Ali      => Intf_Copy,
+                CU       => ALI_Input_Maps.Element (Pos).CU,
+                Explicit => ALI_Input_Maps.Element (Pos).Explicit));
+
+            return True;
+         end;
+      end Redirect_Ali_Input;
+
+      Lib_Copy : Action_Id_Holder.Holder;
    begin
       --  First pass: adjust the Db dependencies to take into account potential
       --  new dependencies between From_CU and the list of imports
@@ -1272,11 +1336,48 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
                      Lib_Copy := Find_Lib_Copy;
 
-                     if Lib_Copy.Is_Defined then
-                        Actions.Thread.Lib_Copy.Object'Class
-                          (Self.Tree.Action_Id_To_Reference
-                             (Lib_Copy.UID).Element.all)
-                          .Add_Unit_To_Lib_Interface (CU);
+                     if not Lib_Copy.Is_Empty then
+                        declare
+                           Dep : constant Path_Name.Object :=
+                                   New_Comp.Dependency_File.Path;
+                           Lib : constant GPR2.Project.View.Object :=
+                                   Lib_Copy.Element.View;
+                           Old : constant Artifacts.Files.Object :=
+                                   New_Comp.Intf_Ali_File;
+                           Copy : constant Artifacts.Files.Object :=
+                                    Artifacts.Files.Create
+                                      (Lib.Library_Ali_Directory.Compose
+                                         (Dep.Simple_Name));
+                        begin
+                           if not Actions.Thread.Lib_Copy.Object'Class
+                                    (Self.Tree.Action_Id_To_Reference
+                                       (Lib_Copy.Element).Element.all)
+                                    .Add_Interface_Unit (CU, Dep)
+                           then
+                              return False;
+                           end if;
+
+                           --  The unit joins the interface here, after its
+                           --  compile action was created with the ALI of the
+                           --  object directory.
+
+                           Compile.Ada.Object'Class
+                             (Self.Tree.Action_Id_To_Reference
+                                (UID).Element.all)
+                             .Change_Intf_Ali_File (Copy.Path);
+
+                           --  Hand the copy to the binders that were given
+                           --  the object directory ALI
+
+                           if Old.Path /= Copy.Path then
+                              Intf_CU   := CU;
+                              Intf_Old  := Old;
+                              Intf_Copy := Copy;
+
+                              Self.Tree.Redirect_Consumers
+                                (Old, Copy, Redirect_Ali_Input'Access);
+                           end if;
+                        end;
                      end if;
                   end if;
 
@@ -1351,7 +1452,13 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
      (Self : in out Object) return Boolean
    is
       use type GPR2.Project.View.Object;
-      Deps : Containers.Name_Set;
+      Deps         : Containers.Name_Set;
+      Has_Lib_Copy : constant Boolean :=
+        Self.Ctxt.Is_Library
+        and then
+          Self.Tree.Has_Action (Actions.Thread.Lib_Copy.Create (Self.Ctxt));
+      --  Whether the view has a library copy action to feed
+
    begin
       --  Now add our explicit inputs
 
@@ -1384,6 +1491,28 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
             if Link.Is_Defined and then Ada_Comp.Object_File.Is_Defined then
                Self.Tree.Add_Input (Link.UID, Ada_Comp.Object_File);
+            end if;
+
+            --  The compile action of a root is created here, so this is where
+            --  the library copy action is told about it
+
+            --  Roots is not the interface: the Roots attribute adds entry
+            --  points to it, and a standalone library must copy its
+            --  interface only.
+
+            if Has_Lib_Copy
+              and then (not Self.Ctxt.Is_Library_Standalone
+                        or else Self.Ctxt.Is_Interface_Unit (CU.Name))
+            then
+               if not Actions.Thread.Lib_Copy.Object'Class
+                        (Self.Tree.Action_Id_To_Reference
+                           (Actions.Thread.Lib_Copy.Create (Self.Ctxt))
+                           .Element.all)
+                        .Add_Interface_Unit
+                          (CU, Ada_Comp.Dependency_File.Path)
+               then
+                  return False;
+               end if;
             end if;
          end;
       end loop;

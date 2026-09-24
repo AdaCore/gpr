@@ -3,22 +3,27 @@
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
-with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Containers.Indefinite_Ordered_Sets;
+with Ada.Containers.Vectors;
 
 with GPR2.Build.Compilation_Unit;
-with GPR2.Build.Compilation_Unit.Maps;
-with GPR2.Path_Name.Set;
 
 package GPR2.Build.Actions.Thread.Lib_Copy is
 
    type Object is new GPR2.Build.Actions.Thread.Object with private;
-   --  Base type for actions executed as Ada threads
+   --  Copy to the library directories the ALI files, and the interface
+   --  sources when the view has a Library_Src_Dir. What to copy is registered
+   --  by Add_Interface_Unit.
 
    Undefined : constant Object;
 
    function Is_Defined (Self : Object) return Boolean;
 
    type Lib_Copy_Id (<>) is new Actions.Action_Id with private;
+
+   function Create (Ctxt : GPR2.Project.View.Object) return Lib_Copy_Id
+   with Pre => Ctxt.Is_Defined and then Ctxt.Is_Library;
+   --  Id of the library copy action of Ctxt, to look it up in the tree
 
    function Needed_For_View (Ctxt : GPR2.Project.View.Object) return Boolean
    with Pre => Ctxt.Is_Defined and then Ctxt.Is_Library;
@@ -35,6 +40,16 @@ package GPR2.Build.Actions.Thread.Lib_Copy is
       Ctxt : GPR2.Project.View.Object)
    with Pre => Ctxt.Is_Defined and then Ctxt.Is_Library;
 
+   function Add_Interface_Unit
+     (Self            : in out Object;
+      CU              : GPR2.Build.Compilation_Unit.Object;
+      Dependency_File : Path_Name.Object) return Boolean
+   with Pre => Self.Is_Defined and then Self.View.Is_Defined;
+   --  Register what to copy for CU: Dependency_File, and the unit's sources
+   --  when the view has a Library_Src_Dir. Called by the action that holds
+   --  the compile action of CU. Idempotent.
+   --  Returns False if a destination is already produced by another action.
+
    overriding
    function Execute
      (Self   : in out Object;
@@ -43,18 +58,8 @@ package GPR2.Build.Actions.Thread.Lib_Copy is
    with Pre => Self.Is_Defined;
 
    overriding
-   function On_Static_Completion (Self : in out Object) return Boolean;
-
-   overriding
    function On_Tree_Insertion
      (Self : Object; Db : in out GPR2.Build.Tree_Db.Object) return Boolean;
-
-   overriding
-   function Post_Execution
-     (Self   : in out Object;
-      Status : Execution_Status;
-      Stdout : Unbounded_String := Null_Unbounded_String;
-      Stderr : Unbounded_String := Null_Unbounded_String) return Boolean;
 
    overriding
    function UID (Self : Object) return Action_Id'Class;
@@ -62,12 +67,6 @@ package GPR2.Build.Actions.Thread.Lib_Copy is
    overriding
    function Working_Directory (Self : Object) return Path_Name.Object
    with Pre => Self.Is_Defined;
-
-   procedure Add_Unit_To_Lib_Interface
-     (Self             : in out Object;
-      Compilation_Unit : GPR2.Build.Compilation_Unit.Object)
-   with Pre => Self.Is_Defined and then
-     Self.View.Is_Defined and then Self.View.Is_Library_Standalone;
 
 private
 
@@ -91,47 +90,39 @@ private
    function Action_Parameter (Self : Lib_Copy_Id) return Value_Type
    is (Value_Type (Self.Ctxt.Name));
 
-   type Interface_Unit_Info is record
-      Unit            : Compilation_Unit.Object;
-      Dependency_File : Path_Name.Object;
-      --  Path of the ALI file produced by the compile action of Unit
+   function Create (Ctxt : GPR2.Project.View.Object) return Lib_Copy_Id
+   is (Lib_Copy_Id'(Ctxt => Ctxt));
 
-      Spec_Needs_Body : Boolean := False;
-      --  Whether the spec of Unit requires a body. Only computed when the
-      --  view has a Library_Src_Dir, as this is the only case where Execute
-      --  needs it.
+   type Copy_Entry is record
+      From   : Path_Name.Object;
+      To     : Path_Name.Object;
+      Unit   : Compilation_Unit.Object;
+      --  The unit From belongs to
+      Kind   : Unit_Kind := S_Spec;
+      --  Which part of Unit From is, for the source entries
+      Is_Ali : Boolean := False;
+      --  ALIs are registered as files, sources as source files
+      Add_SL : Boolean := False;
+      --  Add the SL flag to the ALI's P line, so that a standalone library's
+      --  units are not elaborated twice
+      Skip   : Boolean := False;
+      --  Set by Pre_Execution on the parts that need not be copied
    end record;
 
-   package Interface_Unit_Info_Maps is new
-     Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Interface_Unit_Info);
+   package Copy_Entry_Vectors is new
+     Ada.Containers.Vectors (Positive, Copy_Entry);
+
+   package Filename_Sets is new
+     Ada.Containers.Indefinite_Ordered_Sets (Filename_Type);
 
    type Object is new GPR2.Build.Actions.Thread.Object with record
-      --  Information fetched during the Pre_Execution to be used during
-      --  during the Execute phase.
-
-      Extended_Interface : Compilation_Unit.Maps.Map;
-
-      Units_Info : Interface_Unit_Info_Maps.Map;
-      --  Unit informations
-
-      Standalone : Boolean := False;
-      --  Whether the view is a standalone library
-
+      Copies   : Copy_Entry_Vectors.Vector;
+      Alis     : Filename_Sets.Set;
+      --  The ALIs already in Copies: a unit can be registered twice, and
+      --  scanning Copies for each is quadratic in the interface size
       Lib_Name : Unbounded_String;
-      --  Name of the view, used by the execution traces
-
-      Ali_Dir : Path_Name.Object;
-      --  Library_Ali_Directory of the view
-
-      Src_Dir : Path_Name.Object;
-      --  Library_Src_Directory of the view, undefined when it has none
-
-      Other_Srcs : Path_Name.Set.Object;
-      --  The non-Ada interface sources, to copy to Src_Dir
-
-      --  The above are gathered by Pre_Execution as well: the project tree is
-      --  no more task safe than the tree database, so Execute cannot query
-      --  the view either.
+      --  Execute runs in its own task and can query neither the tree database
+      --  nor the view, so everything it needs is stored here
    end record;
 
    overriding

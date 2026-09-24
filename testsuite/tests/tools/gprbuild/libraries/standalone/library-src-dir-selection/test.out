@@ -1,0 +1,9 @@
+ali:
+  bodyonly.ali
+  gen.ali
+  plain.ali
+libsrc:
+  bodyonly.adb
+  gen.adb
+  gen.ads
+  plain.ads

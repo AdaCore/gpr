@@ -1,0 +1,9 @@
+aggregate library project Agg is
+
+   for Project_Files use ("p1/p1.gpr", "p2/p2.gpr");
+   for Library_Name use "agg";
+   for Library_Dir use "libdir";
+   for Library_ALI_Dir use "ali";
+   for Library_Kind use "static";
+
+end Agg;

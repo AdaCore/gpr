@@ -54,8 +54,9 @@ package GPR2.Build.Actions.Process.Compile.Ada is
    procedure Change_Intf_Ali_File
      (Self : in out Object;
       Path : Path_Name.Object);
-   --  Ensures that after copying the ALI file to the library directory all
-   --  references are updated.
+   --  Point Intf_Ali_File at Path, the copy in the library directory. Called
+   --  by the action that performs the copy, which owns that artifact: the
+   --  tree is left untouched here.
 
    function Local_Ali_File (Self : Object) return Artifacts.Files.Object;
    --  Return the path of the generated ALI file. The one located in the
