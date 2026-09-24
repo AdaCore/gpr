@@ -1,0 +1,8 @@
+[Ada Bind] lib (lib.gpr): DEACTIVATED
+[Ada Compile] pub.adb (lib.gpr): 0
+[Ada Post-Bind] b__lib.adb (lib.gpr): DEACTIVATED
+[Archive] liblib.a (lib.gpr): 0
+[Library-Files-Copy] Lib (lib.gpr): 0
+[Link-Options-Insert] o__lib.o (lib.gpr): SKIPPED
+[Partial Link] p__lib.o (lib.gpr): 0
+library rebuilt: True
