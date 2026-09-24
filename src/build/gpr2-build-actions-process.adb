@@ -77,7 +77,7 @@ package body GPR2.Build.Actions.Process is
       Self.Compute_Response_Files (Self.Cmd_Line);
 
       if Self.Cmd_Line.Total_Length = 0
-        and then not Self.Is_Deactivated
+        and then Self.State /= Actionable
       then
          raise Action_Error;
       end if;

@@ -68,11 +68,7 @@ private
       --  we store the object (so that post-bind object is unconstrained) but
       --  need to access it via Tree_Db.Actions (Binder.UID) to make sure the
       --  information is up-to-date
-      No_Op  : Boolean := False;
    end record;
-
-   overriding function Is_No_Op (Self : Object) return Boolean
-   is (Self.No_Op or else GPR2.Build.Actions.Object (Self).Is_No_Op);
 
    overriding function UID (Self : Object) return Action_Id'Class;
 

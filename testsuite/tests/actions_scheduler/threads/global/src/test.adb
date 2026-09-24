@@ -220,7 +220,7 @@ begin
                A2.Initialize
                   (Root_View, 2, Valid_Executable,
                   Ret_Code, With_Deps);
-               A2.Deactivate;
+               A2.Set_State (GPR2.Build.Actions.Deactivated);
 
                if not Tree.Artifacts_Database.Add_Action (A1) then
                   return 1;
@@ -249,7 +249,7 @@ begin
                                          Directory => "write_file");
             begin
                A1.Initialize (Root_View, 1, Valid_Executable);
-               A1.Deactivate;
+               A1.Set_State (GPR2.Build.Actions.Deactivated);
                A2.Initialize (Root_View, 2, Valid_Executable);
 
                if not Tree.Artifacts_Database.Add_Action (A1) then
@@ -302,7 +302,7 @@ begin
                                          Directory => "write_file");
             begin
                A1.Initialize (Root_View, 1, Valid_Executable);
-               A1.Deactivate;
+               A1.Set_State (GPR2.Build.Actions.Deactivated);
                A2.Initialize (Root_View, 2, Valid_Executable);
 
                if not Tree.Artifacts_Database.Add_Action (A1) then

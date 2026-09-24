@@ -55,9 +55,6 @@ package GPR2.Build.Actions.Process.Link is
      (Self : in out Object; Mapping_File : Filename_Type);
    --  Set the name of the map file to generate
 
-   procedure Set_No_Op (Self : in out Object);
-   --  Make the action a no-op, see Actions.Is_No_Op
-
    procedure Set_Has_Library_Dependency_Circle
      (Self  : in out Object;
       State : Boolean);
@@ -120,7 +117,7 @@ package GPR2.Build.Actions.Process.Link is
       Stdout : Unbounded_String := Null_Unbounded_String;
       Stderr : Unbounded_String := Null_Unbounded_String) return Boolean;
 
-   overriding function Is_Deactivated (Self : Object) return Boolean;
+   overriding function State (Self : Object) return Actions.Action_State;
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object
@@ -186,13 +183,7 @@ private
 
       Lib_Symbol_File : Artifacts.Files.Object;
       --  User-defined list of exported symbols
-
-      No_Op           : Boolean := False;
-      --  See Set_No_Op
    end record;
-
-   overriding function Is_No_Op (Self : Object) return Boolean is
-     (Self.No_Op or else GPR2.Build.Actions.Object (Self).Is_No_Op);
 
    procedure Handle_Export_File
      (Self           : in out Object;

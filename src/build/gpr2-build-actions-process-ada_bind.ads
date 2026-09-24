@@ -38,8 +38,9 @@ package GPR2.Build.Actions.Process.Ada_Bind is
    --  Main_Unit: the main unit when binding an executable. May be undefined
    --             if the entry point is not in Ada or when binding a
    --             standalone library.
-   --  No_Op:     makes the bind and post-bind actions no-ops, see
-   --             Actions.Is_No_Op. Used with the --no-sal-binding option.
+   --  No_Op:     bind and post-bind have nothing to do and count as
+   --             successful, see Actions.Action_State. Used with the
+   --             --no-sal-binding option.
 
    procedure Add_Root_Unit
      (Self : in out Object;
@@ -160,13 +161,9 @@ private
       --  All ALI files in the bind closure, keyed by unit name.
       --  Tracks both the artifact, its unit and whether it is an explicit
       --  input (for standalone library binding).
-      No_Op        : Boolean := False;
       Main_Unit    : GPR2.Build.Compilation_Unit.Object;
       --  Defined if the binder generates a main entry point
    end record;
-
-   overriding function Is_No_Op (Self : Object) return Boolean
-   is (Self.No_Op or else GPR2.Build.Actions.Object (Self).Is_No_Op);
 
    overriding
    procedure Compute_Signature

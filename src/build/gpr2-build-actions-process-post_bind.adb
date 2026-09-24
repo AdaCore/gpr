@@ -155,7 +155,9 @@ package body GPR2.Build.Actions.Process.Post_Bind is
       Self.Ali    :=
         Artifacts.Files.Create
           (View.Object_Directory.Compose (Impl.Path.Base_Filename & ".ali"));
-      Self.No_Op  := No_Op;
+      if No_Op then
+         Self.Set_State (Actions.No_Op);
+      end if;
 
       return Self;
    end Create;

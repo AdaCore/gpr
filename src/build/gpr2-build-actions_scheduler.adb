@@ -1747,7 +1747,7 @@ package body GPR2.Build.Actions_Scheduler is
 
       Action.Load_Signature;
 
-      if Action.Is_Deactivated then
+      if Action.State = Deactivated then
          --  Note: we need to check for deactivated jobs *after* the
          --  signature is computed to understand if the deactivated
          --  action has all its output correct (so that we can unblock
@@ -1760,6 +1760,15 @@ package body GPR2.Build.Actions_Scheduler is
          end if;
 
          return Deactivated;
+
+      elsif Action.State = No_Op then
+         if Traces.Is_Active then
+            pragma Annotate (Xcov, Exempt_On, "debug code");
+            Traces.Trace ("job is no-op: " & Action.UID.Image);
+            pragma Annotate (Xcov, Exempt_Off);
+         end if;
+
+         return Skipped;
       end if;
 
       if not Force and then Action.Valid_Signature then
@@ -1841,7 +1850,7 @@ package body GPR2.Build.Actions_Scheduler is
                Actions_To_Process.Exclude (Current_Action);
                for Artifact of Tree_Db.Outputs (Action => Current_Action) loop
                   for Action of Tree_Db.Successors (Artifact) loop
-                     if Action.Is_Deactivated then
+                     if Action.State /= Actionable then
                         Actions_To_Process.Include (Action.UID);
                      else
                         Result.Include (Action.UID);

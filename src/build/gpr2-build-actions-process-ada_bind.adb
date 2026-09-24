@@ -711,7 +711,9 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
       Self.Output_Body :=
         Artifacts.Files.Create
           (Context.Object_Directory.Compose ("b__" & Basename & ".adb"));
-      Self.No_Op := No_Op;
+      if No_Op then
+         Self.Set_State (Actions.No_Op);
+      end if;
 
       if Main_Unit.Is_Defined then
          Self.Roots.Include (Main_Unit.Name, Main_Unit);
@@ -1430,7 +1432,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
       Post_Bind :=
         Actions.Process.Post_Bind.Create
           (Self.Output_Body, Self.View, Self,
-           Object'Class (Self).Is_No_Op);
+           Object'Class (Self).State = No_Op);
 
       if not Db.Add_Action (Post_Bind) then
          return False;

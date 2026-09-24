@@ -1011,7 +1011,8 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       for A of To_Remove loop
-         Tree_Db.Action_Id_To_Reference (A.UID).Deactivate;
+         Tree_Db.Action_Id_To_Reference (A.UID).Set_State
+           (GPR2.Build.Actions.Deactivated);
       end loop;
 
       if With_Static_Completion then
