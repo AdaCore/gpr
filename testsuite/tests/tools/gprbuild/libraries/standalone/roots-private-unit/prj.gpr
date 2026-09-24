@@ -1,0 +1,16 @@
+library project Prj is
+
+   for Library_Name use "prj";
+   for Library_Dir use "lib";
+   for Library_Src_Dir use "libsrc";
+   for Library_Kind use "static";
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj";
+
+   --  A standalone library whose interface is Pub only. Roots adds Priv as an
+   --  extra entry point, which must not make it part of the interface.
+
+   for Library_Interface use ("pub");
+   for Roots ("pub.adb") use ("priv");
+
+end Prj;

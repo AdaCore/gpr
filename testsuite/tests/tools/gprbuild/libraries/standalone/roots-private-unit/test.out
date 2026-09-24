@@ -1,0 +1,5 @@
+lib:
+  libprj.a
+  pub.ali
+libsrc:
+  pub.ads
