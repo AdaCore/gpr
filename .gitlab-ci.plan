@@ -18,6 +18,7 @@ def test_install():
         anod_install("gpr2-doc")
     anod_install("gpr2")
     anod_install("libgpr2", qualifier={"bare": True})
+    anod_install("gprbuild")
 
 
 def build():
@@ -111,6 +112,7 @@ def test_gpr2():
 
 
 def test_gpr2_cov():
+    test_install()
     anod_build("gpr2", qualifier={"coverage": True})
     anod_test("gpr2", qualifier={"coverage": True, "rust": True})
 
