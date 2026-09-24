@@ -219,6 +219,9 @@ include:
       artifacts: ["xunit-*.xml"]
       rules:
         - allow_failure: true
+  - component: $CI_SERVER_FQDN/it/gitlab-templates/gitleaks@~latest
+    inputs:
+      stage: check
 
 # Add a precommit to prevent new tests at the toplevel test directory
 check_testsuite:
