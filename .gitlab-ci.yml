@@ -296,7 +296,7 @@ test_gpr2build:arm_elf_zynq7k:linux:
     HOST=$(anod info gpr2 --show platform)
 
     # get the test workspace
-    BUILD_SPACE=$(anod info test gpr2 -Qcoverage --show working_dir)
+    BUILD_SPACE=$(anod info test gpr2 -Qcoverage,rust --show working_dir)
     RESULTS_DIR=${BUILD_SPACE}/results/new
 
     mkdir -v $CI_PROJECT_DIR/coverage
