@@ -112,6 +112,15 @@ package GPR2.Build.Tree_Db is
    --  to finally exdecute, and thus replace the generated object or dependency
    --  file from the extended project by its own generated files.
 
+   procedure Redirect_Consumers
+     (Self     : in out Object;
+      Old      : Artifacts.Object'Class;
+      Value    : Artifacts.Object'Class;
+      Redirect : access function
+                   (Action : in out Actions.Object'Class) return Boolean);
+   --  Offer the consumers of Old to take Value instead: Redirect updates the
+   --  action and returns whether it switched. Old stays in the tree.
+
    function Has_Artifact
      (Self     : Object;
       Artifact : Artifacts.Object'Class) return Boolean;

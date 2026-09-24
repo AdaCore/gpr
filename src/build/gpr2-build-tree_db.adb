@@ -837,6 +837,59 @@ package body GPR2.Build.Tree_Db is
       return True;
    end Propagate_Actions;
 
+   ------------------------
+   -- Redirect_Consumers --
+   ------------------------
+
+   procedure Redirect_Consumers
+     (Self     : in out Object;
+      Old      : Artifacts.Object'Class;
+      Value    : Artifacts.Object'Class;
+      Redirect : access function
+                   (Action : in out Actions.Object'Class) return Boolean)
+   is
+      C_Succ    : constant Artifact_Actions_Maps.Cursor :=
+                    Self.Successors.Find (Old);
+      Consumers : Action_Sets.Set;
+      Switched  : Boolean;
+
+   begin
+      if not Artifact_Actions_Maps.Has_Element (C_Succ) then
+         return;
+      end if;
+
+      --  Snapshot the consumers: the loop below updates Self.Successors
+
+      Consumers := Self.Successors (C_Succ);
+
+      for Id of Consumers loop
+         --  Hold no reference to the action while the tree is updated
+
+         declare
+            Ref : constant Action_Reference_Type :=
+                    Self.Action_Id_To_Reference (Id);
+         begin
+            Switched := Redirect (Ref.Element.all);
+         end;
+
+         if Switched then
+            declare
+               Input_List : constant Action_Artifacts_Maps.Reference_Type :=
+                              Self.Inputs.Reference (Id);
+               C          : Artifact_Vectors.Cursor :=
+                              Input_List.Find (Old);
+            begin
+               if Artifact_Vectors.Has_Element (C) then
+                  Input_List.Delete (C);
+               end if;
+            end;
+
+            Self.Successors.Reference (Old).Exclude (Id);
+            Self.Add_Input (Id, Value);
+         end if;
+      end loop;
+   end Redirect_Consumers;
+
    -------------
    -- Refresh --
    -------------
