@@ -1,0 +1,10 @@
+$ gprbuild -p -q prj.gpr
+$ gprinstall --prefix=inst -f -p --sources-only prj.gpr
+spec_only.ads: substituted value present: True, raw $symbol present: False
+pair_both_prep.ads: substituted value present: True, raw $symbol present: False
+pair_both_prep.adb: substituted value present: True, raw $symbol present: False
+pair_body_only_prep.ads: nothing to preprocess here
+pair_body_only_prep.adb: substituted value present: True, raw $symbol present: False
+pair_with_separate.ads: nothing to preprocess here
+pair_with_separate.adb: nothing to preprocess here
+pair_with_separate-show.adb: substituted value present: True, raw $symbol present: False

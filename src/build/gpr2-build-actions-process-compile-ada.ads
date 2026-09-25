@@ -75,6 +75,11 @@ package GPR2.Build.Actions.Process.Compile.Ada is
    overriding
    function On_Tree_Propagation (Self : in out Object) return Boolean;
 
+   overriding function Pre_Execution (Self : in out Object) return Boolean;
+   --  Removes any ".prep" file left over from a previous compilation,
+   --  for each part (spec, body, separates) of the compiled unit, so that
+   --  a ".prep" found after this compilation reliably reflects it.
+
    overriding function Post_Execution
      (Self   : in out Object;
       Status : Execution_Status;
