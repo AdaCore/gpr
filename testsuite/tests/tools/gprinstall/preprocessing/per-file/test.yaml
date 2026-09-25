@@ -1,0 +1,2 @@
+description: Check that gprinstall correctly installs several types of preprocessed sources (spec / body / separates).
+driver: python_script

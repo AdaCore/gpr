@@ -1,0 +1,2 @@
+description: Check that the correct source is installed when preprocessing is enabled and disabled afterwards.
+driver: python_script

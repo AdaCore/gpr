@@ -1,0 +1,4 @@
+description: check gprbuild error when the preprocessed file cannot be removed
+driver: python_script
+control:
+- [SKIP, "'windows' in env.host.platform", "DEAD on windows. The test modifies some file permissions"]
