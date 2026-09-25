@@ -1,6 +1,6 @@
-[Ada Bind] lib (lib.gpr): DEACTIVATED
+[Ada Bind] lib (lib.gpr): SKIPPED
 [Ada Compile] pub.adb (lib.gpr): 0
-[Ada Post-Bind] b__lib.adb (lib.gpr): DEACTIVATED
+[Ada Post-Bind] b__lib.adb (lib.gpr): SKIPPED
 [Archive] liblib.a (lib.gpr): 0
 [Library-Files-Copy] Lib (lib.gpr): 0
 [Link-Options-Insert] o__lib.o (lib.gpr): SKIPPED
