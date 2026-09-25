@@ -64,7 +64,7 @@ package GPR2.Build.Actions.Process.Compile is
      (Self : in out Object) return GPR2.Containers.Filename_Set;
    --  Fetch dependencies from a .d dependency file with a makefile parser
 
-   overriding function Is_Deactivated (Self : Object) return Boolean;
+   overriding function State (Self : Object) return Actions.Action_State;
 
    overriding function Working_Directory
      (Self : Object) return Path_Name.Object;
@@ -173,14 +173,16 @@ private
      (Self : Object) return Path_Name.Object is
      (Self.Ctxt.Object_Directory);
 
-   overriding function Is_Deactivated (Self : Object) return Boolean is
-     (Actions.Object (Self).Is_Deactivated
-      or else
-        (Self.View.Has_Attribute
-           (PRA.Compiler.Driver, PAI.Create (Self.Lang))
-         and then Self.View.Attribute
-           (PRA.Compiler.Driver,
-            PAI.Create (Self.Lang)).Value.Text'Length = 0));
+   overriding function State (Self : Object) return Actions.Action_State is
+     (if Actions.Object (Self).State /= Actions.Actionable
+      then Actions.Object (Self).State
+      elsif Self.View.Has_Attribute
+              (PRA.Compiler.Driver, PAI.Create (Self.Lang))
+        and then Self.View.Attribute
+                   (PRA.Compiler.Driver,
+                    PAI.Create (Self.Lang)).Value.Text'Length = 0
+      then Actions.Deactivated
+      else Actions.Actionable);
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);

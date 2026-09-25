@@ -1,0 +1,2 @@
+description: --no-sal-binding makes the bind actions no-ops without blocking the library
+driver: python_script

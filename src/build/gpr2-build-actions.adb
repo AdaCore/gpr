@@ -98,15 +98,6 @@ package body GPR2.Build.Actions is
       return Simple_Name (To_String (Res));
    end Db_Filename;
 
-   ----------------
-   -- Deactivate --
-   ----------------
-
-   procedure Deactivate (Self : in out Object) is
-   begin
-      Self.Deactivated := True;
-   end Deactivate;
-
    -----------------------------
    -- Get_Or_Create_Temp_File --
    -----------------------------
@@ -259,6 +250,15 @@ package body GPR2.Build.Actions is
    begin
       Self.Signature := Value;
    end Set_Signature;
+
+   ---------------
+   -- Set_State --
+   ---------------
+
+   procedure Set_State (Self : in out Object; State : Action_State) is
+   begin
+      Self.Act_State := State;
+   end Set_State;
 
    --------------
    -- Set_View --

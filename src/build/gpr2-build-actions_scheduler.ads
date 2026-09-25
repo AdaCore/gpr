@@ -199,7 +199,7 @@ private
       --  Initial state before evaluation
 
       Skipped,
-      --  Signature is still valid; no re-execution needed
+      --  No re-execution: signature is valid or the action is a no-op
 
       Deactivated,
       --  Action is externally built or explicitly deactivated

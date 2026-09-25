@@ -1011,7 +1011,8 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       for A of To_Remove loop
-         Tree_Db.Action_Id_To_Reference (A.UID).Deactivate;
+         Tree_Db.Action_Id_To_Reference (A.UID).Set_State
+           (GPR2.Build.Actions.Deactivated);
       end loop;
 
       if With_Static_Completion then
@@ -1442,7 +1443,7 @@ package body GPR2.Build.Actions_Population is
             Context        => View,
             Main_Unit      => Compilation_Unit.Undefined,
             SAL_In_Closure => Has_SAL,
-            Skip           => Options.No_SAL_Binding);
+            No_Op          => Options.No_SAL_Binding);
 
          if not Tree_Db.Add_Action (Self.Bind) then
             return False;

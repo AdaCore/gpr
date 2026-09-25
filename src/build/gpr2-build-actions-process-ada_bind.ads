@@ -32,15 +32,15 @@ package GPR2.Build.Actions.Process.Ada_Bind is
       Context        : GPR2.Project.View.Object;
       Main_Unit      : GPR2.Build.Compilation_Unit.Object;
       SAL_In_Closure : Boolean;
-      Skip           : Boolean := False);
+      No_Op          : Boolean := False);
    --  Basename:  will produce b__<basename>.ad[bs]
    --  Context:   the view responsible for the bind action
    --  Main_Unit: the main unit when binding an executable. May be undefined
    --             if the entry point is not in Ada or when binding a
    --             standalone library.
-   --  Skip:      when set, this will skip the bind/post-bind stages
-   --             and will consider the action valid (e.g. the signature
-   --             is not checked). Used with --no-sal-binding option.
+   --  No_Op:     bind and post-bind have nothing to do and count as
+   --             successful, see Actions.Action_State. Used with the
+   --             --no-sal-binding option.
 
    procedure Add_Root_Unit
      (Self : in out Object;
@@ -161,13 +161,9 @@ private
       --  All ALI files in the bind closure, keyed by unit name.
       --  Tracks both the artifact, its unit and whether it is an explicit
       --  input (for standalone library binding).
-      Skip         : Boolean := False;
       Main_Unit    : GPR2.Build.Compilation_Unit.Object;
       --  Defined if the binder generates a main entry point
    end record;
-
-   overriding function Valid_Signature (Self : Object) return Boolean is
-     (Self.Skip or else GPR2.Build.Actions.Object (Self).Valid_Signature);
 
    overriding
    procedure Compute_Signature

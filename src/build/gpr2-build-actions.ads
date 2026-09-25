@@ -210,8 +210,19 @@ package GPR2.Build.Actions is
    --  action is overriding an action of the extended view, the result is
    --  the overridden action.
 
-   procedure Deactivate (Self : in out Object);
-   --  Deactivates the action manually
+   type Action_State is (Actionable, Deactivated, No_Op);
+   --  Actionable:  the action is executed when its signature is not valid
+   --  Deactivated: the action is never executed, and its successors are held
+   --               back unless its signature is valid
+   --  No_Op:       the action has nothing to do and counts as successful, so
+   --               its successors run
+
+   function State (Self : Object) return Action_State;
+   --  No_Op for an externally built view, else the state set by Set_State.
+   --  Overrides refine the Actionable case only.
+
+   procedure Set_State (Self : in out Object; State : Action_State);
+   --  Force the state, for an action the build does not need to run
 
    function Force_Execution (Self : Object) return Boolean;
    --  Returns True if the action must always be executed regardless of its
@@ -225,10 +236,6 @@ package GPR2.Build.Actions is
    --  derived types to suppress output for specific actions, such as those
    --  that produce intermediate results or are part of a batch process
    --  where individual outputs are not relevant to the user.
-
-   function Is_Deactivated (Self : Object) return Boolean;
-   --  Returns whether the action has been deactivated manually or implicitly
-   --  by its project nature.
 
    function Write_Signature
      (Self   : in out Object;
@@ -305,8 +312,8 @@ private
       --  Stored signature for the action
       Tmp_Files      : GPR2.Containers.Filename_Map;
       --  List of tmp files to be cleaned up
-      Deactivated    : Boolean := False;
-      --  Set when the action is deactivated
+      Act_State      : Action_State := Actionable;
+      --  See State and Set_State
       Force          : Boolean := False;
       --  Set at runtime to force re-execution regardless of signature validity
    end record;
@@ -331,9 +338,7 @@ private
       (L.UID < R.UID);
 
    function Valid_Signature (Self : Object) return Boolean is
-     (not Self.Force
-      and then (Object'Class (Self).View.Is_Externally_Built
-        or else Self.Signature.Valid));
+     (not Self.Force and then Self.Signature.Valid);
 
    function On_Tree_Propagation
      (Self : in out Object) return Boolean is
@@ -357,8 +362,12 @@ private
    function Failure_Message (Self : Object) return String
    is (Object'Class (Self).UID.Image & " failed.");
 
-   function Is_Deactivated (Self : Object) return Boolean
-   is (Self.Deactivated);
+   function State (Self : Object) return Action_State
+   is (if Self.Act_State /= Actionable then Self.Act_State
+       elsif Object'Class (Self).View.Is_Defined
+         and then Object'Class (Self).View.Is_Externally_Built
+       then No_Op
+       else Actionable);
 
    function Force_Execution (Self : Object) return Boolean
    is (False);
