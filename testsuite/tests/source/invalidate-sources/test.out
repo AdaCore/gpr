@@ -3,8 +3,14 @@ Project: Demo
  > src/api-call.adb   language: Ada   Kind: S_SEPARATE     unit: API.CALL
  > src/api.adb        language: Ada   Kind: S_BODY         unit: API
  > src/api.ads        language: Ada   Kind: S_SPEC         unit: API
+visible api-call.adb: yes, unit API
+visible newapi.ads: no
+visible api.ads: yes, unit API
 ----------
  > src/api.adb        language: Ada   Kind: S_BODY         unit: API
  > src/api.ads        language: Ada   Kind: S_SPEC         unit: API
  > src/newapi.adb     language: Ada   Kind: S_BODY         unit: NEWAPI
  > src/newapi.ads     language: Ada   Kind: S_SPEC         unit: NEWAPI
+visible api-call.adb: no
+visible newapi.ads: yes, unit NEWAPI
+visible api.ads: yes, unit API
