@@ -5,3 +5,4 @@ exactly 256    : length 256, hashes equal TRUE, equal TRUE, found TRUE
 just over 256  : length 257, hashes equal TRUE, equal TRUE, found TRUE
 well over 256  : length 1000, hashes equal TRUE, equal TRUE, found TRUE
 accented long  : length 600, hashes equal TRUE, equal TRUE, found TRUE
+undefined path : hash 0

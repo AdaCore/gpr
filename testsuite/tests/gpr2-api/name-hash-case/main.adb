@@ -10,6 +10,7 @@ use type Ada.Containers.Hash_Type;
 with Ada.Text_IO;
 
 with GPR2;
+with GPR2.Path_Name;
 
 procedure Main is
 
@@ -141,4 +142,12 @@ begin
    Check ("just over 256  ", Repeat ("AbCdEfGh", 257));
    Check ("well over 256  ", Repeat ("AbCdEfGh", 1000));
    Check ("accented long  ", Repeat (Accented, 600));
+
+   --  An undefined path has an empty comparing form, which must not reach
+   --  the hash either
+
+   Text_IO.Put_Line
+     ("undefined path : hash"
+      & Ada.Containers.Hash_Type'Image
+          (GPR2.Path_Name.Hash (GPR2.Path_Name.Undefined)));
 end Main;
