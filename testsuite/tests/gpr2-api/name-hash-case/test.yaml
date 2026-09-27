@@ -1,0 +1,6 @@
+description:
+    Case variants of a name hash equally and stay findable in hashed
+    containers, including past the 256-byte folding buffer
+driver: build_and_run
+project_file: name_hash_case
+main: main
