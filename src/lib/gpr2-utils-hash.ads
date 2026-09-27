@@ -30,6 +30,11 @@ package GPR2.Utils.Hash is
    --  Open a new file-index generation: each file is then stat'ed once, and
    --  later queries for it reuse that result.
 
+   function Generations (Self : Object) return Natural;
+   --  Number of generations opened so far. The scheduler opens one per
+   --  executed action, so that a file modified by an action is stat'ed
+   --  again for the next one.
+
    function Hash_Content (Cnt : String) return Hash_Digest;
 
    function Load (Path : Path_Name.Object) return Object;
@@ -41,7 +46,10 @@ private
 
    type Object is tagged record
       File_Index : GNATCOLL.File_Indexes.File_Index;
+      Gen_Count  : Natural := 0;
    end record;
+
+   function Generations (Self : Object) return Natural is (Self.Gen_Count);
 
    No_Digest : constant Hash_Digest := (others => ' ');
 
