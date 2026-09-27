@@ -552,7 +552,6 @@ package body GPR2.Build.Actions.Process.Compile is
                                      Self.View.Attribute
                                        (PRA.Compiler.Mapping_Body_Suffix,
                                         Lang_Idx).Value.Text;
-                        use Standard.Ada.Characters.Handling;
                         Content  : Unbounded_String;
                      begin
                         for S of Self.View.Visible_Sources loop

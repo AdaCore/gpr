@@ -12,6 +12,7 @@ with Ada.Strings.Maps;
 with GNAT.OS_Lib;
 with GNAT.Regexp;
 
+with GNATCOLL.Hash.xxHash;
 with GNATCOLL.OS.Constants;
 with GNATCOLL.OS.Stat;
 with GNATCOLL.OS.FSUtil;
@@ -27,7 +28,7 @@ package body GPR2.Path_Name is
    function To_OS_Case (Name : Filename_Optional) return String is
      (if File_Names_Case_Sensitive
       then String (Name)
-      else Characters.Handling.To_Lower (String (Name)));
+      else To_Lower (String (Name)));
 
    function To_OS_Case (C : Character) return Character is
      (if File_Names_Case_Sensitive
@@ -65,22 +66,11 @@ package body GPR2.Path_Name is
       Simple_Name : Filename_Optional;
       Value       : Filename_Optional;
       --  the normalized path-name
-      Comparing   : String;
-      --  normalized path-name for comparison
       Base_Name   : Filename_Optional;
       Dir_Name    : Filename_Optional) return Object_Internal
-   is (Simple_Name_Len => Simple_Name'Length,
-       Value_Len       => Value'Length,
-       Comparing_Len   => Comparing'Length,
-       Base_Name_Len   => Base_Name'Length,
-       Dir_Name_Len    => Dir_Name'Length,
-       Is_Dir          => Is_Dir,
-       In_Memory       => In_Memory,
-       Simple_Name     => Simple_Name,
-       Value           => Value,
-       Comparing       => Comparing,
-       Base_Name       => Base_Name,
-       Dir_Name        => Dir_Name);
+     with Inline;
+   --  Computes the comparison key and its hash, see Object_Internal.
+   --  Inlined so that the aggregate is still built in place.
 
    function Unchecked_Value (Self : Object) return String;
 
@@ -180,9 +170,6 @@ package body GPR2.Path_Name is
             In_Memory   => Internal.In_Memory,
             Simple_Name => Replace_Extension (Internal.Simple_Name, New_Ext),
             Value       => Replace_Extension (Internal.Value, New_Ext),
-            Comparing   => String (Replace_Extension
-                             (Filename_Type (Internal.Comparing),
-                              Filename_Optional (To_OS_Case (New_Ext)))),
             Base_Name   => Internal.Base_Name,
             Dir_Name    => Internal.Dir_Name));
 
@@ -348,7 +335,6 @@ package body GPR2.Path_Name is
                In_Memory   => False,
                Simple_Name => Name,
                Value       => NN,
-               Comparing   => To_OS_Case (NN),
                Base_Name   => "",
                Dir_Name    => NN));
       end return;
@@ -373,7 +359,6 @@ package body GPR2.Path_Name is
                   In_Memory   => False,
                   Simple_Name => Name,
                   Value       => "",
-                  Comparing   => To_OS_Case (Name),
                   Base_Name   => Base_Name (Name),
                   Dir_Name    => ""));
          end return;
@@ -390,7 +375,6 @@ package body GPR2.Path_Name is
                      In_Memory   => False,
                      Simple_Name => Name,
                      Value       => NN,
-                     Comparing   => To_OS_Case (NN),
                      Base_Name   => Base_Name (NN),
                      Dir_Name    => Ensure_Directory
                        (Containing_Directory (NN))));
@@ -398,6 +382,56 @@ package body GPR2.Path_Name is
          end;
       end if;
    end Create_File;
+
+   ---------------------
+   -- Create_Internal --
+   ---------------------
+
+   function Create_Internal
+     (Is_Dir      : Boolean := False;
+      In_Memory   : Boolean := False;
+      Simple_Name : Filename_Optional;
+      Value       : Filename_Optional;
+      Base_Name   : Filename_Optional;
+      Dir_Name    : Filename_Optional) return Object_Internal
+   is
+      function Make
+        (Key : String; Case_Insensitive : Boolean) return Object_Internal
+      is (Simple_Name_Len => Simple_Name'Length,
+          Value_Len       => Value'Length,
+          Comparing_Len   => (if Case_Insensitive then Key'Length else 0),
+          Base_Name_Len   => Base_Name'Length,
+          Dir_Name_Len    => Dir_Name'Length,
+          Is_Dir          => Is_Dir,
+          In_Memory       => In_Memory,
+          Simple_Name     => Simple_Name,
+          Value           => Value,
+          Comparing       => (if Case_Insensitive then Key else ""),
+          Key_Hash        => (if Key'Length = 0
+                              then Empty_Hash
+                              else GNATCOLL.Hash.xxHash.XXH3 (Key)),
+          Base_Name       => Base_Name,
+          Dir_Name        => Dir_Name);
+
+   begin
+      if File_Names_Case_Sensitive then
+         --  Folding changes nothing, so the key is a field already there
+
+         if Value'Length = 0 then
+            return Make (String (Simple_Name), Case_Insensitive => False);
+         else
+            return Make (String (Value), Case_Insensitive => False);
+         end if;
+
+      elsif Value'Length = 0 then
+         return Make
+           (GPR2.To_Lower (String (Simple_Name)), Case_Insensitive => True);
+
+      else
+         return Make
+           (GPR2.To_Lower (String (Value)), Case_Insensitive => True);
+      end if;
+   end Create_Internal;
 
    ------------------------
    -- Create_Pseudo_File --
@@ -418,7 +452,6 @@ package body GPR2.Path_Name is
                In_Memory   => True,
                Simple_Name => Name,
                Value       => Pseudo_Full,
-               Comparing   => To_OS_Case (Pseudo_Full),
                Base_Name   => Base_Name (Name),
                Dir_Name    => Ensure_Directory (Pseudo_Dir)));
       end return;

@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.IO_Exceptions;
 with Ada.Text_IO;
@@ -186,7 +185,6 @@ package body GPR2.Project is
      (Name : Filename_Type; Config_File : Boolean := False)
       return Filename_Type
    is
-      use Ada.Characters.Handling;
    begin
       if To_Lower (Directories.Extension (String (Name)))
          in String (Project_File_Extension_No_Dot)

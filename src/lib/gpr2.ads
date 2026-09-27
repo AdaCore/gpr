@@ -120,6 +120,14 @@ package GPR2 is
 
    --  filenames for example.
 
+   function To_Lower (Name : String) return String;
+   --  Name lowercased through a static table: same mapping as
+   --  Ada.Characters.Handling.To_Lower, without the per-character call.
+
+   Empty_Hash : constant Ada.Containers.Hash_Type := 0;
+   --  Hash of an empty name: xxHash takes the address of the first
+   --  character, so the empty string must not reach it.
+
    overriding function "=" (Left, Right : Optional_Name_Type) return Boolean;
    overriding function "<" (Left, Right : Optional_Name_Type) return Boolean;
    function Hash (N : Optional_Name_Type) return Ada.Containers.Hash_Type;

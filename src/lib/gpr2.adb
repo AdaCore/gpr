@@ -33,11 +33,6 @@ package body GPR2 is
    function Less_CI (Left, Right : String) return Boolean;
    --  Ada.Strings.Equal/Hash/Less_Case_Insensitive, folding through Lower
 
-   Empty_Hash : constant Ada.Containers.Hash_Type := 0;
-   --  XXH3 takes the address of the first character, so the empty string
-   --  must not reach it. 0 is what Ada.Strings.Hash_Case_Insensitive
-   --  returns for it.
-
    ---------
    -- "<" --
    ---------
@@ -395,6 +390,20 @@ package body GPR2 is
 
       return Result;
    end To_Hex_String;
+
+   --------------
+   -- To_Lower --
+   --------------
+
+   function To_Lower (Name : String) return String is
+      Result : String (Name'Range);
+   begin
+      for J in Name'Range loop
+         Result (J) := Lower (Name (J));
+      end loop;
+
+      return Result;
+   end To_Lower;
 
    --------------
    -- To_Mixed --

@@ -18,7 +18,6 @@ with GNATCOLL;
 with GNATCOLL.Utils;
 with GNATCOLL.VFS;
 
-private with GNATCOLL.Hash.xxHash;
 private with GNATCOLL.Refcount;
 
 package GPR2.Path_Name is
@@ -257,6 +256,8 @@ package GPR2.Path_Name is
 
 private
 
+   use type Ada.Containers.Hash_Type;
+
    type Object_Internal
      (Simple_Name_Len : Natural;
       Value_Len       : Natural;
@@ -271,12 +272,28 @@ private
       Value       : Filename_Optional (1 .. Value_Len);
       --  the normalized path-name
       Comparing   : String (1 .. Comparing_Len);
-      --  normalized path-name for comparison
+      --  the lowercased comparison key, only used where the OS ignores
+      --  case. Left empty otherwise, Value or Simple_Name being the key.
+      Key_Hash    : Ada.Containers.Hash_Type;
+      --  hash of the comparison key
       Base_Name   : Filename_Optional (1 .. Base_Name_Len);
       Dir_Name    : Filename_Optional (1 .. Dir_Name_Len);
    end record;
-   --  Comparing is equal to Value for case sensitive OS and lowercased Value
-   --  for case insensitive OS.
+
+   function Comparing_Key (Data : Object_Internal) return String is
+     (if Data.Comparing_Len > 0
+      then Data.Comparing
+      elsif Data.Value_Len > 0
+      then String (Data.Value)
+      else String (Data.Simple_Name))
+   with Inline;
+   --  The value paths are compared on, already folded
+
+   function Same_Key (Left, Right : Object_Internal) return Boolean is
+     (Left.Key_Hash = Right.Key_Hash
+      and then Comparing_Key (Left) = Comparing_Key (Right))
+   with Inline;
+   --  The hash check spares most of the key comparisons
 
    package Refcnt is new GNATCOLL.Refcount.Shared_Pointers (Object_Internal);
    use Refcnt;
@@ -290,12 +307,12 @@ private
 
    overriding function "=" (Left, Right : Object) return Boolean is
      (if Left.Is_Defined and then Right.Is_Defined
-      then Get (Left).Comparing = Get (Right).Comparing
+      then Same_Key (Get (Left), Get (Right))
       else Left.Is_Defined = Right.Is_Defined);
 
    function "<" (Left, Right : Object) return Boolean is
      (if Left.Is_Defined and then Right.Is_Defined
-      then Get (Left).Comparing < Get (Right).Comparing
+      then Comparing_Key (Get (Left)) < Comparing_Key (Get (Right))
       elsif not Left.Is_Defined and then not Right.Is_Defined
       then False
       elsif Left.Is_Defined
@@ -363,8 +380,7 @@ private
       else VFS.No_File);
 
    function Hash (Self : Object) return Ada.Containers.Hash_Type is
-     (GNATCOLL.Hash.xxHash.XXH3 (Get (Self).Comparing));
-   --  Comparing is the case-folded form, so this holds either way
+     (if Self.Is_Defined then Get (Self).Key_Hash else Empty_Hash);
 
    function Ends_With
      (Filename : Filename_Optional; Suffix : String) return Boolean

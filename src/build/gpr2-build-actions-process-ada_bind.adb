@@ -192,7 +192,6 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
                           Self.View.Attribute
                             (PRA.Compiler.Mapping_Body_Suffix,
                              PAI.Create (Ada_Language)).Value.Text;
-         use Standard.Ada.Characters.Handling;
 
       begin
          if Map_File.FD /= Invalid_FD and then Map_File.FD /= Null_FD then
