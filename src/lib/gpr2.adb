@@ -156,13 +156,18 @@ package body GPR2 is
 
    function Hash (Fname : Filename_Optional) return Ada.Containers.Hash_Type is
    begin
-      if Fname'Length = 0 then
+      return (if File_Names_Case_Sensitive
+              then Hash (String (Fname))
+              else Hash_CI (String (Fname)));
+   end Hash;
+
+   function Hash (Name : String) return Ada.Containers.Hash_Type is
+   begin
+      if Name'Length = 0 then
          return Empty_Hash;
       end if;
 
-      return (if File_Names_Case_Sensitive
-              then GNATCOLL.Hash.xxHash.XXH3 (String (Fname))
-              else Hash_CI (String (Fname)));
+      return GNATCOLL.Hash.xxHash.XXH3 (Name);
    end Hash;
 
    -------------

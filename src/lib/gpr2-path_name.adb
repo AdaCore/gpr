@@ -12,7 +12,6 @@ with Ada.Strings.Maps;
 with GNAT.OS_Lib;
 with GNAT.Regexp;
 
-with GNATCOLL.Hash.xxHash;
 with GNATCOLL.OS.Constants;
 with GNATCOLL.OS.Stat;
 with GNATCOLL.OS.FSUtil;
@@ -407,9 +406,7 @@ package body GPR2.Path_Name is
           Simple_Name     => Simple_Name,
           Value           => Value,
           Comparing       => (if Case_Insensitive then Key else ""),
-          Key_Hash        => (if Key'Length = 0
-                              then Empty_Hash
-                              else GNATCOLL.Hash.xxHash.XXH3 (Key)),
+          Key_Hash        => GPR2.Hash (Key),
           Base_Name       => Base_Name,
           Dir_Name        => Dir_Name);
 

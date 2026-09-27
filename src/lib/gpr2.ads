@@ -124,6 +124,9 @@ package GPR2 is
    --  Name lowercased through a static table: same mapping as
    --  Ada.Characters.Handling.To_Lower, without the per-character call.
 
+   function Hash (Name : String) return Ada.Containers.Hash_Type;
+   --  Case sensitive hash, for names already folded where they need to be
+
    Empty_Hash : constant Ada.Containers.Hash_Type := 0;
    --  Hash of an empty name: xxHash takes the address of the first
    --  character, so the empty string must not reach it.
