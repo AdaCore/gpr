@@ -22,33 +22,10 @@ library project GPR2 extends "gpr2_shared.gpr" is
                         "langkit/gen/src");
    for Library_Name use "gpr2";
 
-   Tools_Build : Bool := external ("GPR2_TOOLS_BUILD", "false");
-   --  Set when the library is built as part of the tools: the tools use
-   --  a global configuration pragma file applying restrictions to the
-   --  whole partition, while libgpr2 needs to remain generic so its
-   --  object should not carry such restrictions.
-
-   Artifacts_Suffix := "";
-
-   case Tools_Build is
-      when "true" =>
-         case Build is
-            when "gnatcov" =>
-               --  In gnatcov mode the library is only built as part of the
-               --  tools, and the testsuite links against those artifacts:
-               --  keep a single instrumented object directory.
-               null;
-            when others =>
-               Artifacts_Suffix := "-tools";
-         end case;
-      when "false" =>
-         null;
-   end case;
-
    for Object_Dir use
-     Build_Root & "/" & Build & "/obj-" & Library_Type & Artifacts_Suffix;
+     Build_Root & "/" & Build & "/obj-" & Library_Type;
    for Library_Dir use
-     Build_Root & "/" & Build & "/lib-" & Library_Type & Artifacts_Suffix;
+     Build_Root & "/" & Build & "/lib-" & Library_Type;
    for Library_Kind use Library_Type;
    for Run_Path_Option use ();
 

@@ -1,4 +1,4 @@
-with "../../gpr2";
+with "gpr2_for_tools";
 
 library project GPR2tools.Common extends "gpr2tools.gpr" is
 
@@ -7,10 +7,5 @@ library project GPR2tools.Common extends "gpr2tools.gpr" is
    for Library_Name use "gpr2tools_common";
    for Library_Dir use
      GPR2_Shared.Build_Root & "/" & GPR2_Shared.Build & "/lib-tools-common";
-
-   package Builder is
-      for Global_Configuration_Pragmas use
-        Project'Project_Dir & "../gpr2_tools_restrictions.adc";
-   end Builder;
 
 end GPR2tools.Common;

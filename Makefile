@@ -80,6 +80,8 @@ PROFILER          ?= no
 GPR2KBDIR         ?= ${SOURCE_DIR}/../gprconfig_kb/db
 # Used to pass extra options to GPRBUILD, like -d or -v for instance
 GPRBUILD_OPTIONS  ?=
+# Used to pass extra options to GPRINSTALL
+GPRINSTALL_OPTIONS ?=
 # Level of coverage requested from gnatcov code coverage testing
 GNATCOV_LEVEL     ?= stmt
 # To override in case the python executable is not named "python" when
@@ -119,7 +121,9 @@ endif
 # Code coverage support
 ifneq (${GPR2_BUILD},gnatcov)
    COVERAGE_BUILD_FLAGS :=
+   COVERAGE_INSTALL_FLAGS :=
 else
+   COVERAGE_INSTALL_FLAGS := --src-subdirs=gnatcov-instr
    COVERAGE_BUILD_FLAGS := \
            --implicit-with=gnatcov_rts \
            --src-subdirs=gnatcov-instr \
@@ -139,7 +143,8 @@ GPR_OPTIONS := -XGPR2_BUILD=${GPR2_BUILD} \
 BUILDER     := gprbuild -p -j${PROCESSORS} ${GPR_OPTIONS} \
                ${GPRBUILD_OPTIONS} -XPROFILER=${PROFILER} \
                ${COVERAGE_BUILD_FLAGS}
-INSTALLER   := gprinstall -p -f ${GPR_OPTIONS} --prefix='${prefix}'
+INSTALLER   := gprinstall -p -f ${GPR_OPTIONS} --prefix='${prefix}' \
+               ${GPRINSTALL_OPTIONS} ${COVERAGE_INSTALL_FLAGS}
 CLEANER     := gprclean -eL -p ${RBD} -XGPR2_BUILD=${GPR2_BUILD} \
                -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}"
 UNINSTALLER := ${INSTALLER} -p -f --uninstall
@@ -172,18 +177,14 @@ ${KB_BUILD_DIR}/gpr2-kb-embedded.ads: ${KB_BUILD_DIR} ${SOURCE_DIR}/kb/gpr2-kb-e
 # Libgpr2
 build-libs: ${LIBGPR2_TYPES:%=build-lib-%}
 
-build-lib-%: ${KB_BUILD_DIR}/gpr2-kb-embedded.ads ${KB_BUILD_DIR}/gpr2-kb-embedded.adb
-ifneq (${GPR2_BUILD},gnatcov)
+build-lib-%: ${KB_BUILD_DIR}/gpr2-kb-embedded.ads ${KB_BUILD_DIR}/gpr2-kb-embedded.adb \
+		coverage-instrument
 	${BUILDER} -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		${GPR2}
-else
-	echo "gpr2 library built from gpr2_tools in gnatcov mode"
-endif
 
 # Gpr2 tools
-build-tools: build-lib-static coverage-instrument
-	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-		-XGPR2_TOOLS_BUILD=true ${GPR2TOOLS}
+build-tools: build-lib-static
+	${BUILDER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static ${GPR2TOOLS}
 
 # Gnatcov instrumentation
 coverage-instrument:
@@ -196,6 +197,11 @@ ifeq (${GPR2_BUILD},gnatcov)
 	for gpr in ${ALL_GPR2TOOLS}; do \
 		${COVERAGE_INSTR} -P $$gpr; \
 	done
+# libgpr2 is instrumented and built on its own: the tools pull it in through
+# gpr2_for_tools, whose object directory is not the one the testsuite uses.
+# This comes last: instrumenting a tool also cleans the output directory of
+# gpr2, which gpr2_for_tools extends.
+	${COVERAGE_INSTR} -P ${GPR2}
 endif
 
 ###########
@@ -225,7 +231,6 @@ install-lib-%:
 
 install-tools: uninstall-tools
 	${INSTALLER} -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-		-XGPR2_TOOLS_BUILD=true \
 		--build-name=static --mode=usage ${GPR2TOOLS} ${AP_GPR2}
 
 #########
@@ -243,6 +248,7 @@ setup:
 	echo "LOCAL_GPR2       ?= ${LOCAL_GPR2}" >> makefile.setup
 	echo "GPR2KBDIR        ?= ${GPR2KBDIR}" >> makefile.setup
 	echo "GPRBUILD_OPTIONS ?= ${GPRBUILD_OPTIONS}" >> makefile.setup
+	echo 'GPRINSTALL_OPTIONS ?= ${GPRINSTALL_OPTIONS}' >> makefile.setup
 	echo "GNATCOV_LEVEL    ?= ${GNATCOV_LEVEL}" >> makefile.setup
 	echo "PYTHON           ?= ${PYTHON}" >> makefile.setup
 

@@ -25,4 +25,9 @@ abstract project GPR2tools extends "../../gpr2_shared.gpr" is
    Base_Exec_Dir       := GPR2_Shared.Build_Root & "/" & GPR2_Shared.Build;
    Libexec_Install_Dir := "libexec/gprbuild";
 
+   package Builder extends GPR2_Shared.Builder is
+      for Global_Configuration_Pragmas use
+        Project'Project_Dir & "../gpr2_tools_restrictions.adc";
+   end Builder;
+
 end GPR2Tools;
