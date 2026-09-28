@@ -363,10 +363,10 @@ private
    is (Object'Class (Self).UID.Image & " failed.");
 
    function State (Self : Object) return Action_State
-   is (if Self.Act_State /= Actionable then Self.Act_State
-       elsif Object'Class (Self).View.Is_Defined
+   is (if Object'Class (Self).View.Is_Defined
          and then Object'Class (Self).View.Is_Externally_Built
        then No_Op
+       elsif Self.Act_State /= Actionable then Self.Act_State
        else Actionable);
 
    function Force_Execution (Self : Object) return Boolean
