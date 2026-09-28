@@ -3,10 +3,12 @@
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
-with Ada.Containers.Indefinite_Ordered_Sets;
-with Ada.Containers.Vectors;
 
 with GPR2.Build.Compilation_Unit;
+with GPR2.Build.Actions.Process.Compile.Ada;
+
+private with GPR2.Build.Compilation_Unit.Maps;
+private with GPR2.Containers;
 
 package GPR2.Build.Actions.Thread.Lib_Copy is
 
@@ -57,9 +59,10 @@ package GPR2.Build.Actions.Thread.Lib_Copy is
       Stderr : in out Unbounded_String) return Integer
    with Pre => Self.Is_Defined;
 
-   overriding
-   function On_Tree_Insertion
-     (Self : Object; Db : in out GPR2.Build.Tree_Db.Object) return Boolean;
+   function On_Ali_Parsed
+     (Self : in out Object; Comp : Process.Compile.Ada.Object) return Boolean;
+   --  Called whenever an Ali in the input list is parsed. This updates the
+   --  list of sources to copy when relevant.
 
    overriding
    function UID (Self : Object) return Action_Id'Class;
@@ -93,41 +96,34 @@ private
    function Create (Ctxt : GPR2.Project.View.Object) return Lib_Copy_Id
    is (Lib_Copy_Id'(Ctxt => Ctxt));
 
-   type Copy_Entry is record
-      From   : Path_Name.Object;
-      To     : Path_Name.Object;
-      Unit   : Compilation_Unit.Object;
-      --  The unit From belongs to
-      Kind   : Unit_Kind := S_Spec;
-      --  Which part of Unit From is, for the source entries
-      Is_Ali : Boolean := False;
-      --  ALIs are registered as files, sources as source files
-      Add_SL : Boolean := False;
-      --  Add the SL flag to the ALI's P line, so that a standalone library's
-      --  units are not elaborated twice
-      Skip   : Boolean := False;
-      --  Set by Pre_Execution on the parts that need not be copied
-   end record;
-
-   package Copy_Entry_Vectors is new
-     Ada.Containers.Vectors (Positive, Copy_Entry);
-
-   package Filename_Sets is new
-     Ada.Containers.Indefinite_Ordered_Sets (Filename_Type);
-
    type Object is new GPR2.Build.Actions.Thread.Object with record
-      Copies   : Copy_Entry_Vectors.Vector;
-      Alis     : Filename_Sets.Set;
-      --  The ALIs already in Copies: a unit can be registered twice, and
-      --  scanning Copies for each is quadratic in the interface size
-      Lib_Name : Unbounded_String;
-      --  Execute runs in its own task and can query neither the tree database
-      --  nor the view, so everything it needs is stored here
+      Units    : Compilation_Unit.Maps.Map;
+      --  The list of Ada units that are part of the library interface. Used
+      --  to generate the list of Ada sources to copy
+      Srcs     : Containers.Filename_Set;
+      --  In case Library_Src_Dir is set in the context, this is the list of
+      --  sources to compute. Generated statically at init time for non-Ada
+      --  sources, and before execution for Ada sources from the updated
+      --  units information
+      Alis     : Containers.Filename_Set;
+      --  The ALIs to copy.
+
+      Ali_Dir       : Path_Name.Object;
+      Src_Dir       : Path_Name.Object;
+      Is_Standalone : Boolean := False;
+      Lib_Name      : Unbounded_String;
+      --  Used during execution: the action cannot access the view or
+      --  the build tree in a multitask safe way, so uses a copy
    end record;
 
    overriding
    procedure Compute_Signature
      (Self : in out Object; Check_Checksums : Boolean);
+
+   overriding
+   function On_Tree_Insertion
+     (Self : Object;
+      Db   : in out GPR2.Build.Tree_Db.Object) return Boolean;
 
    overriding
    function Pre_Execution (Self : in out Object) return Boolean;

@@ -9,6 +9,7 @@ with Ada.Characters.Handling; use Ada.Characters.Handling;
 with GNATCOLL.Traces;
 
 with GPR2.Build.Actions.Process.Ada_Bind;
+with GPR2.Build.Actions.Thread.Lib_Copy;
 with GPR2.Build.Artifacts.Key_Value;
 with GPR2.Build.Artifacts.Source_Files;
 with GPR2.Build.External_Options;
@@ -58,10 +59,10 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
       Idx     : Language_Id;
       Default : Value_Type) return Value_Type;
 
-   function Update_Binds_From_ALI (Self : in out Object)
+   function On_ALI_Updated (Self : in out Object)
      return Boolean;
-   --  Parse the ALI files and inform the bind actions that also depend on
-   --  this ALI file so that they can update their dependencies.
+   --  Parse the ALI files and inform the bind and copy_lib actions that also
+   --  depend on this ALI file so that they can update their dependencies.
 
    ----------------------
    -- Action_Parameter --
@@ -771,6 +772,74 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
       end if;
    end Initialize;
 
+   --------------------
+   -- On_ALI_Updated --
+   --------------------
+
+   function On_ALI_Updated (Self : in out Object) return Boolean is
+      Binds  : Action_Id_Sets.Set;
+      Copies : Action_Id_Sets.Set;
+   begin
+
+      --  Now that we know the ALI file is correct, let the bind action know
+      --  the actual list of imported units from this dependency file.
+
+      if not Self.ALI_Object.Parse then
+         Self.Tree.Reporter.Report
+           (GPR2.Message.Create
+              (GPR2.Message.Error,
+               "failed to analyze the ALI file",
+               GPR2.Source_Reference.Object
+                 (GPR2.Source_Reference.Create
+                    (Self.ALI_Object.Path_Name.Value, 0, 0))));
+         return False;
+      end if;
+
+      --  Retrieve a list of Bind actions that are using this ali file.
+
+      for Action of Self.Tree.Successors (Self.Dep_File) loop
+            --  Note: do not call On_Ali_Parsed from this loop since we're
+            --  iterating over Self.Tree.Successors so any modification to
+            --  the tree within this loop may raise a Program_Error "attempt
+            --  to tamper with cursors".
+
+         if Action in Ada_Bind.Object'Class then
+            Binds.Include (Action.UID);
+         end if;
+
+         if Action in Thread.Lib_Copy.Object'Class then
+            Copies.Include (Action.UID);
+         end if;
+      end loop;
+
+      for UID of Binds loop
+         declare
+            Bind : constant access Ada_Bind.Object'Class :=
+                     Ada_Bind.Object'Class
+                       (Self.Tree.Action_Id_To_Reference
+                          (UID).Element.all)'Access;
+         begin
+            if not Bind.On_Ali_Parsed (Self) then
+               return False;
+            end if;
+         end;
+      end loop;
+
+      for UID of Copies loop
+         declare
+            Copy : constant access Thread.Lib_Copy.Object'Class :=
+              Thread.Lib_Copy.Object'Class
+                (Self.Tree.Action_Id_To_Reference (UID).Element.all)'Access;
+         begin
+            if not Copy.On_Ali_Parsed (Self) then
+               return False;
+            end if;
+         end;
+      end loop;
+
+      return True;
+   end On_ALI_Updated;
+
    --------------------------
    -- On_Static_Completion --
    --------------------------
@@ -794,7 +863,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
       --  ALI file is missing.
 
       if Self.ALI_Object.Path_Name.Exists then
-         return Self.Update_Binds_From_ALI;
+         return Self.On_ALI_Updated;
       else
          return False;
       end if;
@@ -984,7 +1053,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
             return False;
          end if;
 
-         if not Self.Update_Binds_From_ALI then
+         if not Self.On_ALI_Updated then
             return False;
          end if;
       end if;
@@ -1092,59 +1161,6 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
 
       return Self.ALI_Object.Spec_Needs_Body;
    end Spec_Needs_Body;
-
-   ---------------------------
-   -- Update_Binds_From_ALI --
-   ---------------------------
-
-   function Update_Binds_From_ALI (Self : in out Object)
-     return Boolean
-   is
-      Binds : Action_Id_Sets.Set;
-   begin
-
-      --  Now that we know the ALI file is correct, let the bind action know
-      --  the actual list of imported units from this dependency file.
-
-      if not Self.ALI_Object.Parse then
-         Self.Tree.Reporter.Report
-           (GPR2.Message.Create
-              (GPR2.Message.Error,
-               "failed to analyze the ALI file",
-               GPR2.Source_Reference.Object
-                 (GPR2.Source_Reference.Create
-                    (Self.ALI_Object.Path_Name.Value, 0, 0))));
-         return False;
-      end if;
-
-      --  Retrieve a list of Bind actions that are using this ali file.
-
-      for Action of Self.Tree.Successors (Self.Dep_File) loop
-         if Action in Ada_Bind.Object'Class then
-            --  Note: do not call On_Ali_Parsed from this loop since we're
-            --  iterating over Self.Tree.Successors so any modification to
-            --  the tree within this loop may raise a Program_Error "attempt
-            --  to tamper with cursors".
-
-            Binds.Include (Action.UID);
-         end if;
-      end loop;
-
-      for UID of Binds loop
-         declare
-            Bind : constant access Ada_Bind.Object'Class :=
-                     Ada_Bind.Object'Class
-                       (Self.Tree.Action_Id_To_Reference
-                          (UID).Element.all)'Access;
-         begin
-            if not Bind.On_Ali_Parsed (Self) then
-               return False;
-            end if;
-         end;
-      end loop;
-
-      return True;
-   end Update_Binds_From_ALI;
 
    ------------------
    -- Withed_Units --
