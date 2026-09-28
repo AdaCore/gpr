@@ -1,0 +1,7 @@
+library project Derived extends "../base/base.gpr" is
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj";
+   for Library_Dir use "lib";
+   for Library_Name use "derived";
+   for Library_Interface use ("Defs", "Printer", "Extra");
+end Derived;
