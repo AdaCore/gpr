@@ -1,0 +1,2 @@
+externally built: before NO_OP, after Set_State (Deactivated) NO_OP
+regular view     : before ACTIONABLE, after Set_State (Deactivated) DEACTIVATED
