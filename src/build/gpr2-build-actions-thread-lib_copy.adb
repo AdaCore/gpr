@@ -514,10 +514,35 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
 
    overriding
    function Pre_Execution (Self : in out Object) return Boolean is
+      use type Path_Name.Object;
    begin
       --  Runs in the main task once the units are compiled, which is when the
       --  ALIs can tell which parts belong to the interface. Execute runs in
       --  its own task and could not query them.
+
+      --  What to copy was recorded while the graph was built, and an input
+      --  may have been replaced since: a compile action that had inherited
+      --  its ALI from an extended view produces its own as soon as it really
+      --  compiles. Replace_Artifact keeps the tree up to date, so take the
+      --  sources from there. Destinations are named after the source, hence
+      --  the match on the simple name.
+
+      for Input of Self.Tree.Inputs (Object'Class (Self).UID) loop
+         if Input in Artifacts.Files.Object'Class then
+            declare
+               Path : constant Path_Name.Object :=
+                        Artifacts.Files.Object'Class (Input).Path;
+            begin
+               for E of Self.Copies loop
+                  if E.From /= Path
+                    and then E.From.Simple_Name = Path.Simple_Name
+                  then
+                     E.From := Path;
+                  end if;
+               end loop;
+            end;
+         end if;
+      end loop;
 
       for E of Self.Copies loop
          E.Skip := not Self.Copy_Needed (E);
