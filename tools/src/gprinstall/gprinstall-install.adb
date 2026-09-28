@@ -33,6 +33,7 @@ with GNAT.String_Split;
 with GNATCOLL.OS.Constants;
 with GNATCOLL.OS.FSUtil;
 
+with GPR2.Build.Actions.Process.Ada_Bind;
 with GPR2.Build.Actions.Process.Compile.Ada;
 with GPR2.Build.Actions.Process.Link;
 with GPR2.Build.Artifacts.Files;
@@ -257,6 +258,12 @@ package body GPRinstall.Install is
                           else GPR2.Build.Compilation_Unit.Maps.Empty_Map);
       --  The interface closure of the project. Cached here as slow to compute.
 
+      Extra_Intf : GPR2.Build.Compilation_Unit.Maps.Map;
+      --  The units the bind action added to the interface: a unit withed by
+      --  an interface unit joins the interface even when the project does not
+      --  list it, and its ALI is copied to the library like the others. Set
+      --  from Extra_Interface once that body is elaborated.
+
       procedure Copy_File
         (From, To      : Path_Name.Object;
          File          : Filename_Optional := No_Filename;
@@ -294,6 +301,9 @@ package body GPRinstall.Install is
       --  if not absolute.
 
       function Exec_Dir return Path_Name.Object;
+
+      function Extra_Interface return GPR2.Build.Compilation_Unit.Maps.Map;
+      --  The interface of Project, as extended by its bind action
       --  Returns the full pathname to the executable destination directory
 
       function Lib_Dir (Build_Name : Boolean := True) return Path_Name.Object;
@@ -1212,6 +1222,7 @@ package body GPRinstall.Install is
                         if not Project.Is_Library
                           or else not Project.Is_Library_Standalone
                           or else Interface_Closure.Contains (U.Name)
+                          or else Extra_Intf.Contains (U.Name)
                           or else U.Is_Body_Needed_For_SAL
                         then
                            if Options.All_Sources then
@@ -2157,6 +2168,20 @@ package body GPRinstall.Install is
                            end if;
 
                            Append (Line, Quote (V.Text));
+                           First := False;
+                        end loop;
+
+                        --  A unit withed by an interface unit joins the
+                        --  interface, and its ALI is installed with the
+                        --  others: the installed project must list it too,
+                        --  or its interface no longer matches its content.
+
+                        for CU of Extra_Intf loop
+                           if not First then
+                              Append (Line, ", ");
+                           end if;
+
+                           Append (Line, Quote (String (CU.Name)));
                            First := False;
                         end loop;
 
@@ -3124,6 +3149,30 @@ package body GPRinstall.Install is
       function Exec_Dir return Path_Name.Object is
         (Prefix_For_Dir (-Exec_Subdir.V));
 
+      ---------------------
+      -- Extra_Interface --
+      ---------------------
+
+      function Extra_Interface return GPR2.Build.Compilation_Unit.Maps.Map is
+      begin
+         if not Project.Is_Library
+           or else not Project.Is_Library_Standalone
+         then
+            return GPR2.Build.Compilation_Unit.Maps.Empty_Map;
+         end if;
+
+         for Action of Tree.Artifacts_Database (Project).Tree_Db.All_Actions
+         loop
+            if Action in Ada_Bind.Object'Class
+              and then Action.View = Project
+            then
+               return Ada_Bind.Object'Class (Action).Extended_Interface;
+            end if;
+         end loop;
+
+         return GPR2.Build.Compilation_Unit.Maps.Empty_Map;
+      end Extra_Interface;
+
       -----------------
       -- Has_Sources --
       -----------------
@@ -3375,6 +3424,8 @@ package body GPRinstall.Install is
       --  Whether the project is to be installed
 
    begin
+      Extra_Intf := Extra_Interface;
+
       --  Empty Content
 
       Content.Delete_First (Count => Ada.Containers.Count_Type'Last);
