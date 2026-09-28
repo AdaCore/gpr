@@ -1,0 +1,20 @@
+V "GNAT Lib v27.20260922"
+M P W=b
+A -gnatA
+P
+
+RN
+
+U foo%b		foo.adb		12345678 NE OL PK
+W bar%s		bar.ads		bar.ali
+W baz%s
+Z qux%s		qux.ads		qux.ali
+Z quux%s
+
+D foo.adb		20260101000000 12345678 foo%b
+D bar.ads		20260101000000 87654321 bar%s
+D baz.ads		20260101000000 11223344 baz%s
+D baz.adb		20260101000000 55667788 baz%b
+D qux.ads		20260101000000 99001122 qux%s
+D quux.ads		20260101000000 33445566 quux%s
+D quux.adb		20260101000000 77889900 quux%b

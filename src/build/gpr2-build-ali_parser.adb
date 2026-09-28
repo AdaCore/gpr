@@ -354,6 +354,9 @@ package body GPR2.Build.ALI_Parser is
 
          declare
             Unit_Name : constant String := IO.Get_Token (Reader, EOL);
+            --  EOL is True here exactly when Unit_Name was the last token
+            --  on this line. The compiler recorded a bare "W/Y/Z unit_name%s")
+            Has_File  : constant Boolean := not EOL;
          begin
             if Unit_Name = "" then
                raise Scan_ALI_Error with "missed withed unit name";
@@ -363,15 +366,22 @@ package body GPR2.Build.ALI_Parser is
               and then Unit_Name (Unit_Name'Last) in 's' | 'b'
               and then Unit_Name (Unit_Name'Last - 1) = '%'
             then
-               if Cur_SB = U_Spec then
-                  Self.Spec_Imports.Include
-                    (Name_Type
-                       (Unit_Name (Unit_Name'First .. Unit_Name'Last - 2)));
-               else
-                  Self.Body_Imports.Include
-                    (Name_Type
-                       (Unit_Name (Unit_Name'First .. Unit_Name'Last - 2)));
-               end if;
+               declare
+                  Name : constant Name_Type :=
+                           Name_Type
+                             (Unit_Name
+                                (Unit_Name'First .. Unit_Name'Last - 2));
+               begin
+                  if Cur_SB = U_Spec then
+                     Self.Spec_Imports.Include (Name);
+                  else
+                     Self.Body_Imports.Include (Name);
+                  end if;
+
+                  if not Has_File then
+                     Self.Unresolved_Withs.Include (Name);
+                  end if;
+               end;
             else
                raise Scan_ALI_Error
                  with "withed unit name does not end with '%s'";
@@ -445,7 +455,11 @@ package body GPR2.Build.ALI_Parser is
                      end loop;
                   end;
 
-               when 'W' | 'Y' =>
+               when 'W' | 'Y' | 'Z' =>
+                  --  'W' = with
+                  --  'Y' = limited_with
+                  --  'Z' = with only reachable via a generic instantiation
+                  --  All three are real closure dependencies.
                   Parse_With (Reader);
 
                when 'X' =>

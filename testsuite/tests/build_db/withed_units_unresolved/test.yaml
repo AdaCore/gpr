@@ -1,0 +1,7 @@
+description:
+    Integration-level check that Compile.Ada's Withed_Units,
+    Withed_Units_From_Spec and Withed_Units_From_Body all filter out
+    with-lines that have no resolved source/ALI file, using a real
+    Compile.Ada action constructed against a hand-placed fixture ALI
+    covering all four W/Z x resolved/unresolved combinations.
+driver: basic

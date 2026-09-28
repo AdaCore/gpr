@@ -1284,7 +1284,8 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
 
       if All_Units then
          return Self.ALI_Object.Withed_From_Spec.Union
-           (Self.ALI_Object.Withed_From_Body);
+           (Self.ALI_Object.Withed_From_Body).Difference
+             (Self.ALI_Object.Unresolved_Withs);
       else
          if Self.CU.Main_Part = S_Spec then
             return Self.Withed_Units_From_Spec;
@@ -1309,7 +1310,8 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          return Containers.Empty_Name_Set;
       end if;
 
-      return Self.ALI_Object.Withed_From_Body;
+      return Self.ALI_Object.Withed_From_Body.Difference
+        (Self.ALI_Object.Unresolved_Withs);
    end Withed_Units_From_Body;
 
    ----------------------------
@@ -1327,7 +1329,8 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          return Containers.Empty_Name_Set;
       end if;
 
-      return Self.ALI_Object.Withed_From_Spec;
+      return Self.ALI_Object.Withed_From_Spec.Difference
+        (Self.ALI_Object.Unresolved_Withs);
    end Withed_Units_From_Spec;
 
 end GPR2.Build.Actions.Process.Compile.Ada;
