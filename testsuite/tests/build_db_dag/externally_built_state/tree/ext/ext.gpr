@@ -1,0 +1,8 @@
+library project Ext is
+   for Languages use ("Ada");
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj";
+   for Library_Name use "ext";
+   for Library_Dir use "lib";
+   for Externally_Built use External ("EXT_BUILT", "false");
+end Ext;

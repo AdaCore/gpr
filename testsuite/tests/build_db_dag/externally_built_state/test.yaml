@@ -1,0 +1,2 @@
+description: an action of an externally built view is No_Op, never Deactivated
+driver: python_script

@@ -1733,14 +1733,14 @@ package body GPR2.Build.Actions_Scheduler is
       Slot_Id : Positive;
       Force   : Boolean) return Pre_Run_Action_Status is
    begin
-      if Action.View.Is_Externally_Built then
+      if Action.State = No_Op then
          if Traces.Is_Active then
             pragma Annotate (Xcov, Exempt_On, "debug code");
-            Traces.Trace ("job externally built: " & Action.UID.Image);
+            Traces.Trace ("job is no-op: " & Action.UID.Image);
             pragma Annotate (Xcov, Exempt_Off);
          end if;
 
-         return Deactivated;
+         return Skipped;
       end if;
 
       --  Load and check the job's signature
@@ -1761,14 +1761,6 @@ package body GPR2.Build.Actions_Scheduler is
 
          return Deactivated;
 
-      elsif Action.State = No_Op then
-         if Traces.Is_Active then
-            pragma Annotate (Xcov, Exempt_On, "debug code");
-            Traces.Trace ("job is no-op: " & Action.UID.Image);
-            pragma Annotate (Xcov, Exempt_Off);
-         end if;
-
-         return Skipped;
       end if;
 
       if not Force and then Action.Valid_Signature then
