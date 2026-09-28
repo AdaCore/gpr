@@ -1,0 +1,9 @@
+$ gprbuild -P lib.gpr -p -q
+$ gprbuild -P lib.gpr
+$ rm libsrc/cutil.h
+$ gprbuild -P lib.gpr
+[Library-Files-Copy] Lib
+$ ls libsrc
+api.ads
+cutil.h
+helper.ads

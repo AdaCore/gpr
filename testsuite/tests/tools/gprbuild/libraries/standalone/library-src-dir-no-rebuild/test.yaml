@@ -1,0 +1,6 @@
+description: |
+  Once a standalone library with a Library_Src_Dir is built, building it
+  again must not re-run any action. Conversely, removing one of the copies
+  it produced must make it run again: the copies are outputs of the action,
+  non-Ada ones included, so they take part in its signature.
+driver: python_script
