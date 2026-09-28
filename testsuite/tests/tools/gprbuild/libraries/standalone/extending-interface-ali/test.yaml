@@ -1,0 +1,5 @@
+description: |
+  A library extending another one must copy its own ALI files into its
+  Library_ALI_Dir, not the ones of the extended library, including for the
+  interface units it does not redefine.
+driver: python_script
