@@ -253,7 +253,8 @@ install switches:
            The sources directory/sub-directory
  --stat    Display stats about installed projects, must be used with --list
  --uninstall
-           Remove all previously installed files
+           Remove previously installed files, argument must be the manifest
+           file
 
 Project switches:
    Project file handling switches
@@ -617,7 +618,8 @@ install switches:
            The sources directory/sub-directory
  --stat    Display stats about installed projects, must be used with --list
  --uninstall
-           Remove all previously installed files
+           Remove previously installed files, argument must be the manifest
+           file
 
 Project switches:
    Project file handling switches

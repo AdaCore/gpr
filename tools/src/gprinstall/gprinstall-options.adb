@@ -274,7 +274,8 @@ package body GPRinstall.Options is
         (Install_Group,
          Create
            (Name => "--uninstall",
-            Help => "Remove all previously installed files"));
+            Help => "Remove previously installed files," &
+                    " argument must be the manifest file"));
       Parser.Add_Argument
         (Install_Group,
          Create
