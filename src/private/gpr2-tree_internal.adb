@@ -869,7 +869,7 @@ package body GPR2.Tree_Internal is
 
       --  Do nothing more if there are errors during the parsing
 
-      if not Self.Messages.Has_Error then
+      if not Self.Messages.Has_Critical_Error then
          --  Add to root view's externals, configuration project externals
 
          Def := View_Internal.Get (Self.Root);
@@ -1025,7 +1025,7 @@ package body GPR2.Tree_Internal is
          end if;
       end if;
 
-      if not Self.Messages.Has_Error then
+      if not Self.Messages.Has_Critical_Error then
          --  Tree is now fully loaded, we can create the artifacts database
          --  object.
          Init_Tree_Database (Self.Tree_Db, Self);
@@ -1080,8 +1080,8 @@ package body GPR2.Tree_Internal is
       Self.Conf := PC.Load (Filename);
       View_Internal.Bind_Configuration_To_Tree (Self.Conf, Self.Self);
 
-      if not Self.Conf.Log_Messages.Has_Error
-        and then not Self.Messages.Has_Error
+      if not Self.Conf.Log_Messages.Has_Critical_Error
+        and then not Self.Messages.Has_Critical_Error
       then
          Set_Context (Self);
       end if;
@@ -1265,7 +1265,7 @@ package body GPR2.Tree_Internal is
             begin
                --  If there are parsing errors, do not go further
 
-               if Self.Messages.Has_Error then
+               if Self.Messages.Has_Critical_Error then
                   return View;
                end if;
 
@@ -1752,7 +1752,7 @@ package body GPR2.Tree_Internal is
 
          --  Do the following only if there are no error messages
 
-         if not Self.Messages.Has_Error then
+         if not Self.Messages.Has_Critical_Error then
             Data.Kind := Project.Qualifier;
 
             declare
@@ -2250,8 +2250,8 @@ package body GPR2.Tree_Internal is
       --  Check that library names are unique within each closure. If not,
       --  report an error.
 
-      function Has_Error return Boolean is
-        (Self.Messages.Has_Error);
+      function Has_Critical_Error return Boolean is
+        (Self.Messages.Has_Critical_Error);
 
 
       ------------------------------------
@@ -2607,7 +2607,7 @@ package body GPR2.Tree_Internal is
             View,
             Self.Pre_Conf_Mode);
 
-         if Self.Messages.Has_Error then
+         if Self.Messages.Has_Critical_Error then
             return;
          end if;
 
@@ -2728,7 +2728,7 @@ package body GPR2.Tree_Internal is
                            --  If there was error messages during the parsing
                            --  of the aggregated project, just exit now.
 
-                           if Self.Messages.Has_Error then
+                           if Self.Messages.Has_Critical_Error then
                               raise Project_Error with Pathname.String_Value;
                            end if;
 
@@ -3476,7 +3476,7 @@ package body GPR2.Tree_Internal is
                Set_View (View);
                Closure.Insert (View.Id);
 
-               exit when Has_Error;
+               exit when Has_Critical_Error;
             end if;
          end loop;
 
@@ -3490,7 +3490,7 @@ package body GPR2.Tree_Internal is
 
          --  Now evaluate the remaining views
 
-         if not Has_Error then
+         if not Has_Critical_Error then
             Closure_Loop :
             loop
                for View of Self.Ordered_Views loop
@@ -3499,7 +3499,7 @@ package body GPR2.Tree_Internal is
                   if Inserted then
                      Closure_Found := False;
                      Set_View (View);
-                     exit Closure_Loop when Has_Error;
+                     exit Closure_Loop when Has_Critical_Error;
                   end if;
                end loop;
 
@@ -3510,7 +3510,7 @@ package body GPR2.Tree_Internal is
       end;
 
       if not Self.Pre_Conf_Mode then
-         if not Has_Error then
+         if not Has_Critical_Error then
             for View of Self.Ordered_Views loop
                --  Finally add a dependency over the runtime view if the view*
                --  has Ada language
@@ -3546,7 +3546,7 @@ package body GPR2.Tree_Internal is
             end loop;
          end if;
 
-         if not Has_Error then
+         if not Has_Critical_Error then
 
             --  Now that we know that each view is valid, do cross view checks
             --  for library names uniqueness.
@@ -3554,7 +3554,7 @@ package body GPR2.Tree_Internal is
             Check_Library_Names_Are_Unique;
          end if;
 
-         if Has_Error then
+         if Self.Messages.Has_Error then
             raise Project_Error
               with Self.Root.Path_Name.String_Value & " semantic error";
          end if;

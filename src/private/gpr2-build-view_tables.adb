@@ -707,7 +707,7 @@ package body GPR2.Build.View_Tables is
       if Attr.Is_Defined then
          Read_Source_List
            (Data.View, Attr, Exc_List, Messages);
-         if not Messages.Has_Error then
+         if not Messages.Has_Critical_Error then
             for Src of Exc_List loop
                Data.Excluded_Sources.Include
                  (Src, Source_Reference.Object (Attr.Value));

@@ -140,6 +140,23 @@ package body GPR2.Log is
       end if;
    end First;
 
+   ------------------------
+   -- Has_Critical_Error --
+   ------------------------
+
+   function Has_Critical_Error (Self : Object) return Boolean is
+   begin
+      for M of Self.Store loop
+         if M.Level = GPR2.Message.Critical_Error
+           and then M.Status = GPR2.Message.Unread
+         then
+            return True;
+         end if;
+      end loop;
+
+      return False;
+   end Has_Critical_Error;
+
    -----------------
    -- Has_Element --
    -----------------

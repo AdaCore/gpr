@@ -1141,7 +1141,8 @@ package body Update_Sources_List is
                return True;
             end if;
 
-            exit when Stop_On_Error and then Tree.Log_Messages.Has_Error;
+            exit when Stop_On_Error
+              and then Tree.Log_Messages.Has_Critical_Error;
          end loop;
 
          return False;

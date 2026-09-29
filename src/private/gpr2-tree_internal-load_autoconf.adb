@@ -601,7 +601,7 @@ begin
    --  Ignore possible missing dirs and imported projects since they can
    --  depend on the result of auto-configuration.
 
-   Has_Errors := Self.Messages.Has_Error;
+   Has_Errors := Self.Messages.Has_Critical_Error;
 
    if not Has_Errors then
       --  First, check for Config_Prj_File declaration

@@ -67,6 +67,9 @@ package GPR2.Log is
    function Has_Error (Self : Object) return Boolean;
    --  Returns True if the log contains unread errors
 
+   function Has_Critical_Error (Self : Object) return Boolean;
+   --  Returns True if the log contains unread critical errors
+
    --  Iterator
 
    type Cursor is private;
