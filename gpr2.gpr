@@ -42,6 +42,7 @@ library project GPR2 extends "gpr2_shared.gpr" is
             "GPR2.Build.Actions.Link_Options_Consumer",
             "GPR2.Build.Actions_Population",
             "GPR2.Build.Actions.Thread",
+            "GPR2.Build.Actions.Thread.Lib_Copy",
             "GPR2.Build.Ali_Parser",
             "GPR2.Build.Artifacts",
             "GPR2.Build.Artifacts.Files",
