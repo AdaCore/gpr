@@ -1183,7 +1183,8 @@ package body GPR2.Project.View is
      (Self               : Object;
       Include_Self       : Boolean := False;
       Include_Extended   : Boolean := False;
-      Include_Aggregated : Boolean := False)
+      Include_Aggregated : Boolean := False;
+      Use_Cache          : Boolean := True)
       return GPR2.Project.View.Vector.Object
    is
       procedure Add (V : GPR2.Project.View.Object);
@@ -1214,7 +1215,7 @@ package body GPR2.Project.View is
          end if;
       end Add;
    begin
-      if Cached.Computed then
+      if Use_Cache and then Cached.Computed then
          return Cached.Views;
       end if;
 
@@ -1258,7 +1259,9 @@ package body GPR2.Project.View is
          Closure_Views.Delete_First;
       end if;
 
-      Cached := (Computed => True, Views => Closure_Views);
+      if Use_Cache then
+         Cached := (Computed => True, Views => Closure_Views);
+      end if;
 
       return Closure_Views;
    end Closure;
