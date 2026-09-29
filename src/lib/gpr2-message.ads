@@ -10,10 +10,10 @@ with GPR2.Source_Reference;
 
 package GPR2.Message is
 
-   type Level_Value is (Warning, Error, End_User, Hint, Lint);
+   type Level_Value is (Warning, Critical_Error, End_User, Hint, Lint);
    --  Severity levels of messages:
    --
-   --  Warning and Error:
+   --  Warning and Critical_Error:
    --     Self-explanatory.
    --  End_User:
    --     Used for messages displayed directly to the user without

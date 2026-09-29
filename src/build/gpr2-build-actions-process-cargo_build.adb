@@ -71,7 +71,7 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
       else
          Self.Tree.Reporter.Report
            (GPR2.Message.Create
-              (GPR2.Message.Error,
+              (GPR2.Message.Critical_Error,
                "no compiler driver defined for language Rust, "
                & "set Compiler.Driver (""Rust"") to the path of cargo",
                GPR2.Source_Reference.Create
@@ -624,7 +624,7 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
       if Self.Rust_Triple = Null_Unbounded_String then
          Db.Reporter.Report
            (GPR2.Message.Create
-              (GPR2.Message.Error,
+              (GPR2.Message.Critical_Error,
                "no Rust target triple known for GPR target """
                & String (GPR_Target)
                & """, set package Cargo attribute Rust_Target "
@@ -639,7 +639,7 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
       then
          Db.Reporter.Report
            (GPR2.Message.Create
-              (GPR2.Message.Error,
+              (GPR2.Message.Critical_Error,
                "Rust target triple """
                & To_String (Self.Rust_Triple)
                & """ is not compatible with GPR target """
@@ -653,7 +653,7 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
       if Self.Manifest_Error /= Null_Unbounded_String then
          Db.Reporter.Report
            (GPR2.Message.Create
-              (GPR2.Message.Error,
+              (GPR2.Message.Critical_Error,
                To_String (Self.Manifest_Error),
                GPR2.Source_Reference.Create
                  (Self.Ctxt.Path_Name.Value, 0, 0)));

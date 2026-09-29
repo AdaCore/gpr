@@ -30,7 +30,7 @@ package body GPR2.Build.Actions.Process.Cargo_Clean is
       if Driver = "" then
          Self.Tree.Reporter.Report
            (GPR2.Message.Create
-              (GPR2.Message.Error,
+              (GPR2.Message.Critical_Error,
                "no compiler driver defined for language Rust, "
                & "set Compiler.Driver (""Rust"") to the path of cargo",
                GPR2.Source_Reference.Create

@@ -155,7 +155,7 @@ package body GPR2.KB.Parsing is
       when XML_Validation_Error =>
          Self.Messages.Append
            (Message.Create
-              (Message.Error,
+              (Message.Critical_Error,
                Get_Error_Message (Reader),
                Source_Reference.Object
                  (Source_Reference.Create
@@ -167,7 +167,7 @@ package body GPR2.KB.Parsing is
       when E : XML_Fatal_Error =>
          Self.Messages.Append
            (Message.Create
-              (Message.Error,
+              (Message.Critical_Error,
                Ada.Exceptions.Exception_Message (E),
                Source_Reference.Object
                  (Source_Reference.Create
@@ -256,7 +256,7 @@ package body GPR2.KB.Parsing is
       when XML_Validation_Error =>
          Base.Messages.Append
            (Message.Create
-              (Message.Error,
+              (Message.Critical_Error,
                Get_Error_Message (Schema),
                Source_Reference.Object
                  (Source_Reference.Create
@@ -296,7 +296,7 @@ package body GPR2.KB.Parsing is
       when XML_Validation_Error =>
          Base.Messages.Append
            (Message.Create
-              (Message.Error,
+              (Message.Critical_Error,
                Get_Error_Message (Schema),
                Source_Reference.Object
                  (Source_Reference.Create
@@ -390,7 +390,7 @@ package body GPR2.KB.Parsing is
          else
             Result.Messages.Append
               (Message.Create
-                 (Message.Error,
+                 (Message.Critical_Error,
                   "entity not found for Public_Id="""
                   & Public_Id
                   & """, System_Id="""
@@ -445,7 +445,7 @@ package body GPR2.KB.Parsing is
                when XML_Validation_Error =>
                   Result.Messages.Append
                     (Message.Create
-                       (Message.Error,
+                       (Message.Critical_Error,
                         Get_Error_Message (Reader),
                         Source_Reference.Object
                           (Source_Reference.Create
@@ -459,7 +459,7 @@ package body GPR2.KB.Parsing is
                when E : XML_Fatal_Error =>
                   Result.Messages.Append
                     (Message.Create
-                       (Message.Error,
+                       (Message.Critical_Error,
                         Ada.Exceptions.Exception_Message (E),
                         Source_Reference.Object
                           (Source_Reference.Create
@@ -537,7 +537,7 @@ package body GPR2.KB.Parsing is
             when XML_Validation_Error =>
                Self.Messages.Append
                  (Message.Create
-                    (Message.Error,
+                    (Message.Critical_Error,
                      Get_Error_Message (Reader),
                      Source_Reference.Object
                        (Source_Reference.Create
@@ -549,7 +549,7 @@ package body GPR2.KB.Parsing is
             when E : XML_Fatal_Error =>
                Self.Messages.Append
                  (Message.Create
-                    (Message.Error,
+                    (Message.Critical_Error,
                      Ada.Exceptions.Exception_Message (E),
                      Source_Reference.Object
                        (Source_Reference.Create
@@ -928,7 +928,7 @@ package body GPR2.KB.Parsing is
                   when Expression_Error =>
                      Base.Messages.Append
                        (Message.Create
-                          (Message.Error,
+                          (Message.Critical_Error,
                            "Invalid regular expression found in configuration:"
                            & Val,
                            Sloc => Error_Sloc));
@@ -984,7 +984,7 @@ package body GPR2.KB.Parsing is
             else
                Base.Messages.Append
                  (Message.Create
-                    (Message.Error,
+                    (Message.Critical_Error,
                      "Unknown XML tag in " & Node_Name (N),
                      Sloc => Error_Sloc));
                raise Invalid_KB;
@@ -1151,7 +1151,7 @@ package body GPR2.KB.Parsing is
                   else
                      Base.Messages.Append
                        (Message.Create
-                          (Message.Error,
+                          (Message.Critical_Error,
                            "Unknown XML tag in " & Node_Name (N2),
                            Sloc => Error_Sloc));
                      raise Invalid_KB;
@@ -1194,7 +1194,7 @@ package body GPR2.KB.Parsing is
                      else
                         Base.Messages.Append
                           (Message.Create
-                             (Message.Error,
+                             (Message.Critical_Error,
                               "Unknown XML tag in " & Node_Name (N2),
                            Sloc => Error_Sloc));
                         raise Invalid_KB;
@@ -1244,7 +1244,7 @@ package body GPR2.KB.Parsing is
                   else
                      Base.Messages.Append
                        (Message.Create
-                          (Message.Error,
+                          (Message.Critical_Error,
                            "Unknown XML tag in " & Node_Name (N2),
                            Sloc => Error_Sloc));
                      raise Invalid_KB;
@@ -1265,7 +1265,7 @@ package body GPR2.KB.Parsing is
             else
                Base.Messages.Append
                  (Message.Create
-                    (Message.Error,
+                    (Message.Critical_Error,
                      "Unknown XML tag in " & Node_Name (N),
                      Sloc => Error_Sloc));
                raise Invalid_KB;
@@ -1306,7 +1306,7 @@ package body GPR2.KB.Parsing is
             else
                Base.Messages.Append
                  (Message.Create
-                    (Message.Error,
+                    (Message.Critical_Error,
                      "Unknown XML tag in " & Node_Name (N),
                      Sloc => Error_Sloc));
                raise Invalid_KB;
@@ -1340,7 +1340,7 @@ package body GPR2.KB.Parsing is
             if Flags (Pedantic) then
                Base.Messages.Append
                  (Message.Create
-                    (Message.Error,
+                    (Message.Critical_Error,
                      "No canonical target specified for target-set",
                      Sloc => Error_Sloc));
                raise Invalid_KB;
@@ -1370,7 +1370,7 @@ package body GPR2.KB.Parsing is
                   when Expression_Error =>
                      Base.Messages.Append
                        (Message.Create
-                          (Message.Error,
+                          (Message.Critical_Error,
                            "Invalid regular expression " & Val
                            & " found in the target-set",
                            Sloc => Error_Sloc));
@@ -1380,7 +1380,7 @@ package body GPR2.KB.Parsing is
             else
                Base.Messages.Append
                  (Message.Create
-                    (Message.Error,
+                    (Message.Critical_Error,
                      "Unknown XML tag " & Node_Name (N),
                      Sloc => Error_Sloc));
                raise Invalid_KB;
@@ -1431,7 +1431,7 @@ package body GPR2.KB.Parsing is
             else
                Base.Messages.Append
                  (Message.Create
-                    (Message.Error,
+                    (Message.Critical_Error,
                      "Unknown XML tag "
                      & Node_Name (N),
                      Sloc => Error_Sloc));
@@ -1444,7 +1444,9 @@ package body GPR2.KB.Parsing is
       else
          Base.Messages.Append
            (Message.Create
-              (Message.Error, "Invalid toplevel XML tag", Sloc => Error_Sloc));
+              (Message.Critical_Error,
+               "Invalid toplevel XML tag",
+               Sloc => Error_Sloc));
       end if;
    exception
       when Invalid_KB =>

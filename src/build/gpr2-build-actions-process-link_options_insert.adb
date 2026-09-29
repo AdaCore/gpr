@@ -53,7 +53,7 @@ package body GPR2.Build.Actions.Process.Link_Options_Insert is
             if File.FD = GNATCOLL.OS.FS.Null_FD then
                Self.Tree.Reporter.Report
                  (GPR2.Message.Create
-                    (GPR2.Message.Error,
+                    (GPR2.Message.Critical_Error,
                      "failed to initialize a temporary file "
                      & "to contain the linker options"));
 

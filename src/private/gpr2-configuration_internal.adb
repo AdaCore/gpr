@@ -137,7 +137,7 @@ package body GPR2.Configuration_Internal is
                   else
                      Message :=
                        GPR2.Message.Create
-                         (GPR2.Message.Error,
+                         (GPR2.Message.Critical_Error,
                           "invalid runtime directory " &
                             Runtime_Dir.String_Value,
                           Sloc =>

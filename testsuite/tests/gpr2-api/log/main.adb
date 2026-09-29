@@ -67,7 +67,7 @@ begin
          Source_Reference.Create ("/ada/prj1.gpr", 1, 2)));
    Log.Append
      (Message.Create
-        (Message.Error, "test error",
+        (Message.Critical_Error, "test error",
          Source_Reference.Create ("/ada/prj2.gpr", 2, 3)));
    Log.Append
      (Message.Create

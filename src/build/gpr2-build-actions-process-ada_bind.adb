@@ -974,7 +974,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
             if not Comp.Parse_Ali then
                Self.Tree.Reporter.Report
                  (Message.Create
-                    (Message.Error,
+                    (Message.Critical_Error,
                      "Incorrectly formatted ali file """
                      & Comp.Dependency_File.Path.String_Value
                      & '"',

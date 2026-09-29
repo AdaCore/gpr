@@ -999,7 +999,7 @@ package body GPR2.Build.Actions_Scheduler is
          if Script_FD = Invalid_FD then
             Tree_Db.Reporter.Report
               (GPR2.Message.Create
-                 (GPR2.Message.Error,
+                 (GPR2.Message.Critical_Error,
                   "could not create the script file '"
                   & Options.Script_File.String_Value
                   & '"',

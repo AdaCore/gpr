@@ -49,7 +49,7 @@ package body GPR2.Reporter.Console is
 
       Stream : constant File_Type :=
                  (case Message.Level is
-                   when Error | Warning => Current_Error,
+                   when Critical_Error | Warning => Current_Error,
                    when others          =>
                     (if Message.To_Stderr
                      then Current_Error
@@ -70,7 +70,7 @@ package body GPR2.Reporter.Console is
 
             FD : constant File_Descriptor :=
               (case Message.Level is
-                 when Error | Warning => Standerr,
+                 when Critical_Error | Warning => Standerr,
                  when others          =>
                    (if Message.To_Stderr then Standerr else Standout));
          begin

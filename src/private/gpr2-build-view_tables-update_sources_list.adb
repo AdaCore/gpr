@@ -820,7 +820,7 @@ package body Update_Sources_List is
                         if Units.Contains (Unit.Index) then
                            Messages.Append
                              (Message.Create
-                                (Message.Error,
+                                (Message.Critical_Error,
                                  "file "
                                  & String (Full_Name (File.Path))
                                  & " contains duplicated units """
@@ -1280,7 +1280,7 @@ package body Update_Sources_List is
          then
             Messages.Append
               (Message.Create
-                 (Message.Error,
+                 (Message.Critical_Error,
                   "source file """ & String (S) & """ not found",
                   (if Data.View.Has_Attribute (PRA.Source_List_File)
                    then Data.View.Attribute (PRA.Source_List_File)
@@ -1331,7 +1331,7 @@ package body Update_Sources_List is
                     ((if Data.View.Has_Attribute (PRA.Source_Files)
                      or else Data.View.Has_Attribute (PRA.Source_List_File)
                      then Message.Warning
-                     else Message.Error),
+                     else Message.Critical_Error),
                      "source file """ & A.Value.Text
                      & """ for unit """ & A.Index.Text
                      & """ not found",
@@ -1347,7 +1347,7 @@ package body Update_Sources_List is
             if not Is_Simple_Name (Filename_Type (A.Value.Text)) then
                Messages.Append
                  (Message.Create
-                    (Message.Error,
+                    (Message.Critical_Error,
                      "source file """ & A.Value.Text
                      & """ for unit """ & A.Index.Text
                      & """ must be a simple filename",
@@ -1359,7 +1359,7 @@ package body Update_Sources_List is
                     ((if Data.View.Has_Attribute (PRA.Source_Files)
                      or else Data.View.Has_Attribute (PRA.Source_List_File)
                      then Message.Warning
-                     else Message.Error),
+                     else Message.Critical_Error),
                      "source file """ & A.Value.Text
                      & """ for unit """ & A.Index.Text
                      & """ not found",

@@ -12,7 +12,8 @@ procedure Test is
    begin
       Ada.Text_IO.Put_Line (" * Single message reporting:");
 
-      Reporter.Report (GPR2.Message.Create (Error, "An error message"));
+      Reporter.Report
+        (GPR2.Message.Create (Critical_Error, "An error message"));
       Reporter.Report (GPR2.Message.Create (End_User, "An end user message"));
       Reporter.Report ("A simple string");
       Reporter.Report (GPR2.Message.Create (Warning, "A warning message"));
@@ -31,7 +32,7 @@ procedure Test is
       Log.Clear;
 
       Ada.Text_IO.Put_Line (" * Log with error messages:");
-      Log.Append (GPR2.Message.Create (Error, "An error message"));
+      Log.Append (GPR2.Message.Create (Critical_Error, "An error message"));
       Log.Append (GPR2.Message.Create (End_User, "An end user message"));
       Log.Append (GPR2.Message.Create (Warning, "A warning message"));
       Log.Append (GPR2.Message.Create (Hint, "A hint message"));
@@ -43,7 +44,7 @@ procedure Test is
 
       Ada.Text_IO.Put_Line
         (" * Log with error messages and Warn_If_Errors set:");
-      Log.Append (GPR2.Message.Create (Error, "An error message"));
+      Log.Append (GPR2.Message.Create (Critical_Error, "An error message"));
       Log.Append (GPR2.Message.Create (End_User, "An end user message"));
       Log.Append (GPR2.Message.Create (Warning, "A warning message"));
       Log.Append (GPR2.Message.Create (Hint, "A hint message"));

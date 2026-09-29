@@ -712,7 +712,7 @@ package body GPR2.Build.Actions.Process.Compile is
                   else
                      Self.Tree.Reporter.Report
                        (GPR2.Message.Create
-                          (GPR2.Message.Error,
+                          (GPR2.Message.Critical_Error,
                            "compiler """
                            & Path.String_Value
                            & """"
@@ -732,7 +732,7 @@ package body GPR2.Build.Actions.Process.Compile is
          if Object'Class (Self).State = Actionable then
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
-                 (GPR2.Message.Error,
+                 (GPR2.Message.Critical_Error,
                   "no compiler for language """ & Image (Self.Lang) &
                     """, cannot compile """ &
                     String (Self.Src.Path_Name.Simple_Name) & '"',
@@ -1451,7 +1451,7 @@ package body GPR2.Build.Actions.Process.Compile is
                then
                   Self.Tree.Reporter.Report
                     (GPR2.Message.Create
-                       (GPR2.Message.Error,
+                       (GPR2.Message.Critical_Error,
                         '"'
                         & String (Self.Src.Path_Name.Relative_Path (Root_Dir))
                         & """ cannot import """
@@ -1471,7 +1471,7 @@ package body GPR2.Build.Actions.Process.Compile is
                then
                   Self.Tree.Reporter.Report
                     (GPR2.Message.Create
-                       (GPR2.Message.Error,
+                       (GPR2.Message.Critical_Error,
                         '"'
                         & String (Self.Src.Path_Name.Relative_Path (Root_Dir))
                         & """ cannot import """

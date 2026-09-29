@@ -1260,7 +1260,7 @@ package body GPR2.Build.Actions.Process.Link is
          if not GNATCOLL.OS.Stat.Is_File (Attrs) then
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
-                 (GPR2.Message.Error,
+                 (GPR2.Message.Critical_Error,
                   '"' & From.String_Value & """ is not a file",
                   GPR2.Source_Reference.Create
                     (Self.Ctxt.Path_Name.Value, 0, 0)));
@@ -1269,7 +1269,7 @@ package body GPR2.Build.Actions.Process.Link is
          elsif not GNATCOLL.OS.Stat.Is_Readable (Attrs) then
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
-                 (GPR2.Message.Error,
+                 (GPR2.Message.Critical_Error,
                   '"' & From.String_Value & """ is not a readable",
                   GPR2.Source_Reference.Create
                     (Self.Ctxt.Path_Name.Value, 0, 0)));
@@ -1280,7 +1280,7 @@ package body GPR2.Build.Actions.Process.Link is
          then
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
-                 (GPR2.Message.Error,
+                 (GPR2.Message.Critical_Error,
                   '"' & From.String_Value & """ is too big",
                   GPR2.Source_Reference.Create
                     (Self.Ctxt.Path_Name.Value, 0, 0)));
@@ -1820,7 +1820,7 @@ package body GPR2.Build.Actions.Process.Link is
                   pragma Annotate (Xcov, Exempt_On, "defensive code");
                   Self.Tree.Reporter.Report
                     (GPR2.Message.Create
-                       (GPR2.Message.Error,
+                       (GPR2.Message.Critical_Error,
                         "cannot replace symbolic link " & String (Variant),
                         GPR2.Source_Reference.Create
                           (Self.Ctxt.Path_Name.Value, 0, 0)));
@@ -1839,7 +1839,7 @@ package body GPR2.Build.Actions.Process.Link is
                      pragma Annotate (Xcov, Exempt_On, "defensive code");
                      Self.Tree.Reporter.Report
                        (GPR2.Message.Create
-                          (GPR2.Message.Error,
+                          (GPR2.Message.Critical_Error,
                            "cannot copy library variant " & String (Variant),
                            GPR2.Source_Reference.Create
                              (Self.Ctxt.Path_Name.Value, 0, 0)));
@@ -1863,7 +1863,7 @@ package body GPR2.Build.Actions.Process.Link is
                      pragma Annotate (Xcov, Exempt_On, "defensive code");
                      Self.Tree.Reporter.Report
                        (GPR2.Message.Create
-                          (GPR2.Message.Error,
+                          (GPR2.Message.Critical_Error,
                            "cannot create symbolic link " & String (Variant),
                            GPR2.Source_Reference.Create
                              (Self.Ctxt.Path_Name.Value, 0, 0)));
@@ -1901,7 +1901,7 @@ package body GPR2.Build.Actions.Process.Link is
          then
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
-                 (GPR2.Message.Error,
+                 (GPR2.Message.Critical_Error,
                   "cannot remove the old archive " &
                     String (Self.Output.Path.Simple_Name),
                   GPR2.Source_Reference.Create
@@ -1967,7 +1967,7 @@ package body GPR2.Build.Actions.Process.Link is
                      elsif not Signature_Only then
                         Self.Tree.Reporter.Report
                           (GPR2.Message.Create
-                             (GPR2.Message.Error,
+                             (GPR2.Message.Critical_Error,
                               "unknown object file """ & Val.Text & '"',
                               Val));
                         raise Action_Error;

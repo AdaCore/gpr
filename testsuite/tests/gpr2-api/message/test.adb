@@ -33,7 +33,7 @@ procedure Test is
       Level_Ub : Unbounded_String;
    begin
       case Level is
-         when Error => Level_Ub := To_Unbounded_String ("error");
+         when Critical_Error => Level_Ub := To_Unbounded_String ("error");
          when End_User => Level_Ub := To_Unbounded_String ("end-user");
          when Warning => Level_Ub := To_Unbounded_String ("warning");
          when Hint => Level_Ub := To_Unbounded_String ("hint");
@@ -56,7 +56,7 @@ procedure Test is
    end Test_Level_Value_Message;
 
 begin
-   Test_Level_Value_Message (Error);
+   Test_Level_Value_Message (Critical_Error);
    Test_Level_Value_Message (End_User);
    Test_Level_Value_Message (Warning);
    Test_Level_Value_Message (Hint);
@@ -73,7 +73,7 @@ begin
          Ada.Text_IO.Put_Line ("Message shall be undefined");
       end if;
 
-      Message := GPR2.Message.Create (Error, "message", Sloc);
+      Message := GPR2.Message.Create (Critical_Error, "message", Sloc);
 
       if not Message.Is_Defined then
          Ada.Text_IO.Put_Line ("Message shall be defined");
@@ -93,7 +93,7 @@ begin
          Ada.Text_IO.Put_Line ("Status shall be read");
       end if;
 
-      if Message.Level /= Error then
+      if Message.Level /= Critical_Error then
          Ada.Text_IO.Put_Line ("Level should be error");
       end if;
    end;

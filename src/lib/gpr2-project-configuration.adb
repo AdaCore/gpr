@@ -209,7 +209,7 @@ package body GPR2.Project.Configuration is
 
          Result.Messages.Append
            (Message.Create
-              (Message.Error,
+              (Message.Critical_Error,
                "cannot create configuration file",
                Sloc => Source_Reference.Create (Project_Path.Value, 0, 0)));
       end if;
