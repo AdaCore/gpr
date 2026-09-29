@@ -158,3 +158,35 @@ source.ads: lint message with sloc
 source.ads: L: lint message with sloc
 source.ads: lint: lint message with sloc
 
+===  non-critical error messages
+* Message content
+non-critical error message without sloc nor indent
+* Full path name : True
+non-critical error message without sloc nor indent
+E: non-critical error message without sloc nor indent
+error: non-critical error message without sloc nor indent
+* Full path name : False
+non-critical error message without sloc nor indent
+E: non-critical error message without sloc nor indent
+error: non-critical error message without sloc nor indent
+* Message content
+non-critical error message without sloc and with one indent
+* Full path name : True
+  non-critical error message without sloc and with one indent
+  non-critical error message without sloc and with one indent
+  non-critical error message without sloc and with one indent
+* Full path name : False
+  non-critical error message without sloc and with one indent
+  non-critical error message without sloc and with one indent
+  non-critical error message without sloc and with one indent
+* Message content
+non-critical error message with sloc
+* Full path name : True
+path/to/source.ads: non-critical error message with sloc
+path/to/source.ads: E: non-critical error message with sloc
+path/to/source.ads: error: non-critical error message with sloc
+* Full path name : False
+source.ads: non-critical error message with sloc
+source.ads: E: non-critical error message with sloc
+source.ads: error: non-critical error message with sloc
+

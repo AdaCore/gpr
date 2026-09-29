@@ -34,6 +34,8 @@ procedure Test is
    begin
       case Level is
          when Critical_Error => Level_Ub := To_Unbounded_String ("error");
+         when Non_Critical_Error =>
+            Level_Ub := To_Unbounded_String ("non-critical error");
          when End_User => Level_Ub := To_Unbounded_String ("end-user");
          when Warning => Level_Ub := To_Unbounded_String ("warning");
          when Hint => Level_Ub := To_Unbounded_String ("hint");
@@ -61,6 +63,7 @@ begin
    Test_Level_Value_Message (Warning);
    Test_Level_Value_Message (Hint);
    Test_Level_Value_Message (Lint);
+   Test_Level_Value_Message (Non_Critical_Error);
 
    declare
       Sloc : GPR2.Source_Reference.Object :=
