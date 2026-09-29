@@ -281,7 +281,13 @@ package body GPRbuild.Options is
             Hidden         => True));
 
       Parser.Add_Argument
-        (Compiler_Group, Create ("-nostdlib", Help => ""));
+        (Compiler_Group,
+         Create
+           ("-nostdlib",
+            Help =>
+              "Add -nostdlib to the binder and linker command lines to "
+              & "prevent linking against libgnat and standard system "
+              & "startup files or libraries"));
       Parser.Add_Argument
         (Compiler_Group, Create ("-nostdinc", Help => ""));
       Parser.Add_Argument
@@ -669,7 +675,19 @@ package body GPRbuild.Options is
          Add_Ada_Compiler_Option (String (Arg));
 
       elsif Arg = "-nostdlib" then
-         Add_Ada_Compiler_Option (String (Arg));
+         --  -nostdlib on the binder command line prevents libgnat to be
+         --  linked, where -nostdlib on the linker command line prevents other
+         --  standard libraries such as libc or ligcc to be linked. Specifying
+         --  this option at the builder level triggers both behaviors.
+
+         Result.Extra_Args.Register
+           (GPR2.Build.External_Options.Linker,
+            GPR2.No_Language,
+            String (Arg));
+         Result.Extra_Args.Register
+           (GPR2.Build.External_Options.Binder,
+            GPR2.No_Language,
+            String (Arg));
 
       elsif Arg = "-g" then
          if Param = "default" then

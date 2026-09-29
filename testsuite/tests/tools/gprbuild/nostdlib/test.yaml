@@ -1,0 +1,2 @@
+description: Test -nostdlib support for both binder, linker and builder
+driver: python_script

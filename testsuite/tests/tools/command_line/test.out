@@ -117,6 +117,9 @@ For compatibility with gnatmake, these switches are passed to the Ada compiler:
  -g[<debug_opt>]
  -nostdinc
  -nostdlib
+           Add -nostdlib to the binder and linker command lines to prevent
+           linking against libgnat and standard system startup files or
+           libraries
  -O[<level>]
 
 -------------------------
@@ -478,6 +481,9 @@ For compatibility with gnatmake, these switches are passed to the Ada compiler:
  -g[<debug_opt>]
  -nostdinc
  -nostdlib
+           Add -nostdlib to the binder and linker command lines to prevent
+           linking against libgnat and standard system startup files or
+           libraries
  -O[<level>]
 
 -------------------------

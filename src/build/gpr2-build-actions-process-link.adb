@@ -37,7 +37,7 @@ package body GPR2.Build.Actions.Process.Link is
 
    Traces : constant GNATCOLL.Traces.Trace_Handle :=
               GNATCOLL.Traces.Create
-                ("GPR.BUILD.ACTIONS.LINK", GNATCOLL.Traces.Off);
+                ("GPR.BUILD.ACTIONS.PROCESS.LINK", GNATCOLL.Traces.Off);
 
    function Generate_Export_File
      (Self : in out Object;
@@ -698,22 +698,36 @@ package body GPR2.Build.Actions.Process.Link is
         and then Self.View.Is_Shared_Library
       then
          declare
-            Gnat_Version   : constant String :=
-                               Self.View.Tree.Ada_Compiler_Version;
-            Needs_Libgnat  : Boolean;
-            Needs_Libgnarl : Boolean;
+            Gnat_Version          : constant String :=
+                                      Self.View.Tree.Ada_Compiler_Version;
+            Needs_Libgnat         : Boolean;
+            Needs_Libgnarl        : Boolean;
+            Must_Not_Link_Runtime : constant Boolean :=
+              (for some Opt of Self.Tree.External_Options.Fetch
+                 (Build.External_Options.Binder, GPR2.No_Language)
+               => Opt = "-nostdlib");
+            --  -nostdlib passed to the linker prevents standard libraries like
+            --  libgcc or libc to be linked, but it does not impact libgnat.
+            --  The linking against libgnat is all controlled by the binder,
+            --  so even if shared libraries don't have one executed, rely on
+            --  its value.
+
          begin
             if Gnat_Version /= "" then
-               Check_Ada_Runtime_Needed (Needs_Libgnat, Needs_Libgnarl);
+               if not Must_Not_Link_Runtime then
+                  Check_Ada_Runtime_Needed (Needs_Libgnat, Needs_Libgnarl);
 
-               if Needs_Libgnat then
-                  if Needs_Libgnarl then
-                     Cmd_Line.Add_Argument ("-lgnarl-" & Gnat_Version);
+                  if Needs_Libgnat then
+                     if Needs_Libgnarl then
+                        Cmd_Line.Add_Argument ("-lgnarl-" & Gnat_Version);
+                     end if;
+
+                     Cmd_Line.Add_Argument ("-lgnat-" & Gnat_Version);
                   end if;
-
-                  Cmd_Line.Add_Argument ("-lgnat-" & Gnat_Version);
                end if;
 
+               --  Stay coherent with gcc that also adds the path to its
+               --  runtime directory even with -nostdlib
                Cmd_Line.Add_Argument
                  (Self.Tree.Linker_Lib_Dir_Option &
                  Self.View.Tree.Runtime_Project.Object_Directory.String_Value);
