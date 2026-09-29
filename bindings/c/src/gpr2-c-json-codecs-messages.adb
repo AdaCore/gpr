@@ -25,11 +25,11 @@ package body GPR2.C.JSON.Codecs.Messages is
    begin
       return GPR2.C.JSON.Values.To_JSON_Value
         (case Value is
-            when GPR2.Message.Warning        => "warning",
-            when GPR2.Message.Critical_Error => "error",
-            when GPR2.Message.End_User       => "end_user",
-            when GPR2.Message.Hint           => "hint",
-            when GPR2.Message.Lint           => "lint");
+            when GPR2.Message.Warning   => "warning",
+            when GPR2.Message.Any_Error => "error",
+            when GPR2.Message.End_User  => "end_user",
+            when GPR2.Message.Hint      => "hint",
+            when GPR2.Message.Lint      => "lint");
    end Encode;
 
    ------------

@@ -102,7 +102,7 @@ package body GPR2.Reporter is
          use all type GPR2.Message.Level_Value;
       begin
          case Msg.Level is
-            when Critical_Error =>
+            when GPR2.Message.Any_Error =>
                return Self.Verbosity > Quiet;
 
             when End_User =>

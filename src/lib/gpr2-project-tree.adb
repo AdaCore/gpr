@@ -1284,7 +1284,7 @@ package body GPR2.Project.Tree is
 
       if No_Error then
          for Msg of Log loop
-            if Msg.Level = Message.Critical_Error then
+            if Msg.Level in Message.Any_Error then
                Msg.Change_Level (Message.Warning);
             end if;
          end loop;

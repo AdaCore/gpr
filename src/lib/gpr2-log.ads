@@ -65,7 +65,7 @@ package GPR2.Log is
    --  specified values.
 
    function Has_Error (Self : Object) return Boolean;
-   --  Returns True if the log contains unread errors
+   --  Returns True if the log contains unread errors, critical or not
 
    function Has_Critical_Error (Self : Object) return Boolean;
    --  Returns True if the log contains unread critical errors

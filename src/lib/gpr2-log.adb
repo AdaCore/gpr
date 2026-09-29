@@ -37,7 +37,7 @@ package body GPR2.Log is
       Read     : Boolean;
       Unread   : Boolean) return Boolean is
      (((Message.Level = GPR2.Message.Warning and then Warning)
-       or else (Message.Level = GPR2.Message.Critical_Error and then Error)
+       or else (Message.Level in GPR2.Message.Any_Error and then Error)
        or else (Message.Level = GPR2.Message.End_User and then End_User)
        or else (Message.Level = GPR2.Message.Hint and then Hint)
        or else (Message.Level = GPR2.Message.Lint and then Lint))
