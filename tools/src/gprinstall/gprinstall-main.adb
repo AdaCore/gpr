@@ -22,6 +22,8 @@ with Ada.Exceptions;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
+with GNATCOLL.Traces;
+
 with GPR2;
 with GPR2.Build.Actions_Population;
 with GPR2.Containers;
@@ -175,6 +177,7 @@ function GPRinstall.Main return Ada.Command_Line.Exit_Status is
    Options : GPRinstall.Options.Object;
 
 begin
+   GNATCOLL.Traces.Parse_Config_File;
    GPRtools.Util.Set_Program_Name ("gprinstall");
 
    --  Initialize and read the command line arguments

@@ -1,0 +1,9 @@
+with "lib.gpr";
+
+library project App is
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj";
+   for Library_Dir use "lib";
+   for Library_Name use "app";
+   for Library_Interface use ("Front");
+end App;

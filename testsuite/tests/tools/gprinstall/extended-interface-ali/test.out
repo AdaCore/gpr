@@ -1,0 +1,8 @@
+lib.gpr: warning: unit "HIDDEN" is not in the interface set, but it is needed by "PKG"
+Install project Lib
+
+hidden.ali
+pkg.ali
+for Library_Interface use ("Pkg", "HIDDEN");
+Install project App
+

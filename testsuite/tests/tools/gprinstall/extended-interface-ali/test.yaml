@@ -1,0 +1,6 @@
+description: |
+  A unit withed by an interface unit joins the interface even when the
+  project does not declare it. Its ALI must be installed, and the installed
+  project must declare it, otherwise a library built against the installed
+  one can no longer be installed itself.
+driver: python_script
