@@ -1,0 +1,4 @@
+description: Check that the process runner releases its listener tasks and
+             reports the failure when its body raises
+driver: python_script
+timeout: 300
