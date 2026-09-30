@@ -417,8 +417,8 @@ prj1.gpr: warning: there are no sources of language "Ada" in this project
 --- create body src1/foo.adb
 --- rm src3/source.ada
 --- Refresh list of sources
-agglib_multi.gpr: warning: duplicated body for unit "FOO" in /scenario/src3/source.ada and /scenario/src1/foo.adb
 agglib_multi.gpr: warning: duplicated spec for unit "FOO" in /scenario/src3/source.ada and /scenario/src1/foo.ads
+agglib_multi.gpr: warning: duplicated body for unit "FOO" in /scenario/src3/source.ada and /scenario/src1/foo.adb
 prj3.gpr:3:08: error: source file "source.ada" not found
 prj3.gpr:8:28: warning: source file "source.ada" for unit "Foo" not found
 prj3.gpr:9:28: warning: source file "source.ada" for unit "Foo" not found
