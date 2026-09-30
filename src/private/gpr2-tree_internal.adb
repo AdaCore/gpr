@@ -3715,6 +3715,12 @@ package body GPR2.Tree_Internal is
       Self.Explicit_Target  := Undefined.Explicit_Target;
       Self.File_Reader_Ref  := Undefined.File_Reader_Ref;
 
+      --  Break the reference cycles held by the view caches
+
+      for V of Self.Views_Set loop
+         View_Internal.Get (V).Clear_Cache;
+      end loop;
+
       Self.Tree_Db.Unload;
       Self.Messages.Clear;
       Self.Views_Set.Clear;

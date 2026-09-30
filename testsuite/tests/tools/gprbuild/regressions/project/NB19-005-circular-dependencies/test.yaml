@@ -1,7 +1,5 @@
 description: Circular dependencies expressed with limited withs build without any diagnostic
-driver: build_and_run
-project_file: ie_agg.gpr
-main: exe/main
+driver: python_script
 timeout: 800
 control:
   - [SKIP, "env.gnatcov is not None", "non-library aggregate projects with more than one aggregated project are not supported"]
