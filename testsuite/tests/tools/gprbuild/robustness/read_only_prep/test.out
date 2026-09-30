@@ -1,0 +1,5 @@
+preprocessed source after first build: True
+pkg.ads: error: cannot remove the preprocessed file pkg.ads.prep
+[Ada Compile] pkg.ads (prj.gpr) failed.
+preprocessed source still present: True
+[Ada Compile]     pkg.ads

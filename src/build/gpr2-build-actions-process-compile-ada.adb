@@ -6,6 +6,7 @@
 
 with Ada.Characters.Handling; use Ada.Characters.Handling;
 
+with GNATCOLL.OS.FSUtil;
 with GNATCOLL.Traces;
 
 with GPR2.Build.Actions.Process.Ada_Bind;
@@ -24,16 +25,11 @@ with GPR2.Source_Reference;
 
 package body GPR2.Build.Actions.Process.Compile.Ada is
 
-   Save_Preprocessed_Option : constant Value_Type := "-gnateG";
-   --  The switch that makes the compiler save the preprocessed form of the
-   --  source it compiles
-
-   Prep_Suffix : constant Filename_Type := ".prep";
-   --  Suffix the compiler gives preprocessed files
-
-   function Preprocessed_Source (Self : Object) return Artifacts.Files.Object;
-   --  The preprocessed form of the source, or Undefined when the compiler is
-   --  not asked to save it.
+   function Preprocessed_Source
+     (Self : Object; Source : Path_Name.Object) return Artifacts.Files.Object;
+   --  Return the preprocessed source artifact related to specified Source
+   --  when the -gnateG switch is specified in the command line. Return
+   --  Undefined otherwise.
 
    Traces : constant GNATCOLL.Traces.Trace_Handle :=
               GNATCOLL.Traces.Create
@@ -263,6 +259,48 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          Sep_Name : Optional_Name_Type);
       --  Add the file artifact found at the given path to the signature
 
+      procedure Add_Prep_Output
+        (Kind     : Unit_Kind;
+         View     : GPR2.Project.View.Object;
+         Path     : Path_Name.Object;
+         Index    : Unit_Index;
+         Sep_Name : Optional_Name_Type);
+      --  Add Path's preprocessed form to the signature if the file exists
+      --  and if the -gnateG option is present.
+
+      ---------------------
+      -- Add_Prep_Output --
+      ---------------------
+
+      procedure Add_Prep_Output
+        (Kind     : Unit_Kind;
+         View     : GPR2.Project.View.Object;
+         Path     : Path_Name.Object;
+         Index    : Unit_Index;
+         Sep_Name : Optional_Name_Type)
+      is
+         pragma Unreferenced (Kind, View, Index, Sep_Name);
+         Prep : constant Artifacts.Files.Object :=
+                  Self.Preprocessed_Source (Path);
+      begin
+         --  Because only source code containing preprocessing directives
+         --  have a .prep file generated, we need to check each unit part.
+         --  Also, because .prep files have been removed during the
+         --  Pre_Execution phase, only correct .prep files are present during
+         --  the signature writing.
+
+         if Prep.Is_Defined
+           and then Prep.Path.Exists
+           and then not Self.Signature.Add_Output (Prep, Check_Checksums)
+         then
+            Stop := True;
+         end if;
+      end Add_Prep_Output;
+
+      ----------------------
+      -- Add_To_Signature --
+      ----------------------
+
       procedure Add_To_Signature
         (Kind     : Unit_Kind;
          View     : GPR2.Project.View.Object;
@@ -471,15 +509,11 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          return;
       end if;
 
-      declare
-         Prep : constant Artifacts.Files.Object := Self.Preprocessed_Source;
-      begin
-         if Prep.Is_Defined
-           and then not Self.Signature.Add_Output (Prep, Check_Checksums)
-         then
-            return;
-         end if;
-      end;
+      BCU.For_All_Part (Self.CU, Add_Prep_Output'Access);
+
+      if Stop then
+         return;
+      end if;
 
       --  Object file checksum is the heaviest to compute since those are
       --  pretty large compared to the other artifacts involved in this
@@ -911,16 +945,6 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          return False;
       end if;
 
-      declare
-         Prep : constant Artifacts.Files.Object := Self.Preprocessed_Source;
-      begin
-         if Prep.Is_Defined
-           and then not Db.Add_Output (UID, Prep)
-         then
-            return False;
-         end if;
-      end;
-
       return True;
    end On_Tree_Insertion;
 
@@ -1073,12 +1097,75 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
       return Result;
    end Post_Execution;
 
+   -------------------
+   -- Pre_Execution --
+   -------------------
+
+   overriding function Pre_Execution (Self : in out Object) return Boolean is
+
+      Success : Boolean := True;
+
+      procedure Remove_Prep_File
+        (Kind     : Unit_Kind;
+         View     : GPR2.Project.View.Object;
+         Path     : Path_Name.Object;
+         Index    : Unit_Index;
+         Sep_Name : Optional_Name_Type);
+      --  Remove Path's ".prep" file if it exists
+
+      ----------------------
+      -- Remove_Prep_File --
+      ----------------------
+
+      procedure Remove_Prep_File
+        (Kind     : Unit_Kind;
+         View     : GPR2.Project.View.Object;
+         Path     : Path_Name.Object;
+         Index    : Unit_Index;
+         Sep_Name : Optional_Name_Type)
+      is
+         pragma Unreferenced (Kind, View, Index, Sep_Name);
+         Prep : constant Artifacts.Files.Object :=
+                  Self.Preprocessed_Source (Path);
+      begin
+         if Success
+           and then Prep.Is_Defined
+           and then Prep.Path.Exists
+           and then not GNATCOLL.OS.FSUtil.Remove_File
+                          (Prep.Path.String_Value)
+         then
+            Self.Tree.Reporter.Report
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  "cannot remove the preprocessed file " &
+                    String (Prep.Path.Simple_Name),
+                  GPR2.Source_Reference.Create
+                    (Self.Src.Path_Name.Value, 0, 0)));
+
+            Success := False;
+         end if;
+      end Remove_Prep_File;
+
+   begin
+      BCU.For_All_Part (Self.CU, Remove_Prep_File'Access);
+
+      return Success;
+   end Pre_Execution;
+
    -------------------------
    -- Preprocessed_Source --
    -------------------------
 
-   function Preprocessed_Source (Self : Object) return Artifacts.Files.Object
+   function Preprocessed_Source
+     (Self : Object; Source : Path_Name.Object) return Artifacts.Files.Object
    is
+      Save_Preprocessed_Option : constant Value_Type := "-gnateG";
+      --  The switch that makes the compiler save the preprocessed form of the
+      --  source it compiles.
+
+      Prep_Suffix : constant Filename_Type := ".prep";
+      --  Suffix the compiler gives preprocessed files
+
       function Is_Saved return Boolean;
       --  Whether "-gnateG" is among the switches of this compilation
 
@@ -1108,7 +1195,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
 
          Lang_Idx : constant PAI.Object := PAI.Create (Self.Lang);
          Src_Idx  : constant PAI.Object :=
-                      PAI.Create_Source (Self.Input.Path_Name.Simple_Name);
+                      PAI.Create_Source (Source.Simple_Name);
 
       begin
          if Has_Preproc_Opt (PRA.Compiler.Leading_Required_Switches, Lang_Idx)
@@ -1141,7 +1228,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
 
       return Artifacts.Files.Create
                (Self.View.Object_Directory.Compose
-                  (Self.Input.Path_Name.Simple_Name & Prep_Suffix));
+                  (Source.Simple_Name & Prep_Suffix));
    end Preprocessed_Source;
 
    ---------------------
