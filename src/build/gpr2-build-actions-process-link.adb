@@ -1241,11 +1241,10 @@ package body GPR2.Build.Actions.Process.Link is
 
          --  Finally don't forget the binder-generated object if any
 
-         if Self.Bind.Is_Defined then
+         if not Self.Bind.Is_Empty then
             declare
-               --  Make sure we retrieve an up-to-date bind object
                Bind : constant Ada_Bind.Object :=
-                        Ada_Bind.Object (Self.Tree.Action (Self.Bind.UID));
+                        Ada_Bind.Object (Self.Tree.Action (-Self.Bind));
             begin
                Obj := Bind.Post_Bind.Object_File.Path;
             end;
@@ -1621,9 +1620,9 @@ package body GPR2.Build.Actions.Process.Link is
       if Self.Ctxt.Is_Library_Standalone then
          Units := Self.Ctxt.Interface_Closure;
 
-         if Self.Bind.Is_Defined then
+         if not Self.Bind.Is_Empty then
             for CU of Ada_Bind.Object
-              (Self.Tree.Action (Self.Bind.UID)).Extended_Interface
+              (Self.Tree.Action (-Self.Bind)).Extended_Interface
             loop
                Units.Include (CU.Name, CU);
             end loop;
@@ -1986,9 +1985,9 @@ package body GPR2.Build.Actions.Process.Link is
 
    procedure Set_Bind_Action
      (Self : in out Object;
-      Bind : Actions.Process.Ada_Bind.Object) is
+      Bind : Actions.Process.Ada_Bind.Ada_Bind_Id) is
    begin
-      Self.Bind := Bind;
+      Self.Bind := +Bind;
    end Set_Bind_Action;
 
    ---------------------------------------

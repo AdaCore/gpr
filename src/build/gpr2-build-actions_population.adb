@@ -9,6 +9,7 @@ with Ada.Containers.Vectors;
 with GNATCOLL.Directed_Graph;
 with GNATCOLL.Traces;
 
+with GPR2.Build.Actions; use GPR2.Build.Actions;
 with GPR2.Build.Actions.Process.Ada_Bind;
 with GPR2.Build.Actions.Process.Archive_Table_List;
 with GPR2.Build.Actions.Process.Cargo_Build;
@@ -57,17 +58,11 @@ package body GPR2.Build.Actions_Population is
    package PRA renames GPR2.Project.Registry.Attribute;
    package PAI renames GPR2.Project.Attribute_Index;
 
-   type Link_Array is
-     array (Positive range <>) of Link.Object;
-
-   type Bind_Array is
-     array (Positive range <>) of Ada_Bind.Object;
-
    package Library_Helper is
 
       type Object is tagged record
          View                : GPR2.Project.View.Object;
-         Bind                : Ada_Bind.Object;
+         Bind_Id             : Action_Id_Holder.Holder;
          Static_Libs_Deps    : GPR2.View_Ids.Set.Set;
          Shared_Libs_Deps    : GPR2.View_Ids.Set.Set;
          Link_Options_Insert : Actions.Process.Link_Options_Insert.Object;
@@ -83,6 +78,8 @@ package body GPR2.Build.Actions_Population is
       function Final_Link_Action
         (Self : Object) return Link.Object'Class;
 
+      function Bind (Self : Object) return access Ada_Bind.Object'Class;
+
    private
 
       function Initial_Link_Action
@@ -95,6 +92,10 @@ package body GPR2.Build.Actions_Population is
         (Self : Object) return Link.Object'Class
       is (Self.Main_Link);
 
+      function Bind (Self : Object) return access Ada_Bind.Object'Class
+      is (Ada_Bind.Object'Class
+            (Self.View.Tree.Artifacts_Database.Action_Id_To_Reference
+              (-Self.Bind_Id).Element.all)'Access);
    end Library_Helper;
 
    package LH renames Library_Helper;
@@ -1109,17 +1110,17 @@ package body GPR2.Build.Actions_Population is
          then
             Populated.Insert (V.Id);
 
-            declare
-               Comp : Compile.Ada.Object;
-            begin
-               for CU of V.Own_Units loop
+            for CU of V.Own_Units loop
+               declare
+                  Comp : Compile.Ada.Object;
+               begin
                   Comp.Initialize (CU);
 
                   if not Tree_Db.Add_Action (Comp) then
                      return False;
                   end if;
-               end loop;
-            end;
+               end;
+            end loop;
 
             declare
                Comp : Compile.Object;
@@ -1438,28 +1439,36 @@ package body GPR2.Build.Actions_Population is
          --  Create the binder action that will create the file in charge of
          --  elaborating and finalizing the lib. Used for standalone libraries.
 
-         Self.Bind.Initialize
-           (Basename       => View.Library_Name,
-            Context        => View,
-            Main_Unit      => Compilation_Unit.Undefined,
-            SAL_In_Closure => Has_SAL,
-            No_Op          => Options.No_SAL_Binding);
+         declare
+            Bind : Ada_Bind.Object;
+         begin
+            Bind.Initialize
+              (Basename       => View.Library_Name,
+               Context        => View,
+               Main_Unit      => Compilation_Unit.Undefined,
+               SAL_In_Closure => Has_SAL,
+               No_Op          => Options.No_SAL_Binding);
 
-         if not Tree_Db.Add_Action (Self.Bind) then
-            return False;
-         end if;
+            if not Tree_Db.Add_Action (Bind) then
+               return False;
+            end if;
+
+            --  Self.Bind is only used as a handle from now on
+
+            Self.Bind_Id := +Bind.UID;
+         end;
 
          --  Used by the linker so it can find its bind action easily.
 
          Link.Object'Class
            (Tree_Db.Action_Id_To_Reference (Self.Initial_Link_Action.UID)
               .Element.all)
-           .Set_Bind_Action (Self.Bind);
+           .Set_Bind_Action (Ada_Bind.Ada_Bind_Id (-Self.Bind_Id));
 
          Link.Object'Class
            (Tree_Db.Action_Id_To_Reference (Self.Final_Link_Action.UID)
               .Element.all)
-           .Set_Bind_Action (Self.Bind);
+           .Set_Bind_Action (Ada_Bind.Ada_Bind_Id (-Self.Bind_Id));
 
          --  Save the linker options in the form of an object file with a
          --  gpr-specific text section so that they can be retrieved later on
@@ -1566,7 +1575,13 @@ package body GPR2.Build.Actions_Population is
            Cache,
            Has_Cycle);
 
-      Self.Main_Link.Set_Has_Library_Dependency_Circle (Has_Cycle);
+      --  Through the database: Self.Main_Link is a copy made before the
+      --  action was inserted, so mutating it would have no effect.
+
+      Link.Object'Class
+        (Tree_Db.Action_Id_To_Reference (Self.Final_Link_Action.UID)
+           .Element.all)
+        .Set_Has_Library_Dependency_Circle (Has_Cycle);
 
       for Lib of Sorted_Libs loop
          declare
@@ -1717,18 +1732,21 @@ package body GPR2.Build.Actions_Population is
 
       declare
          Tree          : constant GPR2.Project.Tree.Object := View.Tree;
-         Bind          : Bind_Array (1 .. Natural (Actual_Mains.Length));
-         Link          : Link_Array (1 .. Natural (Actual_Mains.Length));
+         Bind_Act      : Ada_Bind.Object;
+         --  Bind action of the main being processed, reset on each iteration
+         Link_Act      : Link.Object;
+         --  Link action of the current main, reset on each iteration
          Closure       : GPR2.Project.View.Set.Object;
          Libs_Cache    : View_Id_Library_Map.Map;
          Sorted_Libs   : Library_Vector.Vector;
          Has_Cycle     : Boolean;
          Static_Libs   : View_Ids.Set.Set;
          Shared_Libs   : View_Ids.Set.Set;
-         Idx           : Natural := 1;
-         Skip          : Boolean := False;
-         Direct_Import : Boolean := False;
          Has_SAL       : Boolean := False;
+         Direct_Comp   : Action_Id_Sets.Set;
+         --  Compilation actions of non-Ada non-main sources in the project
+         --  that are included directly in the final link
+
       begin
          --  First check the dependencies and retrieve the libraries
 
@@ -1750,62 +1768,88 @@ package body GPR2.Build.Actions_Population is
             Sorted_Libs.Append (Libs_Cache.Element (Id));
          end loop;
 
-         --  Check if we have non-ada objects that will require an archive
-         --  before the final link
+         --  Check non-Ada sources: we create an intermedidate library for
+         --  those sources so that the final link only picks up the actually
+         --  used objects. A direct link with an explicit list of objects
+         --  would actually use all those objects.
 
-         Non_Ada_Archive_Loop :
          for V of Closure loop
             --  Add the non-Ada objects as dependencies
 
             for Src of V.Sources loop
-               Skip := False;
-               Direct_Import := False;
+               declare
+                  Skip          : Boolean := False;
+                  Direct_Import : Boolean := False;
 
-               if Src.Has_Units
-                 or else not Src.Is_Compilation_Enabled
-                 or else Src.Kind /= S_Body
-               then
-                  Skip := True;
-               end if;
-
-               for Main of Actual_Mains loop
-                  if Src.Path_Name = Main.Source then
-                     --  Don't include mains in the closure of another main
+               begin
+                  if Src.Has_Units
+                    or else not Src.Is_Compilation_Enabled
+                    or else Src.Kind /= S_Body
+                  then
                      Skip := True;
                   end if;
-               end loop;
 
-               if not Skip then
-                  declare
-                     Attr : constant Project.Attribute.Object :=
-                              Src.Owning_View.Attribute
-                                (PRA.Linker.Unconditional_Linking,
-                                 PAI.Create (Src.Language));
-                  begin
-                     Direct_Import := Name_Type (Attr.Value.Text) = "True";
-                  end;
-               end if;
+                  if not Skip then
+                     for Main of Actual_Mains loop
+                        if Src.Path_Name = Main.Source then
+                           --  Don't include mains in the closure of another
+                           --  main.
+                           Skip := True;
+                        end if;
+                     end loop;
+                  end if;
 
-               if not Skip then
-                  if not Direct_Import then
-                     --  Need to create an intermediate library so that
-                     --  foreign objects can be ignored by the linker
-                     --  if no symbol is used from them. Else the linker
-                     --  uses all objects that are on the command line.
+                  if not Skip then
+                     declare
+                        Attr : constant Project.Attribute.Object :=
+                                 Src.Owning_View.Attribute
+                                   (PRA.Linker.Unconditional_Linking,
+                                    PAI.Create (Src.Language));
+                     begin
+                        Direct_Import := Name_Type (Attr.Value.Text) = "True";
+                     end;
+                  end if;
 
-                     Archive.Initialize
-                       (Kind     => Actions.Process.Link.Global_Archive,
-                        Context  => View);
+                  if not Skip then
+                     Comp.Initialize (Src);
 
-                     if not Tree_Db.Add_Action (Archive) then
+                     if not Tree_Db.Add_Action (Comp) then
                         return False;
                      end if;
 
-                     exit Non_Ada_Archive_Loop;
+                     if not Comp.Object_File.Is_Defined then
+                        Skip := True;
+                     end if;
                   end if;
-               end if;
+
+                  if not Skip then
+                     if Direct_Import then
+                        --  Compilation output will be added directly to the
+                        --  final link
+                        Direct_Comp.Include (Comp.UID);
+
+                     else
+                        if not Archive.Is_Defined then
+                           --  Need to create an intermediate library so that
+                           --  foreign objects can be ignored by the linker
+                           --  if no symbol is used from them. Else the linker
+                           --  uses all objects that are on the command line.
+
+                           Archive.Initialize
+                             (Kind     => Actions.Process.Link.Global_Archive,
+                              Context  => View);
+
+                           if not Tree_Db.Add_Action (Archive) then
+                              return False;
+                           end if;
+                        end if;
+
+                        Tree_Db.Add_Input (Archive.UID, Comp.Object_File);
+                     end if;
+                  end if;
+               end;
             end loop;
-         end loop Non_Ada_Archive_Loop;
+         end loop;
 
          --  A named main that is actually a subunit has no Main_Part of its
          --  own and cannot be linked - compile it directly instead.
@@ -1855,9 +1899,10 @@ package body GPR2.Build.Actions_Population is
          --  Process the mains one by one
 
          for Main of Actual_Mains loop
-            Source := Main.View.Visible_Source (Main.Source);
+            Source   := Main.View.Visible_Source (Main.Source);
+            Bind_Act := Ada_Bind.Undefined;
 
-            Link (Idx).Initialize
+            Link_Act.Initialize
               (Kind     => Actions.Process.Link.Executable,
                Src      => Main,
                No_Rpath => Options.No_Run_Path,
@@ -1865,16 +1910,16 @@ package body GPR2.Build.Actions_Population is
 
             if Options.Create_Map_File then
                if Length (Options.Mapping_File_Name) > 0 then
-                  Link (Idx).Set_Mapping_File
+                  Link_Act.Set_Mapping_File
                     (Filename_Type (To_String (Options.Mapping_File_Name)));
                else
-                  Link (Idx).Set_Mapping_File
-                    (Filename_Type (String (Link (Idx).Output.Path.Base_Name))
+                  Link_Act.Set_Mapping_File
+                    (Filename_Type (String (Link_Act.Output.Path.Base_Name))
                      & ".map");
                end if;
             end if;
 
-            if not Tree_Db.Add_Action (Link (Idx)) then
+            if not Tree_Db.Add_Action (Link_Act) then
                return False;
             end if;
 
@@ -1884,19 +1929,20 @@ package body GPR2.Build.Actions_Population is
                            Main.View.Own_Unit
                              (Source.Units.Element (Main.Index).Name);
                begin
+                  A_Comp := Compile.Ada.Undefined;
                   A_Comp.Initialize (Unit);
 
                   if not Tree_Db.Add_Action (A_Comp) then
                      return False;
                   end if;
 
-                  Bind (Idx).Initialize
+                  Bind_Act.Initialize
                     (A_Comp.Local_Ali_File.Path.Base_Filename,
                      Main.View,
                      Main_Unit      => Unit,
                      SAL_In_Closure => Has_SAL);
 
-                  if not Tree_Db.Add_Action (Bind (Idx)) then
+                  if not Tree_Db.Add_Action (Bind_Act) then
                      return False;
                   end if;
 
@@ -1923,10 +1969,10 @@ package body GPR2.Build.Actions_Population is
                            end if;
 
                            Tree_Db.Add_Input
-                             (Bind (Idx).UID, R_Comp.Local_Ali_File);
+                             (Bind_Act.UID, R_Comp.Local_Ali_File);
                            Ada_Bind.Object'Class
                              (Tree_Db.Action_Id_To_Reference
-                                (Bind (Idx).UID).Element.all)
+                                (Bind_Act.UID).Element.all)
                                .Track_ALI_Input
                                  (U, R_Comp.Local_Ali_File, False);
 
@@ -1934,20 +1980,20 @@ package body GPR2.Build.Actions_Population is
                            --  link to resolve their symbols before the
                            --  runtime for proper overriding.
                            Tree_Db.Add_Input
-                             (Link (Idx).UID, R_Comp.Object_File);
+                             (Link_Act.UID, R_Comp.Object_File);
                         end;
                      end loop;
                   end;
                end;
 
-               Tree_Db.Add_Input (Bind (Idx).UID, A_Comp.Local_Ali_File);
+               Tree_Db.Add_Input (Bind_Act.UID, A_Comp.Local_Ali_File);
                Ada_Bind.Object'Class
-                 (Tree_Db.Action_Id_To_Reference (Bind (Idx).UID).Element.all)
+                 (Tree_Db.Action_Id_To_Reference (Bind_Act.UID).Element.all)
                  .Track_ALI_Input (A_Comp.Unit, A_Comp.Local_Ali_File, True);
 
-               Tree_Db.Add_Input (Link (Idx).UID, A_Comp.Object_File);
+               Tree_Db.Add_Input (Link_Act.UID, A_Comp.Object_File);
                Tree_Db.Add_Input
-                 (Link (Idx).UID, Bind (Idx).Post_Bind.Object_File);
+                 (Link_Act.UID, Bind_Act.Post_Bind.Object_File);
 
             else
                Comp.Initialize (Source);
@@ -1956,7 +2002,7 @@ package body GPR2.Build.Actions_Population is
                   return False;
                end if;
 
-               Tree_Db.Add_Input (Link (Idx).UID, Comp.Object_File);
+               Tree_Db.Add_Input (Link_Act.UID, Comp.Object_File);
 
                if (for some Lib of Closure =>
                      Lib.Has_Source_Of_Language (Ada_Language))
@@ -1972,7 +2018,7 @@ package body GPR2.Build.Actions_Population is
                   --  need one for the view. We do that only to remain
                   --  compatible with what gpr1build does?
 
-                  Bind (Idx).Initialize
+                  Bind_Act.Initialize
                     (Source.Path_Name.Base_Filename,
                      View,
                      Main_Unit      => Compilation_Unit.Undefined,
@@ -1986,7 +2032,7 @@ package body GPR2.Build.Actions_Population is
                           or else Main.View.Is_Roots
                             (Source.Path_Name, Source.Language, CU.Name)
                         then
-                           Bind (Idx).Add_Root_Unit (CU);
+                           Bind_Act.Add_Root_Unit (CU);
                         end if;
                      end loop;
                   end loop;
@@ -2010,29 +2056,29 @@ package body GPR2.Build.Actions_Population is
                                 or else Main.View.Is_Roots
                                   (Source.Path_Name, Source.Language, CU.Name)
                               then
-                                 Bind (Idx).Add_Root_Unit (CU);
+                                 Bind_Act.Add_Root_Unit (CU);
                               end if;
                            end loop;
                         end if;
                      end;
                   end loop;
 
-                  if not Tree_Db.Add_Action (Bind (Idx)) then
+                  if not Tree_Db.Add_Action (Bind_Act) then
                      return False;
                   end if;
 
                   Tree_Db.Add_Input
-                    (Link (Idx).UID, Bind (Idx).Post_Bind.Object_File);
+                    (Link_Act.UID, Bind_Act.Post_Bind.Object_File);
                end if;
             end if;
 
-            if Bind (Idx).Is_Defined then
+            if Bind_Act.Is_Defined then
                --  Used by the linker so it can find its bind action easily.
 
                Actions.Process.Link.Object'Class
-                 (Tree_Db.Action_Id_To_Reference (Link (Idx).UID)
+                 (Tree_Db.Action_Id_To_Reference (Link_Act.UID)
                   .Element.all)
-                 .Set_Bind_Action (Bind (Idx));
+                 .Set_Bind_Action (Ada_Bind.Ada_Bind_Id (Bind_Act.UID));
             end if;
 
             --  Add library dependencies: we need a proper ordering in
@@ -2043,17 +2089,13 @@ package body GPR2.Build.Actions_Population is
 
             declare
 
-               procedure Add_Archive_Table_List_Action
-                 (Lib      : LH.Object;
-                  Link_Idx : Natural);
+               procedure Add_Archive_Table_List_Action (Lib : LH.Object);
 
                ----------------------------
                -- Add_Archive_Table_List --
                ----------------------------
 
-               procedure Add_Archive_Table_List_Action
-                 (Lib      : LH.Object;
-                  Link_Idx : Natural)
+               procedure Add_Archive_Table_List_Action (Lib : LH.Object)
                is
                   Archive_Table_List :
                     Actions.Process.Archive_Table_List.Object;
@@ -2076,11 +2118,11 @@ package body GPR2.Build.Actions_Population is
                   --  in the graph.
 
                   Tree_Db.Add_Input
-                    (Link (Link_Idx).UID, Archive_Table_List.UID_Artifact);
+                    (Link_Act.UID, Archive_Table_List.UID_Artifact);
                end Add_Archive_Table_List_Action;
             begin
                if Archive.Is_Defined then
-                  Tree_Db.Add_Input (Link (Idx).UID, Archive.Output);
+                  Tree_Db.Add_Input (Link_Act.UID, Archive.Output);
                end if;
 
                for Lib of Sorted_Libs loop
@@ -2089,11 +2131,11 @@ package body GPR2.Build.Actions_Population is
                      --  Post_Execution can add cargo_build's output once the
                      --  target directory is known.
                      Tree_Db.Add_Input
-                       (Link (Idx).UID,
+                       (Link_Act.UID,
                         Lib.Cargo_Metadata_Act.UID_Artifact);
                   else
                      Tree_Db.Add_Input
-                       (Link (Idx).UID, Lib.Final_Link_Action.Output);
+                       (Link_Act.UID, Lib.Final_Link_Action.Output);
 
                      --  For standalone static libraries, linker options must
                      --  be updated to ensure proper elaboration of the
@@ -2112,7 +2154,7 @@ package body GPR2.Build.Actions_Population is
                        and then Lib.View.Is_Static_Library
                        and then Lib.View.Is_Externally_Built
                      then
-                        Add_Archive_Table_List_Action (Lib, Idx);
+                        Add_Archive_Table_List_Action (Lib);
                      end if;
                   end if;
                end loop;
@@ -2126,68 +2168,20 @@ package body GPR2.Build.Actions_Population is
                   Actions.Process.Link.Set_Has_Library_Dependency_Circle
                     (Actions.Process.Link.Object'Class
                        (Tree_Db.Action_Id_To_Reference
-                            (Link (Idx).UID).Element.all),
+                            (Link_Act.UID).Element.all),
                      True);
                end if;
             end;
 
-            Idx := Idx + 1;
-         end loop;
+            --  Add to the link the non-ada objects that require an
+            --  unconditional linking
 
-         --  Check non-Ada sources: we create an intermedidate library for
-         --  those sources so that the final link only picks up the actually
-         --  used objects. A direct link with an explicit list of objects
-         --  would actually use all those objects.
-
-         for V of Closure loop
-            --  Add the non-Ada objects as dependencies
-
-            for Src of V.Sources loop
-               Skip := False;
-               Direct_Import := False;
-
-               if Src.Has_Units
-                 or else not Src.Is_Compilation_Enabled
-                 or else Src.Kind /= S_Body
-               then
-                  Skip := True;
-               end if;
-
-               for Main of Actual_Mains loop
-                  if Src.Path_Name = Main.Source then
-                     --  Don't include mains in the closure of another main
-                     Skip := True;
-                  end if;
-               end loop;
-
-               if not Skip then
-                  declare
-                     Attr : constant Project.Attribute.Object :=
-                              Src.Owning_View.Attribute
-                                (PRA.Linker.Unconditional_Linking,
-                                 PAI.Create (Src.Language));
-                  begin
-                     Direct_Import := Name_Type (Attr.Value.Text) = "True";
-                  end;
-               end if;
-
-               if not Skip then
-                  Comp.Initialize (Src);
-
-                  if not Tree_Db.Add_Action (Comp) then
-                     return False;
-                  end if;
-
-                  if Comp.Object_File.Is_Defined then
-                     if Direct_Import then
-                        for J in Link'Range loop
-                           Tree_Db.Add_Input (Link (J).UID, Comp.Object_File);
-                        end loop;
-                     else
-                        Tree_Db.Add_Input (Archive.UID, Comp.Object_File);
-                     end if;
-                  end if;
-               end if;
+            for UID of Direct_Comp loop
+               Tree_Db.Add_Input
+                 (Link_Act.UID,
+                  Compile.Object'Class
+                    (Tree_Db.Action_Id_To_Reference
+                         (UID).Element.all).Object_File);
             end loop;
          end loop;
       end;

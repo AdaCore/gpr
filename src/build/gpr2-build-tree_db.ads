@@ -225,6 +225,10 @@ package GPR2.Build.Tree_Db is
    package Artifact_Vectors is new Ada.Containers.Indefinite_Vectors
      (Positive, GPR2.Build.Artifacts.Object'Class, GPR2.Build.Artifacts."=");
 
+   --------------------------
+   -- Iteration on actions --
+   --------------------------
+
    type Action_Cursor is private;
    No_Action_Element : constant Action_Cursor;
 

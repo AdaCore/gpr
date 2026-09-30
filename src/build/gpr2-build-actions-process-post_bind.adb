@@ -59,6 +59,7 @@ package body GPR2.Build.Actions.Process.Post_Bind is
       Ada_Lang    : constant PAI.Object := PAI.Create (Ada_Language);
       Driver_Attr : constant GPR2.Project.Attribute.Object :=
         Self.View.Attribute (PRA.Compiler.Driver, Ada_Lang);
+
    begin
       if Driver_Attr.Is_Defined then
          Cmd_Line.Set_Driver (Driver_Attr.Value.Text);
@@ -77,10 +78,8 @@ package body GPR2.Build.Actions.Process.Post_Bind is
       --  add some of its switches
 
       declare
-         Binder : constant Ada_Bind.Object :=
-           Ada_Bind.Object (Self.Tree.Action (Self.Binder.UID));
-         Ali    : constant GPR2.Build.Artifacts.Files.Object :=
-           Binder.First_ALI;
+         Ali : constant GPR2.Build.Artifacts.Files.Object :=
+                 Self.Binder.First_ALI;
       begin
          if Ali.Is_Defined and then Ali.Path.Exists then
             for Sw of ALI_Parser.Switches (Ali.Path) loop
@@ -134,7 +133,7 @@ package body GPR2.Build.Actions.Process.Post_Bind is
    function Create
      (Impl   : Artifacts.Files.Object;
       View   : GPR2.Project.View.Object;
-      Binder : Ada_Bind.Object;
+      Binder : Ada_Bind.Ada_Bind_Id;
       No_Op  : Boolean) return Object
    is
       Attr : constant GPR2.Project.Attribute.Object :=
@@ -146,15 +145,16 @@ package body GPR2.Build.Actions.Process.Post_Bind is
       Self   : Object;
 
    begin
-      Self.Ctxt   := View;
-      Self.Binder := Binder;
-      Self.Input  := Impl;
-      Self.Output :=
+      Self.Ctxt      := View;
+      Self.Binder_Id := +Binder;
+      Self.Input     := Impl;
+      Self.Output    :=
         Artifacts.Object_File.Create
           (View.Object_Directory.Compose (Impl.Path.Base_Filename & O_Suff));
-      Self.Ali    :=
+      Self.Ali       :=
         Artifacts.Files.Create
           (View.Object_Directory.Compose (Impl.Path.Base_Filename & ".ali"));
+
       if No_Op then
          Self.Set_State (Actions.No_Op);
       end if;

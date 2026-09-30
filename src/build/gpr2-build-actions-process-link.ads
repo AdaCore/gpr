@@ -49,7 +49,7 @@ package GPR2.Build.Actions.Process.Link is
 
    procedure Set_Bind_Action
      (Self : in out Object;
-      Bind : Actions.Process.Ada_Bind.Object);
+      Bind : Actions.Process.Ada_Bind.Ada_Bind_Id);
 
    procedure Set_Mapping_File
      (Self : in out Object; Mapping_File : Filename_Type);
@@ -172,7 +172,7 @@ private
                               Containers.Empty_Value_List;
       --  Command line options coming from the binder
 
-      Bind : Actions.Process.Ada_Bind.Object;
+      Bind : Action_Id_Holder.Holder;
       --  The bind action generating the initialisation of the linked library
 
       No_Rpath        : Boolean := False;
