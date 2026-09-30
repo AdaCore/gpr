@@ -1,0 +1,9 @@
+project Codec is
+   for Languages   use ("Rust");
+   for Source_Dirs use ("rust/src");
+   for Main        use ("encode.rs", "decode.rs");
+
+   package Cargo is
+      for Root use Project'Project_Dir & "rust";
+   end Cargo;
+end Codec;
