@@ -21,6 +21,7 @@ with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
 with GPR2.Project.View.Set;
+with GPR2.Project.View.Vector;
 with GPR2.Source_Reference;
 with GPR2.Source_Reference.Value;
 with GPR2.View_Base_Internal;
@@ -64,6 +65,21 @@ private package GPR2.View_Internal is
      (Exec_Dir, Library_Ali_Dir, Library_Dir, Library_Src_Dir, Object_Dir);
 
    type Dir_Cache_List is array (Cacheable_Dir_Attrs) of Dir_Cache_Value;
+
+   type Closure_Cache_Value is record
+      Computed : Boolean := False;
+      Views    : GPR2.Project.View.Vector.Object;
+   end record;
+
+   type Closure_Cache_List is
+     array (Boolean, Boolean, Boolean) of Closure_Cache_Value;
+   --  Indexed by Closure's Include_Self, Include_Extended and
+   --  Include_Aggregated
+
+   type Namespace_Roots_Cache_Value is record
+      Computed : Boolean := False;
+      Views    : GPR2.Project.View.Set.Object;
+   end record;
 
    type Driver_Status is record
       Defined : Boolean;
@@ -144,6 +160,14 @@ private package GPR2.View_Internal is
       Cache                : Attribute_Cache.Object;
       --  Attribute's final values cache
       Dir_Cache            : Dir_Cache_List;
+
+      Closure_Cache        : Closure_Cache_List;
+      --  Cache for GPR2.Project.View.Closure, which walks the imports of the
+      --  whole closure and is queried once per parsed ALI
+
+      NS_Roots_Cache       : Namespace_Roots_Cache_Value;
+      --  Cache for GPR2.Project.View.Namespace_Roots, which resolves and
+      --  collects the root views on each call
       --  View's directories cache, heavily used when loading sources and
       --  retrieving build artifacts.
    end record;

@@ -23,6 +23,10 @@ with GPR2.Project.View.Vector;
 with GPR2.Source_Reference;
 with GPR2.Tree_Internal;
 
+------------------------
+-- GPR2.Build.Tree_Db --
+------------------------
+
 package body GPR2.Build.Tree_Db is
 
    package GOF renames GNATCOLL.OS.FS;
@@ -204,17 +208,21 @@ package body GPR2.Build.Tree_Db is
       Action   : Actions.Action_Id'Class;
       Artifact : Artifacts.Object'Class)
    is
-      Pred       : Artifact_Action_Maps.Cursor;
-      Input_List : constant Action_Artifacts_Maps.Reference_Type :=
-                     Self.Inputs.Reference (Action);
+      Pred : Artifact_Action_Maps.Cursor;
    begin
       Self.Add_Artifact (Artifact);
 
-      if not Input_List.Contains (Artifact) then
-         Input_List.Append (Artifact);
-      end if;
+      declare
+         Succs : constant Artifact_Actions_Maps.Reference_Type :=
+                   Self.Successors.Reference (Artifact);
+      begin
+         --  Equivalent to checking Inputs, but Successors is a set
 
-      Self.Successors.Reference (Artifact).Include (Action);
+         if not Succs.Contains (Action) then
+            Succs.Insert (Action);
+            Self.Inputs.Reference (Action).Append (Artifact);
+         end if;
+      end;
 
       if Self.Executing then
          --  need to amend the execution context dependencies
@@ -289,10 +297,9 @@ package body GPR2.Build.Tree_Db is
             return False;
          end if;
       else
-         Self.Predecessor.Insert (Artifact, Action);
-      end if;
+         --  Not produced by anything yet, so not an output of Action either
 
-      if not Self.Outputs.Reference (Action).Contains (Artifact) then
+         Self.Predecessor.Insert (Artifact, Action);
          Self.Outputs.Reference (Action).Append (Artifact);
       end if;
 
@@ -681,6 +688,15 @@ package body GPR2.Build.Tree_Db is
          end;
       end if;
    end Get_Or_Create_Temp_File;
+
+   ------------------------------
+   -- Invalidate_Source_Caches --
+   ------------------------------
+
+   procedure Invalidate_Source_Caches (Self : in out Object) is
+   begin
+      Self.Src_Generation := Self.Src_Generation + 1;
+   end Invalidate_Source_Caches;
 
    ---------------------------
    -- Linker_Lib_Dir_Option --
@@ -1186,6 +1202,13 @@ package body GPR2.Build.Tree_Db is
    begin
       Self.Static_Completion := Active;
    end Set_Static_Completion;
+
+   -----------------------
+   -- Source_Generation --
+   -----------------------
+
+   function Source_Generation (Self : Object) return Natural is
+     (Self.Src_Generation);
 
    ------------
    -- Unload --

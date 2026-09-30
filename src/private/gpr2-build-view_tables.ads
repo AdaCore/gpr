@@ -121,6 +121,15 @@ private package GPR2.Build.View_Tables is
      (Simple_Name, Source_Proxy, Hash, "=");
    --  Basename to pathname maps
 
+   type Visible_Source_Result is record
+      Src       : Build.Source.Object;
+      Ambiguous : Boolean := False;
+   end record;
+
+   package Visible_Source_Maps is new Ada.Containers.Indefinite_Hashed_Maps
+     (Simple_Name, Visible_Source_Result, Hash, "=");
+   --  See View_Data.Visible_Src_Cache
+
    package Basename_Source_List_Maps is new
      Ada.Containers.Indefinite_Hashed_Maps
        (Simple_Name, Source_Proxy_Sets.Set, Hash, "=", Source_Proxy_Sets."=");
@@ -184,10 +193,17 @@ private package GPR2.Build.View_Tables is
       Temp_Files      : GPR2.Containers.Filename_Map;
       --  Holds the path of temp files created during build
 
+      Visible_Src_Cache     : Visible_Source_Maps.Map;
+      Visible_Src_Cache_Gen : Natural := 0;
+      --  Cache for Visible_Source, dropped when the tree's source
+      --  generation changes.
+
       Visible_Source_Closure : GPR2.Project.View.Vector.Object;
       --  The list of views to consider during source lookup: the current view
       --  and its dependencies recursively, together with the extended
       --  view's dependencies if any.
+      --  Set at creation only: updating it in place would need
+      --  Visible_Src_Cache to be cleared.
 
       Interface_Closure          : GPR2.Build.Compilation_Unit.Maps.Map;
       Interface_Closure_Computed : Boolean := False;

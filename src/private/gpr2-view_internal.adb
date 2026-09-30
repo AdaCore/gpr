@@ -501,6 +501,8 @@ package body GPR2.View_Internal is
    begin
       Def.Cache.Clear_Cache;
       Def.Dir_Cache := (others => <>);
+      Def.Closure_Cache := (others => (others => (others => <>)));
+      Def.NS_Roots_Cache := (others => <>);
    end Clear_Cache;
 
    -------------------

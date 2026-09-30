@@ -60,6 +60,16 @@ package GPR2.Build.Tree_Db is
 
    function Source_Option (Self : Object) return Optional_Source_Info_Option;
 
+   function Source_Generation (Self : Object) return Natural
+     with Pre => Self.Is_Defined, Inline;
+   --  Identifies the current state of the views' visible sources. Caches
+   --  derived from them are dropped when it changes.
+
+   procedure Invalidate_Source_Caches (Self : in out Object)
+     with Pre => Self.Is_Defined, Inline;
+   --  To be called whenever the sources visible from a view change. This is
+   --  tree-wide: a view resolves names against its whole closure.
+
    --  VIEW DATABASE LOOKUP:
 
    function View_Database
@@ -418,6 +428,9 @@ private
 
       Successors         : Artifact_Actions_Maps.Map;
       Predecessor        : Artifact_Action_Maps.Map;
+
+      Src_Generation     : Natural := 0;
+      --  See Source_Generation
 
       Executing          : Boolean := False;
       First_Single_Exec  : Boolean := False;

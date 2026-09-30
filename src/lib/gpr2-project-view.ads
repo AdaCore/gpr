@@ -94,11 +94,15 @@ package GPR2.Project.View is
      (Self               : Object;
       Include_Self       : Boolean := False;
       Include_Extended   : Boolean := False;
-      Include_Aggregated : Boolean := False)
+      Include_Aggregated : Boolean := False;
+      Use_Cache          : Boolean := True)
       return GPR2.Project.View.Vector.Object
      with Pre => Self.Is_Defined;
    --  Returns the list of views that are withed or limited withed by Self
    --  recursively.
+   --  Use_Cache must be unset while the tree is still being built: the
+   --  closure is not stable then, and keeping it would serve no purpose
+   --  since it is only queried repeatedly once the tree is loaded.
    --  If Include_Self is set, then Self will be part of the
    --  returned set.
    --  If Include_Aggregated is set, then the projects aggregated by any

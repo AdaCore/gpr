@@ -28,6 +28,10 @@ procedure Main is
 
       procedure List_Sources (View : Project.View.Object);
 
+      procedure List_Visible (View : Project.View.Object);
+      --  Query Visible_Source for the sources this test adds and removes, so
+      --  that a stale lookup cache shows up here.
+
       ------------------
       -- List_Sources --
       ------------------
@@ -63,6 +67,40 @@ procedure Main is
          end loop;
       end List_Sources;
 
+      -------------------
+      -- List_Visible --
+      -------------------
+
+      procedure List_Visible (View : Project.View.Object) is
+
+         procedure Query (Name : Simple_Name);
+
+         -----------
+         -- Query --
+         -----------
+
+         procedure Query (Name : Simple_Name) is
+            Ambiguous : Boolean;
+            Src       : constant Build.Source.Object :=
+                          View.Visible_Source (Name, Ambiguous);
+         begin
+            Text_IO.Put ("visible " & String (Name) & ": ");
+
+            if Src.Is_Defined then
+               Text_IO.Put_Line
+                 ("yes, unit " & String (Src.Unit.Name)
+                  & (if Ambiguous then " (ambiguous)" else ""));
+            else
+               Text_IO.Put_Line ("no");
+            end if;
+         end Query;
+
+      begin
+         Query ("api-call.adb");
+         Query ("newapi.ads");
+         Query ("api.ads");
+      end List_Visible;
+
       Prj  : Project.Tree.Object;
       Opt  : Options.Object;
       View : Project.View.Object;
@@ -93,6 +131,7 @@ procedure Main is
       Text_IO.Put_Line ("Project: " & String (View.Name));
 
       List_Sources (View);
+      List_Visible (View);
 
       --  Change api-call.adb to be a child package We need a small
       --  delay to ensure that the timestamp is updated. To be safe we
@@ -120,6 +159,7 @@ procedure Main is
 
       Prj.Update_Sources;
       List_Sources (View);
+      List_Visible (View);
    end Check;
 
    ---------------------

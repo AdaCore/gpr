@@ -1183,10 +1183,17 @@ package body GPR2.Project.View is
      (Self               : Object;
       Include_Self       : Boolean := False;
       Include_Extended   : Boolean := False;
-      Include_Aggregated : Boolean := False)
+      Include_Aggregated : Boolean := False;
+      Use_Cache          : Boolean := True)
       return GPR2.Project.View.Vector.Object
    is
       procedure Add (V : GPR2.Project.View.Object);
+
+      Cached : View_Internal.Closure_Cache_Value renames
+                 View_Internal.Get_RW (Self).Closure_Cache
+                   (Include_Self, Include_Extended, Include_Aggregated);
+      --  Walking the imports of the whole closure is costly, and the result
+      --  only changes with the tree itself, so it is kept until Clear_Cache.
 
       Closure_Views : GPR2.Project.View.Vector.Object;
       Todo          : GPR2.Project.View.Vector.Object;
@@ -1208,6 +1215,10 @@ package body GPR2.Project.View is
          end if;
       end Add;
    begin
+      if Use_Cache and then Cached.Computed then
+         return Cached.Views;
+      end if;
+
       Add (Self);
 
       while not Todo.Is_Empty loop
@@ -1246,6 +1257,10 @@ package body GPR2.Project.View is
 
       if not Include_Self then
          Closure_Views.Delete_First;
+      end if;
+
+      if Use_Cache then
+         Cached := (Computed => True, Views => Closure_Views);
       end if;
 
       return Closure_Views;
@@ -2701,11 +2716,19 @@ package body GPR2.Project.View is
    --------------------
 
    function Namespace_Roots (Self : Object) return Set.Object is
+      Cached : View_Internal.Namespace_Roots_Cache_Value renames
+                 View_Internal.Get_RW (Self).NS_Roots_Cache;
       Result : Set.Object;
    begin
+      if Cached.Computed then
+         return Cached.Views;
+      end if;
+
       for Id of Get_RO (Self).Root_Views loop
          Result.Include (Self.Tree_Int.Instance_Of (Id));
       end loop;
+
+      Cached := (Computed => True, Views => Result);
 
       return Result;
    end Namespace_Roots;

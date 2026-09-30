@@ -936,11 +936,15 @@ package body GPR2.Tree_Internal is
                declare
                   Non_Extended : GPR2.Containers.Filename_Set;
                begin
-                  for V of NS.Closure (True, False, True) loop
+                  for V of NS.Closure
+                             (True, False, True, Use_Cache => False)
+                  loop
                      Non_Extended.Include (V.Path_Name.Value);
                   end loop;
 
-                  for V of NS.Closure (True, True, True) loop
+                  for V of NS.Closure
+                             (True, True, True, Use_Cache => False)
+                  loop
                      if V.Is_Extended
                        and then V.Kind /= K_Abstract
                        and then Non_Extended.Contains (V.Path_Name.Value)
@@ -2278,7 +2282,8 @@ package body GPR2.Tree_Internal is
               Root_Project.Closure
                 (Include_Self       => True,
                  Include_Extended   => False,
-                 Include_Aggregated => False);
+                 Include_Aggregated => False,
+                 Use_Cache          => False);
 
             for V of Closure loop
                if V.Is_Library then
