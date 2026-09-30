@@ -56,7 +56,7 @@ package body GPR2.Build.Actions_Scheduler is
    --  Execute the actions scheduler, which occurs after an option cast
 
    procedure Kill_Process (Handle : GOP.Process_Handle);
-   --  Terminate a child before waiting for its output listeners on failure.
+   --  Terminate a child before waiting for its output listeners on failure
 
    procedure Launch_Process
      (Job            : in out Actions.Process.Object'Class;
@@ -773,18 +773,18 @@ package body GPR2.Build.Actions_Scheduler is
       --  Effective max number of simultaneous jobs
 
       Runner_Check_Period : constant Duration := 1.0;
-      --  Interval between dead-runner checks.
+      --  Interval between dead-runner checks
 
       protected Collect_Signal is
          entry Wait;
-         --  Wait for a completion and reset the signal.
+         --  Wait for a completion and reset the signal
 
          procedure Signal;
          --  Wake the main loop
       private
          Signalled : Boolean := False;
       end Collect_Signal;
-      --  Wake the scheduler when an action completes.
+      --  Wake the scheduler when an action completes
 
       Script_FD  : GNATCOLL.OS.FS.File_Descriptor := FS.Null_FD;
       Script_Dir : Path_Name.Object;
