@@ -1,0 +1,15 @@
+[Always-Execute]   1
+Executed
+[Always-Execute]   2
+Executed
+[Always-Execute]   3
+Executed
+actions: 3  file index generations: 4
+unchanged input, executed: 0
+[Always-Execute]   1
+Executed
+[Always-Execute]   2
+Executed
+[Always-Execute]   3
+Executed
+changed input, executed: 3

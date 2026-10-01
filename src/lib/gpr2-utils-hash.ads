@@ -26,6 +26,15 @@ package GPR2.Utils.Hash is
    --  artifact file is the same of the stored one and whether we trust what is
    --  inside the cache or not.
 
+   procedure Start_Generation (Self : in out Object);
+   --  Open a new file-index generation: each file is then stat'ed once, and
+   --  later queries for it reuse that result.
+
+   function Generations (Self : Object) return Natural;
+   --  Number of generations opened so far. The scheduler opens one per
+   --  executed action, so that a file modified by an action is stat'ed
+   --  again for the next one.
+
    function Hash_Content (Cnt : String) return Hash_Digest;
 
    function Load (Path : Path_Name.Object) return Object;
@@ -37,7 +46,10 @@ private
 
    type Object is tagged record
       File_Index : GNATCOLL.File_Indexes.File_Index;
+      Gen_Count  : Natural := 0;
    end record;
+
+   function Generations (Self : Object) return Natural is (Self.Gen_Count);
 
    No_Digest : constant Hash_Digest := (others => ' ');
 
@@ -46,6 +58,9 @@ private
       Path        : Filename_Type;
       Force_Cache : Boolean) return Hash_Digest
    is (GNATCOLL.File_Indexes.Hash
-       (Self.File_Index, String (Path), Force_Cache => Force_Cache));
+       (Self.File_Index, String (Path),
+        Force_Cache         => Force_Cache,
+        Path_Is_Normalized  => True));
+   --  Path_Name.Value is already normalized.
 
 end GPR2.Utils.Hash;

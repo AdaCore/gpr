@@ -51,4 +51,14 @@ package body GPR2.Utils.Hash is
       end if;
    end Save;
 
+   ----------------------
+   -- Start_Generation --
+   ----------------------
+
+   procedure Start_Generation (Self : in out Object) is
+   begin
+      GNATCOLL.File_Indexes.Start_Generation (Self.File_Index);
+      Self.Gen_Count := Self.Gen_Count + 1;
+   end Start_Generation;
+
 end GPR2.Utils.Hash;
