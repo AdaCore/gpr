@@ -19,7 +19,6 @@
 with Ada.Command_Line;
 with Ada.Containers.Ordered_Maps;
 with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.Integer_Text_IO;
 with Ada.IO_Exceptions;
@@ -235,7 +234,6 @@ procedure GPRconfig is
    ----------------------------
 
    function Parse_Config_Parameter (Config : String) return Description is
-      use Ada.Characters.Handling;
       use GNAT.String_Split;
 
       function Positional_Parameters return Boolean;

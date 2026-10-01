@@ -5,8 +5,6 @@
 --
 
 with Ada.Characters.Handling;
-with Ada.Strings.Maps;
-with Ada.Strings.Fixed;
 
 with GNATCOLL.OS.Temp;
 with GNATCOLL.OS.FS;
@@ -70,11 +68,8 @@ package body GPR2.Build.Actions is
       Basename : Boolean := False) return Simple_Name
    is
       use Ada.Characters.Handling;
-      use Ada.Strings;
 
-      Space_Repl : constant Ada.Strings.Maps.Character_Mapping :=
-                     Maps.To_Mapping (" ", "_");
-      Res        : Unbounded_String;
+      Res : Unbounded_String;
 
    begin
       --  A Build_Db file item is stored in the view's object directory so
@@ -86,7 +81,13 @@ package body GPR2.Build.Actions is
          Append (Res, '_');
       end if;
 
-      Append (Res, Fixed.Translate (To_Lower (Self.Action_Class), Space_Repl));
+      --  Lower case with spaces turned into underscores, in place: Translate
+      --  would build a mapping and two strings on each call.
+
+      for C of Self.Action_Class loop
+         Append (Res, (if C = ' ' then '_' else To_Lower (C)));
+      end loop;
+
       Append (Res, '_');
 
       Append (Res, Self.Action_Parameter);

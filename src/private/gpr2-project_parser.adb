@@ -5,7 +5,6 @@
 --
 
 with Ada.Characters.Conversions;
-with Ada.Characters.Handling;
 with Ada.Containers;
 with Ada.Environment_Variables;
 with Ada.Exceptions;
@@ -4676,7 +4675,6 @@ package body GPR2.Project_Parser is
 
             declare
                use GPR2.Containers.Value_Type_Set;
-               use Ada.Characters.Handling;
 
             begin
 
@@ -4855,8 +4853,6 @@ package body GPR2.Project_Parser is
       --  Insert intrinsic attributes Name and Project_Dir
 
       declare
-         use Characters.Handling;
-
          Sloc : constant Source_Reference.Object :=
                   Source_Reference.Object
                     (Source_Reference.Create (Self.File.Value, 0, 0));

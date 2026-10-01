@@ -5,7 +5,8 @@
 --
 
 with Ada.Directories;
-with Ada.Strings.Less_Case_Insensitive;
+
+with GNATCOLL.Hash.xxHash;
 
 pragma Warnings (Off, "* is an internal GNAT unit");
 with System.Soft_Links;               use System.Soft_Links;
@@ -18,30 +19,41 @@ package body GPR2 is
    Is_Multitasking : constant Boolean :=
       System.Soft_Links.Lock_Task /= System.Soft_Links.Task_Lock_NT'Access;
 
+   --  Names are compared and hashed constantly. The runtime's
+   --  Less/Equal/Hash_Case_Insensitive fold through
+   --  Ada.Strings.Maps.Value, a call per character, so use a table.
+
+   type Fold_Table is array (Character) of Character;
+
+   function Build_Fold_Table return Fold_Table;
+   --  Not an aggregate: "others => <>" would leave the entries uninitialized
+
+   function Equal_CI (Left, Right : String) return Boolean;
+   function Hash_CI (Key : String) return Ada.Containers.Hash_Type;
+   function Less_CI (Left, Right : String) return Boolean;
+   --  Ada.Strings.Equal/Hash/Less_Case_Insensitive, folding through Lower
+
    ---------
    -- "<" --
    ---------
 
    overriding function "<" (Left, Right : Optional_Name_Type) return Boolean is
-      use Ada.Strings;
    begin
-      return Less_Case_Insensitive (String (Left), String (Right));
+      return Less_CI (String (Left), String (Right));
    end "<";
 
    overriding function "<" (Left, Right : Filename_Optional) return Boolean is
    begin
       return (if File_Names_Case_Sensitive
               then String (Left) < String (Right)
-              else Ada.Strings.Less_Case_Insensitive
-                     (String (Left), String (Right)));
+              else Less_CI (String (Left), String (Right)));
    end "<";
 
    overriding function "<" (Left, Right : External_Name_Type) return Boolean is
    begin
       return (if File_Names_Case_Sensitive
               then String (Left) < String (Right)
-              else Ada.Strings.Less_Case_Insensitive
-                     (String (Left), String (Right)));
+              else Less_CI (String (Left), String (Right)));
    end "<";
 
    ---------
@@ -49,26 +61,59 @@ package body GPR2 is
    ---------
 
    overriding function "=" (Left, Right : Optional_Name_Type) return Boolean is
-      use Ada.Strings;
    begin
-      return Equal_Case_Insensitive (String (Left), String (Right));
+      return Equal_CI (String (Left), String (Right));
    end "=";
 
    overriding function "=" (Left, Right : Filename_Optional) return Boolean is
    begin
       return (if File_Names_Case_Sensitive
               then String (Left) = String (Right)
-              else Ada.Strings.Equal_Case_Insensitive
-                     (String (Left), String (Right)));
+              else Equal_CI (String (Left), String (Right)));
    end "=";
 
    overriding function "=" (Left, Right : External_Name_Type) return Boolean is
    begin
       return (if File_Names_Case_Sensitive
               then String (Left) = String (Right)
-              else Ada.Strings.Equal_Case_Insensitive
-                     (String (Left), String (Right)));
+              else Equal_CI (String (Left), String (Right)));
    end "=";
+
+   -----------------------
+   -- Build_Fold_Table --
+   -----------------------
+
+   function Build_Fold_Table return Fold_Table is
+      Result : Fold_Table;
+   begin
+      for C in Character loop
+         Result (C) := Ada.Characters.Handling.To_Lower (C);
+      end loop;
+
+      return Result;
+   end Build_Fold_Table;
+
+   Lower : constant Fold_Table := Build_Fold_Table;
+
+   --------------
+   -- Equal_CI --
+   --------------
+
+   function Equal_CI (Left, Right : String) return Boolean is
+   begin
+      if Left'Length /= Right'Length then
+         return False;
+      end if;
+
+      for J in 0 .. Left'Length - 1 loop
+         if Lower (Left (Left'First + J)) /= Lower (Right (Right'First + J))
+         then
+            return False;
+         end if;
+      end loop;
+
+      return True;
+   end Equal_CI;
 
    ---------------------------
    -- Get_Executable_Suffix --
@@ -99,6 +144,80 @@ package body GPR2 is
                         (GNAT.OS_Lib.Normalize_Pathname
                             (GPRls, Resolve_Links => True))));
    end Get_Tools_Directory;
+
+   ----------
+   -- Hash --
+   ----------
+
+   function Hash (N : Optional_Name_Type) return Ada.Containers.Hash_Type is
+   begin
+      return Hash_CI (String (N));
+   end Hash;
+
+   function Hash (Fname : Filename_Optional) return Ada.Containers.Hash_Type is
+   begin
+      return (if File_Names_Case_Sensitive
+              then Hash (String (Fname))
+              else Hash_CI (String (Fname)));
+   end Hash;
+
+   function Hash (Name : String) return Ada.Containers.Hash_Type is
+   begin
+      if Name'Length = 0 then
+         return Empty_Hash;
+      end if;
+
+      return GNATCOLL.Hash.xxHash.XXH3 (Name);
+   end Hash;
+
+   -------------
+   -- Hash_CI --
+   -------------
+
+   function Hash_CI (Key : String) return Ada.Containers.Hash_Type is
+      use GNATCOLL.Hash.xxHash;
+
+      Folded : String (1 .. 256);
+      --  Fixed size to say on the stack. Longer keys are folded and
+      --  hashed by chunks.
+
+      First  : Positive;
+      Len    : Natural;
+      Ctx    : XXH3_Context;
+
+   begin
+      if Key'Length = 0 then
+         return Empty_Hash;
+      end if;
+
+      if Key'Length <= Folded'Length then
+         for J in 1 .. Key'Length loop
+            Folded (J) := Lower (Key (Key'First + (J - 1)));
+         end loop;
+
+         return XXH3 (Folded (1 .. Key'Length));
+      end if;
+
+      Init_Hash_Context (Ctx);
+      First := Key'First;
+
+      loop
+         Len := Natural'Min (Folded'Length, Key'Last - First + 1);
+
+         for J in 1 .. Len loop
+            Folded (J) := Lower (Key (First + (J - 1)));
+         end loop;
+
+         Update_Hash_Context (Ctx, Folded (1 .. Len));
+
+         --  The last index may be Positive'Last: do not advance past it.
+
+         exit when Len = Key'Last - First + 1;
+         First := First + Len;
+      end loop;
+
+      return Ada.Containers.Hash_Type'Mod (XXH3_Hash'(Hash_Digest (Ctx)));
+   end Hash_CI;
 
    --------
    -- Id --
@@ -170,6 +289,27 @@ package body GPR2 is
    begin
       return To_Mixed (String (Name (List, Id)));
    end Image;
+
+   -------------
+   -- Less_CI --
+   -------------
+
+   function Less_CI (Left, Right : String) return Boolean is
+      Len : constant Natural := Natural'Min (Left'Length, Right'Length);
+   begin
+      for J in 0 .. Len - 1 loop
+         declare
+            LC : constant Character := Lower (Left (Left'First + J));
+            RC : constant Character := Lower (Right (Right'First + J));
+         begin
+            if LC /= RC then
+               return LC < RC;
+            end if;
+         end;
+      end loop;
+
+      return Left'Length < Right'Length;
+   end Less_CI;
 
    -------------------------
    -- Locate_Exec_On_Path --
@@ -259,6 +399,20 @@ package body GPR2 is
 
       return Result;
    end To_Hex_String;
+
+   --------------
+   -- To_Lower --
+   --------------
+
+   function To_Lower (Name : String) return String is
+      Result : String (Name'Range);
+   begin
+      for J in Name'Range loop
+         Result (J) := Lower (Name (J));
+      end loop;
+
+      return Result;
+   end To_Lower;
 
    --------------
    -- To_Mixed --

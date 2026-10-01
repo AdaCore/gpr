@@ -499,7 +499,6 @@ package body GPRinstall.Install is
       begin
          if Project.Has_Package (P.Install) then
             declare
-               use Characters.Handling;
             begin
                for V of Project.Attributes (Pack => P.Install) loop
                   if V.Name.Id = A.Install.Prefix then

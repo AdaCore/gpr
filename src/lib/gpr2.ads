@@ -47,7 +47,6 @@ private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Containers.Indefinite_Vectors;
 private with Ada.Strings.Equal_Case_Insensitive;
 private with Ada.Strings.Hash;
-private with Ada.Strings.Hash_Case_Insensitive;
 private with Ada.Strings.Unbounded;
 private with GNATCOLL.Utils;
 
@@ -120,6 +119,17 @@ package GPR2 is
    --  A string type which cannot be empty
 
    --  filenames for example.
+
+   function To_Lower (Name : String) return String;
+   --  Name lowercased through a static table: same mapping as
+   --  Ada.Characters.Handling.To_Lower, without the per-character call.
+
+   function Hash (Name : String) return Ada.Containers.Hash_Type;
+   --  Case sensitive hash, for names already folded where they need to be
+
+   Empty_Hash : constant Ada.Containers.Hash_Type := 0;
+   --  Hash of an empty name: xxHash takes the address of the first
+   --  character, so the empty string must not reach it.
 
    overriding function "=" (Left, Right : Optional_Name_Type) return Boolean;
    overriding function "<" (Left, Right : Optional_Name_Type) return Boolean;
@@ -381,10 +391,6 @@ private
          Glob           => True,
          Case_Sensitive => File_Names_Case_Sensitive));
 
-   function Hash (Fname : Filename_Optional) return Ada.Containers.Hash_Type
-   is (if File_Names_Case_Sensitive
-       then Ada.Strings.Hash (String (Fname))
-       else Ada.Strings.Hash_Case_Insensitive (String (Fname)));
 
    function Image (Kind : Valid_Unit_Kind) return String is
      (case Kind is
@@ -437,8 +443,6 @@ private
      (Name (Attr_Id_List, Natural (Id)));
    function Image (Id : Optional_Attribute_Id) return String is
      (Image (Attr_Id_List, Natural (Id)));
-   function Hash (N : Optional_Name_Type) return Ada.Containers.Hash_Type is
-     (Ada.Strings.Hash_Case_Insensitive (String (N)));
    function Hash
      (Id : Optional_Attribute_Id) return Ada.Containers.Hash_Type
    is

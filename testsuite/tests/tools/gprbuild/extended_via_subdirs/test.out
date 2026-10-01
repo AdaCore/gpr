@@ -14,6 +14,6 @@ This test procedure is useless in subdir!
 
 $ gprbuild -p -P tree2/p.gpr -j1 --src-subdirs=subdir
 p.gpr:6:11: warning: in "pkg-test-sep2.adb", actual unit name "PKG.TEST.SEP" differs from the one declared in the project : "PKG.TEST"
-p.gpr: warning: duplicated separate for unit "PKG.TEST" in /tree2/obj/subdir/pkg-test-sep.adb and /tree2/obj/subdir/pkg-test-sep2.adb
+p.gpr: warning: duplicated separate for unit "PKG.TEST" in /tree2/obj/subdir/pkg-test-sep2.adb and /tree2/obj/subdir/pkg-test-sep.adb
 p.gpr:6:33: error: source file "pkg-test-sep2.adb" for unit "PKG.TEST" not found
 gprbuild: processing failed
