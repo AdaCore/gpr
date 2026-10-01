@@ -192,7 +192,7 @@ package body GPR2 is
 
       if Key'Length <= Folded'Length then
          for J in 1 .. Key'Length loop
-            Folded (J) := Lower (Key (Key'First + J - 1));
+            Folded (J) := Lower (Key (Key'First + (J - 1)));
          end loop;
 
          return XXH3 (Folded (1 .. Key'Length));
@@ -201,14 +201,18 @@ package body GPR2 is
       Init_Hash_Context (Ctx);
       First := Key'First;
 
-      while First <= Key'Last loop
+      loop
          Len := Natural'Min (Folded'Length, Key'Last - First + 1);
 
          for J in 1 .. Len loop
-            Folded (J) := Lower (Key (First + J - 1));
+            Folded (J) := Lower (Key (First + (J - 1)));
          end loop;
 
          Update_Hash_Context (Ctx, Folded (1 .. Len));
+
+         --  The last index may be Positive'Last: do not advance past it.
+
+         exit when Len = Key'Last - First + 1;
          First := First + Len;
       end loop;
 
