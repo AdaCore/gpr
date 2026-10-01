@@ -192,6 +192,26 @@ package body GPR2.Build.Signature is
       Data      : Buffer.Reader := Buffer.Open (String (Db_File.Value));
       Event     : JSON.JSON_Parser_Event;
 
+      function Decoded (Event : JSON.JSON_Parser_Event) return String;
+      --  Event's string value, avoiding the copy Decode_As_String makes
+      --  when the token holds no escape, which is the usual case here.
+
+      -------------
+      -- Decoded --
+      -------------
+
+      function Decoded (Event : JSON.JSON_Parser_Event) return String is
+         Raw : String renames Data.Token (Event.First + 1, Event.Last - 1);
+      begin
+         for C of Raw loop
+            if C = '\' then
+               return JSON.Decode_As_String (Event, Data);
+            end if;
+         end loop;
+
+         return Raw;
+      end Decoded;
+
    begin
       Signature.Initialize (Ctxt.Tree.Artifacts_Database.File_Indexer);
 
@@ -295,10 +315,8 @@ package body GPR2.Build.Signature is
                                 Artifacts.New_Instance
                                   (Data.Token
                                      (Protocol.First + 1, Protocol.Last - 1));
-                              Chk   : constant String :=
-                                JSON.Decode_As_String (Value, Data);
-                              Uri_F : constant String :=
-                                JSON.Decode_As_String (Uri, Data);
+                              Chk   : constant String := Decoded (Value);
+                              Uri_F : constant String := Decoded (Uri);
                            begin
                               Art.Unserialize (Uri_F, Chk, Ctxt);
 
@@ -320,11 +338,9 @@ package body GPR2.Build.Signature is
                end if;
 
                if Key = TEXT_STDOUT then
-                  Signature.Stdout :=
-                    To_Unbounded_String (JSON.Decode_As_String (Event, Data));
+                  Signature.Stdout := To_Unbounded_String (Decoded (Event));
                elsif Key = TEXT_STDERR then
-                  Signature.Stderr :=
-                    To_Unbounded_String (JSON.Decode_As_String (Event, Data));
+                  Signature.Stderr := To_Unbounded_String (Decoded (Event));
                end if;
             end if;
          end;
