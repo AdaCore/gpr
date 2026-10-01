@@ -29,6 +29,9 @@ procedure Main is
    --  Report whether the case variants of Name hash equally, compare equal,
    --  and are found in a set holding the lower case one only
 
+   procedure Check_Bounds (Label : String; Length : Positive);
+   --  A name ending at Positive'Last hashes like the same name starting at 1
+
    function Repeat
      (Pattern : Optional_Name_Type; Length : Natural)
       return Optional_Name_Type;
@@ -124,6 +127,20 @@ procedure Main is
          & ", found " & Boolean'Image (Found));
    end Check;
 
+   ------------------
+   -- Check_Bounds --
+   ------------------
+
+   procedure Check_Bounds (Label : String; Length : Positive) is
+      Normal : constant Optional_Name_Type := Repeat ("AbCdEfGh", Length);
+      High   : constant Optional_Name_Type
+                 (Positive'Last - (Length - 1) .. Positive'Last) := Normal;
+   begin
+      Text_IO.Put_Line
+        (Label & ": hashes match across bounds "
+         & Boolean'Image (GPR2.Hash (Normal) = GPR2.Hash (High)));
+   end Check_Bounds;
+
    --  Latin-1 letters that fold: E acute, A grave, O circumflex, U diaeresis
 
    Accented : constant Optional_Name_Type :=
@@ -142,6 +159,11 @@ begin
    Check ("just over 256  ", Repeat ("AbCdEfGh", 257));
    Check ("well over 256  ", Repeat ("AbCdEfGh", 1000));
    Check ("accented long  ", Repeat (Accented, 600));
+
+   Check_Bounds ("high bound 1   ", 1);
+   Check_Bounds ("high bound 256 ", 256);
+   Check_Bounds ("high bound 257 ", 257);
+   Check_Bounds ("high bound 512 ", 512);
 
    --  An undefined path has an empty comparing form, which must not reach
    --  the hash either
