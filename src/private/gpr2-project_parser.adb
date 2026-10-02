@@ -4694,7 +4694,8 @@ package body GPR2.Project_Parser is
 
                            else
 
-                              if To_Lower (Val.Text) = To_Lower (Typ) then
+                              if To_Lower_Fast (Val.Text) = To_Lower_Fast (Typ)
+                              then
                                  Found := True;
 
                                  exit;
@@ -4868,7 +4869,7 @@ package body GPR2.Project_Parser is
            (PA.Create
               (Name    => Create_Attr (PRA.Name),
                Value   => Get_Value_Reference
-                            (To_Lower (To_String (Self.Name)), Sloc),
+                            (To_Lower_Fast (To_String (Self.Name)), Sloc),
                Default => True));
 
          Attrs.Include

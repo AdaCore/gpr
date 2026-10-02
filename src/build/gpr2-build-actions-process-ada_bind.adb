@@ -200,7 +200,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
                   declare
                      Ali : constant Path_Name.Object := Ali_In.Ali.Path;
                      Key : constant String :=
-                       To_Lower (String (Ali_In.CU.Name))
+                       To_Lower_Fast (String (Ali_In.CU.Name))
                        & (if Ali_In.CU.Main_Part = S_Spec
                           then S_Suffix
                           else B_Suffix);

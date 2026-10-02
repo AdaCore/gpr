@@ -400,11 +400,11 @@ package body GPR2 is
       return Result;
    end To_Hex_String;
 
-   --------------
-   -- To_Lower --
-   --------------
+   -------------------
+   -- To_Lower_Fast --
+   -------------------
 
-   function To_Lower (Name : String) return String is
+   function To_Lower_Fast (Name : String) return String is
       Result : String (Name'Range);
    begin
       for J in Name'Range loop
@@ -412,7 +412,7 @@ package body GPR2 is
       end loop;
 
       return Result;
-   end To_Lower;
+   end To_Lower_Fast;
 
    --------------
    -- To_Mixed --

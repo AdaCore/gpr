@@ -276,7 +276,7 @@ procedure GPRconfig is
          Name_Set     : Boolean := False;
       begin
          for Slice of Slices loop
-            if To_Lower (Head (Slice, 9)) = "language:" then
+            if To_Lower_Fast (Head (Slice, 9)) = "language:" then
                if Language_Set then
                   Report_Error_And_Exit
                     ("Configuration parameter language specified twice in "
@@ -287,7 +287,7 @@ procedure GPRconfig is
                   Language_Set := True;
                end if;
 
-            elsif To_Lower (Head (Slice, 8)) = "version:" then
+            elsif To_Lower_Fast (Head (Slice, 8)) = "version:" then
                if Version_Set then
                   Report_Error_And_Exit
                     ("Configuration parameter version specified twice in "
@@ -298,7 +298,7 @@ procedure GPRconfig is
                   Version_Set := True;
                end if;
 
-            elsif To_Lower (Head (Slice, 8)) = "runtime:" then
+            elsif To_Lower_Fast (Head (Slice, 8)) = "runtime:" then
                if Runtime_Set then
                   Report_Error_And_Exit
                     ("Configuration parameter runtime specified twice in "
@@ -309,7 +309,7 @@ procedure GPRconfig is
                   Runtime_Set := True;
                end if;
 
-            elsif To_Lower (Head (Slice, 5)) = "path:" then
+            elsif To_Lower_Fast (Head (Slice, 5)) = "path:" then
                if Path_Set then
                   Report_Error_And_Exit
                     ("Configuration parameter path specified twice in "
@@ -320,7 +320,7 @@ procedure GPRconfig is
                   Path_Set := True;
                end if;
 
-            elsif To_Lower (Head (Slice, 5)) = "name:" then
+            elsif To_Lower_Fast (Head (Slice, 5)) = "name:" then
                if Name_Set then
                   Report_Error_And_Exit
                     ("Configuration parameter name specified twice in "
@@ -348,7 +348,7 @@ procedure GPRconfig is
          Pref_Len : constant Positive := Pref'Length;
       begin
          for Slice of Slices loop
-            if To_Lower (Head (Slice, Pref_Len)) = Pref then
+            if To_Lower_Fast (Head (Slice, Pref_Len)) = Pref then
                if Slice = Pref then
                   Report_Error_And_Exit
                     ("Parameter value for " & Prefix & " not specified in """
@@ -377,11 +377,11 @@ procedure GPRconfig is
       begin
          for Slice of Slices loop
             if Slice = ""
-              or else (To_Lower (Head (Slice, 9)) /= "language:"
-                        and then To_Lower (Head (Slice, 8)) /= "version:"
-                        and then To_Lower (Head (Slice, 8)) /= "runtime:"
-                        and then To_Lower (Head (Slice, 5)) /= "path:"
-                        and then To_Lower (Head (Slice, 5)) /= "name:")
+              or else (To_Lower_Fast (Head (Slice, 9)) /= "language:"
+                        and then To_Lower_Fast (Head (Slice, 8)) /= "version:"
+                        and then To_Lower_Fast (Head (Slice, 8)) /= "runtime:"
+                        and then To_Lower_Fast (Head (Slice, 5)) /= "path:"
+                        and then To_Lower_Fast (Head (Slice, 5)) /= "name:")
             then
                Not_Positional_Present := True;
             else

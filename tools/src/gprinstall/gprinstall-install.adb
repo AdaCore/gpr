@@ -562,7 +562,7 @@ package body GPRinstall.Install is
 
                   elsif V.Name.Id = A.Install.Active then
                      declare
-                        Val : constant String := To_Lower (V.Value.Text);
+                        Val : constant String := To_Lower_Fast (V.Value.Text);
                      begin
                         if Val = "false" then
                            Active := False;
@@ -573,7 +573,7 @@ package body GPRinstall.Install is
 
                   elsif V.Name.Id = A.Install.Side_Debug then
                      declare
-                        Val : constant String := To_Lower (V.Value.Text);
+                        Val : constant String := To_Lower_Fast (V.Value.Text);
                      begin
                         if Val = "true" then
                            Side_Debug := True;
@@ -584,7 +584,7 @@ package body GPRinstall.Install is
 
                   elsif V.Name.Id = A.Install.Install_Project then
                      declare
-                        Val : constant String := To_Lower (V.Value.Text);
+                        Val : constant String := To_Lower_Fast (V.Value.Text);
                      begin
                         if Val = "false" then
                            Install_Project := False;
@@ -2133,7 +2133,7 @@ package body GPRinstall.Install is
                if Standalone /= GPR2.Project.No then
                   V.Append
                      ("         for Library_Standalone use """
-                     & Characters.Handling.To_Lower (Standalone'Image)
+                     & GPR2.To_Lower_Fast (Standalone'Image)
                      & """;");
 
                   --  And then generates the interfaces
@@ -2488,7 +2488,7 @@ package body GPRinstall.Install is
             --  Contains the final result returned
 
             function Is_Language_Active (Lang : String) return Boolean
-              is (Languages.Contains ((Characters.Handling.To_Lower (Lang))));
+              is (Languages.Contains ((GPR2.To_Lower_Fast (Lang))));
             --  Returns True if Lang is active in the installed project
 
             ----------------
