@@ -1,0 +1,4 @@
+abstract project Settings is
+   for Source_Dirs use ();
+   for Languages use ();
+end Settings;

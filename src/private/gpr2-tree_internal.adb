@@ -2568,6 +2568,13 @@ package body GPR2.Tree_Internal is
                return False;
             end if;
 
+            if View.Kind = K_Aggregate_Library then
+               --  Aggregate libraries don't define source_dirs, source_files
+               --  and don't accept the Languages attribute, and they're
+               --  definitely not abstract.
+               return False;
+            end if;
+
             --  We need at least Source_Dirs, Source_Files, or Languages
             --  explicitly empty.
 

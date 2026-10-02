@@ -1,0 +1,7 @@
+aggregate library project Combined extends "settings.gpr" is
+   for Project_Files use ("member.gpr");
+   for Library_Name use "combined";
+   for Library_Dir use "lib";
+   for Library_Kind use "static";
+   for Object_Dir use "obj/combined";
+end Combined;
