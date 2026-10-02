@@ -367,7 +367,8 @@ package body GPR2.Tree_Internal is
       Msg  : String;
       Sloc : Source_Reference.Object'Class) is
    begin
-      Self.Messages.Append (Message.Create (Message.Error, Msg, Sloc));
+      Self.Messages.Append
+        (Message.Create (Message.Critical_Error, Msg, Sloc));
    end Error;
 
    ------------------
@@ -868,7 +869,7 @@ package body GPR2.Tree_Internal is
 
       --  Do nothing more if there are errors during the parsing
 
-      if not Self.Messages.Has_Error then
+      if not Self.Messages.Has_Critical_Error then
          --  Add to root view's externals, configuration project externals
 
          Def := View_Internal.Get (Self.Root);
@@ -951,7 +952,7 @@ package body GPR2.Tree_Internal is
                      then
                         Self.Messages.Append
                           (Message.Create
-                             (Message.Error,
+                             (Message.Critical_Error,
                               "cannot extend an already imported project file",
                               Source_Reference.Create
                                 (V.Extending.Path_Name.Value, 0, 0)));
@@ -999,7 +1000,7 @@ package body GPR2.Tree_Internal is
                         if not Actual.Is_Defined then
                            Self.Messages.Append
                              (GPR2.Message.Create
-                                (GPR2.Message.Error,
+                                (GPR2.Message.Critical_Error,
                                  "toolchain version for language " & Image (L)
                                  & " differs from the required one """
                                  & Filter_GNAT (Required) & '"',
@@ -1009,7 +1010,7 @@ package body GPR2.Tree_Internal is
                         then
                            Self.Messages.Append
                              (GPR2.Message.Create
-                                (GPR2.Message.Error,
+                                (GPR2.Message.Critical_Error,
                                  "toolchain version """
                                  & Filter_GNAT (Actual)
                                  & """ for language " & Image (L)
@@ -1024,7 +1025,7 @@ package body GPR2.Tree_Internal is
          end if;
       end if;
 
-      if not Self.Messages.Has_Error then
+      if not Self.Messages.Has_Critical_Error then
          --  Tree is now fully loaded, we can create the artifacts database
          --  object.
          Init_Tree_Database (Self.Tree_Db, Self);
@@ -1079,8 +1080,8 @@ package body GPR2.Tree_Internal is
       Self.Conf := PC.Load (Filename);
       View_Internal.Bind_Configuration_To_Tree (Self.Conf, Self.Self);
 
-      if not Self.Conf.Log_Messages.Has_Error
-        and then not Self.Messages.Has_Error
+      if not Self.Conf.Log_Messages.Has_Critical_Error
+        and then not Self.Messages.Has_Critical_Error
       then
          Set_Context (Self);
       end if;
@@ -1264,7 +1265,7 @@ package body GPR2.Tree_Internal is
             begin
                --  If there are parsing errors, do not go further
 
-               if Self.Messages.Has_Error then
+               if Self.Messages.Has_Critical_Error then
                   return View;
                end if;
 
@@ -1313,7 +1314,7 @@ package body GPR2.Tree_Internal is
                      if P_Names (View.Name) /= Full_Name then
                         Self.Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Message => "duplicate project name """
                                           & String (View.Name) & """ in """
                                           & P_Names (View.Name)
@@ -1732,7 +1733,7 @@ package body GPR2.Tree_Internal is
          if not Filename.Exists then
             Self.Messages.Append
               (GPR2.Message.Create
-                 (Level   => Message.Error,
+                 (Level   => Message.Critical_Error,
                   Message => Get_Missing_Project_Err_Msg (Filename, "")));
             return Data;
          end if;
@@ -1751,7 +1752,7 @@ package body GPR2.Tree_Internal is
 
          --  Do the following only if there are no error messages
 
-         if not Self.Messages.Has_Error then
+         if not Self.Messages.Has_Critical_Error then
             Data.Kind := Project.Qualifier;
 
             declare
@@ -1790,7 +1791,7 @@ package body GPR2.Tree_Internal is
                        (GPR2.Message.Create
                           (Level   => (if Self.Pre_Conf_Mode
                                        then Message.Warning
-                                       else Message.Error),
+                                       else Message.Critical_Error),
                            Message => Get_Missing_Project_Err_Msg
                              (Import_Filename, "imported "),
                            Sloc    => Import));
@@ -1819,7 +1820,7 @@ package body GPR2.Tree_Internal is
                        (GPR2.Message.Create
                           (Level   => (if Self.Pre_Conf_Mode
                                        then Message.Warning
-                                       else Message.Error),
+                                       else Message.Critical_Error),
                            Message => Get_Missing_Project_Err_Msg
                              (Extended_Filename, "extended "),
                            Sloc    => Data.Trees.Project.Extended));
@@ -2019,7 +2020,7 @@ package body GPR2.Tree_Internal is
                begin
                   Self.Messages.Append
                     (Message.Create
-                       (Message.Error, "circular dependency detected",
+                       (Message.Critical_Error, "circular dependency detected",
                         Report_Sloc));
 
                   loop
@@ -2029,7 +2030,7 @@ package body GPR2.Tree_Internal is
 
                      Self.Messages.Append
                        (Message.Create
-                          (Message.Error,
+                          (Message.Critical_Error,
                            Source_Reference.Create
                              (Self.Instance_Of (Cycle (Index)).Path_Name.Value,
                               1, 1).Format (Full_Path_Name => True)
@@ -2249,8 +2250,8 @@ package body GPR2.Tree_Internal is
       --  Check that library names are unique within each closure. If not,
       --  report an error.
 
-      function Has_Error return Boolean is
-        (Self.Messages.Has_Error);
+      function Has_Critical_Error return Boolean is
+        (Self.Messages.Has_Critical_Error);
 
 
       ------------------------------------
@@ -2508,13 +2509,15 @@ package body GPR2.Tree_Internal is
             end if;
 
             if Files.Is_Empty then
-               Log (Message.Error, "file """ & Projects.Text & """ not found");
+               Log
+                 (Message.Critical_Error,
+                  "file """ & Projects.Text & """ not found");
             end if;
 
             return Files;
          exception
             when IO_Exceptions.Name_Error =>
-               Log (Message.Error,
+               Log (Message.Critical_Error,
                     Projects.Text & " contains an invalid directory");
                return Files;
          end Get_Matching_Files;
@@ -2604,7 +2607,7 @@ package body GPR2.Tree_Internal is
             View,
             Self.Pre_Conf_Mode);
 
-         if Self.Messages.Has_Error then
+         if Self.Messages.Has_Critical_Error then
             return;
          end if;
 
@@ -2725,7 +2728,7 @@ package body GPR2.Tree_Internal is
                            --  If there was error messages during the parsing
                            --  of the aggregated project, just exit now.
 
-                           if Self.Messages.Has_Error then
+                           if Self.Messages.Has_Critical_Error then
                               raise Project_Error with Pathname.String_Value;
                            end if;
 
@@ -2769,7 +2772,7 @@ package body GPR2.Tree_Internal is
             then
                Self.Messages.Append
                  (Message.Create
-                    (Message.Error,
+                    (Message.Critical_Error,
                      "a project with no sources cannot be a " &
                        "library project",
                      Tmp_Attr));
@@ -2792,7 +2795,7 @@ package body GPR2.Tree_Internal is
 
                      Self.Messages.Append
                        (Message.Create
-                          (Message.Error,
+                          (Message.Critical_Error,
                            "a standard project must have "
                            & (if Tmp_Attr.Name.Id = PRA.Source_Dirs
                               then "source directories"
@@ -2825,7 +2828,7 @@ package body GPR2.Tree_Internal is
                      then
                         Self.Messages.Append
                           (Message.Create
-                             (Message.Error,
+                             (Message.Critical_Error,
                               "a standard project cannot be a library project",
                               Tmp_Attr));
                      end if;
@@ -3215,7 +3218,7 @@ package body GPR2.Tree_Internal is
                   if Mandatory then
                      Self.Messages.Append
                        (Message.Create
-                          (Message.Error,
+                          (Message.Critical_Error,
                            "attribute " & Image (Name.Attr) & " not declared",
                            Source_Reference.Create
                              (View.Path_Name.Value, 0, 0)));
@@ -3251,7 +3254,7 @@ package body GPR2.Tree_Internal is
                      then
                         Self.Messages.Append
                           (Message.Create
-                             (Message.Error,
+                             (Message.Critical_Error,
                               '"' & String (Self.Build_Path.Dir_Name)
                               & String (PN.Relative_Path (Self.Build_Path))
                               & """ cannot relocate "
@@ -3302,7 +3305,7 @@ package body GPR2.Tree_Internal is
                if not View.Attribute (PRA.Library_Name).Is_Defined then
                   Self.Messages.Append
                     (Message.Create
-                       (Message.Error,
+                       (Message.Critical_Error,
                         "attribute Library_Name not declared",
                         Source_Reference.Create (View.Path_Name.Value, 0, 0)));
                end if;
@@ -3343,7 +3346,7 @@ package body GPR2.Tree_Internal is
                      if Agg.Is_Externally_Built then
                         Self.Messages.Append
                           (Message.Create
-                             (Message.Error,
+                             (Message.Critical_Error,
                               "cannot aggregate externally built project """
                               & String (Agg.Name) & '"',
                               Sloc => View.Attribute (PRA.Project_Files)));
@@ -3363,7 +3366,7 @@ package body GPR2.Tree_Internal is
                            if not Non_Empty_Imports then
                               Self.Messages.Append
                                 (Message.Create
-                                   (Message.Error,
+                                   (Message.Critical_Error,
                                     "cannot aggregate abstract project """
                                     & String (Agg.Name) & '"',
                                     Sloc =>
@@ -3395,7 +3398,7 @@ package body GPR2.Tree_Internal is
                      then
                         Self.Messages.Append
                           (Message.Create
-                             (Message.Error,
+                             (Message.Critical_Error,
                               "non-empty set of sources can't be defined in an"
                               & " abstract project",
                               Source_Reference.Create
@@ -3473,7 +3476,7 @@ package body GPR2.Tree_Internal is
                Set_View (View);
                Closure.Insert (View.Id);
 
-               exit when Has_Error;
+               exit when Has_Critical_Error;
             end if;
          end loop;
 
@@ -3487,7 +3490,7 @@ package body GPR2.Tree_Internal is
 
          --  Now evaluate the remaining views
 
-         if not Has_Error then
+         if not Has_Critical_Error then
             Closure_Loop :
             loop
                for View of Self.Ordered_Views loop
@@ -3496,7 +3499,7 @@ package body GPR2.Tree_Internal is
                   if Inserted then
                      Closure_Found := False;
                      Set_View (View);
-                     exit Closure_Loop when Has_Error;
+                     exit Closure_Loop when Has_Critical_Error;
                   end if;
                end loop;
 
@@ -3507,7 +3510,7 @@ package body GPR2.Tree_Internal is
       end;
 
       if not Self.Pre_Conf_Mode then
-         if not Has_Error then
+         if not Has_Critical_Error then
             for View of Self.Ordered_Views loop
                --  Finally add a dependency over the runtime view if the view*
                --  has Ada language
@@ -3543,7 +3546,7 @@ package body GPR2.Tree_Internal is
             end loop;
          end if;
 
-         if not Has_Error then
+         if not Has_Critical_Error then
 
             --  Now that we know that each view is valid, do cross view checks
             --  for library names uniqueness.
@@ -3551,7 +3554,7 @@ package body GPR2.Tree_Internal is
             Check_Library_Names_Are_Unique;
          end if;
 
-         if Has_Error then
+         if Self.Messages.Has_Error then
             raise Project_Error
               with Self.Root.Path_Name.String_Value & " semantic error";
          end if;

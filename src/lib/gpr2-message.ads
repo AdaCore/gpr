@@ -10,11 +10,17 @@ with GPR2.Source_Reference;
 
 package GPR2.Message is
 
-   type Level_Value is (Warning, Error, End_User, Hint, Lint);
+   type Level_Value is
+     (Warning, Critical_Error, Non_Critical_Error, End_User, Hint, Lint);
    --  Severity levels of messages:
    --
-   --  Warning and Error:
+   --  Warning:
    --     Self-explanatory.
+   --  Critical_Error:
+   --     Error that prevents further processing.
+   --  Non_Critical_Error:
+   --     Error that makes the overall operation fail, but allows processing
+   --     to continue, so that further errors can be reported.
    --  End_User:
    --     Used for messages displayed directly to the user without
    --     formatting, such as "Creating object directory 'obj'" or
@@ -25,6 +31,10 @@ package GPR2.Message is
    --  Lint:
    --     Indicates possible stylistic and structural improvements
    --     to the project file.
+
+   subtype Any_Error is Level_Value
+     range Critical_Error .. Non_Critical_Error;
+   --  All error levels
 
    type User_Level_Value is (Optional, Regular, Important);
 

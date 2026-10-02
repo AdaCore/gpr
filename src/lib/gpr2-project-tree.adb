@@ -503,7 +503,7 @@ package body GPR2.Project.Tree is
                      Self.Tree.Log_Messages.Append
                        (Message.Create
                           ((if Absent_Dir_Error = Error
-                           then Message.Error
+                           then Message.Critical_Error
                            else Message.Warning),
                            Human_Name & " directory """ & Path.String_Value &
                              """ could not be created",
@@ -518,7 +518,7 @@ package body GPR2.Project.Tree is
                   Self.Tree.Log_Messages.Append
                     (Message.Create
                        ((if Absent_Dir_Error = Error
-                        then Message.Error
+                        then Message.Critical_Error
                         else Message.Warning),
                         Human_Name & " directory """ & Path_Img &
                           """ not found",
@@ -892,7 +892,7 @@ package body GPR2.Project.Tree is
                if Conf_Norm /= Self_Norm then
                   Self.Tree.Log_Messages.Append
                     (GPR2.Message.Create
-                       (Level   =>  GPR2.Message.Error,
+                       (Level   =>  GPR2.Message.Critical_Error,
                         Message =>  "--target: '" &
                           String (Options.Target) &
                           "' is different from the target value in the" &
@@ -1048,7 +1048,7 @@ package body GPR2.Project.Tree is
                if Conf_Norm /= Self_Norm then
                   Self.Tree.Log_Messages.Append
                     (GPR2.Message.Create
-                       (Level   =>  GPR2.Message.Error,
+                       (Level   =>  GPR2.Message.Critical_Error,
                         Message =>  "--target: '" &
                           String (Options.Target) &
                           "' is different from the target value in the" &
@@ -1284,7 +1284,7 @@ package body GPR2.Project.Tree is
 
       if No_Error then
          for Msg of Log loop
-            if Msg.Level = Message.Error then
+            if Msg.Level in Message.Any_Error then
                Msg.Change_Level (Message.Warning);
             end if;
          end loop;

@@ -498,7 +498,7 @@ package body GPR2.Build.Actions_Population is
       if Ambiguous then
          Tree_Db.Reporter.Report
            (Message.Create
-              (Message.Error,
+              (Message.Critical_Error,
                "multiple sources were found for: """ &
                  Basename & '"',
                Source_Reference.Create (View.Path_Name.Value, 0, 0)));
@@ -511,7 +511,7 @@ package body GPR2.Build.Actions_Population is
          if not Src.Has_Units then
             Tree_Db.Reporter.Report
               (Message.Create
-                 (Message.Error,
+                 (Message.Critical_Error,
                   "unit index specified with a non unit-based source",
                   Source_Reference.Create (Src.Path_Name.Value, 0, 0)));
             Error_Reported := True;
@@ -521,7 +521,7 @@ package body GPR2.Build.Actions_Population is
          elsif not Src.Has_Unit_At (Index) then
             Tree_Db.Reporter.Report
               (Message.Create
-                 (Message.Error,
+                 (Message.Critical_Error,
                   " no unit for the index" & Index'Image,
                   Source_Reference.Create (Src.Path_Name.Value, 0, 0)));
             Error_Reported := True;
@@ -539,7 +539,7 @@ package body GPR2.Build.Actions_Population is
       then
          Tree_Db.Reporter.Report
            (Message.Create
-              (Message.Error,
+              (Message.Critical_Error,
                "main cannot be a source of a library project: """ &
                  Basename & '"',
                Source_Reference.Create
@@ -595,7 +595,7 @@ package body GPR2.Build.Actions_Population is
 
       Tree_Db.Reporter.Report
         (Message.Create
-           (Message.Error,
+           (Message.Critical_Error,
             "project " & String (View.Name) & " is built by Cargo and "
             & "cannot link against Ada library " & String (Dep.Name)
             & ", which is not encapsulated: Cargo is handed the library "
@@ -1710,7 +1710,7 @@ package body GPR2.Build.Actions_Population is
          then
             Tree_Db.Reporter.Report
               (Message.Create
-                 (Message.Error,
+                 (Message.Critical_Error,
                   "main cannot be a source of a library project: """ &
                     String (Loc.Source.Simple_Name) & '"',
                   Source_Reference.Create (Loc.View.Path_Name.Value, 0, 0)));
@@ -1723,7 +1723,7 @@ package body GPR2.Build.Actions_Population is
       then
          Tree_Db.Reporter.Report
            (GPR2.Message.Create
-              (GPR2.Message.Error,
+              (GPR2.Message.Critical_Error,
                "cannot specify an output filename when there are several " &
                  "mains.",
                Source_Reference.Create (View.Path_Name.Value, 0, 0)));
@@ -2383,7 +2383,7 @@ package body GPR2.Build.Actions_Population is
             then
                Tree.Reporter.Report
                  (Message.Create
-                    (Message.Error,
+                    (Message.Critical_Error,
                      '"' & Main &
                        """ was not found in the sources of any project",
                      Source_Reference.Create
@@ -2391,7 +2391,7 @@ package body GPR2.Build.Actions_Population is
             else
                Tree.Reporter.Report
                  (Message.Create
-                    (Message.Error,
+                    (Message.Critical_Error,
                      '"' & Main &
                        """ was not found in the project",
                      Source_Reference.Create

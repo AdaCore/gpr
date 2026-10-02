@@ -474,7 +474,7 @@ package body GPR2.Project_Parser is
       if Contents = Null_Unbounded_String then
          Messages.Append
            (GPR2.Message.Create
-              (Level   => Message.Error,
+              (Level   => Message.Critical_Error,
                Message => "project string is empty",
                Sloc    => Source_Reference.Create (Filename.Value, 0, 0)));
 
@@ -498,7 +498,7 @@ package body GPR2.Project_Parser is
                begin
                   Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Sloc,
                         Message =>
                           To_String (To_Wide_Wide_String (D.Message))));
@@ -574,7 +574,7 @@ package body GPR2.Project_Parser is
          if not Filename.Exists then
             Messages.Append
               (GPR2.Message.Create
-                 (Level   => Message.Error,
+                 (Level   => Message.Critical_Error,
                   Message => "project file """ & Filename.String_Value &
                              """ not found",
                   Sloc    => Source_Reference.Create (Filename.Value, 0, 0)));
@@ -617,7 +617,7 @@ package body GPR2.Project_Parser is
                         begin
                            Messages.Append
                              (GPR2.Message.Create
-                                (Level   => Message.Error,
+                                (Level   => Message.Critical_Error,
                                  Sloc    => Sloc,
                                  Message =>
                                    To_String
@@ -671,7 +671,7 @@ package body GPR2.Project_Parser is
       when E : others =>
          Messages.Append
            (Message.Create
-              (Message.Error,
+              (Message.Critical_Error,
                "fatal error while parsing the project file: " &
                  Ada.Exceptions.Exception_Message (E),
                GPR2.Source_Reference.Create (Filename.Value, 0, 0)));
@@ -764,7 +764,7 @@ package body GPR2.Project_Parser is
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, N),
                         Message =>
                           "missing parameters for external_as_list"
@@ -773,7 +773,7 @@ package body GPR2.Project_Parser is
                elsif Exprs.Children_Count < 2 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message =>
                           "external_as_list requires two " & "parameters"));
@@ -781,7 +781,7 @@ package body GPR2.Project_Parser is
                elsif Exprs.Children_Count > 2 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message =>
                           "external_as_list accepts only two parameters"));
@@ -800,7 +800,7 @@ package body GPR2.Project_Parser is
                      if Error then
                         Project.Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Filename, Var_Node),
                               Message =>
@@ -810,7 +810,7 @@ package body GPR2.Project_Parser is
                      elsif Var = "" then
                         Project.Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Filename, Var_Node),
                               Message =>
@@ -831,7 +831,7 @@ package body GPR2.Project_Parser is
                      if Error then
                         Project.Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Filename, Sep_Node),
                               Message =>
@@ -841,7 +841,7 @@ package body GPR2.Project_Parser is
                      elsif Sep = "" then
                         Project.Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Filename, Sep_Node),
                               Message =>
@@ -862,14 +862,14 @@ package body GPR2.Project_Parser is
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, N),
                         Message => "missing parameter for external built-in"));
 
                elsif Exprs.Children_Count > 3 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message =>
                           "external built-in accepts at most three "
@@ -889,7 +889,7 @@ package body GPR2.Project_Parser is
                      if Error then
                         Project.Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Filename, Exprs),
                               Message =>
@@ -899,7 +899,7 @@ package body GPR2.Project_Parser is
                      elsif Var = "" then
                         Project.Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Filename, Exprs),
                               Message =>
@@ -910,7 +910,7 @@ package body GPR2.Project_Parser is
                      then
                         Project.Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Filename, Exprs),
                               Message =>
@@ -974,7 +974,7 @@ package body GPR2.Project_Parser is
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, N),
                         Message =>
                           "missing parameters for file_as_list"
@@ -983,7 +983,7 @@ package body GPR2.Project_Parser is
                elsif Exprs.Children_Count /= 1 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message =>
                           "file_as_list requires one "
@@ -1003,7 +1003,7 @@ package body GPR2.Project_Parser is
                      if Error then
                         Project.Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Filename, Var_Node),
                               Message =>
@@ -1013,7 +1013,7 @@ package body GPR2.Project_Parser is
                      elsif Var = "" then
                         Project.Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Filename, Var_Node),
                               Message =>
@@ -1037,7 +1037,7 @@ package body GPR2.Project_Parser is
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, N),
                         Message => "missing parameters for match built-in"));
 
@@ -1046,7 +1046,7 @@ package body GPR2.Project_Parser is
                elsif Exprs.Children_Count < 2 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message => "match requires a second parameter"));
 
@@ -1055,7 +1055,7 @@ package body GPR2.Project_Parser is
                elsif Exprs.Children_Count > 3 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message =>
                           "match accepts a maximum of three parameters"));
@@ -1078,7 +1078,7 @@ package body GPR2.Project_Parser is
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, N),
                         Message => "missing parameters for "
                                    & String (Name) & "  built-in"));
@@ -1088,7 +1088,7 @@ package body GPR2.Project_Parser is
                elsif Exprs.Children_Count > 1 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message =>
                           String (Name) & " accepts only one parameter"));
@@ -1108,7 +1108,7 @@ package body GPR2.Project_Parser is
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, N),
                         Message => "missing parameters for split built-in"));
 
@@ -1117,7 +1117,7 @@ package body GPR2.Project_Parser is
                elsif Exprs.Children_Count = 1 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message => "split requires a second parameter"));
 
@@ -1126,7 +1126,7 @@ package body GPR2.Project_Parser is
                elsif Exprs.Children_Count > 2 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message => "split accepts only two parameters"));
                end if;
@@ -1148,7 +1148,7 @@ package body GPR2.Project_Parser is
                if Exprs.Is_Null or else Exprs.Children_Count < 2 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, N),
                         Message => "missing parameters for "
                                    & String (Name) & "  built-in"));
@@ -1158,7 +1158,7 @@ package body GPR2.Project_Parser is
                elsif Exprs.Children_Count > 2 then
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, Exprs),
                         Message =>
                           String (Name) & " accepts only two parameters"));
@@ -1210,7 +1210,7 @@ package body GPR2.Project_Parser is
             else
                Project.Messages.Append
                  (GPR2.Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Message.Critical_Error,
                      Sloc    => Get_Source_Reference (Filename, N),
                      Message =>
                        "unknown built-in """ & String (Function_Name) & '"'));
@@ -1233,7 +1233,7 @@ package body GPR2.Project_Parser is
             if Name (Project) /= Name_Type (To_UTF8 (F_End_Name (N).Text)) then
                Project.Messages.Append
                  (GPR2.Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Message.Critical_Error,
                      Sloc    =>
                        Get_Source_Reference (Filename, F_End_Name (N)),
                      Message =>
@@ -1277,7 +1277,7 @@ package body GPR2.Project_Parser is
                else
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    =>
                           Get_Source_Reference (Filename, Ext),
                         Message => "extended project name cannot be empty"));
@@ -1349,7 +1349,7 @@ package body GPR2.Project_Parser is
                else
                   Project.Messages.Append
                     (GPR2.Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Filename, Cur_Child),
                         Message => "missing project file for with clause"));
                end if;
@@ -1460,7 +1460,7 @@ package body GPR2.Project_Parser is
                                                    others => <>);
 
       function Missing_Project_Error_Level return Message.Level_Value is
-        (if Pre_Conf_Mode then Message.Warning else Message.Error);
+        (if Pre_Conf_Mode then Message.Warning else Message.Critical_Error);
       --  Returns expected level for missing import messages
 
       function Ensure_Source_Loc
@@ -1715,7 +1715,7 @@ package body GPR2.Project_Parser is
          then
             Tree.Log_Messages.Append
               (Message.Create
-                 (Message.Error,
+                 (Message.Critical_Error,
                   "cannot have a reference to a limited project",
                   Get_Source_Reference (Self.File, Node)));
 
@@ -1736,7 +1736,7 @@ package body GPR2.Project_Parser is
                if not PRP.Exists (Q_Name.Pack) then
                   Tree.Log_Messages.Append
                     (Message.Create
-                       (Message.Error,
+                       (Message.Critical_Error,
                         "unknown package or project """ &
                           Image (Q_Name.Pack) & '"',
                         Get_Source_Reference (Self.File, Node)));
@@ -1744,7 +1744,7 @@ package body GPR2.Project_Parser is
                else
                   Tree.Log_Messages.Append
                     (Message.Create
-                       (Message.Error,
+                       (Message.Critical_Error,
                         "undefined attribute """ & Image (Q_Name) &
                           '"',
                         Get_Source_Reference (Self.File, Node)));
@@ -1757,7 +1757,7 @@ package body GPR2.Project_Parser is
          if Index.Is_Defined and then Def.Index_Type = PRA.No_Index then
             Tree.Log_Messages.Append
               (Message.Create
-                 (Message.Error,
+                 (Message.Critical_Error,
                   "attribute """ & Image (Q_Name) & """ cannot have index",
                   Get_Source_Reference (Self.File, Node)));
 
@@ -1852,7 +1852,7 @@ package body GPR2.Project_Parser is
                then
                   Tree.Log_Messages.Append
                     (Message.Create
-                       (Message.Error,
+                       (Message.Critical_Error,
                         "package """ & Image (Pack)
                         & """ not declared in project """
                         & String (Project) & '"',
@@ -1863,7 +1863,7 @@ package body GPR2.Project_Parser is
                then
                   Tree.Log_Messages.Append
                     (Message.Create
-                       (Message.Error,
+                       (Message.Critical_Error,
                         "undefined attribute """ &
                         (if Pack = Project_Level_Scope then ""
                          else Image (Pack) & "'") &
@@ -2100,7 +2100,7 @@ package body GPR2.Project_Parser is
                         else
                            Tree.Log_Messages.Append
                              (GPR2.Message.Create
-                                (Level   => Message.Error,
+                                (Level   => Message.Critical_Error,
                                  Sloc    =>
                                    Get_Source_Reference
                                      (Self.File, Parameters),
@@ -2142,7 +2142,7 @@ package body GPR2.Project_Parser is
                               if not Found then
                                  Tree.Log_Messages.Append
                                  (GPR2.Message.Create
-                                    (Level   => Message.Error,
+                                    (Level   => Message.Critical_Error,
                                     Sloc    =>
                                        Get_Source_Reference
                                           (Self.File, Node),
@@ -2168,7 +2168,7 @@ package body GPR2.Project_Parser is
                      if not Ext_Conf_Mode then
                         Tree.Log_Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Self.File, Parameters),
                               Message => Exception_Message (E)));
@@ -2261,7 +2261,7 @@ package body GPR2.Project_Parser is
                      if P1.Single then
                         Tree.Log_Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Self.File, Node),
                               Message =>
@@ -2274,7 +2274,7 @@ package body GPR2.Project_Parser is
                      if not P2.Single then
                         Tree.Log_Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Self.File, Node),
                               Message =>
@@ -2373,7 +2373,7 @@ package body GPR2.Project_Parser is
                      if P1.Single xor P2.Single then
                         Tree.Log_Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Self.File, Node),
                               Message =>
@@ -2435,7 +2435,7 @@ package body GPR2.Project_Parser is
                      if not P2.Single then
                         Tree.Log_Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Self.File, Node),
                               Message =>
@@ -2506,7 +2506,7 @@ package body GPR2.Project_Parser is
                      if P1.Single then
                         Tree.Log_Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Self.File, Node),
                               Message =>
@@ -2526,7 +2526,7 @@ package body GPR2.Project_Parser is
                      then
                         Tree.Log_Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Self.File, Node),
                               Message =>
@@ -2544,7 +2544,7 @@ package body GPR2.Project_Parser is
                            then
                               Tree.Log_Messages.Append
                                 (GPR2.Message.Create
-                                   (Level   => Message.Error,
+                                   (Level   => Message.Critical_Error,
                                     Sloc    =>
                                       Get_Source_Reference (Self.File, Node),
                                     Message =>
@@ -2585,7 +2585,7 @@ package body GPR2.Project_Parser is
                   if not Pat.Single then
                      Tree.Log_Messages.Append
                        (Message.Create
-                          (Level => Message.Error,
+                          (Level => Message.Critical_Error,
                            Sloc  => Get_Source_Reference
                                       (Self.File, Child (Parameters, 2)),
                            Message => "Match pattern parameter must be a"
@@ -2594,7 +2594,7 @@ package body GPR2.Project_Parser is
                   elsif Rep /= Empty_Item_Values and then not Rep.Single then
                      Tree.Log_Messages.Append
                        (Message.Create
-                          (Level => Message.Error,
+                          (Level => Message.Critical_Error,
                            Sloc  => Get_Source_Reference
                                       (Self.File, Child (Parameters, 2)),
                            Message => "Match replacement parameter must be a"
@@ -2672,7 +2672,7 @@ package body GPR2.Project_Parser is
                      if not Ext_Conf_Mode then
                         Tree.Log_Messages.Append
                           (GPR2.Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    =>
                                 Get_Source_Reference (Self.File, Parameters),
                               Message => Exception_Message (E)));
@@ -2700,7 +2700,7 @@ package body GPR2.Project_Parser is
                   if not Str.Single then
                      Tree.Log_Messages.Append
                        (Message.Create
-                          (Level => Message.Error,
+                          (Level => Message.Critical_Error,
                            Sloc  => Get_Source_Reference
                                       (Self.File, Child (Parameters, 1)),
                            Message => "Split first parameter must be a"
@@ -2709,7 +2709,7 @@ package body GPR2.Project_Parser is
                   elsif not Sep.Single then
                      Tree.Log_Messages.Append
                        (Message.Create
-                          (Level => Message.Error,
+                          (Level => Message.Critical_Error,
                            Sloc  => Get_Source_Reference
                                       (Self.File, Child (Parameters, 2)),
                            Message => "Split separator parameter must be a"
@@ -2725,7 +2725,7 @@ package body GPR2.Project_Parser is
                         if Delim = "" then
                            Tree.Log_Messages.Append
                              (Message.Create
-                                (Level => Message.Error,
+                                (Level => Message.Critical_Error,
                                  Sloc  => Source_Reference.Object
                                             (Sep.Values.First_Element),
                                  Message => "Split separator parameter must"
@@ -2895,7 +2895,7 @@ package body GPR2.Project_Parser is
                   if Result.Values.Length /= 0 and then Result.Single then
                      Tree.Log_Messages.Append
                        (Message.Create
-                          (Message.Error,
+                          (Message.Critical_Error,
                            "literal string list cannot appear in a string",
                            Get_Source_Reference (Self.File, Node)));
                   end if;
@@ -3080,7 +3080,7 @@ package body GPR2.Project_Parser is
          begin
             Tree.Log_Messages.Append
               (Message.Create
-                 (Message.Error,
+                 (Message.Critical_Error,
                   (if Msg /= "" then Msg
                    else "undefined variable """ &
                         (if Project = No_Name then ""
@@ -3492,7 +3492,7 @@ package body GPR2.Project_Parser is
             if Expr = No_Term_List then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Message.Critical_Error,
                      Sloc    => Sloc,
                      Message =>
                        "gpr_registry_dirs attribute must have a value"));
@@ -3625,7 +3625,7 @@ package body GPR2.Project_Parser is
                                        if Def.Empty_Value = PRA.Error then
                                           Tree.Log_Messages.Append
                                             (Message.Create
-                                               (Level   => Message.Error,
+                                               (Message.Critical_Error,
                                                 Sloc    => Sloc,
                                                 Message =>
                                                   "empty value in attribute """
@@ -3672,7 +3672,7 @@ package body GPR2.Project_Parser is
                      if Def.Builtin then
                         Tree.Log_Messages.Append
                           (Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    => Sloc,
                               Message =>
                                 "builtin attribute """
@@ -3746,7 +3746,7 @@ package body GPR2.Project_Parser is
                         then
                            Tree.Log_Messages.Append
                              (Message.Create
-                                (Level   => Message.Error,
+                                (Level   => Message.Critical_Error,
                                  Sloc    => Sloc,
                                  Message =>
                                    "empty filename not allowed for "
@@ -3836,7 +3836,7 @@ package body GPR2.Project_Parser is
                if not Values.Indexed_Values.Filled then
                   Tree.Log_Messages.Append
                     (Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Sloc,
                         Message =>
                           "full associative array expression "
@@ -3846,7 +3846,7 @@ package body GPR2.Project_Parser is
                then
                   Tree.Log_Messages.Append
                     (Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Sloc,
                         Message =>
                           "not the same package as " & Image (Pack_Name)));
@@ -3854,7 +3854,7 @@ package body GPR2.Project_Parser is
                elsif Values.Indexed_Values.Attribute_Name.Attr /= N_Id then
                   Tree.Log_Messages.Append
                     (Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Sloc,
                         Message =>
                           "full associative array expression "
@@ -3909,7 +3909,7 @@ package body GPR2.Project_Parser is
                --  Can't have attribute references as value in case statements
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Message.Critical_Error,
                      Sloc    => Get_Source_Reference (Self.File, Att_Ref),
                      Message => "attribute reference not allowed here"));
 
@@ -4086,14 +4086,14 @@ package body GPR2.Project_Parser is
             if Num_Childs = 1 then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Message.Critical_Error,
                      Sloc    => Sloc,
                      Message =>
                        "project_name.package_name reference is required"));
             elsif Is_Limited_Import (Self, Project) then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Message.Critical_Error,
                      Sloc    => Sloc,
                      Message =>
                        "cannot have a reference to a limited project"));
@@ -4109,7 +4109,7 @@ package body GPR2.Project_Parser is
             elsif not View.Has_Package (P_Name) then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Message.Critical_Error,
                      Sloc    => Sloc,
                      Message =>
                        "undefined package """ &
@@ -4159,7 +4159,7 @@ package body GPR2.Project_Parser is
             if Num_Childs = 1 then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Message.Critical_Error,
                      Sloc    => Sloc,
                      Message =>
                        "project_name.package_name reference is required"));
@@ -4167,7 +4167,7 @@ package body GPR2.Project_Parser is
             elsif Is_Limited_Import (Self, Project) then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Message.Critical_Error,
                      Sloc    => Sloc,
                      Message =>
                        "cannot have a reference to a limited project"));
@@ -4248,7 +4248,7 @@ package body GPR2.Project_Parser is
             if Types.Contains (Name) then
                Tree.Log_Messages.Append
                  (GPR2.Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Message.Critical_Error,
                      Sloc    =>
                        Get_Source_Reference (Self.File, F_Type_Id (N)),
                      Message =>
@@ -4267,7 +4267,7 @@ package body GPR2.Project_Parser is
                         if Set.Contains (Value) then
                            Tree.Log_Messages.Append
                              (GPR2.Message.Create
-                                (Level   => Message.Error,
+                                (Level   => Message.Critical_Error,
                                  Sloc    =>
                                    Get_Source_Reference
                                      (Self.File, Cur_Child),
@@ -4342,7 +4342,7 @@ package body GPR2.Project_Parser is
                            then
                               Tree.Log_Messages.Append
                                 (Message.Create
-                                   (Level   => Message.Error,
+                                   (Level   => Message.Critical_Error,
                                     Sloc    => Sloc,
                                     Message => "value """ & Value
                                     & """ is illegal for typed string """
@@ -4354,7 +4354,7 @@ package body GPR2.Project_Parser is
                      else
                         Tree.Log_Messages.Append
                           (Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    => Sloc,
                               Message =>
                                 "expression for """
@@ -4365,7 +4365,7 @@ package body GPR2.Project_Parser is
                   else
                      Tree.Log_Messages.Append
                        (Message.Create
-                          (Level   => Message.Error,
+                          (Level   => Message.Critical_Error,
                            Sloc    => Get_Source_Reference (Self.File, V_Type),
                            Message =>
                              "unknown string type """ & String (T_Name) &
@@ -4387,7 +4387,7 @@ package body GPR2.Project_Parser is
                if not Tree.Log_Messages.Has_Error then
                   Tree.Log_Messages.Append
                     (Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Get_Source_Reference (Self.File, Name),
                         Message =>
                           "internal error evaluating the value for """ &
@@ -4542,7 +4542,7 @@ package body GPR2.Project_Parser is
             then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level => Message.Error,
+                    (Level => Message.Critical_Error,
                      Sloc  => Source_Reference.Object (A),
                      Message => "undefined attribute """
                                 & Image (Q_Name) & """"));
@@ -4563,14 +4563,14 @@ package body GPR2.Project_Parser is
                if Def.Value = PRA.Single then
                   Tree.Log_Messages.Append
                     (Message.Create
-                       (Level => Message.Error,
+                       (Level => Message.Critical_Error,
                         Sloc  => Source_Reference.Object (A),
                         Message => "attribute """ & Image (Q_Name) &
                                    """ expects a single value"));
                else
                   Tree.Log_Messages.Append
                     (Message.Create
-                       (Level => Message.Error,
+                       (Level => Message.Critical_Error,
                         Sloc  => Source_Reference.Object (A),
                         Message => "attribute """ & Image (Q_Name) &
                                    """ expects a list of values"));
@@ -4585,7 +4585,7 @@ package body GPR2.Project_Parser is
                if Def.Empty_Value = PRA.Error then
                   Tree.Log_Messages.Append
                     (Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => Source_Reference.Object (A.Value),
                         Message => "attribute """ & Image (Q_Name)
                                    & """ cannot be empty"));
@@ -4614,7 +4614,7 @@ package body GPR2.Project_Parser is
                      then
                         Tree.Log_Messages.Append
                           (Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    => Source_Reference.Object (A),
                               Message => "attribute """ & Image (Q_Name)
                                          & """ accepts only simple names"));
@@ -4630,7 +4630,7 @@ package body GPR2.Project_Parser is
                   if A.Has_Index then
                      Tree.Log_Messages.Append
                        (Message.Create
-                          (Level => Message.Error,
+                          (Level => Message.Critical_Error,
                            Sloc  => Source_Reference.Object (A.Index),
                            Message => "attribute """ & Image (Q_Name) &
                                       """ does not expect an index"));
@@ -4641,7 +4641,7 @@ package body GPR2.Project_Parser is
                   if not A.Has_Index then
                      Tree.Log_Messages.Append
                        (Message.Create
-                          (Level => Message.Error,
+                          (Level => Message.Critical_Error,
                            Sloc  => Source_Reference.Object (A),
                            Message => "attribute """ & Image (Q_Name) &
                                       """ expects an index"));
@@ -4652,7 +4652,7 @@ package body GPR2.Project_Parser is
                   then
                      Tree.Log_Messages.Append
                        (Message.Create
-                          (Level => Message.Error,
+                          (Level => Message.Critical_Error,
                            Sloc  => Source_Reference.Object (A),
                            Message => "'others' index not allowed with """ &
                                       Image (Q_Name) & """"));
@@ -4662,7 +4662,7 @@ package body GPR2.Project_Parser is
                   then
                      Tree.Log_Messages.Append
                        (Message.Create
-                          (Level => Message.Error,
+                          (Level => Message.Critical_Error,
                            Sloc  => Source_Reference.Object (A),
                            Message => "attribute """ & Image (Q_Name) &
                              """ expects a non empty index"));
@@ -4705,7 +4705,7 @@ package body GPR2.Project_Parser is
                         if not Found then
                            Tree.Log_Messages.Append
                                  (Message.Create
-                                    (Level => Message.Error,
+                                    (Level => Message.Critical_Error,
                                     Sloc  => Source_Reference.Object (A),
                                     Message => "Value " & String (Val.Text) &
                                        " is invalid for attribute " &
@@ -4726,7 +4726,7 @@ package body GPR2.Project_Parser is
                if Old.Is_Frozen then
                   Tree.Log_Messages.Append
                     (Message.Create
-                       (Level => Message.Error,
+                       (Level => Message.Critical_Error,
                         Sloc  => Source_Reference.Object (A),
                         Message => "cannot set configuration attribute """ &
                           Image (A.Name.Id) &

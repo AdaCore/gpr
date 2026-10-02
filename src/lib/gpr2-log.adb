@@ -37,7 +37,7 @@ package body GPR2.Log is
       Read     : Boolean;
       Unread   : Boolean) return Boolean is
      (((Message.Level = GPR2.Message.Warning and then Warning)
-       or else (Message.Level = GPR2.Message.Error and then Error)
+       or else (Message.Level in GPR2.Message.Any_Error and then Error)
        or else (Message.Level = GPR2.Message.End_User and then End_User)
        or else (Message.Level = GPR2.Message.Hint and then Hint)
        or else (Message.Level = GPR2.Message.Lint and then Lint))
@@ -139,6 +139,23 @@ package body GPR2.Log is
          return Next (Iter, Position);
       end if;
    end First;
+
+   ------------------------
+   -- Has_Critical_Error --
+   ------------------------
+
+   function Has_Critical_Error (Self : Object) return Boolean is
+   begin
+      for M of Self.Store loop
+         if M.Level = GPR2.Message.Critical_Error
+           and then M.Status = GPR2.Message.Unread
+         then
+            return True;
+         end if;
+      end loop;
+
+      return False;
+   end Has_Critical_Error;
 
    -----------------
    -- Has_Element --

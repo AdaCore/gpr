@@ -248,7 +248,7 @@ is
                else
                   Self.Append_Message
                     (Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Message => "incompatible change for language "
                         & Image (Language (Descr_B))
                         & " during reconfiguration",
@@ -257,7 +257,7 @@ is
 
                   Self.Append_Message
                     (Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Message => Error (Descr_B, Descr_A),
                         Sloc    => Source_Reference.Create
                           (Self.Root.Path_Name.Value, 0, 0)));
@@ -272,7 +272,7 @@ is
          if not Found_In_After then
             Self.Append_Message
               (Message.Create
-                 (Level   => Message.Error,
+                 (Level   => Message.Critical_Error,
                   Message => "language " & Image (Language (Descr_B))
                   & " missing for reconfiguration",
                   Sloc    => Source_Reference.Create
@@ -316,7 +316,7 @@ is
       then
          Self.Append_Message
            (Message.Create
-              (Level   => Message.Error,
+              (Level   => Message.Critical_Error,
                Message => "no language for the projects tree "
                & "due to language restriction",
                Sloc    => Source_Reference.Create
@@ -601,7 +601,7 @@ begin
    --  Ignore possible missing dirs and imported projects since they can
    --  depend on the result of auto-configuration.
 
-   Has_Errors := Self.Messages.Has_Error;
+   Has_Errors := Self.Messages.Has_Critical_Error;
 
    if not Has_Errors then
       --  First, check for Config_Prj_File declaration
@@ -619,7 +619,7 @@ begin
                if not Default_Cfg.Exists then
                   Self.Messages.Append
                     (Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Message =>
                           "could not locate main configuration project " &
                           Default_Cfg.String_Value,
@@ -675,7 +675,7 @@ begin
             if Default_Cfg.Is_Defined and then not Default_Cfg.Exists then
                Self.Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Message.Critical_Error,
                      Message =>
                        "could not locate main configuration project " &
                        Default_Cfg.String_Value,

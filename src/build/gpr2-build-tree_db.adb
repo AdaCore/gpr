@@ -263,7 +263,7 @@ package body GPR2.Build.Tree_Db is
             if Artifact in GPR2.Build.Artifacts.Files.Object'Class then
                Self.Tree.Reporter.Report
                  (GPR2.Message.Create
-                    (GPR2.Message.Error,
+                    (GPR2.Message.Critical_Error,
                      '"'
                      & Action.Image
                      & """ and """
@@ -284,7 +284,7 @@ package body GPR2.Build.Tree_Db is
             else
                Self.Tree.Reporter.Report
                  (GPR2.Message.Create
-                    (GPR2.Message.Error,
+                    (GPR2.Message.Critical_Error,
                      '"'
                      & Action.Image
                      & """ and """
@@ -1049,7 +1049,7 @@ package body GPR2.Build.Tree_Db is
                         if not Found then
                            Messages.Append
                              (Message.Create
-                                (Message.Error,
+                                (Message.Critical_Error,
                                  "source for interface unit '" &
                                  String (Unit_Name_To_Sloc.Key (C)) &
                                  "' not found",
@@ -1074,7 +1074,7 @@ package body GPR2.Build.Tree_Db is
                      if not Found then
                         Messages.Append
                           (Message.Create
-                             (Message.Error,
+                             (Message.Critical_Error,
                               "source for interface '" &
                                 String (Source_Path_To_Sloc.Key (C)) &
                                 "' not found",

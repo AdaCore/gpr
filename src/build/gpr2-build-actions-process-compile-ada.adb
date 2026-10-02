@@ -126,7 +126,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          then
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
-                 (GPR2.Message.Error,
+                 (GPR2.Message.Critical_Error,
                   "unit """
                   & String (Self.CU.Name)
                   & """ can not import unit """
@@ -147,7 +147,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          then
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
-                 (GPR2.Message.Error,
+                 (GPR2.Message.Critical_Error,
                   "unit """
                   & String (Self.CU.Name)
                   & """ cannot import unit """
@@ -821,7 +821,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
       if not Self.ALI_Object.Parse then
          Self.Tree.Reporter.Report
            (GPR2.Message.Create
-              (GPR2.Message.Error,
+              (GPR2.Message.Critical_Error,
                "failed to analyze the ALI file",
                GPR2.Source_Reference.Object
                  (GPR2.Source_Reference.Create
@@ -1069,7 +1069,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          if not Self.ALI_Object.Parse then
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
-                 (GPR2.Message.Error,
+                 (GPR2.Message.Critical_Error,
                   "failed to analyze the ALI file",
                   GPR2.Source_Reference.Object
                     (GPR2.Source_Reference.Create
@@ -1136,7 +1136,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          then
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
-                 (GPR2.Message.Error,
+                 (GPR2.Message.Critical_Error,
                   "cannot remove the preprocessed file " &
                     String (Prep.Path.Simple_Name),
                   GPR2.Source_Reference.Create

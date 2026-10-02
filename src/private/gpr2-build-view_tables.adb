@@ -289,7 +289,7 @@ package body GPR2.Build.View_Tables is
                   --  Same source found by multiple projects
                   Messages.Append
                     (Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Message => "source file """ &
                           String (Path.Simple_Name) &
                           """ already part of project " &
@@ -707,7 +707,7 @@ package body GPR2.Build.View_Tables is
       if Attr.Is_Defined then
          Read_Source_List
            (Data.View, Attr, Exc_List, Messages);
-         if not Messages.Has_Error then
+         if not Messages.Has_Critical_Error then
             for Src of Exc_List loop
                Data.Excluded_Sources.Include
                  (Src, Source_Reference.Object (Attr.Value));
@@ -795,7 +795,7 @@ package body GPR2.Build.View_Tables is
       if Has_Directory_Separator (Value) then
          Messages.Append
            (Message.Create
-              (Message.Error,
+              (Message.Critical_Error,
                "file name cannot include directory information (""" & Value
                & """)",
                Sloc));
@@ -803,7 +803,7 @@ package body GPR2.Build.View_Tables is
       elsif Value'Length = 0 then
          Messages.Append
            (Message.Create
-              (Message.Error,
+              (Message.Critical_Error,
                "file name cannot be empty",
                Sloc));
       else
@@ -843,7 +843,7 @@ package body GPR2.Build.View_Tables is
       if not Filename.Exists or else Filename.Is_Directory then
          Messages.Append
            (Message.Create
-              (Message.Error,
+              (Message.Critical_Error,
                (if Attr.Name.Id = PRA.Excluded_Source_List_File
                 then "excluded "
                 else "") & "source list file " &
@@ -1430,7 +1430,7 @@ package body GPR2.Build.View_Tables is
 
                   Messages.Append
                     (Message.Create
-                       (Message.Error,
+                       (Message.Critical_Error,
                         '"' & String (Basename) & '"' &
                           " is found in several extended projects",
                         Source_Reference.Create
@@ -1464,13 +1464,13 @@ package body GPR2.Build.View_Tables is
 
                      Messages.Append
                        (Message.Create
-                          (Message.Error,
+                          (Message.Critical_Error,
                            String (P1),
                            Source_Reference.Create (V1.Value, 0, 0),
                            Indent => 1));
                      Messages.Append
                        (Message.Create
-                          (Message.Error,
+                          (Message.Critical_Error,
                            String (P2),
                            Source_Reference.Create (V2.Value, 0, 0),
                            Indent => 1));
@@ -1490,7 +1490,7 @@ package body GPR2.Build.View_Tables is
             for SR of Clashes loop
                Messages.Append
                  (Message.Create
-                    (Message.Error,
+                    (Message.Critical_Error,
                      "The source with basename "
                      & '"'
                      & String (Basename)

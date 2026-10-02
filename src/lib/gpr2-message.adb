@@ -36,7 +36,7 @@ package body GPR2.Message is
       Actual_Level : Level_Value := Level;
    begin
       if Warnings_As_Error_Mode and then Level = Warning then
-         Actual_Level := Error;
+         Actual_Level := Critical_Error;
       end if;
 
       return Object'
@@ -61,22 +61,22 @@ package body GPR2.Message is
                "",
             when Short =>
                (case Self.Level is
-                   when Error    => "E",
-                   when Warning  => "W",
-                   when Hint     => "H",
-                   when Lint     => "L",
-                   when End_User => (if Self.Sloc.Is_Defined
-                                     then "I"
-                                     else "")),
+                   when Any_Error => "E",
+                   when Warning   => "W",
+                   when Hint      => "H",
+                   when Lint      => "L",
+                   when End_User  => (if Self.Sloc.Is_Defined
+                                      then "I"
+                                      else "")),
            when Long =>
                (case Self.Level is
-                   when Error    => "error",
-                   when Warning  => "warning",
-                   when Hint     => "hint",
-                   when Lint     => "lint",
-                   when End_User => (if Self.Sloc.Is_Defined
-                                     then "info"
-                                     else "")));
+                   when Any_Error => "error",
+                   when Warning   => "warning",
+                   when Hint      => "hint",
+                   when Lint      => "lint",
+                   when End_User  => (if Self.Sloc.Is_Defined
+                                      then "info"
+                                      else "")));
 
       Indent   : constant String := (1 .. Self.Indent * 2 => ' ');
 

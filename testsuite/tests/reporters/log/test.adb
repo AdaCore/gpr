@@ -32,7 +32,8 @@ procedure Test is
    begin
       Ada.Text_IO.Put_Line (" * Single message reporting:");
 
-      Reporter.Report (GPR2.Message.Create (Error, "An single error message"));
+      Reporter.Report
+        (GPR2.Message.Create (Critical_Error, "An single error message"));
       Reporter.Report (GPR2.Message.Create (End_User, "An end user message"));
       Reporter.Report ("A simple string");
       Reporter.Report (GPR2.Message.Create (Warning, "A warning message"));
@@ -44,7 +45,8 @@ procedure Test is
 
       Ada.Text_IO.Put_Line (" * Single error message + Log without error messages:");
 
-      Reporter.Report (GPR2.Message.Create (Error, "A single error message"));
+      Reporter.Report
+        (GPR2.Message.Create (Critical_Error, "A single error message"));
       Log.Append (GPR2.Message.Create (End_User, "An end user message"));
       Log.Append (GPR2.Message.Create (Warning, "A warning message"));
       Log.Append (GPR2.Message.Create (Hint, "A hint message"));
@@ -57,8 +59,9 @@ procedure Test is
 
       Ada.Text_IO.Put_Line (" * Single error message + Log with error messages:");
 
-      Reporter.Report (GPR2.Message.Create (Error, "A single error message"));
-      Log.Append (GPR2.Message.Create (Error, "An error message"));
+      Reporter.Report
+        (GPR2.Message.Create (Critical_Error, "A single error message"));
+      Log.Append (GPR2.Message.Create (Critical_Error, "An error message"));
       Log.Append (GPR2.Message.Create (End_User, "An end user message"));
       Log.Append (GPR2.Message.Create (Warning, "A warning message"));
       Log.Append (GPR2.Message.Create (Hint, "A hint message"));
@@ -72,8 +75,9 @@ procedure Test is
       Ada.Text_IO.Put_Line
         (" * Single message + Log with error messages and Warn_If_Errors set:");
 
-      Reporter.Report (GPR2.Message.Create (Error, "A single error message"));
-      Log.Append (GPR2.Message.Create (Error, "An error message"));
+      Reporter.Report
+        (GPR2.Message.Create (Critical_Error, "A single error message"));
+      Log.Append (GPR2.Message.Create (Critical_Error, "An error message"));
       Log.Append (GPR2.Message.Create (End_User, "An end user message"));
       Log.Append (GPR2.Message.Create (Warning, "A warning message"));
       Log.Append (GPR2.Message.Create (Hint, "A hint message"));

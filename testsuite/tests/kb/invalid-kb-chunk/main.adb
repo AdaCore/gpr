@@ -20,7 +20,7 @@ begin
       Ada.Text_IO.Put_Line ("Invalid KB chunk ignored");
    else
       for M of PT.Configuration.Log_Messages loop
-         if M.Level = GPR2.Message.Error then
+         if M.Level = GPR2.Message.Critical_Error then
             --  Ignore line/column to have the output not dependent on
             --  the actual autoconf project that depends on the host/kb
             Ada.Text_IO.Put_Line

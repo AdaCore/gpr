@@ -346,7 +346,7 @@ package body GPR2.Build.Actions.Process.Cargo_Metadata is
       else
          Self.Tree.Reporter.Report
            (GPR2.Message.Create
-              (GPR2.Message.Error,
+              (GPR2.Message.Critical_Error,
                "no compiler driver defined for language Rust, "
                & "set Compiler.Driver (""Rust"") to the path of cargo",
                GPR2.Source_Reference.Create
@@ -471,7 +471,7 @@ package body GPR2.Build.Actions.Process.Cargo_Metadata is
          if not Parsed.Success then
             Self.Tree.Reporter.Report
               (GPR2.Message.Create
-                 (GPR2.Message.Error,
+                 (GPR2.Message.Critical_Error,
                   "the output of ""cargo metadata"" is not valid JSON: "
                   & Format_Parsing_Error (Parsed.Error),
                   GPR2.Source_Reference.Create
@@ -488,7 +488,7 @@ package body GPR2.Build.Actions.Process.Cargo_Metadata is
       then
          Self.Tree.Reporter.Report
            (GPR2.Message.Create
-              (GPR2.Message.Error,
+              (GPR2.Message.Critical_Error,
                "the output of ""cargo metadata"" declares no target "
                & "directory, so the library Cargo builds cannot be located",
                GPR2.Source_Reference.Create
@@ -540,7 +540,7 @@ package body GPR2.Build.Actions.Process.Cargo_Metadata is
                if Binaries.Is_Empty then
                   Self.Tree.Reporter.Report
                     (GPR2.Message.Create
-                       (GPR2.Message.Error,
+                       (GPR2.Message.Critical_Error,
                         (if not Self.Mains.Is_Empty
                          then "the Cargo package builds none of the mains "
                               & "this project asks for"
@@ -558,7 +558,7 @@ package body GPR2.Build.Actions.Process.Cargo_Metadata is
                then
                   Self.Tree.Reporter.Report
                     (GPR2.Message.Create
-                       (GPR2.Message.Error,
+                       (GPR2.Message.Critical_Error,
                         "the Cargo package builds no binary for some of the "
                         & "mains this project asks for",
                         GPR2.Source_Reference.Create

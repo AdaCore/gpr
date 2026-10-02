@@ -87,7 +87,7 @@ package body GPR2.View_Internal is
                      if not Exists (V_Path, Val.Text) then
                         Tree.Log_Messages.Append
                           (Message.Create
-                             (Level   => Message.Error,
+                             (Level   => Message.Critical_Error,
                               Sloc    => Val,
                               Message =>
                                 """" & Val.Text &
@@ -114,7 +114,7 @@ package body GPR2.View_Internal is
                then
                   Tree.Log_Messages.Append
                     (Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => SR.Value.Create
                           (Filename => View.Path_Name.Value,
                            Line     => 0,
@@ -130,7 +130,7 @@ package body GPR2.View_Internal is
                then
                   Tree.Log_Messages.Append
                     (Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Sloc    => SR.Value.Create
                           (Filename => View.Path_Name.Value,
                            Line     => 0,
@@ -151,7 +151,7 @@ package body GPR2.View_Internal is
             if V.Library_Directory = V.Object_Directory then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Message.Critical_Error,
                      Sloc    => SR.Value.Create
                        (Filename => V.Path_Name.Value,
                         Line     => 0,
@@ -162,7 +162,7 @@ package body GPR2.View_Internal is
             elsif V.Library_Ali_Directory = V.Object_Directory then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Message.Critical_Error,
                      Sloc    => SR.Value.Create
                        (Filename => V.Path_Name.Value,
                         Line     => 0,
@@ -234,7 +234,8 @@ package body GPR2.View_Internal is
               and then ACH.To_Lower (Casing.Value.Text)
                          not in "lowercase" | "uppercase" | "mixedcase"
             then
-               Log_Error (Message.Error, "invalid value for casing", Casing);
+               Log_Error
+                 (Message.Critical_Error, "invalid value for casing", Casing);
             end if;
          end Check_Casing;
 
@@ -280,7 +281,7 @@ package body GPR2.View_Internal is
 
             if Not_OK then
                Log_Error
-                 (Message.Error,
+                 (Message.Critical_Error,
                   """" & Value & """ is illegal for Dot_Replacement",
                   Dot_Replacement);
             end if;
@@ -302,7 +303,7 @@ package body GPR2.View_Internal is
          begin
             if Value /= No_Value and then ASF.Index (Value, ".") = 0 then
                Log_Error
-                 (Message.Error,
+                 (Message.Critical_Error,
                   """" & Value & """ is illegal for "
                   & Image (Attribute_Name.Attr) & ": must have a dot",
                   Attribute);
@@ -326,7 +327,7 @@ package body GPR2.View_Internal is
 
                      if ACH.Is_Letter (Value (Value'First + 1)) then
                         Log_Error
-                          (Message.Error,
+                          (Message.Critical_Error,
                            """" & Value & """ is illegal for "
                            & Image (Attribute_Name.Attr)
                            & ": ambiguous prefix when "
@@ -360,14 +361,14 @@ package body GPR2.View_Internal is
 
                   if Language = Suffix_Lang_Maps.Element (Associated_Lang) then
                      Log_Error
-                       (Message.Error,
+                       (Message.Critical_Error,
                         Image (Attribute_Name.Attr) & " ("
                         & Image (Language) &
                         ") value already used for this language",
                         Attribute);
                   else
                      Log_Error
-                       (Message.Error,
+                       (Message.Critical_Error,
                         Image (Attribute_Name.Attr) & " ("
                         & Image (Language) &
                         ") value is already used for language " &
@@ -600,7 +601,7 @@ package body GPR2.View_Internal is
          if Current >= 512 then
             Messages.Append
               (Message.Create
-                 (Message.Error,
+                 (Message.Critical_Error,
                   "directory depth too big for """ &
                     String (Dir.Name) & """",
                   Source));
@@ -644,7 +645,7 @@ package body GPR2.View_Internal is
 
                Messages.Append
                  (Message.Create
-                    (Message.Error,
+                    (Message.Critical_Error,
                      """" & Dir.String_Value &
                        """ is not a valid directory",
                      Source));

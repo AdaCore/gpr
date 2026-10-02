@@ -1102,7 +1102,7 @@ package body GPR2.Project.View is
          if Value.Text = "" then
             Messages.Append
               (Message.Create
-                 (Level   => Message.Error,
+                 (Level   => Message.Critical_Error,
                   Message => "a main cannot have an empty name",
                   Sloc    => Value));
 
@@ -1130,7 +1130,7 @@ package body GPR2.Project.View is
                if Has_Ambiguous_Result then
                   Messages.Append
                     (Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Message => "multiple sources were found for " &
                           String (Value.Text) &
                           " from project " & String (Self.Name),
@@ -1138,7 +1138,7 @@ package body GPR2.Project.View is
                else
                   Messages.Append
                     (Message.Create
-                       (Level   => Message.Error,
+                       (Level   => Message.Critical_Error,
                         Message =>
                         '"' & String (Value.Text) &
                           """ is not a source of project " &

@@ -413,7 +413,7 @@ begin
                then
                   Opt.Tree.Reporter.Report
                     (GPR2.Message.Create
-                       (GPR2.Message.Error,
+                       (GPR2.Message.Critical_Error,
                         "the spec for unit """ & String (U.Name) &
                           """ does not belong to the view """ &
                           String (U.Owning_View.Name) &
@@ -427,7 +427,7 @@ begin
                   if Sep.View /= U.Owning_View then
                      Opt.Tree.Reporter.Report
                        (GPR2.Message.Create
-                          (GPR2.Message.Error,
+                          (GPR2.Message.Critical_Error,
                            "the separate """ &
                              String (Sep.Source.Simple_Name) &
                              """ for unit """ & String (U.Name) &
