@@ -1,0 +1,5 @@
+project Member is
+   for Languages use ("Ada");
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj/member";
+end Member;
