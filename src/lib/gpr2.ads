@@ -120,7 +120,7 @@ package GPR2 is
 
    --  filenames for example.
 
-   function To_Lower (Name : String) return String;
+   function To_Lower_Fast (Name : String) return String with Inline;
    --  Name lowercased through a static table: same mapping as
    --  Ada.Characters.Handling.To_Lower, without the per-character call.
 

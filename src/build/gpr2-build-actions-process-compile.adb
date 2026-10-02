@@ -560,7 +560,7 @@ package body GPR2.Build.Actions.Process.Compile is
                                  if U.Kind /= S_No_Body then
                                     declare
                                        Key : constant String :=
-                                               To_Lower
+                                               To_Lower_Fast
                                                  (String (U.Full_Name)) &
                                        (if U.Kind = S_Spec
                                         then S_Suffix else B_Suffix);
@@ -606,7 +606,7 @@ package body GPR2.Build.Actions.Process.Compile is
                               then
                                  declare
                                     Key : constant String :=
-                                            To_Lower (String (U.Name))
+                                            To_Lower_Fast (String (U.Name))
                                             & (if U.Main_Part = S_Spec
                                                then B_Suffix else S_Suffix);
                                  begin
@@ -627,7 +627,7 @@ package body GPR2.Build.Actions.Process.Compile is
                                  if U.Kind /= S_No_Body then
                                     declare
                                        Key : constant String :=
-                                               To_Lower
+                                               To_Lower_Fast
                                                  (String (U.Full_Name)) &
                                        (if U.Kind = S_Spec
                                         then S_Suffix else B_Suffix);

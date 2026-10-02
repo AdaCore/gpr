@@ -27,7 +27,7 @@ package body GPR2.Path_Name is
    function To_OS_Case (Name : Filename_Optional) return String is
      (if File_Names_Case_Sensitive
       then String (Name)
-      else To_Lower (String (Name)));
+      else To_Lower_Fast (String (Name)));
 
    function To_OS_Case (C : Character) return Character is
      (if File_Names_Case_Sensitive
@@ -422,11 +422,12 @@ package body GPR2.Path_Name is
 
       elsif Value'Length = 0 then
          return Make
-           (GPR2.To_Lower (String (Simple_Name)), Case_Insensitive => True);
+           (GPR2.To_Lower_Fast
+               (String (Simple_Name)), Case_Insensitive => True);
 
       else
          return Make
-           (GPR2.To_Lower (String (Value)), Case_Insensitive => True);
+           (GPR2.To_Lower_Fast (String (Value)), Case_Insensitive => True);
       end if;
    end Create_Internal;
 

@@ -186,7 +186,7 @@ package body GPR2.Project is
       return Filename_Type
    is
    begin
-      if To_Lower (Directories.Extension (String (Name)))
+      if To_Lower_Fast (Directories.Extension (String (Name)))
          in String (Project_File_Extension_No_Dot)
           | String (Config_File_Extension_No_Dot)
       then
