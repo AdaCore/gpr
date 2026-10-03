@@ -56,6 +56,12 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns a unique Id for Self
 
+   type Comparison_Result is (Less, Equal, Greater);
+
+   function Compare (Left, Right : Object) return Comparison_Result
+     with Pre => Left.Is_Defined and then Right.Is_Defined;
+   --  Compare view IDs without copying them.
+
    function "<" (Left, Right : Object) return Boolean;
    --  Ordering a project object to be able to build an ordered map for example
 
@@ -980,7 +986,7 @@ private
      (Self /= Undefined);
 
    function "<" (Left, Right : Object) return Boolean is
-     (Left.Id < Right.Id);
+     (Compare (Left, Right) = Less);
 
    function Is_Library (Self : Object) return Boolean is
      (Self.Kind in GPR2.Library_Kind

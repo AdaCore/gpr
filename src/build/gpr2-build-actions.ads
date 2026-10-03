@@ -14,7 +14,6 @@ with GPR2.Build.Signature;
 with GPR2.Containers;
 with GPR2.Path_Name;
 with GPR2.Project.View;
-with GPR2.View_Ids;
 
 limited with GPR2.Build.Tree_Db;
 
@@ -305,7 +304,7 @@ private
    --  Action_Class_Width + 3 characters (1 for "[", Action_Class_Width for
    --  the class name, 1 for "]", 1 for the trailing space).
 
-   use type GPR2.View_Ids.View_Id;
+   use type GPR2.Project.View.Comparison_Result;
 
    type Object is abstract tagged record
       Tree           : access Tree_Db.Object;
@@ -322,18 +321,9 @@ private
       --  Set at runtime to force re-execution regardless of signature validity
    end record;
 
-   function "<" (L, R : Action_Id'Class) return Boolean is
-     (if L.View.Id /= R.View.Id
-      then L.View.Id < R.View.Id
-      elsif L.Action_Class /= R.Action_Class
-      then L.Action_Class < R.Action_Class
-      elsif L.Language /= R.Language
-      then L.Language < R.Language
-      else L.Action_Parameter < R.Action_Parameter);
-
-
    function "=" (L, R : Action_Id'Class) return Boolean is
-     (L.View.Id = R.View.Id and then
+     (GPR2.Project.View.Compare (L.View, R.View) =
+        GPR2.Project.View.Equal and then
       L.Action_Class = R.Action_Class and then
       L.Language = R.Language and then
       L.Action_Parameter = R.Action_Parameter);

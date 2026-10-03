@@ -1265,6 +1265,30 @@ package body GPR2.Project.View is
    end Closure;
 
 
+   -------------
+   -- Compare --
+   -------------
+
+   function Compare (Left, Right : Object) return Comparison_Result is
+   begin
+      if Left = Right then
+         return Equal;
+      end if;
+
+      declare
+         L_Id : GPR2.View_Ids.View_Id renames Get_RO (Left).Unique_Id;
+         R_Id : GPR2.View_Ids.View_Id renames Get_RO (Right).Unique_Id;
+      begin
+         if L_Id = R_Id then
+            return Equal;
+         elsif L_Id < R_Id then
+            return Less;
+         else
+            return Greater;
+         end if;
+      end;
+   end Compare;
+
    ---------------------
    -- Compiler_Prefix --
    ---------------------

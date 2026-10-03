@@ -12,6 +12,7 @@ with GNATCOLL.OS.FSUtil;
 with GNATCOLL.Traces;
 
 with GPR2.Build.Tree_Db;
+with GPR2.View_Ids;
 
 package body GPR2.Build.Actions is
 
@@ -22,6 +23,30 @@ package body GPR2.Build.Actions is
               GNATCOLL.Traces.Create
                 ("GPR.BUILD.ACTIONS",
                  GNATCOLL.Traces.Off);
+
+   -------
+   -- < --
+   -------
+
+   function "<" (L, R : Action_Id'Class) return Boolean is
+   begin
+      case GPR2.Project.View.Compare (L.View, R.View) is
+         when GPR2.Project.View.Less =>
+            return True;
+         when GPR2.Project.View.Greater =>
+            return False;
+         when GPR2.Project.View.Equal =>
+            null;
+      end case;
+
+      if L.Action_Class /= R.Action_Class then
+         return L.Action_Class < R.Action_Class;
+      elsif L.Language /= R.Language then
+         return L.Language < R.Language;
+      else
+         return L.Action_Parameter < R.Action_Parameter;
+      end if;
+   end "<";
 
    ------------
    -- Attach --
