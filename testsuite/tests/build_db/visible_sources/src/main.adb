@@ -1,5 +1,7 @@
 with Ada.Real_Time;     use Ada.Real_Time;
 with Ada.Command_Line;
+with Ada.Strings.Unbounded;
+with Ada_Filter;
 with Ada.Text_IO;
 
 with GPR2.Build.Compilation_Unit;
@@ -15,6 +17,38 @@ procedure Main is
    use GPR2;
    use GPR2.Build;
    use type GPR2.Project.View.Object;
+
+   procedure Check_Filter (View : Project.View.Object) is
+      package Sets renames Build.Source.Sets;
+      package UB renames Ada.Strings.Unbounded;
+
+      use type UB.Unbounded_String;
+   begin
+      for Opt in Sets.Sorted .. Sets.Recurse loop
+         for Ambiguous in Boolean loop
+            declare
+               All_Sources : constant Sets.Object := Sets.Create
+                 (View.View_Db, Opt, Ambiguous => Ambiguous);
+               Ada_Sources : constant Sets.Object := Sets.Create
+                 (View.View_Db, Opt, Filter => Ada_Filter'Access,
+                  Ambiguous => Ambiguous);
+               Expected, Actual : UB.Unbounded_String;
+            begin
+               for S of All_Sources loop
+                  if S.Language = Ada_Language then
+                     UB.Append (Expected, S.Path_Name.String_Value & ASCII.LF);
+                  end if;
+               end loop;
+               for S of Ada_Sources loop
+                  UB.Append (Actual, S.Path_Name.String_Value & ASCII.LF);
+               end loop;
+               if Actual /= Expected then
+                  raise Program_Error with "filtered source order differs";
+               end if;
+            end;
+         end loop;
+      end loop;
+   end Check_Filter;
 
    procedure Test (Gpr : String)
    is
@@ -75,6 +109,7 @@ procedure Main is
              (Path_Name.Create_Directory ("."))));
 
       Tree.Update_Sources;
+      Check_Filter (Tree.Root_Project);
 
       Ada.Text_IO.New_Line;
       Ada.Text_IO.Put_Line ("* Views *");
@@ -244,6 +279,7 @@ procedure Main is
       end if;
 
       Tree.Update_Sources;
+      Check_Filter (Tree.Root_Project);
 
       Ada.Text_IO.Put_Line
         ("*** checking Ambiguous parameter of Visible_Sources on " &

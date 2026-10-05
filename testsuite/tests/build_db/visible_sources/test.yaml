@@ -1,5 +1,6 @@
 description:
     check source of withed or limited withed views are visible, and that
     the Ambiguous parameter of Visible_Sources controls whether homonym
-    sources from different views are all returned
+    sources from different views are all returned. Filtering must preserve
+    the source order in sorted and recursive iteration
 driver: python_script
