@@ -110,7 +110,15 @@ private
 
    use GPR2.Build.View_Tables;
 
-   function Less (P1, P2 : Filename_Type) return Boolean;
+   type Source_Key (Path_Len, Name_Len : Natural) is record
+      Path     : Filename_Type (1 .. Path_Len);
+      Basename : String (1 .. Name_Len);
+   end record;
+
+   function Create_Key (Path : Filename_Type) return Source_Key;
+   --  Cache the basename, folded on case-insensitive file systems.
+
+   function Less (P1, P2 : Source_Key) return Boolean;
 
    type Source_Context (Path_Len : Natural) is record
       Owner : View_Db.Object;
@@ -119,7 +127,7 @@ private
 
    --  Use an ordered path with our custom Less function
    package Path_Source_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Key_Type     => Filename_Type,
+     (Key_Type     => Source_Key,
       Element_Type => Source_Context,
       "<"          => Less);
 
