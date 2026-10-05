@@ -6,6 +6,7 @@
 
 with GNATCOLL.Buffer;
 with GNATCOLL.JSON;
+with GNATCOLL.JSON.Serializers;
 with GNATCOLL.OS.FS;
 with GNATCOLL.Traces;
 
@@ -367,31 +368,44 @@ package body GPR2.Build.Signature is
    -----------
 
    procedure Store (Self : in out Object; Db_File : Path_Name.Object) is
-      FD      : GNATCOLL.OS.FS.File_Descriptor;
-      Value   : constant JSON.JSON_Value := JSON.Create_Object;
-      Inputs  : JSON.JSON_Array;
-      Outputs : JSON.JSON_Array;
-      Repr    : Unbounded_String;
+      FD   : GNATCOLL.OS.FS.File_Descriptor;
+      Repr : Unbounded_String;
 
       use type Ada.Containers.Count_Type;
       use GNATCOLL.OS.FS;
 
-      function To_Artifact_Element
-        (Position : Checksum_Maps.Cursor) return JSON.JSON_Value;
+      type Json_Writer is new JSON.Serializers.Serializer with null record;
 
-      function To_Artifact_Element
-        (Position : Checksum_Maps.Cursor) return JSON.JSON_Value
-      is
+      overriding
+      procedure Write (Self : in out Json_Writer; Content : String);
+
+      -----------
+      -- Write --
+      -----------
+
+      overriding
+      procedure Write (Self : in out Json_Writer; Content : String) is
+      begin
+         Append (Repr, Content);
+      end Write;
+
+      W : Json_Writer;
+
+      procedure Write_Artifact_Element (Position : Checksum_Maps.Cursor);
+
+      procedure Write_Artifact_Element (Position : Checksum_Maps.Cursor) is
          Art : constant Artifacts.Object'Class := Checksum_Maps.Key (Position);
          Chk : constant String := Checksum_Maps.Element (Position);
-         Val : constant JSON.JSON_Value := JSON.Create_Object;
       begin
-         JSON.Set_Field (Val, TEXT_CLASS, Art.Protocol);
-         JSON.Set_Field (Val, TEXT_KEY, Art.Serialize);
-         JSON.Set_Field (Val, TEXT_VALUE, Chk);
-
-         return Val;
-      end To_Artifact_Element;
+         W.Start_Object;
+         W.Encode_Name (TEXT_CLASS);
+         W.Encode_String (Art.Protocol);
+         W.Encode_Name (TEXT_KEY);
+         W.Encode_String (Art.Serialize);
+         W.Encode_Name (TEXT_VALUE);
+         W.Encode_String (Chk);
+         W.End_Object;
+      end Write_Artifact_Element;
 
    begin
       for IO in IO_Type'Range loop
@@ -417,24 +431,27 @@ package body GPR2.Build.Signature is
          end if;
       end loop;
 
+      W.Start_Object;
+      W.Encode_Name (TEXT_INPUTS);
+      W.Start_Array;
       for C in Self.Checksums (Input).Iterate loop
-         JSON.Append (Inputs, To_Artifact_Element (C));
+         Write_Artifact_Element (C);
       end loop;
+      W.End_Array;
 
+      W.Encode_Name (TEXT_OUTPUTS);
+      W.Start_Array;
       for C in Self.Checksums (Output).Iterate loop
-         JSON.Append (Outputs, To_Artifact_Element (C));
+         Write_Artifact_Element (C);
       end loop;
+      W.End_Array;
 
-      JSON.Set_Field
-        (Val => Value, Field_Name => TEXT_INPUTS, Field => Inputs);
-      JSON.Set_Field
-        (Val => Value, Field_Name => TEXT_OUTPUTS, Field => Outputs);
-      JSON.Set_Field
-        (Val => Value, Field_Name => TEXT_STDOUT, Field => Self.Stdout);
-      JSON.Set_Field
-        (Val => Value, Field_Name => TEXT_STDERR, Field => Self.Stderr);
-
-      Repr := JSON.Write (Value);
+      W.Encode_Name (TEXT_STDERR);
+      W.Encode_String (Self.Stderr);
+      W.Encode_Name (TEXT_STDOUT);
+      W.Encode_String (Self.Stdout);
+      W.End_Object;
+      W.Close;
 
       FD := Open (Db_File.String_Value, Write_Mode);
 
