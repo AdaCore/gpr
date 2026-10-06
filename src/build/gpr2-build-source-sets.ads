@@ -106,6 +106,12 @@ package GPR2.Build.Source.Sets is
    function Iterate
      (Self : Object) return Source_Iterators.Forward_Iterator'Class;
 
+   function Iterate
+     (Self : Object; Include_Runtime : Boolean)
+      return Source_Iterators.Forward_Iterator'Class;
+   --  In recursive iteration, optionally omit the runtime view. User sources
+   --  overriding runtime units are still included.
+
 private
 
    use GPR2.Build.View_Tables;

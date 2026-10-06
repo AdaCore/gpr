@@ -184,7 +184,18 @@ package body GPR2.Build.Source.Sets is
    -------------
 
    function Iterate
-     (Self : Object) return Source_Iterators.Forward_Iterator'Class
+     (Self : Object) return Source_Iterators.Forward_Iterator'Class is
+   begin
+      return Iterate (Self, Include_Runtime => True);
+   end Iterate;
+
+   -------------
+   -- Iterate --
+   -------------
+
+   function Iterate
+     (Self : Object; Include_Runtime : Boolean)
+      return Source_Iterators.Forward_Iterator'Class
    is
       use View_Tables.Filename_Source_Maps;
       Opt : Source_Set_Option := Self.Option;
@@ -270,7 +281,9 @@ package body GPR2.Build.Source.Sets is
                   --  Make sure the runtime is last, since any project may
                   --  override runtime sources
 
-                  if View.Tree.Has_Runtime_Project then
+                  if Include_Runtime
+                    and then View.Tree.Has_Runtime_Project
+                  then
                      C := Closure.Find (View.Tree.Runtime_Project);
 
                      if GPR2.Project.View.Vector.Vector.Has_Element (C) then
@@ -282,6 +295,7 @@ package body GPR2.Build.Source.Sets is
                   for V of Closure loop
                      if V.Kind in With_Object_Dir_Kind
                        and then not V.Is_Extended
+                       and then (Include_Runtime or else not V.Is_Runtime)
                      then
                         declare
                            Db : constant View_Db.Object :=

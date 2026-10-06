@@ -554,28 +554,36 @@ package body GPR2.Build.Actions.Process.Compile is
                                         Lang_Idx).Value.Text;
                         Content  : Unbounded_String;
                      begin
-                        for S of Self.View.Visible_Sources loop
-                           if S.Language = Ada_Language then
-                              for U of S.Units loop
-                                 if U.Kind /= S_No_Body then
-                                    Append
-                                      (Content,
-                                       To_Lower_Fast (String (U.Full_Name)));
-                                    Append
-                                      (Content,
-                                       (if U.Kind = S_Spec
-                                        then S_Suffix else B_Suffix));
-                                    Append (Content, ASCII.LF);
-                                    Append
-                                      (Content,
-                                       String (S.Path_Name.Simple_Name));
-                                    Append (Content, ASCII.LF);
-                                    Append
-                                      (Content, S.Path_Name.String_Value);
-                                    Append (Content, ASCII.LF);
-                                 end if;
-                              end loop;
-                           end if;
+                        for C in Self.View.Visible_Sources.Iterate
+                          (Include_Runtime => False)
+                        loop
+                           declare
+                              S : constant GPR2.Build.Source.Object :=
+                                    Source.Sets.Element (C);
+                           begin
+                              if S.Language = Ada_Language then
+                                 for U of S.Units loop
+                                    if U.Kind /= S_No_Body then
+                                       Append
+                                         (Content,
+                                          To_Lower_Fast
+                                            (String (U.Full_Name)));
+                                       Append
+                                         (Content,
+                                          (if U.Kind = S_Spec
+                                           then S_Suffix else B_Suffix));
+                                       Append (Content, ASCII.LF);
+                                       Append
+                                         (Content,
+                                          String (S.Path_Name.Simple_Name));
+                                       Append (Content, ASCII.LF);
+                                       Append
+                                         (Content, S.Path_Name.String_Value);
+                                       Append (Content, ASCII.LF);
+                                    end if;
+                                 end loop;
+                              end if;
+                           end;
                         end loop;
 
                         for S of Self.View.View_Db.Excluded_Sources loop
