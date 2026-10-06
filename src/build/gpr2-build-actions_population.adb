@@ -595,14 +595,9 @@ package body GPR2.Build.Actions_Population is
 
       Tree_Db.Reporter.Report
         (Message.Create
-           (Message.Critical_Error,
-            "project " & String (View.Name) & " is built by Cargo and "
-            & "cannot link against Ada library " & String (Dep.Name)
-            & ", which is not encapsulated: Cargo is handed the library "
-            & "file alone, without the elaboration code and the Ada "
-            & "runtime a GPR link would add; declare "
-            & "Library_Standalone as ""encapsulated"" in "
-            & String (Dep.Path_Name.Simple_Name),
+           (Message.Non_Critical_Error,
+            String (Dep.Name) & " needs to be encapsulated to be imported by "
+            & String (View.Name),
             Source_Reference.Create (View.Path_Name.Value, 0, 0)));
 
       return False;
