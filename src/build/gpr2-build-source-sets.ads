@@ -112,6 +112,13 @@ package GPR2.Build.Source.Sets is
    --  In recursive iteration, optionally omit the runtime view. User sources
    --  overriding runtime units are still included.
 
+   procedure Query_Element
+     (Position : Cursor;
+      Process  : not null access procedure (Source : Source_Base.Object))
+     with Pre => Has_Element (Position);
+   --  Read source metadata without copying it. Process must not modify the
+   --  source database.
+
 private
 
    use GPR2.Build.View_Tables;

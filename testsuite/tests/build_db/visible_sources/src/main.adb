@@ -8,6 +8,8 @@ with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
 with GPR2.Build.Source.Sets;
+with GPR2.Build.Source_Base;
+with GPR2.Build.Unit_Info.List;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
@@ -49,6 +51,86 @@ procedure Main is
          end loop;
       end loop;
    end Check_Filter;
+
+   procedure Check_Metadata (View : Project.View.Object) is
+      package Sets renames Build.Source.Sets;
+      use type Build.Unit_Info.List.Object;
+
+      Query_Error : exception;
+
+      procedure Fail_Source (S : Build.Source_Base.Object) is
+         pragma Unreferenced (S);
+      begin
+         raise Query_Error;
+      end Fail_Source;
+
+      procedure Fail_Unit (U : Build.Unit_Info.Object) is
+         pragma Unreferenced (U);
+      begin
+         raise Query_Error;
+      end Fail_Unit;
+   begin
+      for Opt in Sets.Source_Set_Option loop
+         for Ambiguous in Boolean loop
+            declare
+               Sources : constant Sets.Object :=
+                           Sets.Create (View.View_Db, Opt,
+                                        Ambiguous => Ambiguous);
+            begin
+               for C in Sources.Iterate loop
+                  declare
+                     Expected : constant Build.Source.Object :=
+                                  Sets.Element (C);
+                     Called   : Boolean := False;
+
+                     procedure Check_Source (S : Build.Source_Base.Object) is
+                        Actual : Build.Unit_Info.List.Object;
+
+                        procedure Check_Unit (U : Build.Unit_Info.Object) is
+                        begin
+                           Actual.Insert (U);
+                        end Check_Unit;
+                     begin
+                        Called := True;
+                        if S.Language /= Expected.Language
+                          or else S.Path_Name.String_Value /=
+                            Expected.Path_Name.String_Value
+                          or else S.Has_Units /= Expected.Has_Units
+                        then
+                           raise Program_Error with "source metadata differs";
+                        end if;
+                        if S.Has_Units then
+                           S.Query_Units (Check_Unit'Access);
+                           if Actual /= Expected.Units then
+                              raise Program_Error with "unit metadata differs";
+                           end if;
+                           if not Actual.Is_Empty then
+                              begin
+                                 S.Query_Units (Fail_Unit'Access);
+                                 raise Program_Error with "callback not called";
+                              exception
+                                 when Query_Error => null;
+                              end;
+                           end if;
+                        end if;
+                     end Check_Source;
+                  begin
+                     begin
+                        Sets.Query_Element (C, Fail_Source'Access);
+                        raise Program_Error with "callback not called";
+                     exception
+                        when Query_Error => null;
+                     end;
+                     Sets.Query_Element (C, Check_Source'Access);
+                     if not Called then
+                        raise Program_Error with "source callback not called";
+                     end if;
+                  end;
+               end loop;
+            end;
+         end loop;
+      end loop;
+   end Check_Metadata;
 
    procedure Test (Gpr : String)
    is
@@ -110,6 +192,8 @@ procedure Main is
 
       Tree.Update_Sources;
       Check_Filter (Tree.Root_Project);
+      Check_Metadata (Tree.Root_Project);
+      Tree.Update_Sources;
 
       Ada.Text_IO.New_Line;
       Ada.Text_IO.Put_Line ("* Views *");
@@ -280,6 +364,8 @@ procedure Main is
 
       Tree.Update_Sources;
       Check_Filter (Tree.Root_Project);
+      Check_Metadata (Tree.Root_Project);
+      Tree.Update_Sources;
 
       Ada.Text_IO.Put_Line
         ("*** checking Ambiguous parameter of Visible_Sources on " &

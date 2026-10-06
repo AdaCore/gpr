@@ -381,4 +381,25 @@ package body GPR2.Build.Source.Sets is
       return Result;
    end Next;
 
+   -------------------
+   -- Query_Element --
+   -------------------
+
+   procedure Query_Element
+     (Position : Cursor;
+      Process  : not null access procedure (Source : Source_Base.Object))
+   is
+      use type GPR2.Project.View.Object;
+
+      Ctxt : constant Source_Context := Fetch_Source_Context (Position);
+      Data : constant View_Data_Ref := Get_Ref (Ctxt.Owner);
+      Ref  : constant Src_Info_Maps.Constant_Reference_Type :=
+               (if Ctxt.Proxy.View = Data.View
+                then Data.Src_Infos.Constant_Reference (Ctxt.Proxy.Path_Name)
+                else Get_Data (Data.Tree_Db, Ctxt.Proxy.View).Src_Infos.
+                  Constant_Reference (Ctxt.Proxy.Path_Name));
+   begin
+      Process (Ref.Element.all);
+   end Query_Element;
+
 end GPR2.Build.Source.Sets;

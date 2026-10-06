@@ -1593,28 +1593,21 @@ package body GPR2.Build.View_Tables is
      (Data : View_Data_Ref;
       Pos  : Basename_Source_Maps.Cursor) return Build.Source.Object
    is
-      Proxy : constant Source_Proxy := Basename_Source_Maps.Element (Pos);
-
       use type GPR2.Project.View.Object;
+
+      Proxy    : constant Source_Proxy := Basename_Source_Maps.Element (Pos);
+      Base_Src : constant Src_Info_Maps.Constant_Reference_Type :=
+                   (if Proxy.View = Data.View
+                    then Data.Src_Infos.Constant_Reference (Proxy.Path_Name)
+                    else Get_Data (Data.Tree_Db, Proxy.View).Src_Infos.
+                      Constant_Reference (Proxy.Path_Name));
    begin
-      if Proxy.View = Data.View then
-         return Build.Source.Create
-           (Base_Source    => Data.Src_Infos.Element (Proxy.Path_Name),
-            Defining_View  => Proxy.View,
-            Owning_View    => Data.View,
-            Inherited_From => Proxy.Inh_From,
-            Is_Visible     => True);
-      else
-         return Build.Source.Create
-           (Base_Source    => Get_Data
-              (Data.Tree_Db,
-               Proxy.View).Src_Infos.Element
-              (Proxy.Path_Name),
-            Defining_View  => Proxy.View,
-            Owning_View    => Data.View,
-            Inherited_From => Proxy.Inh_From,
-            Is_Visible     => True);
-      end if;
+      return Build.Source.Create
+        (Base_Source    => Base_Src.Element.all,
+         Defining_View  => Proxy.View,
+         Owning_View    => Data.View,
+         Inherited_From => Proxy.Inh_From,
+         Is_Visible     => True);
    end Source;
 
    ------------
@@ -1627,12 +1620,12 @@ package body GPR2.Build.View_Tables is
    is
       use type GPR2.Project.View.Object;
 
-      Base_Src      : constant GPR2.Build.Source_Base.Object :=
+      Base_Src      : constant Src_Info_Maps.Constant_Reference_Type :=
                         (if Proxy.View = Data.View
-                         then Data.Src_Infos.Element (Proxy.Path_Name)
-                         else Get_Data
-                           (Data.Tree_Db, Proxy.View).Src_Infos.Element
-                             (Proxy.Path_Name));
+                         then Data.Src_Infos.Constant_Reference
+                           (Proxy.Path_Name)
+                         else Get_Data (Data.Tree_Db, Proxy.View).Src_Infos.
+                           Constant_Reference (Proxy.Path_Name));
       Is_Compilable : constant Boolean :=
                         Data.View.Is_Compilable (Base_Src.Language);
       Is_Visible    : constant Boolean :=
@@ -1640,7 +1633,7 @@ package body GPR2.Build.View_Tables is
 
    begin
       return Build.Source.Create
-        (Base_Source    => Base_Src,
+        (Base_Source    => Base_Src.Element.all,
          Defining_View  => Proxy.View,
          Owning_View    => Data.View,
          Inherited_From => Proxy.Inh_From,
