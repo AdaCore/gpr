@@ -4,8 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Calendar;
-
 limited with GPR2.Build.Tree_Db;
 with GPR2.Build.Unit_Info.List;
 with GPR2.Containers;
@@ -39,10 +37,8 @@ package GPR2.Build.Source_Base is
      (Filename         : GPR2.Path_Name.Object;
       Language         : Language_Id;
       Kind             : Unit_Kind;
-      Timestamp        : Ada.Calendar.Time;
       Tree_Db          : access GPR2.Build.Tree_Db.Object;
       Naming_Exception : Boolean;
-      Source_Dir_Idx   : Natural;
       From_Src_Subdirs : Boolean)
       return Object'Class
      with Pre  => Filename.Is_Defined,
@@ -65,16 +61,6 @@ package GPR2.Build.Source_Base is
    function Path_Name (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined;
    --  Returns the path-name for the given source
-
-   function Modification_Time (Self : Object) return Ada.Calendar.Time
-     with Inline, Pre => Self.Is_Defined;
-   --  Returns last modification of the source file from the time point when
-   --  the last successful build was done.
-
-   procedure Update_Modification_Time
-     (Self : in out Object;
-      Time : Ada.Calendar.Time);
-   --  Update the source modification time field
 
    function Language (Self : Object) return Language_Id
      with Pre => Self.Is_Defined;
@@ -137,11 +123,6 @@ package GPR2.Build.Source_Base is
      with Pre => Self.Is_Defined;
    --  Returns whether the source comes from a naming exception
 
-   function Source_Dir_Value_Index
-     (Self : Object) return Natural
-     with Pre => Self.Is_Defined;
-   --  Used to determine internally if a source overrides another
-
    function From_Src_Subdirs (Self : Object) return Boolean;
    --  Whether the source is contained in a src_subdirs directory
 
@@ -152,8 +133,6 @@ private
       --  The view's build database
       Path_Name         : GPR2.Path_Name.Object;
       --  Source path
-      Modification_Time : Calendar.Time := No_Time;
-      --  Source file modification time
       Language          : Language_Id   := No_Language;
       --  Source's language
       Kind              : Unit_Kind := S_Separate;
@@ -162,17 +141,12 @@ private
       --  Source's units in case of unit-based language
       Naming_Exception  : Boolean := False;
       --  Whether a naming exception concerns this source
-      Source_Dir_Idx    : Natural := 0;
-      --  The value of Source_Dirs responsible for loading this value
       Src_Subdirs       : Boolean := False;
    end record;
 
    Undefined : constant Object := (others => <>);
 
    function Is_Defined (Self : Object) return Boolean is (Self /= Undefined);
-
-   function Modification_Time (Self : Object) return Ada.Calendar.Time
-   is (Self.Modification_Time);
 
    function Path_Name (Self : Object) return GPR2.Path_Name.Object is
      (Self.Path_Name);
@@ -211,10 +185,6 @@ private
 
    function Has_Naming_Exception (Self : Object) return Boolean is
      (Self.Naming_Exception);
-
-   function Source_Dir_Value_Index
-     (Self : Object) return Natural is
-     (Self.Source_Dir_Idx);
 
    function From_Src_Subdirs (Self : Object) return Boolean is
       (Self.Src_Subdirs);

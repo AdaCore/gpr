@@ -5,6 +5,14 @@
 --
 
 with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Strings.Fixed;
+with Ada.Strings.Maps.Constants;
+with Ada.Text_IO;
+
+with GNAT.OS_Lib;
+
+with GNATCOLL.Utils;
 
 with GPR2.Build.Unit_Info.List;
 with GPR2.Build.Source_Base.Ada_Parser;
@@ -15,12 +23,14 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.View;
 with GPR2.Source_Reference.Value;
+with GPR2.Tree_Internal;
 with GPR2.View_Internal;
 
 separate (GPR2.Build.View_Tables)
 package body Update_Sources_List is
 
    use type Project.Attribute.Object;
+   use type Project.View.Object;
    package PAI renames GPR2.Project.Attribute_Index;
 
    use GPR2.Path_Name;
@@ -28,6 +38,8 @@ package body Update_Sources_List is
    package PRA renames GPR2.Project.Registry.Attribute;
    package PRP renames GPR2.Project.Registry.Pack;
    package SR  renames GPR2.Source_Reference;
+
+   package Source_Set renames GPR2.Containers.Filename_Type_Set;
 
    package Attribute_List is new
      Ada.Containers.Doubly_Linked_Lists (Project.Attribute.Object);
@@ -59,18 +71,105 @@ package body Update_Sources_List is
    package Naming_Schema_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (Language_Id, Naming_Schema, GPR2.Hash, GPR2."=");
 
+   type Source_Detection is
+     (Naming_Exception, Naming_Convention, No_Match);
+
+   type Source_Context (Dot_Repl_Length : Natural) is limited record
+      Dot_Repl              : String (1 .. Dot_Repl_Length);
+      --  Filename sequence representing a dot in an Ada unit name
+      Tree                  : not null access Tree_Internal.Object;
+      --  Access to the file reader and source subdirectory settings
+      Listed_Sources        : Source_Set.Set;
+      --  Basenames selected by Source_Files and Source_List_File
+      Excluded_Sources      : Containers.Source_Path_To_Sloc.Map;
+      --  Excluded basenames and their locations for diagnostics
+      Has_Source_List       : Boolean := False;
+      --  An explicit source list is defined, even if it is empty
+      Naming_Schema_Map     : Naming_Schema_Maps.Map;
+      --  Filename suffixes for each language
+      Ada_Naming_Exceptions : Source_Path_To_Attribute_List.Map;
+      --  Ada basenames mapped to their Naming.Spec and Naming.Body attributes
+   end record;
+   --  Selection and naming information owned by one Process call
+
+   package Message_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (Filename_Type, GPR2.Log.Object, "<", GPR2.Log."=");
+
+   procedure Add_Source (Data : View_Data_Ref; Src : Source_Proxy);
+   --  Register a newly discovered or inherited source
+
+   procedure Check_Naming_Exceptions
+     (Data     : View_Data_Ref;
+      Context  : Source_Context;
+      File     : Full_Name;
+      Language : Language_Id;
+      Match    : out Source_Detection;
+      Kind     : out Valid_Unit_Kind;
+      Units    : in out Unit_Info.List.Object;
+      Exc_Attr : out Source_Reference.Object;
+      Messages : in out GPR2.Log.Object);
+   --  Identify sources and declared units from naming exceptions
+
+   procedure Check_Naming_Scheme
+     (Context  : Source_Context;
+      Basename : Filename_Type;
+      Language : Language_Id;
+      Match    : out Source_Detection;
+      Kind     : out Valid_Unit_Kind);
+   --  Match the most specific language suffix
+
+   procedure Include_Simple_Filename
+     (Set      : in out Source_Set.Set;
+      Value    : Value_Type;
+      Sloc     : Source_Reference.Object'Class;
+      Messages : in out GPR2.Log.Object);
+
+   procedure Initialize_Source_Lists
+     (Data     : View_Data_Ref;
+      Context  : in out Source_Context;
+      Messages : in out GPR2.Log.Object);
+   --  Read source selection attributes before collecting sources
+
+   procedure Insert_Inherited
+     (Data    : View_Data_Ref;
+      Src     : Source_Proxy;
+      Clashes : in out Basename_Source_Maps.Map);
+   --  Own sources take precedence over inherited sources
+
+   function Process_File
+     (Data           : View_Data_Ref;
+      Context        : Source_Context;
+      File           : Full_Name;
+      Matching_Units : Boolean;
+      Messages       : in out GPR2.Log.Object) return Boolean;
+
+   procedure Read_Source_List
+     (View      : Project.View.Object;
+      Attr      : Project.Attribute.Object;
+      Set       : in out Source_Set.Set;
+      Messages  : in out GPR2.Log.Object);
+   --  Read filenames from the file designated by Attr
+
+   procedure Register_Units
+     (Data     : View_Data_Ref;
+      Messages : in out GPR2.Log.Object);
+   --  Register the view's visible units in their namespaces
+
+   procedure Report_Source
+     (Src : Source_Proxy; Messages : in out GPR2.Log.Object);
+   --  Report a source involved in an inheritance conflict
+
    procedure Fill_Ada_Naming_Exceptions
      (View         : GPR2.Project.View.Object;
       Attr         : Attribute_Id;
       Src_Map      : in out Source_Path_To_Attribute_List.Map)
      with Pre => Attr in  PRA.Naming.Spec.Attr | PRA.Naming.Body_N.Attr;
-   --  Populate the src->unit and unit->src maps for Ada sources
+   --  Map source filenames to their Ada naming exceptions
 
    procedure Fill_Naming_Schema
      (View : Project.View.Object;
       Map  : in out Naming_Schema_Maps.Map);
-   --  Populate Map with the naming schema information from view, for every
-   --  language in use for the view.
+   --  Cache naming suffixes for each language
 
    function Compute_Unit_From_Filename
      (File     : Filename_Type;
@@ -95,6 +194,210 @@ package body Update_Sources_List is
 
    function Krunch (Unit_Name : Name_Type) return Filename_Type;
    --  convenient wrapper around the above procedure
+
+   ----------------
+   -- Add_Source --
+   ----------------
+
+   procedure Add_Source (Data : View_Data_Ref; Src : Source_Proxy) is
+      Owner_Db : constant View_Data_Ref :=
+                   Get_Data (Data.Tree_Db, Src.View);
+      Src_Info : constant Src_Info_Maps.Constant_Reference_Type :=
+                   Owner_Db.Src_Infos.Constant_Reference (Src.Path_Name);
+      C_Lang   : Sources_By_Langs_Maps.Cursor;
+      Inserted : Boolean;
+   begin
+      Data.Sources.Insert (Src.Path_Name, Src);
+      Data.Langs_Usage.Insert (Src_Info.Language, 1, C_Lang, Inserted);
+      if not Inserted then
+         declare
+            Count : constant Sources_By_Langs_Maps.Reference_Type :=
+                      Data.Langs_Usage.Reference (C_Lang);
+         begin
+            Count.Element.all := Count + 1;
+         end;
+      end if;
+   end Add_Source;
+
+   -----------------------------
+   -- Check_Naming_Exceptions --
+   -----------------------------
+
+   procedure Check_Naming_Exceptions
+     (Data     : View_Data_Ref;
+      Context  : Source_Context;
+      File     : Full_Name;
+      Language : Language_Id;
+      Match    : out Source_Detection;
+      Kind     : out Valid_Unit_Kind;
+      Units    : in out Unit_Info.List.Object;
+      Exc_Attr : out Source_Reference.Object;
+      Messages : in out GPR2.Log.Object)
+   is
+      Basename : constant Filename_Type := Path_Name.Simple_Name (File);
+      Attr     : Project.Attribute.Object;
+      Index    : Unit_Index;
+      Ada_Exc  : Source_Path_To_Attribute_List.Cursor;
+   begin
+      Exc_Attr := Source_Reference.Undefined;
+      Match := No_Match;
+      Kind  := S_Spec;  --  Dummy value
+
+      if Language = Ada_Language
+        and then not Context.Ada_Naming_Exceptions.Is_Empty
+      then
+         Ada_Exc := Context.Ada_Naming_Exceptions.Find (Basename);
+
+         if Source_Path_To_Attribute_List.Has_Element (Ada_Exc) then
+            for Exc of Context.Ada_Naming_Exceptions (Ada_Exc) loop
+               --  Found at least one: so we have naming exceptions for
+               --  this source
+
+               Match := Naming_Exception;
+               Exc_Attr := Source_Reference.Object (Exc);
+
+               if Exc.Value.Has_At_Pos then
+                  Index := Exc.Value.At_Pos;
+                  pragma Assert (Index /= No_Index);
+               else
+                  Index := No_Index;
+               end if;
+
+               Kind := (if Exc.Name.Id = PRA.Naming.Spec
+                        then S_Spec
+                        else S_Body);
+
+               declare
+                  Unit : constant GPR2.Build.Unit_Info.Object :=
+                    (Unit_Info.Create
+                       (Unit_Name => Name_Type (Exc.Index.Text),
+                        Index     => Index,
+                        Kind      => Kind));
+               begin
+                  if Units.Contains (Unit.Index) then
+                     Messages.Append
+                       (Message.Create
+                          (Message.Critical_Error,
+                           "file "
+                           & String (File)
+                           & " contains duplicated units """
+                           & String (Unit.Name)
+                           & " and """
+                           & String (Units.Element (Unit.Index).Name)
+                           & """ at index"
+                           & Unit.Index'Image
+                           & "",
+                           SR.Create (Data.View.Path_Name.Value, 0, 0)));
+                  else
+                     Units.Insert (Unit);
+                  end if;
+               end;
+
+            end loop;
+         end if;
+
+      elsif Language /= Ada_Language then
+         --  Non-Ada case: we suppose that the language doesn't support
+         --  the notion of compilation unit.
+
+         if Data.View.Check_Attribute
+              (PRA.Naming.Specification_Exceptions,
+               Project.Attribute_Index.Create (Language),
+               Result => Attr)
+           and then Attr.Has_Value (Value_Type (Basename))
+           --  ??? Doesn't take care of FS casing
+         then
+            Match := Naming_Exception;
+            Kind  := S_Spec;
+
+         elsif Data.View.Check_Attribute
+                 (PRA.Naming.Implementation_Exceptions,
+                  Project.Attribute_Index.Create (Language),
+                  Result => Attr)
+           and then Attr.Has_Value (Value_Type (Basename))
+         then
+            Match := Naming_Exception;
+            Kind  := S_Body;
+         end if;
+      end if;
+   end Check_Naming_Exceptions;
+
+   -------------------------
+   -- Check_Naming_Scheme --
+   -------------------------
+
+   procedure Check_Naming_Scheme
+     (Context  : Source_Context;
+      Basename : Filename_Type;
+      Language : Language_Id;
+      Match    : out Source_Detection;
+      Kind     : out Valid_Unit_Kind)
+   is
+      NS               : Naming_Schema renames
+                           Context.Naming_Schema_Map.Element (Language);
+      Matches_Spec     : Boolean;
+      Matches_Body     : Boolean;
+      Matches_Separate : Boolean;
+
+   begin
+      Kind := S_Spec;
+      Matches_Spec :=
+        NS.Has_Spec_Suffix
+        and then GPR2.Path_Name.Ends_With
+                   (Basename, NS.Spec_Suffix);
+
+      Matches_Body :=
+        NS.Has_Body_Suffix
+        and then GPR2.Path_Name.Ends_With
+                   (Basename, NS.Body_Suffix);
+
+      Matches_Separate :=
+        NS.Has_Separate_Suffix
+        and then GPR2.Path_Name.Ends_With
+                   (Basename, NS.Sep_Suffix);
+
+      --  Use the longest matching suffix
+
+      if Matches_Spec and then Matches_Body then
+         if NS.Spec_Suffix'Length >= NS.Body_Suffix'Length then
+            Matches_Body := False;
+         else
+            Matches_Spec := False;
+         end if;
+      end if;
+
+      if Matches_Spec and then Matches_Separate then
+         if NS.Spec_Suffix'Length >= NS.Sep_Suffix'Length then
+            Matches_Separate := False;
+         else
+            Matches_Spec := False;
+         end if;
+      end if;
+
+      if Matches_Body and then Matches_Separate then
+         if NS.Body_Suffix'Length >= NS.Sep_Suffix'Length then
+            Matches_Separate := False;
+         else
+            Matches_Body := False;
+         end if;
+      end if;
+
+      Match := (if Matches_Spec
+                  or else Matches_Body
+                  or else Matches_Separate
+                then Naming_Convention
+                else No_Match);
+
+      if Matches_Spec then
+         Kind  := S_Spec;
+
+      elsif Matches_Body then
+         Kind  := S_Body;
+
+      elsif Matches_Separate then
+         Kind  := S_Separate;
+      end if;
+   end Check_Naming_Scheme;
 
    function Compute_Unit_From_Filename
      (File     : Filename_Type;
@@ -298,6 +601,136 @@ package body Update_Sources_List is
          end;
       end loop;
    end Fill_Naming_Schema;
+
+   -----------------------------
+   -- Include_Simple_Filename --
+   -----------------------------
+
+   procedure Include_Simple_Filename
+     (Set      : in out Source_Set.Set;
+      Value    : Value_Type;
+      Sloc     : Source_Reference.Object'Class;
+      Messages : in out GPR2.Log.Object)
+   is
+      Position : Source_Set.Cursor;
+      Inserted : Boolean;
+   begin
+      if Has_Directory_Separator (Value) then
+         Messages.Append
+           (Message.Create
+              (Message.Critical_Error,
+               "file name cannot include directory information (""" & Value
+               & """)",
+               Sloc));
+
+      elsif Value'Length = 0 then
+         Messages.Append
+           (Message.Create
+              (Message.Critical_Error,
+               "file name cannot be empty",
+               Sloc));
+      else
+         Set.Insert (Filename_Type (Value), Position, Inserted);
+      end if;
+   end Include_Simple_Filename;
+
+   -----------------------------
+   -- Initialize_Source_Lists --
+   -----------------------------
+
+   procedure Initialize_Source_Lists
+     (Data     : View_Data_Ref;
+      Context  : in out Source_Context;
+      Messages : in out GPR2.Log.Object)
+   is
+      Attr     : Project.Attribute.Object;
+      Exc_List : Source_Set.Set;
+   begin
+      --  If we have attribute Excluded_Source_List_File
+
+      Attr := Data.View.Attribute (PRA.Excluded_Source_List_File);
+
+      if Attr.Is_Defined then
+         Read_Source_List
+           (Data.View, Attr, Exc_List, Messages);
+         if not Messages.Has_Critical_Error then
+            for Src of Exc_List loop
+               Context.Excluded_Sources.Include
+                 (Src, Source_Reference.Object (Attr.Value));
+            end loop;
+         end if;
+      end if;
+
+      --  If we have attribute Excluded_Source_Files
+
+      Attr := Data.View.Attribute (PRA.Excluded_Source_Files);
+
+      if Attr.Is_Defined then
+         for File of Attr.Values loop
+            Exc_List.Clear;
+            Include_Simple_Filename
+              (Exc_List, File.Text, File, Messages);
+            if not Exc_List.Is_Empty then
+               Context.Excluded_Sources.Include
+                 (Exc_List.First_Element, Source_Reference.Object (File));
+            end if;
+         end loop;
+      end if;
+
+      --  Remove naming exception sources from inactive case alternatives
+
+      for File of Data.View.Skipped_Sources loop
+         Exc_List.Clear;
+         Include_Simple_Filename
+           (Exc_List, File.Text, File, Messages);
+         if not Exc_List.Is_Empty then
+            Context.Excluded_Sources.Include
+              (Exc_List.First_Element, Source_Reference.Undefined);
+         end if;
+      end loop;
+
+      --  If we have attribute Source_List_File
+
+      Attr := Data.View.Attribute (PRA.Source_List_File);
+
+      if Attr.Is_Defined then
+         Context.Has_Source_List := True;
+         Read_Source_List
+           (Data.View, Attr, Context.Listed_Sources, Messages);
+      end if;
+
+      --  If we have attribute Source_Files
+
+      Attr := Data.View.Attribute (PRA.Source_Files);
+
+      if Attr.Is_Defined then
+         Context.Has_Source_List := True;
+         for File of Attr.Values loop
+            Include_Simple_Filename
+              (Context.Listed_Sources, File.Text, File, Messages);
+         end loop;
+      end if;
+   end Initialize_Source_Lists;
+
+   ----------------------
+   -- Insert_Inherited --
+   ----------------------
+
+   procedure Insert_Inherited
+     (Data    : View_Data_Ref;
+      Src     : Source_Proxy;
+      Clashes : in out Basename_Source_Maps.Map)
+   is
+      Name     : constant Simple_Name :=
+                   Path_Name.Simple_Name (Src.Path_Name);
+      Position : Basename_Source_Maps.Cursor;
+      Inserted : Boolean;
+   begin
+      Data.Basenames.Insert (Name, Src, Position, Inserted);
+      if not Inserted and then Data.Basenames (Position).View /= Data.View then
+         Clashes.Include (Name, Src);
+      end if;
+   end Insert_Inherited;
 
    ------------
    -- Krunch --
@@ -582,76 +1015,28 @@ package body Update_Sources_List is
 
    procedure Process
      (Data           : View_Data_Ref;
-      Stop_On_Error  : Boolean;
       Messages       : in out GPR2.Log.Object;
       Matching_Units : Boolean := True)
    is
-      function Data_Has_Basename (BN : Simple_Name) return Boolean;
-      --  Whether Data.Sources contains a source whose simple name is BN.
-      --  Useful when multiple BN hide each other in order to not bug the end
-      --  user with an issue already detected.
+      Dot_Repl : constant String :=
+                   Data.View.Attribute (PRA.Naming.Dot_Replacement).Value.Text;
+      Context : Source_Context :=
+                  (Dot_Repl_Length => Dot_Repl'Length,
+                   Dot_Repl        => Dot_Repl,
+                   Tree            => View_Internal.Get_RO (Data.View).Tree,
+                   others          => <>);
+      Attr          : Project.Attribute.Object;
+      Clashes       : Basename_Source_Maps.Map;
+      File_Messages : Message_Maps.Map;
+      Current_Dir   : Natural := 0;
+      Source_Names  : Source_Set.Set;
+      --  Basenames selected from the current Source_Dirs value
 
       procedure Handle_File
         (Dir_Index : Natural;
          File      : GPR2.Path_Name.Full_Name;
          Timestamp : Ada.Calendar.Time);
-      --  Callback to Source_Directories_Walk: update the list of files found
-      --  in the source directories.
-
-      function Process_File (File : File_Info) return Boolean;
-
-      Tree          : constant not null access Tree_Internal.Object :=
-                        View_Internal.Get_RO (Data.View).Tree;
-
-      Previous_Files     : File_Sets.Set := Data.Src_Files;
-      --  List of files that were present in the source dirs during last call
-      --  to Process. Used for delta updates
-
-      Changed_Sources    : Basename_Sets.Set;
-
-      Current_Src_Dir_Idx   : Natural := 0;
-      --  Identifies the Source_Dirs value being processed
-
-      Current_Is_Src_Subdirs : Boolean := False;
-      --  Identifies if the analyzed sources are part of Src_Subdirs. In this
-      --  case we need to adjust some checks and attributes.
-
-      Dot_Repl : constant String :=
-                   Data.View.Attribute (PRA.Naming.Dot_Replacement).Value.Text;
-      --  Get Dot_Replacement value
-
-      Source_Name_Set       : GPR2.Containers.Filename_Set;
-      --  Collection of source simple names for a given Source_Dirs value
-
-      Naming_Schema_Map     : Naming_Schema_Maps.Map;
-
-      Ada_Naming_Exceptions : Source_Path_To_Attribute_List.Map;
-      Attr                  : Project.Attribute.Object;
-
-
-      -----------------------
-      -- Data_Has_Basename --
-      -----------------------
-
-      function Data_Has_Basename (BN : Simple_Name) return Boolean is
-      begin
-         if Data.Basenames.Contains (BN) then
-            return True;
-         end if;
-
-         for S of Data.Sources loop
-            declare
-               S_BN : constant Simple_Name :=
-                        Path_Name.Simple_Name (S.Path_Name);
-            begin
-               if S_BN = BN then
-                  return True;
-               end if;
-            end;
-         end loop;
-
-         return False;
-      end Data_Has_Basename;
+      --  Register sources in Source_Dirs order during the directory walk
 
       -----------------
       -- Handle_File --
@@ -662,615 +1047,149 @@ package body Update_Sources_List is
          File      : GPR2.Path_Name.Full_Name;
          Timestamp : Ada.Calendar.Time)
       is
+         pragma Unreferenced (Timestamp);
+         Messages : GPR2.Log.Object;
       begin
-         Data.Src_Files.Include ((File'Length, Timestamp, Dir_Index, File));
+         if Dir_Index /= Current_Dir then
+            Current_Dir := Dir_Index;
+            Source_Names.Clear;
+         end if;
+
+         if Process_File (Data, Context, File, Matching_Units, Messages)
+         then
+            declare
+               Src      : constant Source_Proxy :=
+                            (File'Length, Data.View,
+                             Project.View.Undefined, File);
+               Name     : constant Simple_Name := Path_Name.Simple_Name (File);
+               Position : Basename_Source_Maps.Cursor;
+               Inserted : Boolean;
+            begin
+               Add_Source (Data, Src);
+               Data.Basenames.Insert (Name, Src, Position, Inserted);
+               if Inserted then
+                  Source_Names.Include (Name);
+               elsif Source_Names.Contains (Name) then
+                  Clashes.Include (Name, Src);
+               end if;
+            end;
+         end if;
+
+         if not Messages.Is_Empty then
+            File_Messages.Insert (File, Messages);
+         end if;
       end Handle_File;
 
-      ------------------
-      -- Process_File --
-      ------------------
-
-      function Process_File (File : File_Info) return Boolean is
-
-         --  The implementation works as follows:
-         --    For every language L in the project:
-         --      1- Check if F matches with a naming exception (see
-         --         Check_Naming_Exceptions):
-         --           - if L is Ada, look F up the Ada_Naming_Exceptions map
-         --           - else, check the attributes Implementation_Exceptions
-         --             and Specification_Exceptions for the language L.
-         --             This was missing in the previous implementation.
-         --           - This also computes Kind for non-Ada sources.
-         --             For Ada sources we will compute a Kind for every
-         --             compilation unit later on.
-         --         If a match is found and L is Ada, then compute the
-         --         compilation units.
-         --      2- If no naming exceptions matched, check the naming scheme
-         --         for L (see Check_Naming_Scheme):
-         --           - Separate_Suffix is only checked for Ada.
-         --           - This time, Kind is computed no matter the language, as
-         --             for Ada we will assume the source is single-unit.
-         --         If a match is found and L is Ada then compute the single
-         --         compilation unit for the source. The unit name is derived
-         --         from the file name (see Compute_Unit_From_Filename):
-         --           - Validity checks on the unit name are only done here.
-         --             Should this be reverted to the previous behavior, i.e.
-         --             some checks apply to both the naming exception and
-         --             naming scheme cases???
-         --      3- If either one or the other method resulted in a match,
-         --         - update the source/unit interface containers as done in
-         --           the previous implementation (except that the unit and
-         --           source interface cases are now handled separately).
-         --         - Create the GPR2.Source object. We now have different
-         --           constructors for Ada and for other languages. This change
-         --           is just to make things more explicit. In addition to the
-         --           Units argument, the Ada source constructor
-         --           takes a new argument Is_RTS_Source, used to handle this
-         --           special case when parsing the source.
-         --         - Create the GPR2.Project.Source. Nothing special here.
-         --           A new check is added to report duplicate project sources.
-         --           Add it to the project definition.
-         --         - For Ada, create/add the source object to the project
-         --           definition: no change from the initial code, but it is
-         --           now inside a loop over the compilation units.
-         --         - Exit.
-
-         Basename         : constant Filename_Type :=
-                                GPR2.Path_Name.Simple_Name (File.Path);
-
-         type Source_Detection is
-           (Naming_Exception,
-            Naming_Convention,
-            No_Match);
-         Match            : Source_Detection := No_Match;
-         Units            : Unit_Info.List.Object;  --  For Ada
-         Kind             : Valid_Unit_Kind;
-         Index            : Unit_Index;
-         Source           : Build.Source_Base.Object;
-         Attr             : Project.Attribute.Object;
-         Ada_Exc_CS       : Source_Path_To_Attribute_List.Cursor;
-         Parsed           : Boolean;
-         Exc_Attr         : Source_Reference.Object;
-
-      begin
-         if Data.No_Sources then
-            return False;
-         end if;
-
-         if File.Dir_Idx /= Current_Src_Dir_Idx then
-            Current_Src_Dir_Idx := File.Dir_Idx;
-            Source_Name_Set.Clear;
-
-            Current_Is_Src_Subdirs :=
-              Tree.Has_Src_Subdirs
-              and then
-                Path_Name.Create_File (File.Path).Containing_Directory =
-                  Data.View.Source_Subdirectory;
-         end if;
-
-         --  Stop here if it's one of the excluded sources, or it's not in the
-         --  included sources if those are given explicitely.
-
-         if Current_Is_Src_Subdirs then
-            --  consider everything from src_subdirs
-            null;
-
-         elsif Data.Excluded_Sources.Contains (Basename) then
-            declare
-               --  Add the source proxy with undefined view information since
-               --  the source object doesn't exist in Data.View DB.
-               --  We still need to store elementary information about the
-               --  source path.
-               Proxy : constant Source_Proxy :=
-                         (File.Path_Len,
-                          Project.View.Undefined,
-                          Project.View.Undefined,
-                          File.Path);
-            begin
-               Data.Actually_Excluded.Include (Basename, Proxy);
-            end;
-
-            return False;
-
-         elsif not Data.Listed_Sources.Is_Empty
-           and then not Data.Listed_Sources.Contains (Basename)
-         then
-            return False;
-         end if;
-
-         for Language of Data.View.Language_Ids loop
-            --  First, try naming exceptions
-
-            Match := No_Match;
-            Kind  := S_Spec;  --  Dummy value
-
-            if Language = Ada_Language
-              and then not Ada_Naming_Exceptions.Is_Empty
-            then
-               Ada_Exc_CS := Ada_Naming_Exceptions.Find (Basename);
-
-               if Source_Path_To_Attribute_List.Has_Element (Ada_Exc_CS) then
-                  for Exc of Ada_Naming_Exceptions (Ada_Exc_CS) loop
-                     --  Found at least one: so we have naming exceptions for
-                     --  this source
-
-                     Match := Naming_Exception;
-                     Exc_Attr := Source_Reference.Object (Exc);
-
-                     if Exc.Value.Has_At_Pos then
-                        Index := Exc.Value.At_Pos;
-                        pragma Assert (Index /= No_Index);
-                     else
-                        Index := No_Index;
-                     end if;
-
-                     Kind := (if Exc.Name.Id = PRA.Naming.Spec
-                              then S_Spec
-                              else S_Body);
-
-                     declare
-                        Unit : constant GPR2.Build.Unit_Info.Object :=
-                          (Unit_Info.Create
-                             (Unit_Name => Name_Type (Exc.Index.Text),
-                              Index     => Index,
-                              Kind      => Kind));
-                     begin
-                        if Units.Contains (Unit.Index) then
-                           Messages.Append
-                             (Message.Create
-                                (Message.Critical_Error,
-                                 "file "
-                                 & String (Full_Name (File.Path))
-                                 & " contains duplicated units """
-                                 & String (Unit.Name)
-                                 & " and """
-                                 & String (Units.Element (Unit.Index).Name)
-                                 & """ at index"
-                                 & Unit.Index'Image
-                                 & "",
-                                 SR.Create (Data.View.Path_Name.Value, 0, 0)));
-                        else
-                           Units.Insert (Unit);
-                        end if;
-                     end;
-
-                  end loop;
-               end if;
-
-            elsif Language /= Ada_Language then
-               --  Non-Ada case: we suppose that the language doesn't support
-               --  the notion of compilation unit.
-
-               if Data.View.Check_Attribute
-                    (PRA.Naming.Specification_Exceptions,
-                     Project.Attribute_Index.Create (Language),
-                     Result => Attr)
-                 and then Attr.Has_Value (Value_Type (Basename))
-                 --  ??? Doesn't take care of FS casing
-               then
-                  Match := Naming_Exception;
-                  Kind  := S_Spec;
-
-               elsif Data.View.Check_Attribute
-                       (PRA.Naming.Implementation_Exceptions,
-                        Project.Attribute_Index.Create (Language),
-                        Result => Attr)
-                 and then Attr.Has_Value (Value_Type (Basename))
-               then
-                  Match := Naming_Exception;
-                  Kind  := S_Body;
-               end if;
-            end if;
-
-            if Match = No_Match then
-               --  If no naming exception matched, try with naming schema
-
-               declare
-                  NS               : Naming_Schema renames
-                                       Naming_Schema_Map.Element (Language);
-                  Matches_Spec     : Boolean;
-                  Matches_Body     : Boolean;
-                  Matches_Separate : Boolean;
-
-               begin
-                  Matches_Spec :=
-                    NS.Has_Spec_Suffix
-                    and then GPR2.Path_Name.Ends_With
-                               (Basename, NS.Spec_Suffix);
-
-                  Matches_Body :=
-                    NS.Has_Body_Suffix
-                    and then GPR2.Path_Name.Ends_With
-                               (Basename, NS.Body_Suffix);
-
-                  Matches_Separate :=
-                    NS.Has_Separate_Suffix
-                    and then GPR2.Path_Name.Ends_With
-                               (Basename, NS.Sep_Suffix);
-
-                  --  See GA05-012: if there's ambiguity with suffixes (e.g.
-                  --  one of the suffixes if a suffix of another) we use
-                  --  with the most explicit one (e.g. the longest one)
-                  --  that matches.
-
-                  if Matches_Spec and then Matches_Body then
-                     if NS.Spec_Suffix'Length >= NS.Body_Suffix'Length then
-                        Matches_Body := False;
-                     else
-                        Matches_Spec := False;
-                     end if;
-                  end if;
-
-                  if Matches_Spec and then Matches_Separate then
-                     if NS.Spec_Suffix'Length >= NS.Sep_Suffix'Length then
-                        Matches_Separate := False;
-                     else
-                        Matches_Spec := False;
-                     end if;
-                  end if;
-
-                  if Matches_Body and then Matches_Separate then
-                     if NS.Body_Suffix'Length >= NS.Sep_Suffix'Length then
-                        Matches_Separate := False;
-                     else
-                        Matches_Body := False;
-                     end if;
-                  end if;
-
-                  Match := (if Matches_Spec
-                              or else Matches_Body
-                              or else Matches_Separate
-                            then Naming_Convention
-                            else No_Match);
-
-                  if Matches_Spec then
-                     Kind  := S_Spec;
-
-                  elsif Matches_Body then
-                     Kind  := S_Body;
-
-                  elsif Matches_Separate then
-                     Kind  := S_Separate;
-                  end if;
-               end;
-            end if;
-
-            --  If we have a match from either naming exception or scheme
-            --  we create the Source object.
-
-            if Match /= No_Match then
-               Source := Build.Source_Base.Object
-                 (Build.Source_Base.Create
-                    (Path_Name.Create_File (File.Path),
-                     Language         => Language,
-                     Kind             => Kind,
-                     Timestamp        => File.Stamp,
-                     Tree_Db          => Data.Tree_Db,
-                     Naming_Exception => Match = Naming_Exception,
-                     Source_Dir_Idx   => File.Dir_Idx,
-                     From_Src_Subdirs => Current_Is_Src_Subdirs));
-
-               --  If we know the units in the source (from naming exception),
-               --  then add them now.
-
-               for U of Units loop
-                  Source.Update_Unit (U);
-               end loop;
-            end if;
-
-            --  Check Unit names and kind for Ada:
-
-            if Match = Naming_Convention and then Language = Ada_Language then
-               declare
-                  Last_Dot  : Natural;
-                  Success   : Boolean;
-                  Unit_Name : constant Name_Type :=
-                                Compute_Unit_From_Filename
-                                  (File     => File.Path,
-                                   Kind     => Kind,
-                                   NS       =>
-                                     Naming_Schema_Map (Ada_Language),
-                                   Dot_Repl => Dot_Repl,
-                                   Messages => Messages,
-                                   Last_Dot => Last_Dot,
-                                   Success  => Success);
-
-               begin
-                  if not Success then
-                     return False;
-                  end if;
-
-                  if not Compilation_Unit.Check_Name_Validity
-                    (Unit_Name,
-                     Source_Reference.Create (File.Path, 0, 0),
-                     False,
-                     Messages)
-                  then
-                     return False;
-                  end if;
-
-                  --  There can be ambiguities in Ada with the default naming
-                  --  convention or with naming exception with regards to
-                  --  separate and child bodies. In order to disambiguate that
-                  --  we need to parse the source.
-
-                  --  Parse the source to get unit and update its kind if
-                  --  needed.
-
-                  Build.Source_Base.Ada_Parser.Compute
-                    (File_Reader      => Tree.File_Reader,
-                     Data             => Source,
-                     Get_Withed_Units =>
-                       Data.Tree_Db.Source_Option >= Sources_Units,
-                     Success          => Parsed);
-
-                  --  Check if we have a conflicting naming exception with the
-                  --  same unit but a different source
-
-                  if Parsed
-                    and then Source.Kind /= S_No_Body
-                  then
-                     if not Ada_Naming_Exceptions.Is_Empty then
-                        declare
-                           Attr : GPR2.Project.Attribute.Object;
-                        begin
-                           if Source.Kind = S_Spec then
-                              Attr := Data.View.Attribute
-                                (PRA.Naming.Spec,
-                                 PAI.Create
-                                   (Value_Type (Source.Unit.Full_Name)));
-                           else
-                              Attr := Data.View.Attribute
-                                (PRA.Naming.Body_N,
-                                 PAI.Create
-                                   (Value_Type (Source.Unit.Full_Name)));
-                           end if;
-
-                           if Attr.Is_Defined
-                             and then Attr.Value.Text /=
-                               String (Source.Path_Name.Simple_Name)
-                           then
-                              --  We have a naming exception on the unit name
-                              --  for a different source, so ignore the other
-                              --  sources with the same unit.
-                              return False;
-                           end if;
-                        end;
-                     end if;
-
-                     if Unit_Name /= Source.Unit.Full_Name
-                       and then Path_Name.Base_Name (File.Path) /=
-                         Krunch (Source.Unit.Full_Name)
-                     then
-                        if Data.View.Is_Runtime then
-                           --  Ignore sources from the runtime that don't
-                           --  follow the naming convention: they're not
-                           --  part of the runtime library.
-                           return False;
-
-                        elsif Matching_Units then
-                           Messages.Append
-                             (Message.Create
-                                (Message.Warning,
-                                 "unit name """ &
-                                   String (Source.Unit.Name) &
-                                   """ does not match source name. " &
-                                   "The source will be ignored.",
-                                 SR.Create (File.Path, 0, 0)));
-
-                           return False;
-                        end if;
-                     end if;
-
-                  elsif not Parsed and then Kind = S_Separate then
-                     --  Separates must have a doted unit name
-
-                     if Last_Dot > 0 then
-                        Source.Update_Unit
-                          (Unit_Info.Create
-                             (Unit_Name     => Unit_Name
-                                  (Unit_Name'First .. Last_Dot - 1),
-                              Index         => No_Index,
-                              Kind          => Kind,
-                              Separate_Name => Unit_Name
-                                (Last_Dot + 1 .. Unit_Name'Last),
-                              Parsed        => False));
-                     else
-                        Messages.Append
-                          (Message.Create
-                             (Message.Warning,
-                              "invalid file name: no '.' in deduced " &
-                                "separate unit name """ &
-                                String (Unit_Name) & '"',
-                              SR.Create (File.Path, 0, 0)));
-
-                        return False;
-                     end if;
-
-                  elsif not Parsed then
-                     Source.Update_Unit
-                       (Unit_Info.Create
-                          (Unit_Name     => Unit_Name,
-                           Index         => No_Index,
-                           Kind          => Kind,
-                           Separate_Name => "",
-                           Parsed        => False));
-                  end if;
-               end;
-
-            elsif Match = Naming_Exception
-              and then Language = Ada_Language
-              and then not Units.Is_Indexed_List
-            then
-               Build.Source_Base.Ada_Parser.Compute
-                 (File_Reader      => Tree.File_Reader,
-                  Data             => Source,
-                  Get_Withed_Units =>
-                    Data.Tree_Db.Source_Option >= Sources_Units,
-                  Success          => Parsed);
-
-               --  Check parsed unit name is the same as the one declared
-               --  in the gpr project.
-
-               if Parsed
-                 and then Source.Unit.Kind /= S_No_Body
-                 and then Source.Unit.Full_Name /=
-                   Units (No_Index).Full_Name
-               then
-                  Messages.Append
-                    (Message.Create
-                       (Message.Warning,
-                        "in """ & String (Source.Path_Name.Simple_Name) &
-                          """, actual unit name """ &
-                          String
-                          (Source.Unit.Full_Name) &
-                          """ differs from the one declared in the " &
-                          "project : """ &
-                          String (Units (No_Index).Full_Name) & '"',
-                        Exc_Attr));
-               end if;
-            end if;
-
-            if Match /= No_Match then
-               Data.Src_Infos.Insert (File.Path, Source);
-
-               return True;
-            end if;
-
-            exit when Stop_On_Error
-              and then Tree.Log_Messages.Has_Critical_Error;
-         end loop;
-
-         return False;
-      end Process_File;
-
    begin
-      --  Skip projects that don't have source directories
-
-      if Data.View.Kind not in With_Source_Dirs_Kind then
-         return;
-      end if;
+      Initialize_Source_Lists (Data, Context, Messages);
 
       --  Prepare tables used to detect actual sources and their language
 
-      Fill_Naming_Schema (Data.View, Naming_Schema_Map);
+      Fill_Naming_Schema (Data.View, Context.Naming_Schema_Map);
 
       if Data.View.Language_Ids.Contains (Ada_Language) then
          Fill_Ada_Naming_Exceptions
-           (Data.View, PRA.Naming.Spec.Attr, Ada_Naming_Exceptions);
+           (Data.View, PRA.Naming.Spec.Attr, Context.Ada_Naming_Exceptions);
          Fill_Ada_Naming_Exceptions
-           (Data.View, PRA.Naming.Body_N.Attr, Ada_Naming_Exceptions);
+           (Data.View, PRA.Naming.Body_N.Attr,
+            Context.Ada_Naming_Exceptions);
       end if;
 
       --  Lookup for all files in the source directories
-
-      Data.Src_Files.Clear;
 
       Data.View.Source_Directories_Walk
         (Source_CB => Handle_File'Access,
          Dir_CB    => null,
          Messages  => Messages);
 
-      Changed_Sources.Clear;
-
-      --  Check deleted files
-
-      for F of Previous_Files loop
-         if not Data.Src_Files.Contains (F) then
-            --  File F has disapeared, check if it was a source file
-
-            declare
-               C : Src_Info_Maps.Cursor;
-            begin
-               C := Data.Src_Infos.Find (F.Path);
-
-               if Src_Info_Maps.Has_Element (C) then
-                  --  File was a source and has disapeared: notify the build
-                  --  db object to cleanup tables.
-                  Remove_Source
-                    (Data, Data.View, F.Path,
-                     Project.View.Undefined,
-                     Messages => Messages);
-
-                  Changed_Sources.Include
-                    (Path_Name.Simple_Name (F.Path));
-               end if;
-            end;
-         end if;
+      for Source_Messages of File_Messages loop
+         for Msg of Source_Messages loop
+            Messages.Append (Msg);
+         end loop;
       end loop;
 
-      --  Check new or updated sources
+      if Data.View.Is_Extending then
+         for Parent of Data.View.Extended loop
+            declare
+               Parent_Db : constant View_Data_Ref :=
+                             Get_Data (Data.Tree_Db, Parent);
+            begin
+               Load_Sources (Parent_Db, Messages, Matching_Units);
 
-
-      for F of Data.Src_Files loop
-         declare
-            use type Ada.Calendar.Time;
-            C     : File_Sets.Cursor;
-            C2    : Src_Info_Maps.Cursor;
-
-         begin
-            C := Previous_Files.Find (F);
-
-            if not File_Sets.Has_Element (C) then
-               --  New potential source: process it
-
-               if Process_File (F) then
-                  --  First add source to Data view.
-                  Add_Source
-                    (Data, Data.View, F.Path,
-                     Extended_View => Project.View.Undefined,
-                     Messages      => Messages);
-                  Changed_Sources.Include
-                    (Path_Name.Simple_Name (F.Path));
-               end if;
-
-            else
-               C2 := Data.Src_Infos.Find (F.Path);
-
-               if Src_Info_Maps.Has_Element (C2) then
+               for Src of Parent_Db.Basenames loop
                   declare
-                     Src_Ref : constant Src_Info_Maps.Reference_Type :=
-                                 Data.Src_Infos.Reference (C2);
-                     Success : Boolean;
+                     Name : constant Simple_Name :=
+                              Path_Name.Simple_Name (Src.Path_Name);
                   begin
-                     if Src_Ref.Modification_Time /= F.Stamp then
-                        Src_Ref.Update_Modification_Time (F.Stamp);
+                     if Context.Excluded_Sources.Contains (Name) then
+                        Data.Actually_Excluded.Include (Name, Src);
+                     elsif not Data.Sources.Contains (Src.Path_Name) then
+                        declare
+                           Inherited : constant Source_Proxy :=
+                             (Src.Path_Len, Src.View, Parent, Src.Path_Name);
+                        begin
+                           Add_Source (Data, Inherited);
+                           Insert_Inherited (Data, Inherited, Clashes);
+                        end;
+                     end if;
+                  end;
+               end loop;
+            end;
+         end loop;
+      end if;
 
-                        if not Src_Ref.Has_Naming_Exception then
-                           Source_Base.Ada_Parser.Compute
-                             (File_Reader      => Tree.File_Reader,
-                              Data             => Src_Ref,
-                              Get_Withed_Units =>
-                                Data.Tree_Db.Source_Option >= Sources_Units,
-                              Success          => Success);
-                        end if;
+      for C in Clashes.Iterate loop
+         declare
+            Name : constant Simple_Name := Basename_Source_Maps.Key (C);
+            First : constant Source_Proxy := Data.Basenames (Name);
+            Owner : constant View_Data_Ref :=
+                      Get_Data (Data.Tree_Db, First.View);
+            Info : constant Src_Info_Maps.Constant_Reference_Type :=
+                     Owner.Src_Infos.Constant_Reference (First.Path_Name);
+         begin
+            if First.View.Is_Compilable (Info.Language) then
+               if First.View = Data.View then
+                  Messages.Append
+                    (Message.Create
+                       (Message.Critical_Error,
+                        "The source with basename """ & String (Name) &
+                          """ appears multiple times",
+                        Data.View.Attribute
+                          (Project.Registry.Attribute.Source_Dirs)));
+               else
+                  Messages.Append
+                    (Message.Create
+                       (Message.Critical_Error,
+                        '"' & String (Name) & '"' &
+                          " is found in several extended projects",
+                        Source_Reference.Create
+                          (Data.View.Path_Name.Value, 0, 0)));
+
+                  declare
+                     Second : constant Source_Proxy := Clashes (C);
+
+                  begin
+                     if First.Path_Name < Second.Path_Name then
+                        Report_Source (First, Messages);
+                        Report_Source (Second, Messages);
+                     else
+                        Report_Source (Second, Messages);
+                        Report_Source (First, Messages);
                      end if;
                   end;
                end if;
+               Data.Basenames.Delete (Name);
             end if;
          end;
       end loop;
 
-
-      --  All source changes have been processed: now resolve potential
-      --  visibility issues
-
-      for Base_Name of Changed_Sources loop
-         declare
-            C_Overload : Basename_Source_List_Maps.Cursor;
-         begin
-            C_Overload := Data.Overloaded_Srcs.Find (Base_Name);
-            Resolve_Visibility (Data, C_Overload, Messages);
-         end;
-      end loop;
-
-      --  Data.Sources is now updated, we don't need Previous_Files anymore
-      Previous_Files.Clear;
+      Register_Units (Data, Messages);
 
       --  Check that we've found all the listed sources
-      for S of Data.Listed_Sources loop
-         if not Data.Excluded_Sources.Contains (S)
-           and then not Data_Has_Basename (S)
+      for S of Context.Listed_Sources loop
+         if not Context.Excluded_Sources.Contains (S)
+           and then not Data.Basenames.Contains (S)
+           and then not Clashes.Contains (S)
          then
             Messages.Append
               (Message.Create
@@ -1284,7 +1203,7 @@ package body Update_Sources_List is
 
       --  Check that we found all the excluded sources
 
-      for C in Data.Excluded_Sources.Iterate loop
+      for C in Context.Excluded_Sources.Iterate loop
          declare
             Name : constant Filename_Type :=
                      Containers.Source_Path_To_Sloc.Key (C);
@@ -1309,17 +1228,16 @@ package body Update_Sources_List is
                                 With_Defaults  => False,
                                 With_Config    => False)
       then
-         --  Check all naming exceptions is used only in the original
-         --  project where Naming package is declared. If nameing package is
-         --  inherited then not all sources from naming exceptions have to
-         --  be defined, some of then inherited from extended project.
+         --  Check only locally declared naming exceptions
 
          for A of Data.View.Attributes
                     (Name          => PRA.Naming.Spec,
                      With_Defaults => False,
                      With_Config   => False)
          loop
-            if not Data_Has_Basename (Simple_Name (A.Value.Text)) then
+            if not Data.Basenames.Contains (Simple_Name (A.Value.Text))
+              and then not Clashes.Contains (Simple_Name (A.Value.Text))
+            then
                Messages.Append
                  (Message.Create
                     ((if Data.View.Has_Attribute (PRA.Source_Files)
@@ -1347,7 +1265,9 @@ package body Update_Sources_List is
                      & """ must be a simple filename",
                      A.Value));
 
-            elsif not Data_Has_Basename (Simple_Name (A.Value.Text)) then
+            elsif not Data.Basenames.Contains (Simple_Name (A.Value.Text))
+              and then not Clashes.Contains (Simple_Name (A.Value.Text))
+            then
                Messages.Append
                  (Message.Create
                     ((if Data.View.Has_Attribute (PRA.Source_Files)
@@ -1368,7 +1288,9 @@ package body Update_Sources_List is
                Result => Attr)
             then
                for V of Attr.Values loop
-                  if not Data_Has_Basename (Simple_Name (V.Text)) then
+                  if not Data.Basenames.Contains (Simple_Name (V.Text))
+                    and then not Clashes.Contains (Simple_Name (V.Text))
+                  then
                      Messages.Append
                        (Message.Create
                           (Message.Warning,
@@ -1384,7 +1306,9 @@ package body Update_Sources_List is
                Result => Attr)
             then
                for V of Attr.Values loop
-                  if not Data_Has_Basename (Simple_Name (V.Text)) then
+                  if not Data.Basenames.Contains (Simple_Name (V.Text))
+                    and then not Clashes.Contains (Simple_Name (V.Text))
+                  then
                      Messages.Append
                        (Message.Create
                           (Message.Warning,
@@ -1396,5 +1320,408 @@ package body Update_Sources_List is
          end loop;
       end if;
    end Process;
+
+   ------------------
+   -- Process_File --
+   ------------------
+
+   function Process_File
+     (Data           : View_Data_Ref;
+      Context        : Source_Context;
+      File           : Full_Name;
+      Matching_Units : Boolean;
+      Messages       : in out GPR2.Log.Object) return Boolean
+   is
+
+      --  Check naming exceptions before language suffixes
+
+      Basename         : constant Filename_Type :=
+                             GPR2.Path_Name.Simple_Name (File);
+      Current_Is_Src_Subdirs : constant Boolean :=
+        Context.Tree.Has_Src_Subdirs
+        and then
+          Path_Name.Create_File (File).Containing_Directory =
+            Data.View.Source_Subdirectory;
+      --  Use the file's directory: recursive walks can return to a parent
+
+      Match            : Source_Detection := No_Match;
+      Units            : Unit_Info.List.Object;  --  For Ada
+      Kind             : Valid_Unit_Kind;
+      Source           : Build.Source_Base.Object;
+      Parsed           : Boolean := False;
+      Exc_Attr         : Source_Reference.Object;
+
+   begin
+      if Current_Is_Src_Subdirs then
+         --  consider everything from src_subdirs
+         null;
+
+      elsif Context.Excluded_Sources.Contains (Basename) then
+         --  Stop here if it's one of the excluded sources, or it's not in the
+         --  included sources if those are given explicitely.
+
+         Data.Actually_Excluded.Include
+           (Basename,
+            (File'Length, Project.View.Undefined,
+             Project.View.Undefined, File));
+
+         return False;
+
+      elsif Context.Has_Source_List
+        and then not Context.Listed_Sources.Contains (Basename)
+      then
+         return False;
+      end if;
+
+      for Language of Data.View.Language_Ids loop
+         --  First, try naming exceptions
+
+         Check_Naming_Exceptions
+           (Data, Context, File, Language, Match, Kind, Units,
+            Exc_Attr, Messages);
+
+         if Match = No_Match then
+            Check_Naming_Scheme (Context, Basename, Language, Match, Kind);
+         end if;
+
+         --  If we have a match from either naming exception or scheme
+         --  we create the Source object.
+
+         if Match /= No_Match then
+            Source := Build.Source_Base.Object
+              (Build.Source_Base.Create
+                 (Path_Name.Create_File (File),
+                  Language         => Language,
+                  Kind             => Kind,
+                  Tree_Db          => Data.Tree_Db,
+                  Naming_Exception => Match = Naming_Exception,
+                  From_Src_Subdirs => Current_Is_Src_Subdirs));
+
+            --  If we know the units in the source (from naming exception),
+            --  then add them now.
+
+            for U of Units loop
+               Source.Update_Unit (U);
+            end loop;
+         end if;
+
+         --  Check Unit names and kind for Ada:
+
+         if Match = Naming_Convention and then Language = Ada_Language then
+            declare
+               Last_Dot  : Natural;
+               Success   : Boolean;
+               Unit_Name : constant Name_Type :=
+                             Compute_Unit_From_Filename
+                               (File     => File,
+                                Kind     => Kind,
+                                NS       =>
+                                  Context.Naming_Schema_Map (Ada_Language),
+                                Dot_Repl => Context.Dot_Repl,
+                                Messages => Messages,
+                                Last_Dot => Last_Dot,
+                                Success  => Success);
+
+            begin
+               if not Success then
+                  return False;
+               end if;
+
+               if not Compilation_Unit.Check_Name_Validity
+                 (Unit_Name,
+                  Source_Reference.Create (File, 0, 0),
+                  False,
+                  Messages)
+               then
+                  return False;
+               end if;
+
+               --  Naming exceptions override the naming scheme
+
+               if Kind in S_Spec | S_Body
+                 and then not Context.Ada_Naming_Exceptions.Is_Empty
+               then
+                  declare
+                     Attr : constant Project.Attribute.Object :=
+                              Data.View.Attribute
+                                ((if Kind = S_Spec
+                                  then PRA.Naming.Spec
+                                  else PRA.Naming.Body_N),
+                                 PAI.Create (Value_Type (Unit_Name)));
+                  begin
+                     if Attr.Is_Defined
+                       and then Attr.Value.Text /= String (Basename)
+                     then
+                        return False;
+                     end if;
+                  end;
+               end if;
+
+               --  Sources_Only uses inferred units. Parse to resolve
+               --  krunched names, separates and No_Body when requested.
+
+               if Data.Tree_Db.Source_Option >= Sources_Units then
+                  Build.Source_Base.Ada_Parser.Compute
+                    (File_Reader      => Context.Tree.File_Reader,
+                     Data             => Source,
+                     Get_Withed_Units => True,
+                     Success          => Parsed);
+               end if;
+
+               --  Check if we have a conflicting naming exception with the
+               --  same unit but a different source
+
+               if Parsed
+                 and then Source.Kind /= S_No_Body
+               then
+                  if not Context.Ada_Naming_Exceptions.Is_Empty then
+                     declare
+                        Attr : GPR2.Project.Attribute.Object;
+                     begin
+                        if Source.Kind = S_Spec then
+                           Attr := Data.View.Attribute
+                             (PRA.Naming.Spec,
+                              PAI.Create
+                                (Value_Type (Source.Unit.Full_Name)));
+                        else
+                           Attr := Data.View.Attribute
+                             (PRA.Naming.Body_N,
+                              PAI.Create
+                                (Value_Type (Source.Unit.Full_Name)));
+                        end if;
+
+                        if Attr.Is_Defined
+                          and then Attr.Value.Text /=
+                            String (Source.Path_Name.Simple_Name)
+                        then
+                           --  We have a naming exception on the unit name
+                           --  for a different source, so ignore the other
+                           --  sources with the same unit.
+                           return False;
+                        end if;
+                     end;
+                  end if;
+
+                  if Unit_Name /= Source.Unit.Full_Name
+                    and then Path_Name.Base_Name (File) /=
+                      Krunch (Source.Unit.Full_Name)
+                  then
+                     if Data.View.Is_Runtime then
+                        --  Ignore sources from the runtime that don't
+                        --  follow the naming convention: they're not
+                        --  part of the runtime library.
+                        return False;
+
+                     elsif Matching_Units then
+                        Messages.Append
+                          (Message.Create
+                             (Message.Warning,
+                              "unit name """ &
+                                String (Source.Unit.Name) &
+                                """ does not match source name. " &
+                                "The source will be ignored.",
+                              SR.Create (File, 0, 0)));
+
+                        return False;
+                     end if;
+                  end if;
+
+               elsif not Parsed and then Kind = S_Separate then
+                  --  Separates must have a doted unit name
+
+                  if Last_Dot > 0 then
+                     Source.Update_Unit
+                       (Unit_Info.Create
+                          (Unit_Name     => Unit_Name
+                               (Unit_Name'First .. Last_Dot - 1),
+                           Index         => No_Index,
+                           Kind          => Kind,
+                           Separate_Name => Unit_Name
+                             (Last_Dot + 1 .. Unit_Name'Last),
+                           Parsed        => False));
+                  else
+                     Messages.Append
+                       (Message.Create
+                          (Message.Warning,
+                           "invalid file name: no '.' in deduced " &
+                             "separate unit name """ &
+                             String (Unit_Name) & '"',
+                           SR.Create (File, 0, 0)));
+
+                     return False;
+                  end if;
+
+               elsif not Parsed then
+                  Source.Update_Unit
+                    (Unit_Info.Create
+                       (Unit_Name     => Unit_Name,
+                        Index         => No_Index,
+                        Kind          => Kind,
+                        Separate_Name => "",
+                        Parsed        => False));
+               end if;
+            end;
+
+         elsif Match = Naming_Exception
+           and then Language = Ada_Language
+           and then not Units.Is_Indexed_List
+           and then Data.Tree_Db.Source_Option >= Sources_Units
+         then
+            Build.Source_Base.Ada_Parser.Compute
+              (File_Reader      => Context.Tree.File_Reader,
+               Data             => Source,
+               Get_Withed_Units => True,
+               Success          => Parsed);
+
+            --  Check parsed unit name is the same as the one declared
+            --  in the gpr project.
+
+            if Parsed
+              and then Source.Unit.Kind /= S_No_Body
+              and then Source.Unit.Full_Name /=
+                Units (No_Index).Full_Name
+            then
+               Messages.Append
+                 (Message.Create
+                    (Message.Warning,
+                     "in """ & String (Source.Path_Name.Simple_Name) &
+                       """, actual unit name """ &
+                       String
+                       (Source.Unit.Full_Name) &
+                       """ differs from the one declared in the " &
+                       "project : """ &
+                       String (Units (No_Index).Full_Name) & '"',
+                     Exc_Attr));
+            end if;
+         end if;
+
+         if Match /= No_Match then
+            Data.Src_Infos.Insert (File, Source);
+
+            return True;
+         end if;
+      end loop;
+
+      return False;
+   end Process_File;
+
+   ----------------------
+   -- Read_Source_List --
+   ----------------------
+
+   procedure Read_Source_List
+     (View      : Project.View.Object;
+      Attr      : Project.Attribute.Object;
+      Set       : in out Source_Set.Set;
+      Messages  : in out GPR2.Log.Object)
+   is
+      use Ada.Strings;
+      use type Ada.Strings.Maps.Character_Set;
+      package PRA renames Project.Registry.Attribute;
+
+      Filename : constant GPR2.Path_Name.Object :=
+                   (if GNAT.OS_Lib.Is_Absolute_Path (Attr.Value.Text)
+                    then Path_Name.Create_File
+                      (Filename_Type (Attr.Value.Text))
+                    else View.Dir_Name.Compose
+                      (Filename_Type (Attr.Value.Text)));
+      Skip_Set : constant Strings.Maps.Character_Set :=
+                   Maps.Constants.Control_Set or Maps.To_Set (" ");
+      F        : Text_IO.File_Type;
+
+   begin
+      if View.Kind not in K_Standard | K_Library then
+         return;
+      end if;
+
+      if not Filename.Exists or else Filename.Is_Directory then
+         Messages.Append
+           (Message.Create
+              (Message.Critical_Error,
+               (if Attr.Name.Id = PRA.Excluded_Source_List_File
+                then "excluded "
+                else "") & "source list file " &
+                  Filename.String_Value & " not found",
+               Sloc => Attr));
+
+         return;
+      end if;
+
+      Text_IO.Open (F, Text_IO.In_File, Filename.String_Value);
+
+      while not Text_IO.End_Of_File (F) loop
+         declare
+            Line : constant String :=
+                     Fixed.Trim (Text_IO.Get_Line (F), Skip_Set, Skip_Set);
+
+         begin
+            if Line /= ""
+              and then not GNATCOLL.Utils.Starts_With (Line, "--")
+            then
+               Include_Simple_Filename
+                 (Set, Line, Attr.Value, Messages);
+            end if;
+         end;
+      end loop;
+
+      Text_IO.Close (F);
+   end Read_Source_List;
+
+   --------------------
+   -- Register_Units --
+   --------------------
+
+   procedure Register_Units
+     (Data     : View_Data_Ref;
+      Messages : in out GPR2.Log.Object)
+   is
+      Sources : Basename_Source_Maps.Map;
+   begin
+      if Data.View.Is_Extended then
+         return;
+      end if;
+
+      --  Clash handling can remove a source while registering its units
+      Sources := Data.Basenames;
+      for Src of Sources loop
+         if Data.Sources.Contains (Src.Path_Name) then
+            declare
+               Owner : constant View_Data_Ref :=
+                         Get_Data (Data.Tree_Db, Src.View);
+               Info  : constant Src_Info_Maps.Constant_Reference_Type :=
+                         Owner.Src_Infos.Constant_Reference (Src.Path_Name);
+            begin
+               if Info.Has_Units then
+                  for U of Info.Units loop
+                     for Root of Src.View.Namespace_Roots loop
+                        if Root.Kind in With_View_Db
+                          and then U.Kind /= S_No_Body
+                        then
+                           Add_Unit_Part
+                             (Get_Data (Data.Tree_Db, Root),
+                              U.Name, U.Kind, U.Separate_Name,
+                              Data, Info.Path_Name, Src, U.Index, Messages);
+                        end if;
+                     end loop;
+                  end loop;
+               end if;
+            end;
+         end if;
+      end loop;
+   end Register_Units;
+
+   -------------------
+   -- Report_Source --
+   -------------------
+
+   procedure Report_Source
+     (Src : Source_Proxy; Messages : in out GPR2.Log.Object) is
+   begin
+      Messages.Append
+        (Message.Create
+           (Message.Critical_Error, String (Src.Path_Name),
+            Source_Reference.Create (Src.View.Path_Name.Value, 0, 0),
+            Indent => 1));
+   end Report_Source;
 
 end Update_Sources_List;

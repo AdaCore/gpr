@@ -3006,7 +3006,8 @@ package body GPR2.Tree_Internal is
          To_Check := View.Imports.Union (View.Limited_Imports);
 
          if View.Is_Extending then
-            for V of View.Extended loop
+            --  Check imports from the full extended subtree
+            for V of View_Internal.Get_RO (View).Extended loop
                To_Check.Union (V.Imports);
                To_Check.Union (V.Limited_Imports);
             end loop;

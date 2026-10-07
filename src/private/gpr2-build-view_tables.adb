@@ -4,30 +4,18 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Containers.Ordered_Sets;
-with Ada.Strings.Fixed;
-with Ada.Strings.Maps.Constants;
-with Ada.Text_IO;
-with GNAT.OS_Lib;
-
 with GNATCOLL.Traces;
 
 with GPR2.Build.Tree_Db;
 with GPR2.Build.Unit_Info;
-with GPR2.Project.Attribute;
 with GPR2.Message;
-with GPR2.Source_Reference.Value;
-with GPR2.Project.Registry.Attribute;
-with GPR2.Tree_Internal;
-with GPR2.View_Internal;
+with GPR2.Source_Reference;
 
 package body GPR2.Build.View_Tables is
 
    Traces : constant GNATCOLL.Traces.Trace_Handle :=
               GNATCOLL.Traces.Create
                 ("GPR.BUILD.SOURCES_DB", GNATCOLL.Traces.Off);
-
-   package Natural_Sets is new Ada.Containers.Ordered_Sets (Natural);
 
    procedure Add_Unit_Part
      (NS_Db    : View_Data_Ref;
@@ -53,10 +41,10 @@ package body GPR2.Build.View_Tables is
      with Pre => NS_Db.Is_Root
                    and then (Kind = S_Separate) = (Sep_Name'Length > 0);
 
-   procedure Resolve_Visibility
-     (Data     : View_Data_Ref;
-      Cursor   : in out Basename_Source_List_Maps.Cursor;
-      Messages : in out GPR2.Log.Object);
+   procedure Remove_Source
+     (Data       : View_Data_Ref;
+      View_Owner : GPR2.Project.View.Object;
+      Path       : Filename_Type);
 
    procedure Add_Unit_Ownership
      (To   : View_Data_Ref;
@@ -68,27 +56,12 @@ package body GPR2.Build.View_Tables is
       CU   : Name_Type;
       Root : View_Data_Ref);
 
-   procedure Read_Source_List
-     (View      : Project.View.Object;
-      Attr      : Project.Attribute.Object;
-      Set       : in out Source_Set.Set;
-      Messages  : in out GPR2.Log.Object);
-   --  Read from file defined in project attribute Attr_Name and insert each
-   --  line into Set
-
-   procedure Include_Simple_Filename
-     (Set      : in out Source_Set.Set;
-      Value    : Value_Type;
-      Sloc     : Source_Reference.Object'Class;
-      Messages : in out GPR2.Log.Object);
-
    package Update_Sources_List is
       procedure Process
         (Data           : View_Data_Ref;
-         Stop_On_Error  : Boolean;
          Messages       : in out GPR2.Log.Object;
          Matching_Units : Boolean := True);
-      --  Update the list of sources
+      --  Load and validate the view's own and inherited sources
    end Update_Sources_List;
 
    function "-" (Inst : Build.View_Db.Object) return View_Data_Ref
@@ -111,57 +84,6 @@ package body GPR2.Build.View_Tables is
       Pos  : Basename_Source_Maps.Cursor) return Build.Source.Object
      with Inline;
 
-   ----------------
-   -- Add_Source --
-   ----------------
-
-   procedure Add_Source
-     (Data               : View_Data_Ref;
-      View_Owner         : GPR2.Project.View.Object;
-      Path               : Filename_Type;
-      Extended_View      : GPR2.Project.View.Object;
-      Resolve_Visibility : Boolean := False;
-      Messages           : in out GPR2.Log.Object)
-   is
-      C_Overload : Basename_Source_List_Maps.Cursor;
-      Done       : Boolean;
-      Proxy      : constant Source_Proxy :=
-                     (Path_Len  => Path'Length,
-                      View      => View_Owner,
-                      Path_Name => Path,
-                      Inh_From  => Extended_View);
-      Owner_Db   : constant View_Data_Ref :=
-                     Get_Data (Data.Tree_Db, View_Owner);
-      Src_Info   : constant Src_Info_Maps.Constant_Reference_Type :=
-                     Owner_Db.Src_Infos.Constant_Reference (Path);
-      C_Lang     : Sources_By_Langs_Maps.Cursor;
-
-   begin
-      Data.Sources.Include (Path, Proxy);
-
-      Data.Langs_Usage.Insert (Src_Info.Language, 1, C_Lang, Done);
-
-      if not Done then
-         declare
-            Val : constant Sources_By_Langs_Maps.Reference_Type :=
-                    Data.Langs_Usage.Reference (C_Lang);
-         begin
-            Val.Element.all := Val + 1;
-         end;
-      end if;
-
-      Data.Overloaded_Srcs.Insert
-        (Path_Name.Simple_Name (Path),
-         Source_Proxy_Sets.Empty_Set,
-         C_Overload,
-         Done);
-      Data.Overloaded_Srcs.Reference (C_Overload).Include (Proxy);
-
-      if Resolve_Visibility then
-         View_Tables.Resolve_Visibility (Data, C_Overload, Messages);
-      end if;
-   end Add_Source;
-
    ------------------------
    -- Add_Unit_Ownership --
    ------------------------
@@ -175,10 +97,13 @@ package body GPR2.Build.View_Tables is
       New_Set : Project.View.Set.Object;
 
    begin
-      Traces.Trace ("Add_Unit_Ownership:" & ASCII.LF &
-                      " - To: " & To.View.Path_Name.String_Value & ASCII.LF &
-                      " - CU: " & String (CU) & ASCII.LF &
-                      " - Root: " & Root.View.Path_Name.String_Value);
+      if Traces.Is_Active then
+         Traces.Trace
+           ("Add_Unit_Ownership:" & ASCII.LF &
+              " - To: " & To.View.Path_Name.String_Value & ASCII.LF &
+              " - CU: " & String (CU) & ASCII.LF &
+              " - Root: " & Root.View.Path_Name.String_Value);
+      end if;
       C := To.Own_CUs.Find (CU);
 
       if Unit_Maps.Has_Element (C) then
@@ -440,7 +365,6 @@ package body GPR2.Build.View_Tables is
                         Error_Case := True;
                      end if;
 
-
                      if Error_Case then
                         --  Two sources in the closure declare the same unit
                         --  part, so issue a warning.
@@ -549,19 +473,13 @@ package body GPR2.Build.View_Tables is
                Remove_Source
                  (Get_Data (NS_Db.Tree_Db, Src.View),
                   Src.View,
-                  Src.Path_Name,
-                  Project.View.Undefined,
-                  True,
-                  Messages);
+                  Src.Path_Name);
                pragma Annotate (Xcov, Exempt_Off);
             else
                Remove_Source
                  (View_Db,
                   Src.View,
-                  Src.Path_Name,
-                  Src.Inh_From,
-                  True,
-                  Messages);
+                  Src.Path_Name);
             end if;
          end if;
 
@@ -570,10 +488,7 @@ package body GPR2.Build.View_Tables is
                Other_Db : constant View_Data_Ref :=
                  Get_Data (NS_Db.Tree_Db, Other.View);
             begin
-               --  Base case: if a nested Resolve_Visibility (triggered while
-               --  processing Remove_Src above) already removed this exact
-               --  source as part of its own clash resolution, there is nothing
-               --  left to remove, treat it as already-handled and stop here.
+               --  The source may already have been removed
                if Other_Db.Sources.Contains (Other.Source.Value)
                then
                   declare
@@ -589,29 +504,22 @@ package body GPR2.Build.View_Tables is
                      end if;
 
                      if Other_Loc.Inh_From.Is_Defined then
-                        --  See above: we remove fron the inherited view
+                        --  Remove it from the defining view
                         Remove_Source
                           (Get_Data (NS_Db.Tree_Db, Other_Loc.View),
                            Other_Loc.View,
-                           Other_Loc.Path_Name,
-                           Project.View.Undefined,
-                           True,
-                           Messages);
+                           Other_Loc.Path_Name);
                      else
                         Remove_Source
                           (View_Db,
                            Other_Loc.View,
-                           Other_Loc.Path_Name,
-                           Other_Loc.Inh_From,
-                           True,
-                           Messages);
+                           Other_Loc.Path_Name);
                      end if;
                   end;
                elsif Traces.Is_Active then
                   Traces.Trace
                     ("source '" & String (Other.Source.Value) &
-                       "' already removed by a nested visibility " &
-                       "resolution, nothing to do");
+                       "' already removed");
                end if;
             end;
          end if;
@@ -699,92 +607,6 @@ package body GPR2.Build.View_Tables is
       end loop;
    end Check_Separate;
 
-   ------------------------
-   -- Check_Source_Lists --
-   ------------------------
-
-   procedure Check_Source_Lists
-     (Data     : View_Data_Ref;
-      Messages : in out GPR2.Log.Object)
-   is
-      package PRA renames Project.Registry.Attribute;
-
-      Attr : Project.Attribute.Object;
-      Exc_List : Source_Set.Set;
-
-   begin
-      Data.Excluded_Sources.Clear;
-      Data.Listed_Sources.Clear;
-      Data.No_Sources := False;
-
-      --  If we have attribute Excluded_Source_List_File
-
-      Attr := Data.View.Attribute (PRA.Excluded_Source_List_File);
-
-      if Attr.Is_Defined then
-         Read_Source_List
-           (Data.View, Attr, Exc_List, Messages);
-         if not Messages.Has_Critical_Error then
-            for Src of Exc_List loop
-               Data.Excluded_Sources.Include
-                 (Src, Source_Reference.Object (Attr.Value));
-            end loop;
-         end if;
-      end if;
-
-      --  If we have attribute Excluded_Source_Files
-
-      Attr := Data.View.Attribute (PRA.Excluded_Source_Files);
-
-      if Attr.Is_Defined then
-         for File of Attr.Values loop
-            Exc_List.Clear;
-            Include_Simple_Filename
-              (Exc_List, File.Text, File, Messages);
-            if not Exc_List.Is_Empty then
-               Data.Excluded_Sources.Include
-                 (Exc_List.First_Element, Source_Reference.Object (File));
-            end if;
-         end loop;
-      end if;
-
-      --  Remove naming exception sources from inactive case alternatives
-
-      for File of Data.View.Skipped_Sources loop
-         Exc_List.Clear;
-         Include_Simple_Filename
-           (Exc_List, File.Text, File, Messages);
-         if not Exc_List.Is_Empty then
-            Data.Excluded_Sources.Include
-              (Exc_List.First_Element, Source_Reference.Undefined);
-         end if;
-      end loop;
-
-      --  If we have attribute Source_List_File
-
-      Attr := Data.View.Attribute (PRA.Source_List_File);
-
-      if Attr.Is_Defined then
-         Read_Source_List
-           (Data.View, Attr, Data.Listed_Sources, Messages);
-      end if;
-
-      --  If we have attribute Source_Files
-
-      Attr := Data.View.Attribute (PRA.Source_Files);
-
-      if Attr.Is_Defined then
-         if Attr.Values.Is_Empty then
-            Data.No_Sources := True;
-         else
-            for File of Attr.Values loop
-               Include_Simple_Filename
-                 (Data.Listed_Sources, File.Text, File, Messages);
-            end loop;
-         end if;
-      end if;
-   end Check_Source_Lists;
-
    --------------
    -- Get_Data --
    --------------
@@ -795,38 +617,6 @@ package body GPR2.Build.View_Tables is
    begin
       return -Db.View_Database (View);
    end Get_Data;
-
-   -----------------------------
-   -- Include_Simple_Filename --
-   -----------------------------
-
-   procedure Include_Simple_Filename
-     (Set      : in out Source_Set.Set;
-      Value    : Value_Type;
-      Sloc     : Source_Reference.Object'Class;
-      Messages : in out GPR2.Log.Object)
-   is
-      Position : Source_Set.Cursor;
-      Inserted : Boolean;
-   begin
-      if Has_Directory_Separator (Value) then
-         Messages.Append
-           (Message.Create
-              (Message.Critical_Error,
-               "file name cannot include directory information (""" & Value
-               & """)",
-               Sloc));
-
-      elsif Value'Length = 0 then
-         Messages.Append
-           (Message.Create
-              (Message.Critical_Error,
-               "file name cannot be empty",
-               Sloc));
-      else
-         Set.Insert (Filename_Type (Value), Position, Inserted);
-      end if;
-   end Include_Simple_Filename;
 
    -----------------------
    -- Is_Source_Visible --
@@ -851,205 +641,75 @@ package body GPR2.Build.View_Tables is
       end;
    end Is_Source_Visible;
 
-   ----------------------
-   -- Read_Source_List --
-   ----------------------
+   ------------------
+   -- Load_Sources --
+   ------------------
 
-   procedure Read_Source_List
-     (View      : Project.View.Object;
-      Attr      : Project.Attribute.Object;
-      Set       : in out Source_Set.Set;
-      Messages  : in out GPR2.Log.Object)
-   is
-      use Ada.Strings;
-      use type Ada.Strings.Maps.Character_Set;
-      package PRA renames Project.Registry.Attribute;
-
-      Filename : constant GPR2.Path_Name.Object :=
-                   (if GNAT.OS_Lib.Is_Absolute_Path (Attr.Value.Text)
-                    then Path_Name.Create_File
-                      (Filename_Type (Attr.Value.Text))
-                    else View.Dir_Name.Compose
-                      (Filename_Type (Attr.Value.Text)));
-      Skip_Set : constant Strings.Maps.Character_Set :=
-                   Maps.Constants.Control_Set or Maps.To_Set (" ");
-      F        : Text_IO.File_Type;
-
-   begin
-      if View.Kind not in K_Standard | K_Library then
-         return;
-      end if;
-
-      if not Filename.Exists or else Filename.Is_Directory then
-         Messages.Append
-           (Message.Create
-              (Message.Critical_Error,
-               (if Attr.Name.Id = PRA.Excluded_Source_List_File
-                then "excluded "
-                else "") & "source list file " &
-                  Filename.String_Value & " not found",
-               Sloc => Attr));
-
-         return;
-      end if;
-
-      Text_IO.Open (F, Text_IO.In_File, Filename.String_Value);
-
-      while not Text_IO.End_Of_File (F) loop
-         declare
-            Line : constant String :=
-                     Fixed.Trim (Text_IO.Get_Line (F), Skip_Set, Skip_Set);
-
-         begin
-            if Line /= ""
-              and then not GNATCOLL.Utils.Starts_With (Line, "--")
-            then
-               Include_Simple_Filename
-                 (Set, Line, Attr.Value, Messages);
-            end if;
-         end;
-      end loop;
-
-      Text_IO.Close (F);
-   end Read_Source_List;
-
-   -------------
-   -- Refresh --
-   -------------
-
-   procedure Refresh
+   procedure Load_Sources
      (Data           : View_Data_Ref;
       Messages       : in out GPR2.Log.Object;
-      Matching_Units : Boolean := True)
-   is
-      Sources : Filename_Source_Maps.Map;
+      Matching_Units : Boolean := True) is
    begin
-      --  The sources are about to change
-
-      Data.Tree_Db.Invalidate_Source_Caches;
-
-      Update_Sources_List.Process (Data, False, Messages, Matching_Units);
-
-      --  Disambiguate unit kind for Ada bodies
-
-      if Data.Tree_Db.Source_Option >= Sources_Units
-        and then not Data.View.Is_Extended
-        and then Data.View.Kind in With_Object_Dir_Kind
-      then
-         --  Check separates of separates
-
-         --  Work on a copy since this operation might change Data.Sources
-         --  so we don't want to hold cursors on this container.
-         Sources := Data.Sources;
-
-         for Proxy of Sources loop
-            declare
-               Db    : constant View_Data_Ref :=
-                         Get_Data (Data.Tree_Db, Proxy.View);
-               S_Ref : constant Src_Info_Maps.Reference_Type :=
-                         Db.Src_Infos.Reference (Proxy.Path_Name);
-            begin
-               if S_Ref.Has_Units
-                 and then not S_Ref.Has_Index
-                 and then S_Ref.Unit.Kind = S_Separate
-               then
-                  for Root of Data.View.Namespace_Roots loop
-                     declare
-                        Root_Db : constant View_Data_Ref :=
-                                    Get_Data (Data.Tree_Db, Root);
-                        Old     : constant Unit_Info.Object := S_Ref.Unit;
-                     begin
-                        Check_Separate (Root_Db, S_Ref);
-
-                        if S_Ref.Unit.Name /= Old.Name then
-                           Remove_Unit_Part
-                             (Root_Db,
-                              Old.Name,
-                              Old.Kind,
-                              Old.Separate_Name,
-                              Data,
-                              S_Ref.Path_Name,
-                              S_Ref.Unit.Index);
-
-                           --  And add the new one
-                           Add_Unit_Part
-                             (Root_Db,
-                              S_Ref.Unit.Name,
-                              S_Ref.Unit.Kind,
-                              S_Ref.Unit.Separate_Name,
-                              Data,
-                              S_Ref.Path_Name,
-                              Proxy,
-                              S_Ref.Unit.Index,
-                              Messages);
-                        end if;
-                     end;
-                  end loop;
-               end if;
-            end;
-         end loop;
+      if Data.View.Kind in With_Source_Dirs_Kind then
+         Update_Sources_List.Process (Data, Messages, Matching_Units);
       end if;
-   end Refresh;
+   end Load_Sources;
 
    -------------------
    -- Remove_Source --
    -------------------
 
    procedure Remove_Source
-     (Data               : View_Data_Ref;
-      View_Owner         : GPR2.Project.View.Object;
-      Path               : Filename_Type;
-      Extended_View      : GPR2.Project.View.Object;
-      Resolve_Visibility : Boolean := False;
-      Messages           : in out GPR2.Log.Object)
+     (Data       : View_Data_Ref;
+      View_Owner : GPR2.Project.View.Object;
+      Path       : Filename_Type)
    is
-      use type GPR2.Project.View.Object;
-
-      Basename   : constant Simple_Name :=
-                     Path_Name.Simple_Name (Path);
-      C_Overload : Basename_Source_List_Maps.Cursor;
-      Proxy      : constant Source_Proxy := (Path_Len  => Path'Length,
-                                             View      => View_Owner,
-                                             Path_Name => Path,
-                                             Inh_From  => Extended_View);
-      Owner_Db   : constant View_Data :=
-                     (if View_Owner = Data.View
-                      then Data
-                      else Get_Data (Data.Tree_Db, View_Owner));
-      Src_Info   : constant Src_Info_Maps.Constant_Reference_Type :=
-                     Owner_Db.Src_Infos.Constant_Reference (Path);
-
+      Current_View : Project.View.Object := Data.View;
+      Owner   : constant View_Data_Ref :=
+                  Get_Data (Data.Tree_Db, View_Owner);
+      Info    : constant Source_Base.Object := Owner.Src_Infos.Element (Path);
+      Name    : constant Simple_Name := Path_Name.Simple_Name (Path);
    begin
-      if Data.Sources.Contains (Proxy.Path_Name) then
-         Data.Sources.Delete (Proxy.Path_Name);
-
-         C_Overload := Data.Overloaded_Srcs.Find (Basename);
-
-         if Basename_Source_List_Maps.Has_Element (C_Overload)
-           and then Data.Overloaded_Srcs.Reference (C_Overload).Contains
-                       (Proxy)
-         then
-            Data.Overloaded_Srcs.Reference (C_Overload).Delete (Proxy);
-         end if;
-
+      Data.Tree_Db.Invalidate_Source_Caches;
+      loop
          declare
-            Val : constant Sources_By_Langs_Maps.Reference_Type :=
-                    Data.Langs_Usage.Reference (Src_Info.Language);
+            Current : constant View_Data_Ref :=
+                        Get_Data (Data.Tree_Db, Current_View);
          begin
-            pragma Assert (Val > 0);
-            Val.Element.all := Val - 1;
-         end;
+            exit when not Current.Sources.Contains (Path);
+            Current.Sources.Delete (Path);
+            declare
+               Count : constant Sources_By_Langs_Maps.Reference_Type :=
+                         Current.Langs_Usage.Reference (Info.Language);
+            begin
+               Count.Element.all := Count - 1;
+            end;
 
-         if Resolve_Visibility then
-            View_Tables.Resolve_Visibility (Data, C_Overload, Messages);
-         end if;
-      else
-         Traces.Trace
-           ("!!! Attempt to remove """ &
-              String (Proxy.Path_Name) &
-              """ while key is not in the Sources map for project """ &
-              String (Data.View.Name));
-      end if;
+            exit when not Current.Basenames.Contains (Name)
+              or else Current.Basenames.Element (Name).Path_Name /= Path;
+            Current.Basenames.Delete (Name);
+
+            if not Current.View.Is_Extended then
+               if Info.Has_Units then
+                  for U of Info.Units loop
+                     for Root of View_Owner.Namespace_Roots loop
+                        if Root.Kind in With_View_Db
+                          and then U.Kind /= S_No_Body
+                        then
+                           Remove_Unit_Part
+                             (Get_Data (Data.Tree_Db, Root),
+                              U.Name, U.Kind, U.Separate_Name, Current,
+                              Info.Path_Name, U.Index);
+                        end if;
+                     end loop;
+                  end loop;
+               end if;
+               exit;
+            end if;
+
+            Current_View := Current.View.Extending;
+         end;
+      end loop;
    end Remove_Source;
 
    ---------------------------
@@ -1139,463 +799,98 @@ package body GPR2.Build.View_Tables is
       end if;
    end Remove_Unit_Part;
 
-   ------------------------
-   -- Resolve_Visibility --
-   ------------------------
+   -------------------
+   -- Reset_Sources --
+   -------------------
 
-   procedure Resolve_Visibility
+   procedure Reset_Sources (Data : View_Data_Ref) is
+   begin
+      Data.Visible_Src_Cache.Clear;
+      Data.Runtime_Override_Units.Clear;
+      Data.Interface_Closure.Clear;
+      Data.Interface_Closure_Computed := False;
+      Data.Sources.Clear;
+      Data.Basenames.Clear;
+      Data.Src_Infos.Clear;
+      Data.Langs_Usage.Clear;
+      Data.Actually_Excluded.Clear;
+      Data.Own_CUs.Clear;
+      if Data.Is_Root then
+         Data.CUs.Clear;
+         Data.Runtime_Override_Files.Clear;
+         Data.Separates.Clear;
+      end if;
+   end Reset_Sources;
+
+   -----------------------
+   -- Resolve_Separates --
+   -----------------------
+
+   procedure Resolve_Separates
      (Data     : View_Data_Ref;
-      Cursor   : in out Basename_Source_List_Maps.Cursor;
       Messages : in out GPR2.Log.Object)
    is
-      use type Ada.Containers.Count_Type;
-      use type Project.View.Object;
-
-      function Source_Info
-        (Src : Source_Proxy) return Src_Info_Maps.Reference_Type
-      is (Get_Data (Data.Tree_Db,
-          Src.View).Src_Infos.Reference (Src.Path_Name));
-      procedure Propagate_Visible_Source_Removal (Src : Source_Proxy);
-      procedure Propagate_Visible_Source_Added (Src : Source_Proxy);
-
-      ------------------------------------
-      -- Propagate_Visible_Source_Added --
-      ------------------------------------
-
-      procedure Propagate_Visible_Source_Added (Src : Source_Proxy) is
-         Src_Info : constant Src_Info_Maps.Reference_Type :=
-                      Source_Info (Src);
-
-      begin
-         if Data.View.Is_Extended then
-            declare
-               Ext_Data : constant View_Data_Ref :=
-                            Get_Data (Data.Tree_Db, Data.View.Extending);
-               Name     : constant Simple_Name :=
-                            GPR2.Path_Name.Simple_Name (Src.Path_Name);
-            begin
-               --  Check if the extending project excludes the source
-               if Ext_Data.Excluded_Sources.Contains (Name) then
-                  Ext_Data.Actually_Excluded.Include (Name, Src);
-
-                  --  No further propagation, do not use the source as
-                  --  unit part, so just return.
-
-                  return;
-
-               else
-                  Add_Source
-                    (Ext_Data,
-                     Src.View,
-                     Src.Path_Name,
-                     Extended_View      => Data.View,
-                     Resolve_Visibility => True,
-                     Messages           => Messages);
-               end if;
-            end;
-
-         elsif Src_Info.Has_Units then
-            --  Update unit information. Note that we do that on "final"
-            --  views only, so not if the view is extended or aggregated in
-            --  a library, since that's the extending or aggregating lib
-            --  that will have the full picture on what is visible or not.
-
-            Traces.Trace
-              ("visible source propagation: aggregating the units in the" &
-                 " view db");
-
-            for U of Src_Info.Units loop
-               for Root of Src.View.Namespace_Roots loop
-                  if Root.Kind in With_View_Db
-                    and then U.Kind /= S_No_Body
-                  then
-                     Add_Unit_Part
-                       (NS_Db    => Get_Data (Data.Tree_Db, Root),
-                        CU       => U.Name,
-                        Kind     => U.Kind,
-                        Sep_Name => U.Separate_Name,
-                        View_Db  => Data,
-                        Path     => Src_Info.Path_Name,
-                        Src      => Src,
-                        Index    => U.Index,
-                        Messages => Messages);
-                  end if;
-               end loop;
-            end loop;
-         end if;
-      end Propagate_Visible_Source_Added;
-
-      --------------------------------------
-      -- Propagate_Visible_Source_Removal --
-      --------------------------------------
-
-      procedure Propagate_Visible_Source_Removal
-        (Src : Source_Proxy)
-      is
-         Src_Info : constant Source_Base.Object :=
-                      Source_Info (Src).Element.all;
-      begin
-         if Data.View.Is_Extended then
-            declare
-               Ext_Data : constant View_Data_Ref :=
-                            Get_Data (Data.Tree_Db, Data.View.Extending);
-               Name     : constant Simple_Name :=
-                            GPR2.Path_Name.Simple_Name (Src.Path_Name);
-            begin
-               if Traces.Is_Active then
-                  pragma Annotate (Xcov, Exempt_On, "Logging code");
-                  Traces.Trace
-                    ("visible source removed propagation: extended project '"
-                     & String (Data.View.Name)
-                     & "' for source " & String (Name));
-                  pragma Annotate (Xcov, Exempt_Off);
-               end if;
-
-               --  Check if the extending project excludes the source
-               if Ext_Data.Excluded_Sources.Contains (Name) then
-                  Ext_Data.Actually_Excluded.Delete (Name);
-                  --  No further propagation, do not use the source as
-                  --  unit part, so just return.
-                  return;
-
-               else
-                  if Traces.Is_Active then
-                     pragma Annotate (Xcov, Exempt_On, "Logging code");
-                     Traces.Trace
-                       ("visible source propagation: remove '" &
-                          String (Name) &
-                          "' from extending view '" &
-                          String (Ext_Data.View.Name) &
-                          "' and resolve visibility");
-                     pragma Annotate (Xcov, Exempt_Off);
-                  end if;
-
-                  Remove_Source
-                    (Ext_Data,
-                     Src.View,
-                     Src.Path_Name,
-                     Extended_View      => Data.View,
-                     Resolve_Visibility => True,
-                     Messages           => Messages);
-               end if;
-            end;
-
-         elsif Src_Info.Has_Units then
-            Traces.Trace
-              ("visible source propagation: removing the units from the" &
-                 " view db");
-
-            for U of Src_Info.Units loop
-               for Root of Src.View.Namespace_Roots loop
-                  if Root.Kind in With_View_Db
-                    and then U.Kind /= S_No_Body
-                  then
-                     Remove_Unit_Part
-                       (Get_Data (Data.Tree_Db, Root),
-                        CU       => U.Name,
-                        Kind     => U.Kind,
-                        Sep_Name => U.Separate_Name,
-                        View_Db  => Data,
-                        Path     => Src_Info.Path_Name,
-                        Index    => U.Index);
-                  end if;
-               end loop;
-            end loop;
-         end if;
-      end Propagate_Visible_Source_Removal;
-
-      Basename  : constant Simple_Name :=
-                    Basename_Source_List_Maps.Key (Cursor);
-      Set       : constant Basename_Source_List_Maps.Constant_Reference_Type :=
-                    Data.Overloaded_Srcs.Constant_Reference (Cursor);
-      Candidate : access constant Source_Proxy;
-      Current   : access constant Source_Proxy;
-      C_Path    : Basename_Source_Maps.Cursor;
-      C_Info    : Src_Info_Maps.Cursor;
-      C_Info2   : Src_Info_Maps.Cursor;
-      SR1, SR2  : Natural;
-      Clashes   : Natural_Sets.Set;
-
+      Sources : Basename_Source_Maps.Map;
    begin
-      if Traces.Is_Active then
-         pragma Annotate (Xcov, Exempt_On, "Logging code");
-         Traces.Trace
-           ("=== Resolve visibility for '" & String (Basename) & "' ===");
-         pragma Annotate (Xcov, Exempt_Off);
-      end if;
+      --  Disambiguate unit kind for Ada bodies
 
-      if Set.Is_Empty then
-         --  no source for the specified basenamne
+      if Data.Tree_Db.Source_Option >= Sources_Units
+        and then not Data.View.Is_Extended
+        and then Data.View.Kind in With_Object_Dir_Kind
+      then
+         --  Check separates of separates
 
-         Traces.Trace ("no source for basename");
+         --  Conflict resolution may remove a visible source
+         Sources := Data.Basenames;
 
-         Candidate := null;
-
-      elsif Set.Length = 1 then
-         --  Only one source in the set: just use it
-
-         Traces.Trace ("1 source for basename");
-
-         declare
-            pragma Suppress (Accessibility_Check);
-            --  The below trick makes it possible to get a reference implicitly
-            --  bypassing tampering checks but it violates accessibility rules.
-
-         begin
-            Candidate := Set.Constant_Reference (Set.First).Element;
-         end;
-
-      else
-         --  project extension case, or the same basename is found in
-         --  different source dirs
-
-         Traces.Trace ("several sources for basename");
-
-         for Curs in Set.Iterate loop
+         for Proxy of Sources loop
             declare
-               C : constant Source_Proxy_Sets.Constant_Reference_Type :=
-                     Set.Constant_Reference (Curs);
+               Db    : constant View_Data_Ref :=
+                         Get_Data (Data.Tree_Db, Proxy.View);
+               S_Ref : constant Src_Info_Maps.Reference_Type :=
+                         Db.Src_Infos.Reference (Proxy.Path_Name);
             begin
-               if Candidate = null then
-                  --  First value, consider it as a candidate
-
-                  Candidate := C.Element;
-
-                  if Candidate.View = Data.View then
-                     --  Own source, get Src_Info cursor
-                     C_Info := Data.Src_Infos.Find (Candidate.Path_Name);
-
-                     if Traces.Is_Active then
-                        pragma Annotate (Xcov, Exempt_On, "Logging code");
-                        Traces.Trace
-                          ("found first candidate owned by the view: " &
-                             String (Candidate.Path_Name));
-                        pragma Annotate (Xcov, Exempt_Off);
-                     end if;
-                  else
-                     if Traces.Is_Active then
-                        pragma Annotate (Xcov, Exempt_On, "Logging code");
-                        Traces.Trace
-                          ("found first candidate not owned by the view: " &
-                             String (Candidate.Path_Name));
-                        pragma Annotate (Xcov, Exempt_Off);
-                     end if;
-                  end if;
-
-               elsif C.View = Data.View
-                 and then Candidate.View /= Data.View
+               if S_Ref.Has_Units
+                 and then not S_Ref.Has_Index
+                 and then S_Ref.Unit.Kind = S_Separate
                then
-                  --  Candidate was inherited: own source overrides it
-                  Candidate := C.Element;
-                  C_Info    := Data.Src_Infos.Find (Candidate.Path_Name);
+                  for Root of Data.View.Namespace_Roots loop
+                     declare
+                        Root_Db : constant View_Data_Ref :=
+                                    Get_Data (Data.Tree_Db, Root);
+                        Old     : constant Unit_Info.Object := S_Ref.Unit;
+                     begin
+                        Check_Separate (Root_Db, S_Ref);
 
-                  if Traces.Is_Active then
-                     pragma Annotate (Xcov, Exempt_On, "Logging code");
-                     Traces.Trace
-                       ("found new candidate owned by the view, overloading " &
-                          "old candidate: " &
-                          String (Candidate.Path_Name));
-                     pragma Annotate (Xcov, Exempt_Off);
-                  end if;
+                        if S_Ref.Unit.Name /= Old.Name then
+                           Remove_Unit_Part
+                             (Root_Db,
+                              Old.Name,
+                              Old.Kind,
+                              Old.Separate_Name,
+                              Data,
+                              S_Ref.Path_Name,
+                              S_Ref.Unit.Index);
 
-               elsif Candidate.View = Data.View
-                 and then C.View /= Data.View
-               then
-                  --  Candidate is owned by current view, so ignore inherited
-                  --  source
-                  if Traces.Is_Active then
-                     pragma Annotate (Xcov, Exempt_On, "Logging code");
-                     Traces.Trace
-                       ("ignoring " &
-                          String (C.Element.Path_Name) & ", overloaded " &
-                          "by current candidate: " &
-                          String (Candidate.Path_Name));
-                     pragma Annotate (Xcov, Exempt_Off);
-                  end if;
-
-               elsif C.View = Data.View then
-                  --  Both candidates are owned by the view, check
-                  --  Source_Reference: the declaration order of the source
-                  --  directory in the Source_Dirs attribute gives the
-                  --  visibility priority
-
-                  if Traces.Is_Active then
-                     pragma Annotate (Xcov, Exempt_On, "Logging code");
-                     Traces.Trace
-                       ("checking sources both owned by the view " &
-                          String (C.Element.Path_Name) & " and " &
-                          String (Candidate.Path_Name));
-                     pragma Annotate (Xcov, Exempt_Off);
-                  end if;
-
-                  C_Info2 := Data.Src_Infos.Find (C.Element.Path_Name);
-
-                  SR1 :=
-                    Src_Info_Maps.Element (C_Info).Source_Dir_Value_Index;
-                  SR2 :=
-                    Src_Info_Maps.Element (C_Info2).Source_Dir_Value_Index;
-
-                  if SR1 = SR2 then
-                     Traces.Trace
-                       ("the sources come from the same Source_Dir value");
-
-                     Clashes.Include (SR1);
-
-                  elsif SR2 < SR1 then
-                     --  Source_Ref of C2 is declared before the one of
-                     --  Candidate, so takes precedence (and clears any
-                     --  clashing situation).
-
-                     if Traces.Is_Active then
-                        pragma Annotate (Xcov, Exempt_On, "Logging code");
-                        Traces.Trace
-                          ("priority for source_dir " &
-                             String (C.Element.Path_Name));
-                        pragma Annotate (Xcov, Exempt_Off);
-                     end if;
-
-                     Candidate := C.Element;
-                     C_Info := C_Info2;
-                     Clashes.Clear;
-                  end if;
-
-               elsif Candidate.View.Is_Compilable
-                 (Source_Info (Candidate.all).Language)
-               then
-                  --  Remaining case: inheritance shows two candidate sources
-
-                  --  If the source is compilable, then this generates an error
-                  --  since we derive the object file from the source, so
-                  --  cannot handle two sources with the same simple name.
-
-                  Messages.Append
-                    (Message.Create
-                       (Message.Critical_Error,
-                        '"' & String (Basename) & '"' &
-                          " is found in several extended projects",
-                        Source_Reference.Create
-                          (Data.View.Path_Name.Value, 0, 0)));
-
-                  --  Use alphabetical sort to have consistent output.
-                  --  This is in particular important when comparing test
-                  --  output.
-
-                  declare
-                     C_First : constant Boolean :=
-                                 C.Path_Name < Candidate.Path_Name;
-                     P1      : constant Filename_Type :=
-                                 (if C_First
-                                  then C.Path_Name
-                                  else Candidate.Path_Name);
-                     P2      : constant Filename_Type :=
-                                 (if not C_First
-                                  then C.Path_Name
-                                  else Candidate.Path_Name);
-                     V1, V2  : GPR2.Path_Name.Object;
-
-                  begin
-                     if C_First then
-                        V1 := C.View.Path_Name;
-                        V2 := Candidate.View.Path_Name;
-                     else
-                        V1 := Candidate.View.Path_Name;
-                        V2 := C.View.Path_Name;
-                     end if;
-
-                     Messages.Append
-                       (Message.Create
-                          (Message.Critical_Error,
-                           String (P1),
-                           Source_Reference.Create (V1.Value, 0, 0),
-                           Indent => 1));
-                     Messages.Append
-                       (Message.Create
-                          (Message.Critical_Error,
-                           String (P2),
-                           Source_Reference.Create (V2.Value, 0, 0),
-                           Indent => 1));
-                  end;
-
-                  Candidate := null;
-
-                  exit;
+                           --  And add the new one
+                           Add_Unit_Part
+                             (Root_Db,
+                              S_Ref.Unit.Name,
+                              S_Ref.Unit.Kind,
+                              S_Ref.Unit.Separate_Name,
+                              Data,
+                              S_Ref.Path_Name,
+                              Proxy,
+                              S_Ref.Unit.Index,
+                              Messages);
+                        end if;
+                     end;
+                  end loop;
                end if;
             end;
          end loop;
-
-         if not Clashes.Is_Empty
-           and then Candidate.View.Is_Compilable
-             (Src_Info_Maps.Element (C_Info).Language)
-         then
-            for SR of Clashes loop
-               Messages.Append
-                 (Message.Create
-                    (Message.Critical_Error,
-                     "The source with basename "
-                     & '"'
-                     & String (Basename)
-                     & '"'
-                     & " appears multiple times",
-                     Data.View.Attribute
-                       (Project.Registry.Attribute.Source_Dirs)));
-            end loop;
-
-            Candidate := null;
-         end if;
       end if;
-
-      C_Path := Data.Basenames.Find (Basename);
-
-      if Basename_Source_Maps.Has_Element (C_Path) then
-         declare
-            pragma Suppress (Accessibility_Check);
-            --  The below trick makes it possible to get a reference implicitly
-            --  bypassing tampering checks but it violates accessibility rules.
-
-         begin
-            Current := Data.Basenames.Constant_Reference (C_Path).Element;
-         end;
-      else
-         Current := null;
-      end if;
-
-      if Current /= Candidate then
-         --  Remove current visible source
-         if Current /= null then
-            if Traces.Is_Active then
-               pragma Annotate (Xcov, Exempt_On, "Logging code");
-               Traces.Trace
-                 ("removing source " &
-                    String (Current.Path_Name));
-               pragma Annotate (Xcov, Exempt_Off);
-            end if;
-
-            Propagate_Visible_Source_Removal (Current.all);
-
-            if Candidate = null then
-               Data.Basenames.Delete (C_Path);
-            end if;
-         end if;
-
-         if Candidate /= null then
-            if Current = null then
-               Data.Basenames.Insert (Basename, Candidate.all);
-            else
-               Data.Basenames.Replace_Element (C_Path, Candidate.all);
-            end if;
-
-            if Traces.Is_Active then
-               pragma Annotate (Xcov, Exempt_On, "Logging code");
-               Traces.Trace
-                 ("declare visible " &
-                    String (Candidate.Path_Name));
-               pragma Annotate (Xcov, Exempt_Off);
-            end if;
-
-            Propagate_Visible_Source_Added (Candidate.all);
-         end if;
-      end if;
-   end Resolve_Visibility;
+   end Resolve_Separates;
 
    ------------
    -- Source --
@@ -1770,7 +1065,7 @@ package body GPR2.Build.View_Tables is
          for File of Root.Runtime_Override_Files loop
             declare
                Src : constant Build.Source.Object :=
-                       Visible_Source (Data, Simple_Name (File), Ambiguous);
+                       Visible_Source (Data, File, Ambiguous);
                Units : Containers.Name_Set;
             begin
                if Src.Is_Defined and then Src.Has_Units then
@@ -1787,8 +1082,7 @@ package body GPR2.Build.View_Tables is
                end if;
 
                if not Units.Is_Empty then
-                  Data.Runtime_Override_Units.Insert
-                    (Simple_Name (File), Units);
+                  Data.Runtime_Override_Units.Insert (File, Units);
                end if;
             end;
          end loop;

@@ -163,6 +163,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 -----------------------------------
 --- create separate ext/pkg-sub.adb
 --- Refresh list of sources
+pkg2.ads: warning: unit name "PKG" does not match source name. The source will be ignored.
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
@@ -183,6 +184,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 -----------------------------------
 --- rm ext/pkg-sub.adb
 --- Refresh list of sources
+pkg2.ads: warning: unit name "PKG" does not match source name. The source will be ignored.
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
@@ -203,6 +205,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 -----------------------------------
 --- rm src/pkg-sub.adb
 --- Refresh list of sources
+pkg2.ads: warning: unit name "PKG" does not match source name. The source will be ignored.
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
@@ -360,7 +363,7 @@ agglib.gpr: warning: duplicated spec for unit "FOO" in /scenario/src1/foo.ads an
 --- create body src2/foo.adb
 --- rm src1/foo.ads
 --- rm src1/foo.adb
---- Refresh list of sources
+--- Refresh list of sources through view
 prj1.gpr: warning: there are no sources of language "Ada" in this project
 -----------------------------------
 * Sources:
@@ -370,12 +373,34 @@ prj1.gpr: warning: there are no sources of language "Ada" in this project
    - src2/bar.adb (body)
    - src2/bar.ads (spec)
    - src2/foo.adb (body)
+   - src2/foo.ads (spec)
 * Compilation units:
  - units of AggLib
    - BAR
      spec: src2/bar.ads (from view Prj2)
      body: src2/bar.adb (from view Prj2)
    - FOO
+     spec: src2/foo.ads (from view Prj2)
+     body: src2/foo.adb (from view Prj2)
+-----------------------------------
+--- Loading project agglib.gpr
+prj1.gpr: warning: there are no sources of language "Ada" in this project
+-----------------------------------
+* Sources:
+ - sources of Prj1
+   (no sources)
+ - sources of Prj2
+   - src2/bar.adb (body)
+   - src2/bar.ads (spec)
+   - src2/foo.adb (body)
+   - src2/foo.ads (spec)
+* Compilation units:
+ - units of AggLib
+   - BAR
+     spec: src2/bar.ads (from view Prj2)
+     body: src2/bar.adb (from view Prj2)
+   - FOO
+     spec: src2/foo.ads (from view Prj2)
      body: src2/foo.adb (from view Prj2)
 -----------------------------------
 --- Unloading project
@@ -417,20 +442,39 @@ prj1.gpr: warning: there are no sources of language "Ada" in this project
 --- create body src1/foo.adb
 --- rm src3/source.ada
 --- Refresh list of sources
-agglib_multi.gpr: warning: duplicated spec for unit "FOO" in /scenario/src3/source.ada and /scenario/src1/foo.ads
-agglib_multi.gpr: warning: duplicated body for unit "FOO" in /scenario/src3/source.ada and /scenario/src1/foo.adb
 prj3.gpr:3:08: error: source file "source.ada" not found
 prj3.gpr:8:28: warning: source file "source.ada" for unit "Foo" not found
 prj3.gpr:9:28: warning: source file "source.ada" for unit "Foo" not found
-prj1.gpr: warning: there are no sources of language "Ada" in this project
 prj3.gpr:5:23: warning: there are no sources of language "Ada" in this project
 -----------------------------------
 * Sources:
  - sources of Prj1
-   (no sources)
+   - src1/foo.adb (body)
+   - src1/foo.ads (spec)
  - sources of Prj3
    (no sources)
 * Compilation units:
  - units of AggLib_Multi
+   - FOO
+     spec: src1/foo.ads (from view Prj1)
+     body: src1/foo.adb (from view Prj1)
+-----------------------------------
+--- Loading project agglib_multi.gpr
+prj3.gpr:3:08: error: source file "source.ada" not found
+prj3.gpr:8:28: warning: source file "source.ada" for unit "Foo" not found
+prj3.gpr:9:28: warning: source file "source.ada" for unit "Foo" not found
+prj3.gpr:5:23: warning: there are no sources of language "Ada" in this project
+-----------------------------------
+* Sources:
+ - sources of Prj1
+   - src1/foo.adb (body)
+   - src1/foo.ads (spec)
+ - sources of Prj3
+   (no sources)
+* Compilation units:
+ - units of AggLib_Multi
+   - FOO
+     spec: src1/foo.ads (from view Prj1)
+     body: src1/foo.adb (from view Prj1)
 -----------------------------------
 

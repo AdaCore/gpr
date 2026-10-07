@@ -52,9 +52,11 @@ enumerating sources:
 
 ``Update_Sources`` can be called multiple times: to upgrade the level of
 information (e.g. from ``Sources_Only`` to ``Sources_Units``), or to
-accommodate filesystem changes - it performs a delta update of the source
-base, adding newly appearing files and removing files that no longer exist,
-without re-processing the entire tree.
+accommodate filesystem changes. Each call reloads sources for the whole tree,
+then rebuilds visibility and compilation-unit tables. Added, modified and
+removed files are reflected without retaining per-file delta state.
+``GPR2.Build.View_Db.Update`` also refreshes the whole tree, so inherited
+sources and shared namespaces remain consistent.
 
 
 The Source object

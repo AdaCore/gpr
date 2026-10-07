@@ -331,7 +331,9 @@ package body GPR2.Build.View_Db is
      (Self     : Object;
       Messages : in out GPR2.Log.Object) is
    begin
-      View_Tables.Refresh (Ref (Self), Messages);
+      Self.Tree_Db.Refresh
+        (Source_Info_Option'Max (Sources_Only, Self.Source_Option),
+         Messages);
       Self.Tree_Db.Update_Runtime_Overrides;
    end Update;
 

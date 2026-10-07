@@ -1,4 +1,3 @@
-with Ada.Calendar;
 with Ada.Command_Line;
 with Ada.Directories;
 with Ada.Streams.Stream_IO;
@@ -130,10 +129,8 @@ procedure Main is
                                      (Filename_Type (Filename)),
                Language         => Ada_Language,
                Kind             => S_Body,
-               Timestamp        => Ada.Calendar.Clock,
                Tree_Db          => null,
                Naming_Exception => False,
-               Source_Dir_Idx   => 1,
                From_Src_Subdirs => False);
             Ref     : File_Readers.File_Reader_Reference :=
                         File_Readers.No_File_Reader_Reference;

@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Calendar;
 with Ada.Command_Line;
 with Ada.Text_IO;
 
@@ -33,10 +32,8 @@ begin
                                   (Filename_Type (Argument (2))),
             Language         => Ada_Language,
             Kind             => S_Body,
-            Timestamp        => Ada.Calendar.Clock,
             Tree_Db          => null,
             Naming_Exception => False,
-            Source_Dir_Idx   => 1,
             From_Src_Subdirs => False);
          Success : Boolean;
       begin

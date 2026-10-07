@@ -16,10 +16,8 @@ package body GPR2.Build.Source_Base is
      (Filename         : GPR2.Path_Name.Object;
       Language         : Language_Id;
       Kind             : Unit_Kind;
-      Timestamp        : Ada.Calendar.Time;
       Tree_Db          : access GPR2.Build.Tree_Db.Object;
       Naming_Exception : Boolean;
-      Source_Dir_Idx   : Natural;
       From_Src_Subdirs : Boolean)
       return Object'Class
    is
@@ -27,12 +25,10 @@ package body GPR2.Build.Source_Base is
       return
         Object'(Db                => Tree_Db,
                 Path_Name         => Filename,
-                Modification_Time => Timestamp,
                 Language          => Language,
                 Kind              => Kind,
                 CU_List           => Unit_Info.List.Empty_List,
                 Naming_Exception  => Naming_Exception,
-                Source_Dir_Idx    => Source_Dir_Idx,
                 Src_Subdirs       => From_Src_Subdirs);
    end Create;
 
@@ -84,22 +80,6 @@ package body GPR2.Build.Source_Base is
    begin
       Self.CU_List.Delete (Index);
    end Remove_Unit;
-
-   ------------------------------
-   -- Update_Modification_Time --
-   ------------------------------
-
-   procedure Update_Modification_Time
-     (Self : in out Object;
-      Time : Ada.Calendar.Time)
-   is
-   begin
-      Self.Modification_Time := Time;
-
-      for U of Self.CU_List loop
-         U.Set_Parsed_State (False);
-      end loop;
-   end Update_Modification_Time;
 
    -----------------
    -- Update_Unit --

@@ -32,8 +32,7 @@ package GPR2.Build.View_Db is
      (Self     : Object;
       Messages : in out GPR2.Log.Object)
      with Pre => Self.Is_Defined;
-   --  Update the list of objects and dependency files found in the object
-   --  directory and adjust the internal values.
+   --  Reload source and unit information for the whole tree
 
    function Sources
      (Self   : Object;
