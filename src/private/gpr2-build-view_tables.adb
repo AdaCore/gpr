@@ -1773,9 +1773,13 @@ package body GPR2.Build.View_Tables is
          Cached := Data.Visible_Src_Cache.Find (Basename);
 
          if Visible_Source_Maps.Has_Element (Cached) then
-            Ambiguous := Visible_Source_Maps.Element (Cached).Ambiguous;
-
-            return Visible_Source_Maps.Element (Cached).Src;
+            declare
+               Ref : constant Visible_Source_Maps.Constant_Reference_Type :=
+                       Data.Visible_Src_Cache.Constant_Reference (Cached);
+            begin
+               Ambiguous := Ref.Ambiguous;
+               return Ref.Src;
+            end;
          end if;
       end if;
 
