@@ -558,9 +558,13 @@ package GPR2.Project.View is
       Unit_Name : Name_Type;
       Kind      : Valid_Unit_Kind) return Simple_Name
      with Pre => Self.Is_Defined and then Self.Kind in With_Source_Dirs_Kind;
-   --  Given an Unit_Name and a Kind for this unit returns the Simple_Name of
-   --  an existing compilation unit from Self or the Theorical Simple_Name of
-   --  the unit if it does not exist.
+   --  Given a valid Unit_Name and a Kind for this unit returns the Simple_Name
+   --  of an existing compilation unit from Self or the Theorical Simple_Name
+   --  of the unit if it does not exist.
+   --  GPR2.Build.Compilation_Unit.Check_Name_Validity should be used
+   --  beforehand to verify that Unit_Name is a valid Ada unit name.
+   --  This raises Assertion_Error if not and reports the error in the message
+   --  log.
 
    function Unit_Name_For_Filename
      (Self     : Object;

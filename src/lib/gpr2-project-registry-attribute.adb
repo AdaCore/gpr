@@ -4,6 +4,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Assertions;
+
 with GPR2.Project.View;
 
 package body GPR2.Project.Registry.Attribute is
@@ -115,6 +117,14 @@ package body GPR2.Project.Registry.Attribute is
       end Index_Default;
 
    begin
+      --  Raise an assertion_error explictly when the package is undefined,
+      --  since we want to fail here even when not built with assertions.
+
+      if not Registry.Pack.Exists (Name.Pack) then
+         raise Ada.Assertions.Assertion_Error with
+           "package """ & Image (Name.Pack) & """ is not registered";
+      end if;
+
       Store.Insert
         (Name,
          Def'(Index_Type            => Index_Type,
