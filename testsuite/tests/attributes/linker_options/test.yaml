@@ -1,0 +1,2 @@
+description: check that Linker_Options is not used when creating the project containing the option
+driver: python_script

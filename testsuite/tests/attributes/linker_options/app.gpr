@@ -1,0 +1,8 @@
+with "mylib";
+
+project App is
+   for Languages use ("Ada");
+   for Source_Dirs use ("app");
+   for Object_Dir use "app-obj";
+   for Main use ("main.adb");
+end App;
