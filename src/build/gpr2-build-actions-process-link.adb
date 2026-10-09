@@ -849,29 +849,8 @@ package body GPR2.Build.Actions.Process.Link is
       --  ??? If we want to have a generic answer to this kind of situation,
       --  how to express that in KB terms?
 
-      declare
-         Seen          : Boolean := False;
-         Static_Arg    : Boolean := False;
-         Shared_Arg    : Boolean := False;
-      begin
-         for J in reverse
-           Cmd_Line.Argument_List.First_Index ..
-             Cmd_Line.Argument_List.Last_Index
-         loop
-            Static_Arg :=
-              Cmd_Line.Argument_List.Element (J) = "-static-libgcc";
-            Shared_Arg :=
-              Cmd_Line.Argument_List.Element (J) = "-shared-libgcc";
-
-            if Static_Arg or else Shared_Arg then
-               if not Seen then
-                  Seen := True;
-               else
-                  Cmd_Line.Remove (J);
-               end if;
-            end if;
-         end loop;
-      end;
+      Cmd_Line.Filter_Conflicting_Switches
+        ("-static-libgcc", "-shared-libgcc");
 
       if not Self.Is_Static_Library then
          if Link_Exec then

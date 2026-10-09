@@ -85,6 +85,12 @@ package GPR2.Build.Command_Line is
 
    function Total_Length (Self : Object) return Natural;
 
+   procedure Filter_Conflicting_Switches
+     (Self    : in out Object;
+      Switch1 : String;
+      Switch2 : String);
+   --  Keep only the last occurrence of Switch1 or Switch2.
+
    procedure Filter_Duplicate_Switches
      (Self   : in out Object;
       Prefix : String;
