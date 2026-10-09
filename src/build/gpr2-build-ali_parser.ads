@@ -51,8 +51,7 @@ package GPR2.Build.ALI_Parser is
 
    function Has_Imports (Self : Object) return Boolean
    with Pre => Self.Is_Parsed;
-   --  Whether the spec or the body imports anything. Cheaper than testing
-   --  Withed_From_Spec and Withed_From_Body, which both return a copy.
+   --  Whether the spec or the body imports anything
 
    function Spec_Needs_Body (Self : Object) return Boolean
    with Pre => Self.Is_Parsed;

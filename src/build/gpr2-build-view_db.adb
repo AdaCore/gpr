@@ -140,8 +140,6 @@ package body GPR2.Build.View_Db is
       end return;
    end Excluded_Sources;
 
-   ----------------------------
-   -- Has_Source_Of_Language --
    -------------------
    -- Has_Own_Units --
    -------------------
@@ -151,6 +149,8 @@ package body GPR2.Build.View_Db is
       return not Ref (Self).Own_CUs.Is_Empty;
    end Has_Own_Units;
 
+   ----------------------------
+   -- Has_Source_Of_Language --
    ----------------------------
 
    function Has_Source_Of_Language

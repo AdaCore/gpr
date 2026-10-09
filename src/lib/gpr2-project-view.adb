@@ -1605,8 +1605,6 @@ package body GPR2.Project.View is
       return not View_Internal.Get_RO (Self).Trees.Imports.Is_Empty;
    end Has_Imports;
 
-   ------------------
-   -- Has_Language --
    ----------------------------
    -- Has_Interface_Closure --
    ----------------------------
@@ -1631,6 +1629,8 @@ package body GPR2.Project.View is
    function Has_Interface_Sources (Self : Object) return Boolean is
      (not Get_RO (Self).Interface_Sources.Is_Empty);
 
+   ------------------
+   -- Has_Language --
    ------------------
 
    function Has_Language (Self : Object; Name : Name_Type) return Boolean is
