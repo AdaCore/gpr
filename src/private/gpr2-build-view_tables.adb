@@ -290,6 +290,18 @@ package body GPR2.Build.View_Tables is
                   CU_Instance.Add
                     (Kind, View_Db.View, Path, Index, Sep_Name, Success, True);
 
+                  NS_Db.Runtime_Override_Files.Include
+                    (Filename_Type (Other.Source.Simple_Name));
+                  if CU_Instance.Has_Part (S_Spec) then
+                     NS_Db.Runtime_Override_Files.Include
+                       (Filename_Type (CU_Instance.Spec.Source.Simple_Name));
+                  end if;
+                  if CU_Instance.Has_Part (S_Body) then
+                     NS_Db.Runtime_Override_Files.Include
+                       (Filename_Type
+                          (CU_Instance.Main_Body.Source.Simple_Name));
+                  end if;
+
                elsif Other.Source.Value = Path.Value then
                   --  Same source found by multiple projects
                   Messages.Append

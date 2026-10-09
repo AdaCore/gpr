@@ -130,6 +130,10 @@ private package GPR2.Build.View_Tables is
      (Simple_Name, Visible_Source_Result, Hash, "=");
    --  See View_Data.Visible_Src_Cache
 
+   package Runtime_Override_Maps is new Ada.Containers.Indefinite_Hashed_Maps
+     (Simple_Name, Containers.Name_Set, Hash, "=",
+      Containers.Name_Type_Set."=");
+
    package Basename_Source_List_Maps is new
      Ada.Containers.Indefinite_Hashed_Maps
        (Simple_Name, Source_Proxy_Sets.Set, Hash, "=", Source_Proxy_Sets."=");
@@ -198,6 +202,11 @@ private package GPR2.Build.View_Tables is
       --  Cache for Visible_Source, dropped when the tree's source
       --  generation changes.
 
+      Runtime_Override_Units    : Runtime_Override_Maps.Map;
+      Runtime_Overrides_Cached : Boolean := False;
+      Runtime_Overrides_Gen    : Natural := 0;
+      --  Visible runtime overrides by basename, shared by the view's binders.
+
       Visible_Source_Closure : GPR2.Project.View.Vector.Object;
       --  The list of views to consider during source lookup: the current view
       --  and its dependencies recursively, together with the extended
@@ -220,6 +229,10 @@ private package GPR2.Build.View_Tables is
             --  Note: Compilation units are stored in root projects: for
             --  aggregate projects, each root project has its own list
             --  to prevent clashes between independant subtrees.
+
+            Runtime_Override_Files : Containers.Filename_Set;
+            --  Original and replacement basenames of runtime overrides.
+            --  Retained across refreshes; cache lookup checks visibility.
 
             Separates : Name_Maps.Map;
             --  Map of separates to their declaring unit. Note that the

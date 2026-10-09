@@ -1,0 +1,2 @@
+description: Runtime dependency lookup preserves aliases, namespaces and refresh
+driver: basic

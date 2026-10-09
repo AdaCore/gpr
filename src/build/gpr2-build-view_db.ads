@@ -8,6 +8,7 @@
 with GPR2.Build.Source;
 with GPR2.Build.Source_Base.Vectors;
 with GPR2.Build.Compilation_Unit.Maps;
+with GPR2.Containers;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
@@ -179,6 +180,17 @@ package GPR2.Build.View_Db is
    function Has_Own_Units (Self : Object) return Boolean
      with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Units;
    --  Whether Own_Units would return anything, without building the map
+
+   function Has_Runtime_Overrides (Self : Object) return Boolean
+     with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Units;
+   --  Whether visible sources belong to runtime-overriding units in the
+   --  view's namespace. Cached until sources are refreshed.
+
+   function Runtime_Dependencies
+     (Self         : Object;
+      Dependencies : Containers.Filename_Set) return Containers.Name_Set
+     with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Units;
+   --  Runtime-overriding units named by simple ALI dependency filenames.
 
    function View (Self : Object) return GPR2.Project.View.Object
      with Pre => Self.Is_Defined;

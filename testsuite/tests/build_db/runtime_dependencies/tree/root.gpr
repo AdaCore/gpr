@@ -1,0 +1,3 @@
+aggregate project Root is
+   for Project_Files use ("left.gpr", "right.gpr", "multi.gpr");
+end Root;

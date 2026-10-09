@@ -12,12 +12,73 @@ package body GPR2.Build.View_Db is
 
    use GPR2.Build.View_Tables;
 
+   procedure Cache_Runtime_Overrides (Self : Object);
+
    function View_Base_For (Data : View_Tables.View_Data) return Object;
    --  Create an object from the View_Tables data
 
    function Ref (Inst : Object) return View_Tables.View_Data_Ref is
      (Inst.Get);
    --  Extracts a reference to view_tables data from a View_Base instance
+
+   -----------------------------
+   -- Cache_Runtime_Overrides --
+   -----------------------------
+
+   procedure Cache_Runtime_Overrides (Self : Object) is
+      Data       : constant View_Data_Ref := Ref (Self);
+      Generation : constant Natural := Data.Tree_Db.Source_Generation;
+   begin
+      if Data.Runtime_Overrides_Cached
+        and then Data.Runtime_Overrides_Gen = Generation
+      then
+         return;
+      end if;
+
+      Data.Runtime_Override_Units.Clear;
+      Data.Runtime_Overrides_Cached := False;
+
+      declare
+         Root : constant Object :=
+                  Self.View.Namespace_Roots.First_Element.View_Db;
+         NS   : constant View_Data_Ref := Ref (Root);
+         Ambiguous : Boolean;
+      begin
+         for File of NS.Runtime_Override_Files loop
+            declare
+               Src : constant Build.Source.Object :=
+                       Self.Visible_Source (Simple_Name (File), Ambiguous);
+               Units : Containers.Name_Set;
+            begin
+               if Src.Is_Defined and then Src.Has_Units then
+                  for U of Src.Units loop
+                     if U.Kind in S_Spec | S_Body
+                       and then U.Name'Length > 0
+                       and then Root.Has_Compilation_Unit (Name_Type (U.Name))
+                     then
+                        declare
+                           CU : constant Build.Compilation_Unit.Object :=
+                                  Root.Compilation_Unit (Name_Type (U.Name));
+                        begin
+                           if CU.Overridden_From_Runtime then
+                              Units.Include (Name_Type (U.Name));
+                           end if;
+                        end;
+                     end if;
+                  end loop;
+               end if;
+
+               if not Units.Is_Empty then
+                  Data.Runtime_Override_Units.Insert
+                    (Simple_Name (File), Units);
+               end if;
+            end;
+         end loop;
+      end;
+
+      Data.Runtime_Overrides_Gen := Generation;
+      Data.Runtime_Overrides_Cached := True;
+   end Cache_Runtime_Overrides;
 
    ----------------------
    -- Compilation_Unit --
@@ -149,6 +210,17 @@ package body GPR2.Build.View_Db is
       return not Ref (Self).Own_CUs.Is_Empty;
    end Has_Own_Units;
 
+   ---------------------------
+   -- Has_Runtime_Overrides --
+   ---------------------------
+
+   function Has_Runtime_Overrides (Self : Object) return Boolean is
+      Data : constant View_Data_Ref := Ref (Self);
+   begin
+      Cache_Runtime_Overrides (Self);
+      return not Data.Runtime_Override_Units.Is_Empty;
+   end Has_Runtime_Overrides;
+
    ----------------------------
    -- Has_Source_Of_Language --
    ----------------------------
@@ -253,6 +325,30 @@ package body GPR2.Build.View_Db is
 
       return Res;
    end Own_Units;
+
+   --------------------------
+   -- Runtime_Dependencies --
+   --------------------------
+
+   function Runtime_Dependencies
+     (Self         : Object;
+      Dependencies : Containers.Filename_Set) return Containers.Name_Set
+   is
+      Data : constant View_Data_Ref := Ref (Self);
+   begin
+      Cache_Runtime_Overrides (Self);
+
+      return Result : Containers.Name_Set do
+         for C in Data.Runtime_Override_Units.Iterate loop
+            if Dependencies.Contains
+              (Filename_Type (Runtime_Override_Maps.Key (C)))
+            then
+               Result.Union
+                 (Data.Runtime_Override_Units.Constant_Reference (C));
+            end if;
+         end loop;
+      end return;
+   end Runtime_Dependencies;
 
    ---------------------------
    -- Set_Interface_Closure --
