@@ -370,8 +370,9 @@ package body GPR2.Build.Actions.Process.Link is
       Dash_l_Opts  : GPR2.Containers.Value_List;
       --  -l needs to be last in the command line, so we add them here and
       --  then append to the command line in the end
-      Links_Rust   : Boolean := False;
-      --  Whether the closure holds a Rust view
+      Links_Rust   : Boolean :=
+                       Self.View.Language_Ids.Contains (Rust_Language);
+      --  Whether the view or its closure holds a Rust view
 
    begin
       Objects := Self.Embedded_Objects;
@@ -566,14 +567,13 @@ package body GPR2.Build.Actions.Process.Link is
             end;
          end loop;
 
-         for C of Self.View.Closure (True) loop
+         for C of Self.View.Closure loop
             declare
                Opt     : constant Project.Attribute.Object :=
                            C.Attribute (PRA.Linker.Linker_Options);
                Lib_Opt : constant Value_Type :=
                            Self.Tree.Linker_Lib_Dir_Option;
                use GNATCOLL.Utils;
-               use type GPR2.Project.View.Object;
             begin
                if Opt.Is_Defined then
                   for Val of Opt.Values loop
@@ -602,15 +602,10 @@ package body GPR2.Build.Actions.Process.Link is
                            --  ??? How about case where linker switches don't
                            --  start with a dash?
 
-                           if C /= Self.View then
-                              --  For self.View, use non-switch parts of
-                              --  the linker option only.
-
-                              if Starts_With (Arg, "-l") then
-                                 Dash_l_Opts.Append (Arg);
-                              else
-                                 Cmd_Line.Add_Argument (Val.Text);
-                              end if;
+                           if Starts_With (Arg, "-l") then
+                              Dash_l_Opts.Append (Arg);
+                           else
+                              Cmd_Line.Add_Argument (Val.Text);
                            end if;
 
                         else
