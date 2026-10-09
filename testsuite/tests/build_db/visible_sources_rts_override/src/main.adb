@@ -47,6 +47,27 @@ begin
       end if;
    end loop;
 
+   declare
+      Override_Found : Boolean := False;
+   begin
+      for C in V.Visible_Sources.Iterate (Include_Runtime => False) loop
+         declare
+            Source : constant GPR2.Build.Source.Object :=
+                       GPR2.Build.Source.Sets.Element (C);
+         begin
+            if Source.Owning_View.Is_Runtime then
+               raise Program_Error with "runtime source was included";
+            end if;
+            if String (Source.Path_Name.Simple_Name) = Src_Simple_Name then
+               Override_Found := True;
+            end if;
+         end;
+      end loop;
+      if not Override_Found then
+         raise Program_Error with "user runtime override was excluded";
+      end if;
+   end;
+
    Put_Line ("From ""Visible_Source"":");
    declare
       Ambiguous : Boolean;

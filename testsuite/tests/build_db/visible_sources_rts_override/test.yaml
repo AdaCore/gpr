@@ -1,5 +1,6 @@
 description:
-    Check overriden runtime sources are in the visible sources set 
+    Check overridden runtime sources remain visible when runtime sources
+    are excluded from iteration
 driver: build_and_run
 project_file: prj
 main: main

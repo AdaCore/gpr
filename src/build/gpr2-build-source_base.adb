@@ -62,6 +62,19 @@ package body GPR2.Build.Source_Base is
    end Kind;
 
    -----------------
+   -- Query_Units --
+   -----------------
+
+   procedure Query_Units
+     (Self    : Object;
+      Process : not null access procedure (Unit : Unit_Info.Object)) is
+   begin
+      for U of Self.CU_List loop
+         Process (U);
+      end loop;
+   end Query_Units;
+
+   -----------------
    -- Remove_Unit --
    -----------------
 

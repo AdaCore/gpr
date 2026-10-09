@@ -101,6 +101,11 @@ package body GPR2.Build.View_Tables is
                    and then File.Has_Single_Unit
                    and then File.Unit.Kind = S_Separate;
 
+   function Is_Source_Visible
+     (Data          : View_Data_Ref;
+      Proxy         : Source_Proxy;
+      Is_Compilable : Boolean) return Boolean;
+
    function Source
      (Data : View_Data_Ref;
       Pos  : Basename_Source_Maps.Cursor) return Build.Source.Object
@@ -810,6 +815,29 @@ package body GPR2.Build.View_Tables is
          Set.Insert (Filename_Type (Value), Position, Inserted);
       end if;
    end Include_Simple_Filename;
+
+   -----------------------
+   -- Is_Source_Visible --
+   -----------------------
+
+   function Is_Source_Visible
+     (Data          : View_Data_Ref;
+      Proxy         : Source_Proxy;
+      Is_Compilable : Boolean) return Boolean
+   is
+   begin
+      if not Is_Compilable then
+         return True;
+      end if;
+
+      declare
+         C : constant Basename_Source_Maps.Cursor :=
+               Data.Basenames.Find (Path_Name.Simple_Name (Proxy.Path_Name));
+      begin
+         return Basename_Source_Maps.Has_Element (C)
+           and then Basename_Source_Maps.Element (C) = Proxy;
+      end;
+   end Is_Source_Visible;
 
    ----------------------
    -- Read_Source_List --
@@ -1565,28 +1593,21 @@ package body GPR2.Build.View_Tables is
      (Data : View_Data_Ref;
       Pos  : Basename_Source_Maps.Cursor) return Build.Source.Object
    is
-      Proxy : constant Source_Proxy := Basename_Source_Maps.Element (Pos);
-
       use type GPR2.Project.View.Object;
+
+      Proxy    : constant Source_Proxy := Basename_Source_Maps.Element (Pos);
+      Base_Src : constant Src_Info_Maps.Constant_Reference_Type :=
+                   (if Proxy.View = Data.View
+                    then Data.Src_Infos.Constant_Reference (Proxy.Path_Name)
+                    else Get_Data (Data.Tree_Db, Proxy.View).Src_Infos.
+                      Constant_Reference (Proxy.Path_Name));
    begin
-      if Proxy.View = Data.View then
-         return Build.Source.Create
-           (Base_Source    => Data.Src_Infos.Element (Proxy.Path_Name),
-            Defining_View  => Proxy.View,
-            Owning_View    => Data.View,
-            Inherited_From => Proxy.Inh_From,
-            Is_Visible     => True);
-      else
-         return Build.Source.Create
-           (Base_Source    => Get_Data
-              (Data.Tree_Db,
-               Proxy.View).Src_Infos.Element
-              (Proxy.Path_Name),
-            Defining_View  => Proxy.View,
-            Owning_View    => Data.View,
-            Inherited_From => Proxy.Inh_From,
-            Is_Visible     => True);
-      end if;
+      return Build.Source.Create
+        (Base_Source    => Base_Src.Element.all,
+         Defining_View  => Proxy.View,
+         Owning_View    => Data.View,
+         Inherited_From => Proxy.Inh_From,
+         Is_Visible     => True);
    end Source;
 
    ------------
@@ -1599,26 +1620,20 @@ package body GPR2.Build.View_Tables is
    is
       use type GPR2.Project.View.Object;
 
-      BN            : constant Simple_Name :=
-                        Path_Name.Simple_Name (Proxy.Path_Name);
-      C             : constant Basename_Source_Maps.Cursor :=
-                        Data.Basenames.Find (BN);
-      Base_Src      : constant GPR2.Build.Source_Base.Object :=
+      Base_Src      : constant Src_Info_Maps.Constant_Reference_Type :=
                         (if Proxy.View = Data.View
-                         then Data.Src_Infos.Element (Proxy.Path_Name)
-                         else Get_Data
-                           (Data.Tree_Db, Proxy.View).Src_Infos.Element
-                             (Proxy.Path_Name));
+                         then Data.Src_Infos.Constant_Reference
+                           (Proxy.Path_Name)
+                         else Get_Data (Data.Tree_Db, Proxy.View).Src_Infos.
+                           Constant_Reference (Proxy.Path_Name));
       Is_Compilable : constant Boolean :=
                         Data.View.Is_Compilable (Base_Src.Language);
       Is_Visible    : constant Boolean :=
-                        not Is_Compilable or else
-                            (Basename_Source_Maps.Has_Element (C) and then
-                             Basename_Source_Maps.Element (C) = Proxy);
+                        Is_Source_Visible (Data, Proxy, Is_Compilable);
 
    begin
       return Build.Source.Create
-        (Base_Source    => Base_Src,
+        (Base_Source    => Base_Src.Element.all,
          Defining_View  => Proxy.View,
          Owning_View    => Data.View,
          Inherited_From => Proxy.Inh_From,
@@ -1643,6 +1658,33 @@ package body GPR2.Build.View_Tables is
          return Source (Data, C);
       end if;
    end Source;
+
+   -------------------
+   -- Source_Status --
+   -------------------
+
+   procedure Source_Status
+     (Data          : View_Data_Ref;
+      Proxy         : Source_Proxy;
+      Is_Visible    : out Boolean;
+      Is_Compilable : out Boolean)
+   is
+      use type GPR2.Project.View.Object;
+
+      function Language (Owner : View_Data_Ref) return Language_Id;
+
+      function Language (Owner : View_Data_Ref) return Language_Id is
+         Ref : constant Src_Info_Maps.Constant_Reference_Type :=
+                 Owner.Src_Infos.Constant_Reference (Proxy.Path_Name);
+      begin
+         return Ref.Language;
+      end Language;
+   begin
+      Is_Compilable := Data.View.Is_Compilable
+        ((if Proxy.View = Data.View then Language (Data)
+          else Language (Get_Data (Data.Tree_Db, Proxy.View))));
+      Is_Visible := Is_Source_Visible (Data, Proxy, Is_Compilable);
+   end Source_Status;
 
    -----------------------
    -- Unit_Dependencies --
@@ -1724,9 +1766,13 @@ package body GPR2.Build.View_Tables is
          Cached := Data.Visible_Src_Cache.Find (Basename);
 
          if Visible_Source_Maps.Has_Element (Cached) then
-            Ambiguous := Visible_Source_Maps.Element (Cached).Ambiguous;
-
-            return Visible_Source_Maps.Element (Cached).Src;
+            declare
+               Ref : constant Visible_Source_Maps.Constant_Reference_Type :=
+                       Data.Visible_Src_Cache.Constant_Reference (Cached);
+            begin
+               Ambiguous := Ref.Ambiguous;
+               return Ref.Src;
+            end;
          end if;
       end if;
 

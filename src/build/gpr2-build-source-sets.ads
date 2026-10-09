@@ -106,11 +106,32 @@ package GPR2.Build.Source.Sets is
    function Iterate
      (Self : Object) return Source_Iterators.Forward_Iterator'Class;
 
+   function Iterate
+     (Self : Object; Include_Runtime : Boolean)
+      return Source_Iterators.Forward_Iterator'Class;
+   --  In recursive iteration, optionally omit the runtime view. User sources
+   --  overriding runtime units are still included.
+
+   procedure Query_Element
+     (Position : Cursor;
+      Process  : not null access procedure (Source : Source_Base.Object))
+     with Pre => Has_Element (Position);
+   --  Read source metadata without copying it. Process must not modify the
+   --  source database.
+
 private
 
    use GPR2.Build.View_Tables;
 
-   function Less (P1, P2 : Filename_Type) return Boolean;
+   type Source_Key (Path_Len, Name_Len : Natural) is record
+      Path     : Filename_Type (1 .. Path_Len);
+      Basename : String (1 .. Name_Len);
+   end record;
+
+   function Create_Key (Path : Filename_Type) return Source_Key;
+   --  Cache the basename, folded on case-insensitive file systems
+
+   function Less (P1, P2 : Source_Key) return Boolean;
 
    type Source_Context (Path_Len : Natural) is record
       Owner : View_Db.Object;
@@ -119,7 +140,7 @@ private
 
    --  Use an ordered path with our custom Less function
    package Path_Source_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Key_Type     => Filename_Type,
+     (Key_Type     => Source_Key,
       Element_Type => Source_Context,
       "<"          => Less);
 

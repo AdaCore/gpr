@@ -122,6 +122,12 @@ package GPR2.Build.Source_Base is
                    and then Self.Has_Units and then Self.Has_Unit_At (Index);
    --  The dependencies of that unit, without copying the unit itself
 
+   procedure Query_Units
+     (Self    : Object;
+      Process : not null access procedure (Unit : Unit_Info.Object))
+     with Pre => Self.Is_Defined and then Self.Has_Units;
+   --  Read units without copying them. Process must not modify Self's units
+
    function Units (Self : Object) return Unit_Info.List.Object
      with Inline,
           Pre  => Self.Is_Defined and then Self.Has_Units;

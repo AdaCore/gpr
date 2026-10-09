@@ -5,7 +5,7 @@
 --
 
 with Ada.Characters.Handling;
-with Ada.Containers.Ordered_Maps;
+with Ada.Containers.Indefinite_Ordered_Maps;
 
 with GNATCOLL.OS.FS;
 with GNATCOLL.Traces;
@@ -13,9 +13,9 @@ with GNATCOLL.Traces;
 with GPR2.Build.Artifacts.Source_Files;
 with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Makefile_Parser;
-pragma Warnings (Off, ".* is not referenced");
 with GPR2.Build.Source.Sets;
-pragma Warnings (On, ".* is not referenced");
+with GPR2.Build.Source_Base;
+with GPR2.Build.Unit_Info;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.External_Options;
 with GPR2.Message;
@@ -39,13 +39,11 @@ package body GPR2.Build.Actions.Process.Compile is
       Lang : Language_Id;
    end record;
 
-   function "<" (L, R : Mapping_Cache_Key) return Boolean is
-     (if L.View /= R.View
-      then L.View < R.View
-      else L.Lang < R.Lang);
+   function "<" (L, R : Mapping_Cache_Key) return Boolean
+   is (if L.Lang /= R.Lang then L.Lang < R.Lang else L.View < R.View);
 
-   package Mapping_Content_Maps is new Ada.Containers.Ordered_Maps
-     (Key_Type => Mapping_Cache_Key, Element_Type => Unbounded_String);
+   package Mapping_Content_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (Key_Type => Mapping_Cache_Key, Element_Type => String);
 
    Mapping_Content_Cache : Mapping_Content_Maps.Map;
    --  Cache of the compiler mapping-file content built by Add_Mapping_File,
@@ -530,19 +528,10 @@ package body GPR2.Build.Actions.Process.Compile is
          begin
             if Map_File.FD /= Null_FD then
                declare
-                  Cached : constant Mapping_Content_Maps.Cursor :=
+                  Cached : Mapping_Content_Maps.Cursor :=
                              Mapping_Content_Cache.Find (Cache_Key);
                begin
-                  if Mapping_Content_Maps.Has_Element (Cached) then
-
-                     --  Already computed for another slot: reuse it as-is
-                     --  instead of re-walking the view's sources.
-
-                     Write
-                       (Map_File.FD,
-                        To_String (Mapping_Content_Maps.Element (Cached)));
-
-                  else
+                  if not Mapping_Content_Maps.Has_Element (Cached) then
                      declare
                         S_Suffix : constant String :=
                                      Self.View.Attribute
@@ -553,10 +542,38 @@ package body GPR2.Build.Actions.Process.Compile is
                                        (PRA.Compiler.Mapping_Body_Suffix,
                                         Lang_Idx).Value.Text;
                         Content  : Unbounded_String;
-                     begin
-                        for S of Self.View.Visible_Sources loop
-                           if S.Language = Ada_Language then
-                              for U of S.Units loop
+                        Inserted : Boolean;
+
+                        procedure Append_Source
+                          (S : Source_Base.Object; Excluded : Boolean);
+
+                        procedure Append_Visible_Source
+                          (S : Source_Base.Object);
+
+                        -------------------
+                        -- Append_Source --
+                        -------------------
+
+                        procedure Append_Source
+                          (S : Source_Base.Object; Excluded : Boolean) is
+                        begin
+                           if S.Language /= Ada_Language then
+                              return;
+                           end if;
+
+                           declare
+                              Path : constant Path_Name.Object := S.Path_Name;
+                              BN   : constant String :=
+                                       String (Path.Simple_Name);
+
+                              procedure Append_Unit (U : Unit_Info.Object);
+
+                              -----------------
+                              -- Append_Unit --
+                              -----------------
+
+                              procedure Append_Unit (U : Unit_Info.Object) is
+                              begin
                                  if U.Kind /= S_No_Body then
                                     Append
                                       (Content,
@@ -566,16 +583,36 @@ package body GPR2.Build.Actions.Process.Compile is
                                        (if U.Kind = S_Spec
                                         then S_Suffix else B_Suffix));
                                     Append (Content, ASCII.LF);
+                                    Append (Content, BN);
+                                    Append (Content, ASCII.LF);
                                     Append
                                       (Content,
-                                       String (S.Path_Name.Simple_Name));
-                                    Append (Content, ASCII.LF);
-                                    Append
-                                      (Content, S.Path_Name.String_Value);
+                                       (if Excluded then "/"
+                                        else Path.String_Value));
                                     Append (Content, ASCII.LF);
                                  end if;
-                              end loop;
-                           end if;
+                              end Append_Unit;
+                           begin
+                              S.Query_Units (Append_Unit'Access);
+                           end;
+                        end Append_Source;
+
+                        ---------------------------
+                        -- Append_Visible_Source --
+                        ---------------------------
+
+                        procedure Append_Visible_Source
+                          (S : Source_Base.Object) is
+                        begin
+                           Append_Source (S, False);
+                        end Append_Visible_Source;
+
+                     begin
+                        for C in Self.View.Visible_Sources.Iterate
+                          (Include_Runtime => False)
+                        loop
+                           Source.Sets.Query_Element
+                             (C, Append_Visible_Source'Access);
                         end loop;
 
                         for S of Self.View.View_Db.Excluded_Sources loop
@@ -621,33 +658,22 @@ package body GPR2.Build.Actions.Process.Compile is
 
                         for S of Self.View.View_Db.Excluded_Inherited_Sources
                         loop
-                           if S.Language = Ada_Language then
-                              for U of S.Units loop
-                                 if U.Kind /= S_No_Body then
-                                    Append
-                                      (Content,
-                                       To_Lower_Fast (String (U.Full_Name)));
-                                    Append
-                                      (Content,
-                                       (if U.Kind = S_Spec
-                                        then S_Suffix else B_Suffix));
-                                    Append (Content, ASCII.LF);
-                                    Append
-                                      (Content,
-                                       String (S.Path_Name.Simple_Name));
-                                    Append (Content, ASCII.LF);
-                                    Append (Content, "/");
-                                    Append (Content, ASCII.LF);
-                                 end if;
-                              end loop;
-                           end if;
+                           Append_Source (S, True);
                         end loop;
 
-                        Mapping_Content_Cache.Insert (Cache_Key, Content);
-
-                        Write (Map_File.FD, To_String (Content));
+                        Mapping_Content_Cache.Insert
+                          (Cache_Key, To_String (Content), Cached, Inserted);
+                        pragma Assert (Inserted);
                      end;
                   end if;
+
+                  declare
+                     Text : constant
+                       Mapping_Content_Maps.Constant_Reference_Type :=
+                         Mapping_Content_Cache.Constant_Reference (Cached);
+                  begin
+                     Write (Map_File.FD, Text.Element.all);
+                  end;
                end;
 
                Close (Map_File.FD);

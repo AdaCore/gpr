@@ -12,10 +12,6 @@ with GPR2.Project.View.Vector;
 
 package body GPR2.Build.Source.Sets is
 
-   function Element
-     (Self  : Object;
-      Proxy : Source_Proxy) return Source.Object;
-
    procedure Ensure_Visible (C : in out Cursor);
 
    function Fetch_Source_Context (Position : Cursor) return Source_Context;
@@ -54,17 +50,19 @@ package body GPR2.Build.Source.Sets is
               Ambiguous);
    end Create;
 
-   -------------
-   -- Element --
-   -------------
+   ----------------
+   -- Create_Key --
+   ----------------
 
-   function Element
-     (Self  : Object;
-      Proxy : Source_Proxy) return Source.Object
-   is
+   function Create_Key (Path : Filename_Type) return Source_Key is
+      BN : constant String := String (GPR2.Path_Name.Simple_Name (Path));
    begin
-      return View_Tables.Source (-Self.Db, Proxy);
-   end Element;
+      return (Path_Len => Path'Length,
+              Name_Len => BN'Length,
+              Path     => Path,
+              Basename => (if File_Names_Case_Sensitive then BN
+                           else To_Lower_Fast (BN)));
+   end Create_Key;
 
    -------------
    -- Element --
@@ -186,10 +184,42 @@ package body GPR2.Build.Source.Sets is
    -------------
 
    function Iterate
-     (Self : Object) return Source_Iterators.Forward_Iterator'Class
+     (Self : Object) return Source_Iterators.Forward_Iterator'Class is
+   begin
+      return Iterate (Self, Include_Runtime => True);
+   end Iterate;
+
+   -------------
+   -- Iterate --
+   -------------
+
+   function Iterate
+     (Self : Object; Include_Runtime : Boolean)
+      return Source_Iterators.Forward_Iterator'Class
    is
       use View_Tables.Filename_Source_Maps;
       Opt : Source_Set_Option := Self.Option;
+
+      procedure Check_Source
+        (Data          : View_Data_Ref;
+         Proxy         : Source_Proxy;
+         Is_Visible    : out Boolean;
+         Is_Compilable : out Boolean);
+
+      procedure Check_Source
+        (Data          : View_Data_Ref;
+         Proxy         : Source_Proxy;
+         Is_Visible    : out Boolean;
+         Is_Compilable : out Boolean) is
+      begin
+         View_Tables.Source_Status
+           (Data, Proxy, Is_Visible, Is_Compilable);
+         if Is_Visible and then Self.Filter /= null then
+            Is_Visible := Self.Filter
+              (Self.Db.View, View_Tables.Source (Data, Proxy),
+               Filter_Data_Holders.Element (Self.F_Data));
+         end if;
+      end Check_Source;
 
    begin
       if Opt = Unsorted and then Self.Filter /= null then
@@ -222,18 +252,12 @@ package body GPR2.Build.Source.Sets is
                                   Filename_Source_Maps.Element (C);
                      Src_Ctxt : constant Source_Context :=
                                   (Proxy.Path_Len, Self.Db, Proxy);
-                     Src      : constant Build.Source.Object :=
-                                  Self.Element (Element (C));
+                     Visible, Compilable : Boolean;
                   begin
-                     if Src.Is_Visible
-                       and then
-                         (Self.Filter = null
-                          or else Self.Filter
-                            (Self.Db.View,
-                             Src,
-                             Filter_Data_Holders.Element (Self.F_Data)))
-                     then
-                        Iter.Paths.Include (Key (C), Src_Ctxt);
+                     Check_Source
+                       (Get_Ref (Self.Db), Proxy, Visible, Compilable);
+                     if Visible then
+                        Iter.Paths.Include (Create_Key (Key (C)), Src_Ctxt);
                      end if;
                   end;
                end loop;
@@ -241,7 +265,6 @@ package body GPR2.Build.Source.Sets is
 
          when Recurse =>
             declare
-               Result    : Source_Iterator (False);
                Basenames : GPR2.Containers.Filename_Set;
                View      : constant GPR2.Project.View.Object :=
                              Get_Ref (Self.Db).View;
@@ -249,87 +272,79 @@ package body GPR2.Build.Source.Sets is
                              View.Closure (True, True, True);
                C         : GPR2.Project.View.Vector.Vector.Cursor;
             begin
-               Result.Db := Self.Db;
+               return Result : Source_Iterator (False) do
+                  Result.Db := Self.Db;
 
-               --  Add the withed views sources, not overriding if
-               --  there's a basename clash.
+                  --  Add the withed views sources, not overriding if
+                  --  there's a basename clash.
 
-               --  Make sure the runtime is last, since any project may
-               --  override runtime sources
+                  --  Make sure the runtime is last, since any project may
+                  --  override runtime sources
 
-               if View.Tree.Has_Runtime_Project then
-                  C := Closure.Find (View.Tree.Runtime_Project);
-
-                  if GPR2.Project.View.Vector.Vector.Has_Element (C) then
-                     Closure.Delete (C);
-                     Closure.Append (View.Tree.Runtime_Project);
-                  end if;
-               end if;
-
-               for V of Closure loop
-                  if V.Kind in With_Object_Dir_Kind
-                    and then not V.Is_Extended
+                  if Include_Runtime
+                    and then View.Tree.Has_Runtime_Project
                   then
-                     declare
-                        Db    : constant View_Db.Object :=
-                                  Get_Ref (Self.Db).Tree_Db.View_Database (V);
-                     begin
-                        for C in Get_Ref (Db).Sources.Iterate loop
-                           --  Note: we cannot just use Self.Element (Proxy)
-                           --  here since this would give us a source with a
-                           --  visibility for Self.Db.View, so in case the
-                           --  source is owned by a withed unit, such
-                           --  visibility would be null (e.g. False). We need
-                           --  to use the withed view context here and then
-                           --  filter on the basename to check if it's visible.
+                     C := Closure.Find (View.Tree.Runtime_Project);
 
-                           declare
-                              Proxy    : constant View_Tables.Source_Proxy :=
-                                           Filename_Source_Maps.Element (C);
-                              Src_Ctxt : constant Source_Context :=
-                                           (Proxy.Path_Len, V.View_Db, Proxy);
-                              C_Db     : constant View_Data_Ref :=
-                                           (Get_Ref (V.View_Db));
-                              Src      : constant GPR2.Build.Source.Object :=
-                                           View_Tables.Source
-                                             (C_Db, Src_Ctxt.Proxy);
-                              C_BN     : Containers.Filename_Type_Set.Cursor;
-                              Inserted : Boolean;
-
-                           begin
-                              if Src.Is_Visible
-                                and then
-                                  (Self.Filter = null
-                                   or else Self.Filter
-                                     (Self.Db.View,
-                                      Src,
-                                      Filter_Data_Holders.Element
-                                        (Self.F_Data)))
-                              then
-                                 if Src.Is_Compilable
-                                   and then not Self.Ambiguous
-                                 then
-                                    --  Need to check for simple name clashes
-                                    Basenames.Insert
-                                      (Src.Path_Name.Simple_Name,
-                                       C_BN, Inserted);
-                                 else
-                                    Inserted := True;
-                                 end if;
-
-                                 if Inserted then
-                                    Result.Paths.Include
-                                      (Filename_Source_Maps.Key (C),
-                                       Src_Ctxt);
-                                 end if;
-                              end if;
-                           end;
-                        end loop;
-                     end;
+                     if GPR2.Project.View.Vector.Vector.Has_Element (C) then
+                        Closure.Delete (C);
+                        Closure.Append (View.Tree.Runtime_Project);
+                     end if;
                   end if;
-               end loop;
 
-               return Result;
+                  for V of Closure loop
+                     if V.Kind in With_Object_Dir_Kind
+                       and then not V.Is_Extended
+                       and then (Include_Runtime or else not V.Is_Runtime)
+                     then
+                        declare
+                           Db : constant View_Db.Object :=
+                                  Get_Ref (Self.Db).Tree_Db.View_Database (V);
+                           C_Db : constant View_Data_Ref := Get_Ref (Db);
+                        begin
+                           for C in C_Db.Sources.Iterate loop
+                              --  Visibility is checked in the owning view,
+                              --  then basename clashes across the closure.
+
+                              declare
+                                 Proxy : constant View_Tables.Source_Proxy :=
+                                              Filename_Source_Maps.Element (C);
+                                 Src_Ctxt : constant Source_Context :=
+                                   (Proxy.Path_Len, Db, Proxy);
+                                 Visible, Compilable : Boolean;
+                                 C_BN : Containers.Filename_Type_Set.Cursor;
+                                 Inserted : Boolean;
+
+                              begin
+                                 Check_Source
+                                   (C_Db, Proxy, Visible, Compilable);
+                                 if Visible then
+                                    if Compilable
+                                      and then not Self.Ambiguous
+                                    then
+                                       --  Check for basename clashes
+                                       Basenames.Insert
+                                         (GPR2.Path_Name.Simple_Name
+                                            (Proxy.Path_Name),
+                                          C_BN, Inserted);
+                                    else
+                                       Inserted := True;
+                                    end if;
+
+                                    if Inserted then
+                                       Result.Paths.Include
+                                         (Create_Key
+                                            (Filename_Source_Maps.Key (C)),
+                                          Src_Ctxt);
+                                    end if;
+                                 end if;
+                              end;
+                           end loop;
+                        end;
+                     end if;
+                  end loop;
+
+               end return;
             end;
       end case;
    end Iterate;
@@ -338,14 +353,10 @@ package body GPR2.Build.Source.Sets is
    -- Less --
    ----------
 
-   function Less (P1, P2 : Filename_Type) return Boolean is
-      BN1 : constant Simple_Name := GPR2.Path_Name.Simple_Name (P1);
-      BN2 : constant Simple_Name := GPR2.Path_Name.Simple_Name (P2);
+   function Less (P1, P2 : Source_Key) return Boolean is
    begin
-      --  Prioritize the sort on the simple name, only use the full path when
-      --  the simple names are identical: for developers (in particular in Ada)
-      --  the simple name is the important information.
-      return (if BN1 = BN2 then P1 < P2 else BN1 < BN2);
+      return (if P1.Basename = P2.Basename
+              then P1.Path < P2.Path else P1.Basename < P2.Basename);
    end Less;
 
    ----------
@@ -369,5 +380,26 @@ package body GPR2.Build.Source.Sets is
 
       return Result;
    end Next;
+
+   -------------------
+   -- Query_Element --
+   -------------------
+
+   procedure Query_Element
+     (Position : Cursor;
+      Process  : not null access procedure (Source : Source_Base.Object))
+   is
+      use type GPR2.Project.View.Object;
+
+      Ctxt : constant Source_Context := Fetch_Source_Context (Position);
+      Data : constant View_Data_Ref := Get_Ref (Ctxt.Owner);
+      Ref  : constant Src_Info_Maps.Constant_Reference_Type :=
+               (if Ctxt.Proxy.View = Data.View
+                then Data.Src_Infos.Constant_Reference (Ctxt.Proxy.Path_Name)
+                else Get_Data (Data.Tree_Db, Ctxt.Proxy.View).Src_Infos.
+                  Constant_Reference (Ctxt.Proxy.Path_Name));
+   begin
+      Process (Ref.Element.all);
+   end Query_Element;
 
 end GPR2.Build.Source.Sets;
