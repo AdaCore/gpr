@@ -1605,6 +1605,30 @@ package body GPR2.Project.View is
       return not View_Internal.Get_RO (Self).Trees.Imports.Is_Empty;
    end Has_Imports;
 
+   ----------------------------
+   -- Has_Interface_Closure --
+   ----------------------------
+
+   function Has_Interface_Closure (Self : Object) return Boolean is
+      Db : constant GPR2.Build.View_Db.Object :=
+             (if Self.Kind in K_Aggregate | K_Configuration
+              then GPR2.Build.View_Db.Undefined
+              else Self.View_Db);
+   begin
+      if Db.Is_Defined and then Db.Interface_Closure_Computed then
+         return not Db.Interface_Closure_Is_Empty;
+      end if;
+
+      return not Self.Interface_Closure.Is_Empty;
+   end Has_Interface_Closure;
+
+   ---------------------------
+   -- Has_Interface_Sources --
+   ---------------------------
+
+   function Has_Interface_Sources (Self : Object) return Boolean is
+     (not Get_RO (Self).Interface_Sources.Is_Empty);
+
    ------------------
    -- Has_Language --
    ------------------
@@ -1676,6 +1700,16 @@ package body GPR2.Project.View is
 
    -----------------
    -- Has_Package --
+   -------------------
+   -- Has_Own_Units --
+   -------------------
+
+   function Has_Own_Units (Self : Object) return Boolean is
+   begin
+      return Self.Kind in With_Object_Dir_Kind
+        and then Self.View_Db.Has_Own_Units;
+   end Has_Own_Units;
+
    -----------------
 
    function Has_Package

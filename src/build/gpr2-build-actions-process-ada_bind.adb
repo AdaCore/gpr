@@ -20,7 +20,6 @@ with GPR2.Build.Actions.Process.Link;
 with GPR2.Build.Actions.Process.Link_Options_Insert;
 with GPR2.Build.Actions.Process.Post_Bind;
 with GPR2.Build.Actions.Thread.Lib_Copy;
-with GPR2.Build.ALI_Parser;
 with GPR2.Build.Compilation_Unit;
 pragma Warnings (Off);
 with GPR2.Build.Source.Sets;
@@ -853,6 +852,13 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
 
       function Add_Dependency (Unit : Name_Type) return Boolean;
 
+      function Already_Analyzed (Unit : Name_Type) return Boolean;
+      --  Whether Unit has been seen already. Analyzed holds the units seen
+      --  since the last reset, and when Analyzed_Covers_Pre is set the
+      --  pre-analyzed ones count as seen too. Keeping the two sets apart
+      --  avoids copying Pre_Analyzed, which spans the whole closure, each
+      --  time an ALI is parsed.
+
       --------------------
       -- Add_Dependency --
       --------------------
@@ -988,14 +994,14 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
             --  Self.Analyzed instead would cost O (Self.Analyzed'Length) on
             --  each analyzed unit, hence quadratic in the size of the closure.
 
-            for Dep of Comp.ALI.Withed_From_Spec loop
-               if not Self.Analyzed.Contains (Dep) then
+            for Dep of Comp.ALI_Withed_From_Spec loop
+               if not Already_Analyzed (Dep) then
                   To_Analyze_From_Ali.Include (Dep);
                end if;
             end loop;
 
-            for Dep of Comp.ALI.Withed_From_Body loop
-               if not Self.Analyzed.Contains (Dep) then
+            for Dep of Comp.ALI_Withed_From_Body loop
+               if not Already_Analyzed (Dep) then
                   To_Analyze_From_Ali.Include (Dep);
                end if;
             end loop;
@@ -1019,6 +1025,15 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          return True;
       end Add_Dependency;
 
+      ----------------------
+      -- Already_Analyzed --
+      ----------------------
+
+      function Already_Analyzed (Unit : Name_Type) return Boolean
+      is (Self.Analyzed.Contains (Unit)
+          or else (Self.Analyzed_Covers_Pre
+                   and then Self.Pre_Analyzed.Contains (Unit)));
+
    begin
       if From_ALI then
          To_Analyze_From_Ali := Imports;
@@ -1027,7 +1042,8 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          --  as analyzed (so that they're not added twice, duplicating the
          --  processing time).
 
-         Self.Analyzed := Self.Pre_Analyzed;
+         Self.Analyzed.Clear;
+         Self.Analyzed_Covers_Pre := True;
       else
          To_Analyze_From_Ada := Imports;
       end if;
@@ -1047,7 +1063,12 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          begin
             if Dep_From_Ali then
                To_Analyze_From_Ali.Delete_First;
-               Self.Analyzed.Insert (Unit, Pos, Inserted);
+
+               if Already_Analyzed (Unit) then
+                  Inserted := False;
+               else
+                  Self.Analyzed.Insert (Unit, Pos, Inserted);
+               end if;
             else
                To_Analyze_From_Ada.Delete_First;
                Self.Pre_Analyzed.Insert (Unit, Pos, Inserted);
@@ -1166,8 +1187,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
       --  First pass: adjust the Db dependencies to take into account potential
       --  new dependencies between From_CU and the list of imports
 
-      if not (Comp.Withed_Units_From_Spec.Is_Empty
-              and then Comp.Withed_Units_From_Body.Is_Empty)
+      if Comp.ALI_Has_Imports
         and then not Self.On_Ada_Dependencies (Comp.Withed_Units, True)
       then
          return False;
@@ -1195,7 +1215,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
          --  why every candidate found here is filtered down to
          --  Overridden_From_Runtime units only, below.
       begin
-         for Dep_File of Comp.ALI.Dependencies loop
+         for Dep_File of Comp.ALI_Dependencies loop
             if GPR2.Is_Simple_Name (Dep_File) then
                declare
                   Src : constant GPR2.Build.Source.Object :=

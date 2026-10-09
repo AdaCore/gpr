@@ -140,6 +140,10 @@ package GPR2.Build.View_Db is
      with Pre => Self.Is_Defined and then Self.Interface_Closure_Computed;
    --  The cached interface closure of the view
 
+   function Interface_Closure_Is_Empty (Self : Object) return Boolean
+     with Pre => Self.Is_Defined and then Self.Interface_Closure_Computed;
+   --  Whether the cached closure is empty, without copying it
+
    function Interface_Closure_Computed (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Whether the interface closure of the view has already been computed and
@@ -171,6 +175,10 @@ package GPR2.Build.View_Db is
      (Self : Object; Overridden_From_Runtime : Boolean := False)
       return Build.Compilation_Unit.Maps.Map
      with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Units;
+
+   function Has_Own_Units (Self : Object) return Boolean
+     with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Units;
+   --  Whether Own_Units would return anything, without building the map
 
    function View (Self : Object) return GPR2.Project.View.Object
      with Pre => Self.Is_Defined;

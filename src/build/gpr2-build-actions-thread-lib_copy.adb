@@ -369,13 +369,13 @@ package body GPR2.Build.Actions.Thread.Lib_Copy is
    function Needed_For_View (Ctxt : GPR2.Project.View.Object) return Boolean is
    begin
       if Ctxt.Is_Library_Standalone then
-         return not Ctxt.Interface_Closure.Is_Empty;
+         return Ctxt.Has_Interface_Closure;
       end if;
 
-      return not Ctxt.Own_Units.Is_Empty
+      return Ctxt.Has_Own_Units
         or else
           (Ctxt.Has_Library_Src_Directory
-           and then not Ctxt.Interface_Sources.Is_Empty);
+           and then Ctxt.Has_Interface_Sources);
    end Needed_For_View;
 
 -------------------

@@ -49,6 +49,10 @@ package GPR2.Build.ALI_Parser is
    function Withed_From_Body (Self : Object) return GPR2.Containers.Name_Set
    with Pre => Self.Is_Parsed;
 
+   function Has_Imports (Self : Object) return Boolean
+   with Pre => Self.Is_Parsed;
+   --  Whether the spec or the body imports anything
+
    function Spec_Needs_Body (Self : Object) return Boolean
    with Pre => Self.Is_Parsed;
 
@@ -104,6 +108,9 @@ private
 
    function Withed_From_Body (Self : Object) return GPR2.Containers.Name_Set
    is (Self.Body_Imports);
+
+   function Has_Imports (Self : Object) return Boolean
+   is (not Self.Spec_Imports.Is_Empty or else not Self.Body_Imports.Is_Empty);
 
    function Spec_Needs_Body (Self : Object) return Boolean
    is (Self.Needs_Body);

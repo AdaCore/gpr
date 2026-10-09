@@ -279,6 +279,13 @@ private package GPR2.Build.View_Tables is
       Proxy : Source_Proxy) return Build.Source.Object
      with Inline;
 
+   function Unit_Dependencies
+     (Data     : View_Data_Ref;
+      Basename : Simple_Name;
+      Index    : Unit_Index) return GPR2.Containers.Name_Set;
+   --  The dependencies of that unit. Unlike Source above, does not build a
+   --  Source object, which would copy the source and all its units.
+
    function Visible_Source
      (Data      : View_Data_Ref;
       Basename  : Simple_Name;

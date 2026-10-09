@@ -1644,6 +1644,55 @@ package body GPR2.Build.View_Tables is
       end if;
    end Source;
 
+   -----------------------
+   -- Unit_Dependencies --
+   -----------------------
+
+   function Unit_Dependencies
+     (Data     : View_Data_Ref;
+      Basename : Simple_Name;
+      Index    : Unit_Index) return GPR2.Containers.Name_Set
+   is
+      C : constant Basename_Source_Maps.Cursor :=
+            Data.Basenames.Find (Basename);
+
+      use type GPR2.Project.View.Object;
+
+   begin
+      if not Basename_Source_Maps.Has_Element (C) then
+         return GPR2.Containers.Empty_Name_Set;
+      end if;
+
+      declare
+         Proxy : constant Source_Proxy := Basename_Source_Maps.Element (C);
+
+         function Deps (Owner : View_Data_Ref) return GPR2.Containers.Name_Set;
+
+         ----------
+         -- Deps --
+         ----------
+
+         function Deps (Owner : View_Data_Ref) return GPR2.Containers.Name_Set
+         is
+            Src : Src_Info_Maps.Constant_Reference_Type renames
+                    Owner.Src_Infos.Constant_Reference (Proxy.Path_Name);
+         begin
+            if not Src.Has_Units or else not Src.Has_Unit_At (Index) then
+               return GPR2.Containers.Empty_Name_Set;
+            end if;
+
+            return Src.Unit_Dependencies (Index);
+         end Deps;
+
+      begin
+         if Proxy.View = Data.View then
+            return Deps (Data);
+         else
+            return Deps (Get_Data (Data.Tree_Db, Proxy.View));
+         end if;
+      end;
+   end Unit_Dependencies;
+
    package body Update_Sources_List is separate;
 
    --------------------

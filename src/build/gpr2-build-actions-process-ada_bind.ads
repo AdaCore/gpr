@@ -148,6 +148,10 @@ private
       Analyzed    : GPR2.Containers.Name_Set;
       --  List of units that are part of the closure of the gnatbind
       --  analysis, and for which a valid ALI file has been analyzed.
+      --  Holds only the units that Pre_Analyzed does not already cover when
+      --  Analyzed_Covers_Pre is set: see On_Ada_Dependencies.
+      Analyzed_Covers_Pre : Boolean := False;
+      --  Whether Pre_Analyzed is to be considered part of Analyzed
       Pre_Analyzed : GPR2.Containers.Name_Set;
       --  Same as Analyzed but filled when just the Ada parser is available.
       --  This allows proper pruning of the added dependencies to lower the

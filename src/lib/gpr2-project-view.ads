@@ -528,6 +528,15 @@ package GPR2.Project.View is
    --  Return a map of interface sources defined by the view to their
    --  definition in the project file.
 
+   function Has_Interface_Sources (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Whether Interface_Sources would return anything, without copying it
+
+   function Has_Interface_Closure (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Whether Interface_Closure would return anything. Uses the cached
+   --  closure when there is one, rather than copying it.
+
    function Interface_Closure
      (Self : Object) return GPR2.Build.Compilation_Unit.Maps.Map
      with Pre => Self.Is_Defined;
@@ -606,6 +615,10 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns all the units owned by the view. Note that the list of units
    --  is populated only when Update_Sources is called.
+
+   function Has_Own_Units (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Whether Own_Units would return anything, without building the map
    --  If Overridden_From_Runtime is True, then the result will only contain
    --  the units that are overriden from the runtime.
 
