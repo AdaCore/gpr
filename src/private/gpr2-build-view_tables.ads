@@ -284,7 +284,7 @@ private package GPR2.Build.View_Tables is
       Proxy         : Source_Proxy;
       Is_Visible    : out Boolean;
       Is_Compilable : out Boolean);
-   --  Check source status without copying its units and dependencies.
+   --  Check source status without copying its units and dependencies
 
    function Unit_Dependencies
      (Data     : View_Data_Ref;

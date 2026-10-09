@@ -126,7 +126,7 @@ package GPR2.Build.Source_Base is
      (Self    : Object;
       Process : not null access procedure (Unit : Unit_Info.Object))
      with Pre => Self.Is_Defined and then Self.Has_Units;
-   --  Read units without copying them. Process must not modify Self's units.
+   --  Read units without copying them. Process must not modify Self's units
 
    function Units (Self : Object) return Unit_Info.List.Object
      with Inline,

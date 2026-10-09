@@ -322,7 +322,7 @@ package body GPR2.Build.Source.Sets is
                                     if Compilable
                                       and then not Self.Ambiguous
                                     then
-                                       --  Check for basename clashes.
+                                       --  Check for basename clashes
                                        Basenames.Insert
                                          (GPR2.Path_Name.Simple_Name
                                             (Proxy.Path_Name),

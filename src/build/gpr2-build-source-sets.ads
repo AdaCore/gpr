@@ -129,7 +129,7 @@ private
    end record;
 
    function Create_Key (Path : Filename_Type) return Source_Key;
-   --  Cache the basename, folded on case-insensitive file systems.
+   --  Cache the basename, folded on case-insensitive file systems
 
    function Less (P1, P2 : Source_Key) return Boolean;
 
