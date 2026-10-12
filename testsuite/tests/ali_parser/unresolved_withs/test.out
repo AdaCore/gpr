@@ -1,0 +1,9 @@
+=== Parsing file foo.ali
+Withed by the body:
+ - bar
+ - baz
+ - quux
+ - qux
+Unresolved withs (no Sfile/Afile on the with-line):
+ - baz
+ - quux

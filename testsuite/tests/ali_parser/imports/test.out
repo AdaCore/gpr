@@ -1,6 +1,7 @@
 === Parsing file gnatcoll-memory.ali
 Needs body: TRUE
 Withed by the spec:
+ - ada.strings.text_buffers
  - gnat
  - gnat.debug_pools
  - gnatcoll
@@ -8,8 +9,12 @@ Withed by the spec:
 Withed by the body:
  - ada
  - ada.exceptions
+ - ada.strings.text_buffers
  - gnatcoll
  - system
  - system.crtl
+ - system.finalization_primitives
  - system.memory
+ - system<shared-lib-suffix>ft_links
+ - system.standard_library
  - system.storage_elements

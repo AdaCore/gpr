@@ -53,6 +53,12 @@ package GPR2.Build.ALI_Parser is
    with Pre => Self.Is_Parsed;
    --  Whether the spec or the body imports anything
 
+   function Unresolved_Withs (Self : Object) return GPR2.Containers.Name_Set
+   with Pre => Self.Is_Parsed;
+   --  Units referenced on a W/Y/Z with-line for which the compiler recorded
+   --  no source/ALI file at all (a bare "W unit_name%s" with nothing
+   --  following).
+
    function Spec_Needs_Body (Self : Object) return Boolean
    with Pre => Self.Is_Parsed;
 
@@ -80,6 +86,9 @@ private
       --  The list of units imported by the spec
       Body_Imports   : GPR2.Containers.Name_Set;
       --  The list of units imported by the body
+      Unresolved_Withs : GPR2.Containers.Name_Set;
+      --  Units from Spec_Imports/Body_Imports whose with-line had no
+      --  source/ALI file recorded by the compiler
       Needs_Body     : Boolean := False;
       --  Whether importing the specs requires a visible body
       Version        : Unbounded_String;
@@ -111,6 +120,9 @@ private
 
    function Has_Imports (Self : Object) return Boolean
    is (not Self.Spec_Imports.Is_Empty or else not Self.Body_Imports.Is_Empty);
+
+   function Unresolved_Withs (Self : Object) return GPR2.Containers.Name_Set
+   is (Self.Unresolved_Withs);
 
    function Spec_Needs_Body (Self : Object) return Boolean
    is (Self.Needs_Body);
