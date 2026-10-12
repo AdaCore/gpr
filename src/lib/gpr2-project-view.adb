@@ -314,132 +314,125 @@ package body GPR2.Project.View is
       function Get_Attribute_From_View
         (View : Object) return Project.Attribute.Object
       is
-         function Get_Pack return Pack_Internal.Set.Cursor with Inline;
-         function Get_Attrs return Project.Attribute.Set.Object with Inline;
-
-         ---------------
-         -- Get_Attrs --
-         ---------------
-
-         function Get_Attrs return Project.Attribute.Set.Object is
-         begin
-            if Name.Pack = Project_Level_Scope then
-               return View.Get_RO.Attrs;
-            end if;
-
-            declare
-               Cursor : Pack_Internal.Set.Cursor renames Get_Pack;
-            begin
-               if Pack_Internal.Set.Has_Element (Cursor) then
-                  return Pack_Internal.Set.Element (Cursor).Attrs;
-               else
-                  return Project.Attribute.Set.Empty_Set;
-               end if;
-            end;
-         end Get_Attrs;
-
-         --------------
-         -- Get_Pack --
-         --------------
-
-         function Get_Pack return Pack_Internal.Set.Cursor is
-            Def    : View_Internal.Const_Ref := View.Get_RO;
-            Result : Pack_Internal.Set.Cursor;
-         begin
-            loop
-               Result := Def.Packs.Find (Name.Pack);
-               if Pack_Internal.Set.Has_Element (Result) then
-                  return Result;
-               end if;
-
-               exit when not Def.Extended_Root.Is_Defined;
-
-               Def := Def.Extended_Root.Get_RO;
-            end loop;
-
-            return Result;
-         end Get_Pack;
+         procedure Lookup (Attrs : Project.Attribute.Set.Object);
+         --  Read the tagged attribute set by reference, copying only the
+         --  selected attribute.
 
          Result : Project.Attribute.Object;
-         Attrs  : Project.Attribute.Set.Object renames Get_Attrs;
 
-      begin
-         --  First try to find an exact match
+         ------------
+         -- Lookup --
+         ------------
 
-         Result := Attrs.Element (Name.Attr, Index, At_Pos);
+         procedure Lookup (Attrs : Project.Attribute.Set.Object) is
+         begin
+            --  First try to find an exact match
 
-         if not Found (Result) and then Alias /= No_Attribute_Id then
-            Result := Attrs.Element (Alias.Attr, Index, At_Pos);
-         end if;
+            Result := Attrs.Element (Name.Attr, Index, At_Pos);
 
-         --  Checks for special index matching
-
-         if not Found (Result)
-           and then Index.Is_Defined
-           and then Index.Value'Length > 0
-         then
-            if PRA_Def.Index_Type = PRA.FileGlob_Index
-              or else
-                (PRA_Def.Index_Type = PRA.FileGlob_Or_Language_Index
-                 and then not Self.Has_Language (Name_Type (Index.Value)))
-            then
-               --  The index might match a globbing pattern. In that case
-               --  iterate over the attributes to find one that match the
-               --  index.
-
-               for Attr of Attrs loop
-                  if Attr.Name.Id = Name
-                    or else (Alias /= No_Attribute_Id
-                             and then Attr.Name.Id = Alias)
-                  then
-                     --  We should have a file name. Let's do pattern
-                     --  matching.
-
-                     Check_Matching_Index
-                       (Pattern => Attr,
-                        Result  => Result);
-
-                     --  Note: we need to keep going here as last
-                     --  match will be the one to take into account.
-                  end if;
-               end loop;
+            if not Found (Result) and then Alias /= No_Attribute_Id then
+               Result := Attrs.Element (Alias.Attr, Index, At_Pos);
             end if;
 
-            --  Now if we have a source as index, and haven't found any result
-            --  and the attribute is defined for the source's language, let's
-            --  return it.
-            --  Depending on when this is called, be careful that the view may
-            --  not be fully loaded yet (so of course no source available, but
-            --  worse: check for source will blow because Root_View is not
-            --  set at parse time but a bit later).
+            --  Checks for special index matching
 
             if not Found (Result)
-              and then PRA_Def.Index_Type = PRA.FileGlob_Or_Language_Index
-              and then Self.Has_Source (GPR2.Simple_Name (Index.Value))
+              and then Index.Is_Defined
+              and then Index.Value'Length > 0
             then
-               declare
-                  Src : Build.Source.Object renames
-                          Self.Source (GPR2.Simple_Name (Index.Value));
-               begin
-                  Result := Attribute (View, Name, PAI.Create (Src.Language));
-               end;
-            end if;
+               if PRA_Def.Index_Type = PRA.FileGlob_Index
+                 or else
+                   (PRA_Def.Index_Type = PRA.FileGlob_Or_Language_Index
+                    and then not Self.Has_Language (Name_Type (Index.Value)))
+               then
+                  --  The index might match a globbing pattern. In that case
+                  --  iterate over the attributes to find one that match the
+                  --  index.
 
-            --  Finally, check if an attribute with the "others" index is
-            --  defined.
+                  for Attr of Attrs loop
+                     if Attr.Name.Id = Name
+                       or else (Alias /= No_Attribute_Id
+                                and then Attr.Name.Id = Alias)
+                     then
+                        --  We should have a file name. Let's do pattern
+                        --  matching.
 
-            if not Found (Result)
-              and then PRA_Def.Index_Optional
-            then
-               Result :=
-                 Attrs.Element (Name.Attr, Project.Attribute_Index.I_Others);
+                        Check_Matching_Index
+                          (Pattern => Attr,
+                           Result  => Result);
 
-               if not Found (Result) and then Alias.Attr /= No_Attribute then
+                        --  Note: we need to keep going here as last
+                        --  match will be the one to take into account.
+                     end if;
+                  end loop;
+               end if;
+
+               --  If the index is a source and no result was found, try the
+               --  attribute for the source's language. The view may not yet
+               --  be fully loaded: Root_View is set after parsing, so source
+               --  lookup is not always available at this point.
+
+               if not Found (Result)
+                 and then PRA_Def.Index_Type = PRA.FileGlob_Or_Language_Index
+                 and then Self.Has_Source (GPR2.Simple_Name (Index.Value))
+               then
+                  declare
+                     Src : Build.Source.Object renames
+                             Self.Source (GPR2.Simple_Name (Index.Value));
+                  begin
+                     Result :=
+                       Attribute (View, Name, PAI.Create (Src.Language));
+                  end;
+               end if;
+
+               --  Finally, check if an attribute with the "others" index is
+               --  defined.
+
+               if not Found (Result)
+                 and then PRA_Def.Index_Optional
+               then
                   Result :=
-                    Attrs.Element (Alias.Attr,
-                                   Project.Attribute_Index.I_Others);
+                    Attrs.Element
+                      (Name.Attr, Project.Attribute_Index.I_Others);
+
+                  if not Found (Result)
+                    and then Alias.Attr /= No_Attribute
+                  then
+                     Result :=
+                       Attrs.Element (Alias.Attr,
+                                      Project.Attribute_Index.I_Others);
+                  end if;
                end if;
             end if;
+         end Lookup;
+
+      begin
+         if Name.Pack = Project_Level_Scope then
+            Lookup (View.Get_RO.Attrs);
+         else
+            declare
+               Def    : View_Internal.Const_Ref := View.Get_RO;
+               Cursor : Pack_Internal.Set.Cursor;
+            begin
+               loop
+                  Cursor := Def.Packs.Find (Name.Pack);
+                  exit when Pack_Internal.Set.Has_Element (Cursor)
+                    or else not Def.Extended_Root.Is_Defined;
+
+                  Def := Def.Extended_Root.Get_RO;
+               end loop;
+
+               if Pack_Internal.Set.Has_Element (Cursor) then
+                  declare
+                     Pack : constant Pack_Internal.Set.Constant_Reference_Type
+                       := Def.Packs.Constant_Reference (Cursor);
+                  begin
+                     Lookup (Pack.Attrs);
+                  end;
+               else
+                  Lookup (Project.Attribute.Set.Empty_Set);
+               end if;
+            end;
          end if;
 
          if Name.Pack = Project_Level_Scope
