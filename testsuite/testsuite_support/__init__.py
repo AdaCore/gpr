@@ -39,10 +39,8 @@ class Testsuite(e3.testsuite.Testsuite):
 
         parser.add_argument(
             "--gnatcov",
-            help="If provided, compute the source code coverage of testcases"
-                 " on ALS. This requires GNATcoverage working with"
-                 " instrumentation. The argument passed must be a directory"
-                 " that contains all SID files.")
+            action="store_true",
+            help="Compute source coverage using GNATcoverage instrumentation.")
 
         parser.add_argument(
             "--level",
