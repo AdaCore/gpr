@@ -7,7 +7,7 @@ project GPR2tools.GPRLs extends "gpr2tools.gpr" is
    for Object_Dir use GPR2tools.Base_Object_Dir & "/gprls";
    for Exec_Dir use GPR2tools.Base_Exec_Dir;
 
-   package Builder extends GPR2_Shared.Builder is
+   package Builder extends GPR2tools.Builder is
       for Executable ("gprls-main.adb") use "gprls2";
    end Builder;
 

@@ -14,9 +14,11 @@ with Ada.Containers.Unbounded_Synchronized_Queues;
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
-with Ada.Synchronous_Task_Control;
 with Ada.Unchecked_Deallocation;
 
+with Interfaces.C;
+
+with GNATCOLL.OS.Constants;
 with GNATCOLL.OS.FS;
 with GNATCOLL.Traces;
 
@@ -30,7 +32,6 @@ with GPR2.Source_Reference;
 with GPR2.Message;
 
 package body GPR2.Build.Actions_Scheduler is
-   use Ada.Synchronous_Task_Control;
    use GNATCOLL.OS.Process;
    use GNATCOLL.Directed_Graph;
    use GPR2.Build.Actions;
@@ -53,6 +54,9 @@ package body GPR2.Build.Actions_Scheduler is
       Options : GPR2.Build.Actions_Scheduler.Options'Class;
       Make_JS : in out GPR2.Build.Jobserver.Object);
    --  Execute the actions scheduler, which occurs after an option cast
+
+   procedure Kill_Process (Handle : GOP.Process_Handle);
+   --  Terminate a child before waiting for its output listeners on failure
 
    procedure Launch_Process
      (Job            : in out Actions.Process.Object'Class;
@@ -94,7 +98,6 @@ package body GPR2.Build.Actions_Scheduler is
    --  still valid and Force is False, or Ready_To_Run
    --  otherwise.
 
-
    procedure Display
      (Action  : Actions.Action_Id'Class;
       Tree_Db : GPR2.Build.Tree_Db.Object_Access);
@@ -133,17 +136,59 @@ package body GPR2.Build.Actions_Scheduler is
    --    Listen (FD1), Fetch_Content (FD1); Listen (FD2);
    --    Fetch_Content (FD2), ...
    --
-   --  The worker can be ended by calling Listen (GNATCOLL.OS.FS.Null_FD);
+   --  Listen (Null_FD) stops the task.
 
    task type Listener is
       entry Listen (FD : FS.File_Descriptor);
-      --  Start listening a given file descriptor. If FD is Null_FD then
-      --  stop the task.
+      --  Read FD, or stop if Null_FD.
 
       entry Fetch_Content (Content : out Unbounded_String);
-      --  Fetch the captured content while listening on FD. Note that the
-      --  method will block until end-of-file is reached.
+      --  Return captured output after EOF.
    end Listener;
+
+   type Listener_Access is access all Listener;
+
+   -------------
+   -- Runners --
+   -------------
+
+   type Runner_Hooks is limited record
+      Tree_Db      : GPR2.Build.Tree_Db.Object_Access;
+      Reserve_Slot : access procedure (Action_Slot : Integer);
+      Enqueue      : access procedure (Handler : Collect_Handler);
+   end record;
+   --  Parameters used to initialize a new runner
+
+   type Runner_Hooks_Access is access all Runner_Hooks;
+
+   package Process_Action_Holders is new
+     Ada.Containers.Indefinite_Holders
+     (Actions.Process.Object'Class,
+      "=" => Actions.Process."=");
+
+   package Thread_Action_Holders is new
+     Ada.Containers.Indefinite_Holders
+     (Actions.Thread.Object'Class,
+      "=" => Actions.Thread."=");
+
+   task type Process_Runner (Hooks : Runner_Hooks_Access) is
+      entry Execute (UID : Action_Id'Class; Action_Slot : Natural);
+      entry Stop;
+   end Process_Runner;
+   --  Task dedicated to executing a process, waiting for its completion,
+   --  and adding it to the queue of actions to collect.
+   --  Declared at library level so that No_Task_Hierarchy applies.
+
+   type Process_Runner_Access is access all Process_Runner;
+
+   task type Thread_Runner (Hooks : Runner_Hooks_Access) is
+      entry Execute (UID : Action_Id'Class; Action_Slot : Natural);
+      entry Stop;
+   end Thread_Runner;
+   --  Task dedicated to executing a thread action and adding it to the
+   --  queue of actions to collect.
+
+   type Thread_Runner_Access is access all Thread_Runner;
 
    -----------
    -- Clear --
@@ -727,9 +772,19 @@ package body GPR2.Build.Actions_Scheduler is
       Max_Jobs : constant Natural := Effective_Job_Number (Options.Jobs);
       --  Effective max number of simultaneous jobs
 
-      New_Action_To_Collect : Suspension_Object;
-      --  Suspension object used to wake up the main loop when a new action is
-      --  added to the collection queue.
+      Runner_Check_Period : constant Duration := 1.0;
+      --  Interval between dead-runner checks
+
+      protected Collect_Signal is
+         entry Wait;
+         --  Wait for a completion and reset the signal
+
+         procedure Signal;
+         --  Wake the main loop
+      private
+         Signalled : Boolean := False;
+      end Collect_Signal;
+      --  Wake the scheduler when an action completes
 
       Script_FD  : GNATCOLL.OS.FS.File_Descriptor := FS.Null_FD;
       Script_Dir : Path_Name.Object;
@@ -741,34 +796,6 @@ package body GPR2.Build.Actions_Scheduler is
       --  Stop_On_Fail), as opposed to simply running out of ready nodes.
       --  Only in the latter case may new nodes appear via Post_Execution.
       Active_Actions     : Natural := 0;
-
-      task type Thread_Runner is
-         entry Execute (UID : Action_Id'Class; Action_Slot : Natural);
-         entry Stop;
-      end Thread_Runner;
-      --  Task dedicated to executing a thread action and adding it to the
-      --  queue of actions to collect.
-
-      type Thread_Runner_Access is access all Thread_Runner;
-      Thread_Runners : array (1 .. Max_Jobs) of Thread_Runner_Access;
-
-      task type Process_Runner is
-         entry Execute (UID : Action_Id'Class; Action_Slot : Natural);
-         entry Stop;
-      end Process_Runner;
-      --  Task dedicated to executing a process, waiting for its completion,
-      --  and adding it to the queue of actions to collect.
-
-      type Process_Runner_Access is access all Process_Runner;
-      Process_Runners : array (1 .. Max_Jobs) of Process_Runner_Access;
-
-      use type Actions.Process.Object;
-      package Process_Action_Holders is new
-        Ada.Containers.Indefinite_Holders (Actions.Process.Object'Class);
-
-      use type Actions.Thread.Object;
-      package Thread_Action_Holders is new
-        Ada.Containers.Indefinite_Holders (Actions.Thread.Object'Class);
 
       type Slot_Entry is record
          Is_Free : Boolean := True;
@@ -850,6 +877,17 @@ package body GPR2.Build.Actions_Scheduler is
       --  Collect all finished actions currently in queue, releasing slots
       --  and updating execution state.
 
+      function Dead_Runner_Slot return Natural;
+      --  First busy slot with a terminated runner, or 0.
+
+      Hooks : aliased Runner_Hooks :=
+                (Tree_Db      => Tree_Db,
+                 Reserve_Slot => Reserve_Slot'Unrestricted_Access,
+                 Enqueue      => Enqueue'Unrestricted_Access);
+
+      Process_Runners : array (1 .. Max_Jobs) of Process_Runner_Access;
+      Thread_Runners  : array (1 .. Max_Jobs) of Thread_Runner_Access;
+
       --------------------
       -- Available_Slot --
       --------------------
@@ -864,6 +902,43 @@ package body GPR2.Build.Actions_Scheduler is
 
          return -1;
       end Available_Slot;
+
+      --------------------
+      -- Collect_Signal --
+      --------------------
+
+      protected body Collect_Signal is
+         entry Wait when Signalled is
+         begin
+            Signalled := False;
+         end Wait;
+
+         procedure Signal is
+         begin
+            Signalled := True;
+         end Signal;
+      end Collect_Signal;
+
+      ----------------------
+      -- Dead_Runner_Slot --
+      ----------------------
+
+      function Dead_Runner_Slot return Natural is
+      begin
+         for S in Serialized_Slot'Range loop
+            if not Serialized_Slot (S).Is_Free
+              and then
+                ((Thread_Runners (S) /= null
+                  and then Thread_Runners (S).all'Terminated)
+                 or else (Process_Runners (S) /= null
+                          and then Process_Runners (S).all'Terminated))
+            then
+               return S;
+            end if;
+         end loop;
+
+         return 0;
+      end Dead_Runner_Slot;
 
       -------------------------
       -- Drain_Collect_Queue --
@@ -955,7 +1030,7 @@ package body GPR2.Build.Actions_Scheduler is
       procedure Enqueue (Handler : Collect_Handler) is
       begin
          Collect_Queue.Enqueue (Handler);
-         Set_True (New_Action_To_Collect);
+         Collect_Signal.Signal;
       end Enqueue;
 
       ----------------------------
@@ -966,7 +1041,8 @@ package body GPR2.Build.Actions_Scheduler is
         (Slot_Id : Integer; UID : Action_Id'Class) is
       begin
          if Process_Runners (Slot_Id) = null then
-            Process_Runners (Slot_Id) := new Process_Runner;
+            Process_Runners (Slot_Id) :=
+              new Process_Runner (Hooks'Unchecked_Access);
          end if;
 
          Process_Runners (Slot_Id).Execute (UID, Slot_Id);
@@ -980,7 +1056,8 @@ package body GPR2.Build.Actions_Scheduler is
         (Slot_Id : Integer; UID : Action_Id'Class) is
       begin
          if Thread_Runners (Slot_Id) = null then
-            Thread_Runners (Slot_Id) := new Thread_Runner;
+            Thread_Runners (Slot_Id) :=
+              new Thread_Runner (Hooks'Unchecked_Access);
          end if;
 
          Thread_Runners (Slot_Id).Execute (UID, Slot_Id);
@@ -1070,15 +1147,28 @@ package body GPR2.Build.Actions_Scheduler is
          procedure Free is new
            Ada.Unchecked_Deallocation (Thread_Runner, Thread_Runner_Access);
       begin
+         --  Calling an entry of a task that already completed raises
+         --  Tasking_Error, which would skip the runners left to stop.
+
          for Runner of Thread_Runners loop
-            if Runner /= null then
-               Runner.Stop;
+            if Runner /= null and then not Runner.all'Terminated then
+               begin
+                  Runner.Stop;
+               exception
+                  when Tasking_Error =>
+                     null;
+               end;
             end if;
          end loop;
 
          for Runner of Process_Runners loop
-            if Runner /= null then
-               Runner.Stop;
+            if Runner /= null and then not Runner.all'Terminated then
+               begin
+                  Runner.Stop;
+               exception
+                  when Tasking_Error =>
+                     null;
+               end;
             end if;
          end loop;
 
@@ -1106,197 +1196,6 @@ package body GPR2.Build.Actions_Scheduler is
             end if;
          end loop;
       end Stop_And_Free_Runners;
-
-      --------------------
-      -- Process_Runner --
-      --------------------
-
-      task body Process_Runner is
-         UID_Holder                       : Actions.Action_Id_Holder.Holder;
-         Act_Holder                       : Process_Action_Holders.Holder;
-         Stdout, Stderr                   : Unbounded_String;
-         Exit_Code                        : Integer;
-         Proc_Handler                     : Process_Handler;
-         P_Stdout                         : FS.File_Descriptor;
-         P_Stderr                         : FS.File_Descriptor;
-         Stdout_Listener, Stderr_Listener : Listener;
-         Received_Stop_Signal             : Boolean := False;
-         Status                           : Action_Status := Unknown;
-         Act_Slot                         : Natural;
-
-      begin
-         Main_Loop : loop
-            select
-               accept Stop do
-                  Received_Stop_Signal := True;
-
-                  Stdout_Listener.Listen (Null_FD);
-                  Stderr_Listener.Listen (Null_FD);
-               end Stop;
-            or
-               accept Execute (UID : Action_Id'Class; Action_Slot : Natural) do
-                  Reserve_Slot (Action_Slot);
-                  UID_Holder.Replace_Element (UID);
-                  Act_Slot := Action_Slot;
-
-                  --  Read the action inside the rendezvous: this runs on
-                  --  the caller (main task), serializing access to the
-                  --  Actions map and avoiding race conditions. Note that
-                  --  the rendezvous must only be performed from a single
-                  --  thread (in our case, the main thread) in order to
-                  --  avoid race conditions.
-
-                  Act_Holder.Replace_Element
-                    (Process.Object'Class (Self.Tree_Db.Action (UID)));
-
-                  Display_Command_Line (Act_Holder.Element, Self.Tree_Db);
-
-               end Execute;
-            end select;
-
-            exit Main_Loop when Received_Stop_Signal;
-
-            declare
-               Act : Process.Object'Class := Act_Holder.Element;
-            begin
-               Launch_Process (Act, Proc_Handler, P_Stdout, P_Stderr);
-
-               Status := Proc_Handler.Status;
-               pragma Assert (Status in Running | Failed_To_Launch);
-
-               if Status = Running then
-                  Stdout_Listener.Listen (P_Stdout);
-                  Stderr_Listener.Listen (P_Stderr);
-
-                  Exit_Code := GOP.Wait (Proc_Handler.Handle);
-
-                  --  Fetch captured stdout and stderr if necessary
-                  Stdout_Listener.Fetch_Content (Stdout);
-                  Stderr_Listener.Fetch_Content (Stderr);
-
-                  Enqueue
-                    ((Status      => Finished,
-                      Return_Code => Exit_Code,
-                      Stdout      => Stdout,
-                      Stderr      => Stderr,
-                      UID_Holder  => UID_Holder,
-                      Action_Slot => Act_Slot));
-               elsif Status = Failed_To_Launch then
-                  Enqueue
-                    ((Status      => Failed_To_Launch,
-                      Stderr      => Proc_Handler.Error_Message,
-                      UID_Holder  => UID_Holder,
-                      Action_Slot => Act_Slot,
-                      others      => <>));
-               end if;
-            end;
-         end loop Main_Loop;
-
-         --  Wait for listener tasks to fully terminate before this task
-         --  completes, to avoid a deadlock on the GNAT global task lock during
-         --  task termination.
-
-         while not Stdout_Listener'Terminated loop
-            delay 0.001;
-         end loop;
-
-         while not Stderr_Listener'Terminated loop
-            delay 0.001;
-         end loop;
-
-      exception
-         when E : others =>
-            --  The runner died, we supposedly cannot access the Tree or
-            --  Reporter, attempt to trace errors in order to investigate
-            --  potential issues.
-            --  Note that the potential behavior or such an error is the
-            --  action scheduler indefinitely hanging (stuck waiting for this
-            --  runner to properly terminate itself) or finalize issues of
-            --  the underlying tools.
-            Traces.Trace ("!!! Process_Runner error");
-            Traces.Trace (Ada.Exceptions.Exception_Information (E));
-      end Process_Runner;
-
-      -------------------
-      -- Thread_Runner --
-      -------------------
-
-      task body Thread_Runner is
-         UID_Holder            : Actions.Action_Id_Holder.Holder;
-         Act_Holder            : Thread_Action_Holders.Holder;
-         Act_Slot              : Natural;
-         Execution_Return_Code : Integer;
-         Handler               : Collect_Handler;
-         Received_Stop_Signal  : Boolean := False;
-      begin
-         Main_Loop : loop
-            select
-               accept Stop do
-                  Received_Stop_Signal := True;
-               end Stop;
-            or
-               accept Execute (UID : Action_Id'Class; Action_Slot : Natural) do
-                  UID_Holder.Replace_Element (UID);
-                  Act_Slot := Action_Slot;
-                  Reserve_Slot (Action_Slot);
-
-                  Display (UID, Tree_Db);
-
-                  --  Read the action inside the rendezvous: this runs on
-                  --  the caller (main task), serializing access to the
-                  --  Actions map and avoiding race conditions. Note that
-                  --  the rendezvous must only be performed from a single
-                  --  thread (in our case, the main thread) in order to
-                  --  avoid race conditions.
-
-                  Act_Holder.Replace_Element
-                    (Actions.Thread.Object'Class (Tree_Db.Action (UID)));
-               end Execute;
-            end select;
-
-            exit Main_Loop when Received_Stop_Signal;
-
-            declare
-               Stdout, Stderr : Unbounded_String;
-               Action         : Actions.Thread.Object'Class :=
-                 Act_Holder.Element;
-            begin
-               Execution_Return_Code := Action.Execute (Stdout, Stderr);
-               Handler :=
-                 (Status      => Finished,
-                  Return_Code => Execution_Return_Code,
-                  Stdout      => Stdout,
-                  Stderr      => Stderr,
-                  UID_Holder  => UID_Holder,
-                  Action_Slot => Act_Slot);
-            exception
-               when E : others =>
-                  Stderr :=
-                    To_Unbounded_String
-                      (Action.UID.Image
-                       & " "
-                       & Ada.Exceptions.Exception_Information (E));
-                  Handler :=
-                    (Status      => Exception_Raised,
-                     Stdout      => Stdout,
-                     Stderr      => Stderr,
-                     UID_Holder  => UID_Holder,
-                     Action_Slot => Act_Slot);
-            end;
-
-            Enqueue (Handler);
-         end loop Main_Loop;
-      exception
-         when E : others =>
-            --  The runner died, attempt to trace errors in order to
-            --  investigate potential issues.
-            --  Note that the potential behavior or such an error is the
-            --  action scheduler indefinitely hanging (stuck waiting for this
-            --  runner to properly terminate itself) or finalize issues of
-            --  the underlying tools.
-            Traces.Trace ("!!! Thread_Runner error");
-            Traces.Trace (Ada.Exceptions.Exception_Information (E));
-      end Thread_Runner;
 
       ------------------
       -- Write_Script --
@@ -1603,10 +1502,32 @@ package body GPR2.Build.Actions_Scheduler is
 
          exit when End_Of_Iteration and then Nb_Active_Actions = 0;
 
-         --  The maximum number of runnable jobs have been launched, so now
-         --  wait for them to finish.
+         --  Bound the wait: a dead runner may never signal completion.
 
-         Suspend_Until_True (New_Action_To_Collect);
+         select
+            Collect_Signal.Wait;
+         or
+            delay Runner_Check_Period;
+
+            declare
+               Slot : constant Natural := Dead_Runner_Slot;
+            begin
+               if Slot /= 0 then
+                  pragma Annotate (Xcov, Exempt_On, "defensive code");
+                  Tree_Db.Reporter.Report
+                    ("error: internal error in the actions scheduler (runner"
+                     & " for slot" & Slot'Image & " died without reporting)");
+                  Traces.Trace
+                    ("!!! dead runner holding slot" & Slot'Image);
+                  Context.Status     := Failed;
+                  End_Of_Iteration   := True;
+                  End_Due_To_Failure := True;
+
+                  exit;
+                  pragma Annotate (Xcov, Exempt_Off);
+               end if;
+            end;
+         end select;
 
          Drain_Collect_Queue;
       end loop;
@@ -1622,7 +1543,54 @@ package body GPR2.Build.Actions_Scheduler is
       end if;
 
       Stop_And_Free_Runners;
+
+   exception
+      when others =>
+         --  No local master waits for the runners, so join them here too:
+         --  Hooks dies with this frame.
+
+         Stop_And_Free_Runners;
+
+         raise;
    end Internal_Execute;
+
+   ------------------
+   -- Kill_Process --
+   ------------------
+
+   procedure Kill_Process (Handle : GOP.Process_Handle) is
+      use type Interfaces.C.int;
+   begin
+      pragma Warnings
+        (Off, "this code can never be executed and has been deleted");
+      case GNATCOLL.OS.Constants.OS is
+         when GNATCOLL.OS.Windows =>
+            declare
+               function Terminate_Process
+                 (Process : GOP.Process_Handle;
+                  Code    : Interfaces.C.unsigned) return Interfaces.C.int
+               with Import, Convention => Stdcall,
+                    External_Name => "TerminateProcess";
+            begin
+               if Terminate_Process (Handle, 1) = 0 then
+                  Traces.Trace ("cannot terminate child");
+               end if;
+            end;
+         when others =>
+            declare
+               function Kill
+                 (Pid : GOP.Process_Handle; Signal : Interfaces.C.int)
+                  return Interfaces.C.int
+               with Import, Convention => C, External_Name => "kill";
+            begin
+               if Kill (Handle, 9) /= 0 then
+                  Traces.Trace ("cannot terminate child");
+               end if;
+            end;
+      end case;
+      pragma Warnings
+        (On, "this code can never be executed and has been deleted");
+   end Kill_Process;
 
    --------------------
    -- Launch_Process --
@@ -1636,10 +1604,10 @@ package body GPR2.Build.Actions_Scheduler is
    is
       package FS renames GNATCOLL.OS.FS;
 
-      P_Wo : FS.File_Descriptor;
-      P_Ro : FS.File_Descriptor;
-      P_We : FS.File_Descriptor;
-      P_Re : FS.File_Descriptor;
+      P_Wo : FS.File_Descriptor := FS.Invalid_FD;
+      P_Ro : FS.File_Descriptor := FS.Invalid_FD;
+      P_We : FS.File_Descriptor := FS.Invalid_FD;
+      P_Re : FS.File_Descriptor := FS.Invalid_FD;
    begin
       FS.Open_Pipe (P_Ro, P_Wo);
       FS.Open_Pipe (P_Re, P_We);
@@ -1658,9 +1626,6 @@ package body GPR2.Build.Actions_Scheduler is
 
       exception
          when Ex : GNATCOLL.OS.OS_Error =>
-            FS.Close (P_Ro);
-            FS.Close (P_Re);
-
             Proc_Handler :=
               (Status        => Failed_To_Launch,
                Error_Message =>
@@ -1669,14 +1634,27 @@ package body GPR2.Build.Actions_Scheduler is
                     & Image (Job.Command_Line.Argument_List)
                     & "' failed: "
                     & Ada.Exceptions.Exception_Message (Ex)));
+            FS.Close (P_Ro);
+            FS.Close (P_Re);
+            FS.Close (P_Wo);
+            FS.Close (P_We);
             return;
       end;
 
       FS.Close (P_Wo);
+      P_Wo := FS.Invalid_FD;
       FS.Close (P_We);
+      P_We := FS.Invalid_FD;
 
       Capture_Stdout := P_Ro;
       Capture_Stderr := P_Re;
+   exception
+      when others =>
+         FS.Close (P_Ro);
+         FS.Close (P_Re);
+         FS.Close (P_Wo);
+         FS.Close (P_We);
+         raise;
    end Launch_Process;
 
    --------------
@@ -1687,26 +1665,22 @@ package body GPR2.Build.Actions_Scheduler is
       use FS;
       To_Trim   : constant Ada.Strings.Maps.Character_Set :=
         Ada.Strings.Maps.To_Set (" " & ASCII.CR & ASCII.LF);
-      Listen_FD : File_Descriptor;
+      Listen_FD : File_Descriptor := Invalid_FD;
       Result    : Unbounded_String;
    begin
       loop
-         --  Fetch FD to listen too
          accept Listen (FD : FS.File_Descriptor) do
             Listen_FD := FD;
          end Listen;
 
-         --  If null FD then exit
          exit when Listen_FD = Null_FD;
 
          if Listen_FD /= FS.Invalid_FD then
-            --  If a valid FD then fetch the full content
             Result := FS.Read (Listen_FD, Buffer_Size => 8 * 1024);
 
-            --  Close the file descriptor
             FS.Close (Listen_FD);
+            Listen_FD := Invalid_FD;
 
-            --  And then make the result available
             accept Fetch_Content (Content : out Unbounded_String) do
                Content :=
                  Trim
@@ -1716,7 +1690,6 @@ package body GPR2.Build.Actions_Scheduler is
             end Fetch_Content;
 
          else
-            --  Handle nicely if FD is an invalid process
             accept Fetch_Content (Content : out Unbounded_String) do
                Content := To_Unbounded_String ("");
             end Fetch_Content;
@@ -1731,6 +1704,7 @@ package body GPR2.Build.Actions_Scheduler is
          --  action scheduler indefinitely hanging (stuck waiting for this
          --  runner to properly terminate itself) or finalize issues of
          --  the underlying tools.
+         FS.Close (Listen_FD);
          Traces.Trace ("!!! Listener error");
          Traces.Trace (Ada.Exceptions.Exception_Information (E));
    end Listener;
@@ -1814,6 +1788,232 @@ package body GPR2.Build.Actions_Scheduler is
 
       return Ready_To_Run;
    end Pre_Run_Status;
+
+   --------------------
+   -- Process_Runner --
+   --------------------
+
+   task body Process_Runner is
+      use FS;
+
+      UID_Holder           : Actions.Action_Id_Holder.Holder;
+      Act_Holder           : Process_Action_Holders.Holder;
+      Stdout, Stderr       : Unbounded_String;
+      Exit_Code            : Integer;
+      Proc_Handler         : Process_Handler;
+      P_Stdout             : FS.File_Descriptor := FS.Invalid_FD;
+      P_Stderr             : FS.File_Descriptor := FS.Invalid_FD;
+      Stdout_Listener      : Listener_Access := new Listener;
+      Stderr_Listener      : Listener_Access := new Listener;
+      --  Allocated: a nested task object would depend on this task's master
+      Received_Stop_Signal : Boolean := False;
+      Status               : Action_Status := Unknown;
+      Act_Slot             : Natural;
+
+      procedure Cleanup;
+      --  Reap the child before stopping listeners blocked on its pipes.
+
+      procedure Free is new
+        Ada.Unchecked_Deallocation (Listener, Listener_Access);
+
+      procedure Shutdown (L : in out Listener_Access);
+      --  Drain, stop and free L; it may be waiting on either entry.
+
+      -------------
+      -- Cleanup --
+      -------------
+
+      procedure Cleanup is
+      begin
+         --  Only descriptors not handed to a listener are owned here.
+
+         FS.Close (P_Stdout);
+         P_Stdout := FS.Invalid_FD;
+         FS.Close (P_Stderr);
+         P_Stderr := FS.Invalid_FD;
+
+         if Proc_Handler.Status = Running then
+            if GOP.State (Proc_Handler.Handle) /= GOP.TERMINATED then
+               if GOP.State (Proc_Handler.Handle) = GOP.RUNNING then
+                  Kill_Process (Proc_Handler.Handle);
+               end if;
+               Exit_Code := GOP.Wait (Proc_Handler.Handle);
+            end if;
+            Proc_Handler := (Status => Unknown);
+         end if;
+
+         Shutdown (Stdout_Listener);
+         Shutdown (Stderr_Listener);
+      end Cleanup;
+
+      --------------
+      -- Shutdown --
+      --------------
+
+      procedure Shutdown (L : in out Listener_Access) is
+         Unused_Content : Unbounded_String;
+         Signalled      : Boolean := False;
+
+      begin
+         if L = null then
+            return;
+         end if;
+
+         while not Signalled loop
+            exit when L.all'Terminated;
+
+            select
+               L.Fetch_Content (Unused_Content);
+            or
+               delay 0.01;
+            end select;
+
+            exit when L.all'Terminated;
+
+            select
+               L.Listen (Null_FD);
+               Signalled := True;
+            or
+               delay 0.01;
+            end select;
+         end loop;
+
+         --  Wait for termination before freeing the task.
+
+         while not L.all'Terminated loop
+            delay 0.001;
+         end loop;
+
+         Free (L);
+
+      exception
+         when others =>
+            --  The task may terminate before the entry call.
+
+            if L /= null and then L.all'Terminated then
+               Free (L);
+            end if;
+      end Shutdown;
+
+   begin
+      Main_Loop : loop
+         select
+            accept Stop do
+               Received_Stop_Signal := True;
+            end Stop;
+
+            --  Shut down listeners later to avoid blocking the main task.
+         or
+            accept Execute (UID : Action_Id'Class; Action_Slot : Natural) do
+               Hooks.Reserve_Slot (Action_Slot);
+               UID_Holder.Replace_Element (UID);
+               Act_Slot := Action_Slot;
+
+               --  Only the main task calls Execute, serializing Actions
+               --  access.
+
+               Act_Holder.Replace_Element
+                 (Process.Object'Class (Hooks.Tree_Db.Action (UID)));
+
+               Display_Command_Line (Act_Holder.Element, Hooks.Tree_Db);
+
+            end Execute;
+         end select;
+
+         exit Main_Loop when Received_Stop_Signal;
+
+         declare
+            Act : Process.Object'Class := Act_Holder.Element;
+         begin
+            Stdout := Null_Unbounded_String;
+            Stderr := Null_Unbounded_String;
+            Proc_Handler := (Status => Unknown);
+            if Stdout_Listener = null then
+               Stdout_Listener := new Listener;
+            end if;
+            if Stderr_Listener = null then
+               Stderr_Listener := new Listener;
+            end if;
+
+            Launch_Process (Act, Proc_Handler, P_Stdout, P_Stderr);
+
+            Status := Proc_Handler.Status;
+            pragma Assert (Status in Running | Failed_To_Launch);
+
+            if Status = Running then
+               Stdout_Listener.Listen (P_Stdout);
+               P_Stdout := FS.Invalid_FD;
+               Stderr_Listener.Listen (P_Stderr);
+               P_Stderr := FS.Invalid_FD;
+
+               Exit_Code := GOP.Wait (Proc_Handler.Handle);
+               Proc_Handler :=
+                 (Status => Finished, Process_Status => Exit_Code);
+
+               --  Fetch captured stdout and stderr if necessary
+               Stdout_Listener.Fetch_Content (Stdout);
+               Stderr_Listener.Fetch_Content (Stderr);
+
+               Hooks.Enqueue
+                 ((Status      => Finished,
+                   Return_Code => Exit_Code,
+                   Stdout      => Stdout,
+                   Stderr      => Stderr,
+                   UID_Holder  => UID_Holder,
+                   Action_Slot => Act_Slot));
+            elsif Status = Failed_To_Launch then
+               Hooks.Enqueue
+                 ((Status      => Failed_To_Launch,
+                   Stderr      => Proc_Handler.Error_Message,
+                   UID_Holder  => UID_Holder,
+                   Action_Slot => Act_Slot,
+                   others      => <>));
+            end if;
+
+         exception
+            when E : others =>
+               --  Report the failure instead of dying, as Thread_Runner
+               --  does: the action's slot is released on collection only,
+               --  so a dead runner leaves the main loop waiting forever.
+
+               Cleanup;
+
+               Hooks.Enqueue
+                 ((Status      => Exception_Raised,
+                   Stdout      => Stdout,
+                   Stderr      =>
+                     To_Unbounded_String
+                       (Ada.Exceptions.Exception_Information (E)),
+                   UID_Holder  => UID_Holder,
+                   Action_Slot => Act_Slot));
+         end;
+      end loop Main_Loop;
+
+      --  Wait for listener tasks to fully terminate before this task
+      --  completes, to avoid a deadlock on the GNAT global task lock during
+      --  task termination.
+
+      Cleanup;
+
+   exception
+      when E : others =>
+         --  The runner died, we supposedly cannot access the Tree or
+         --  Reporter, attempt to trace errors in order to investigate
+         --  potential issues.
+         --  Note that the potential behavior or such an error is the
+         --  action scheduler indefinitely hanging (stuck waiting for this
+         --  runner to properly terminate itself) or finalize issues of
+         --  the underlying tools.
+         Traces.Trace ("!!! Process_Runner error");
+         Traces.Trace (Ada.Exceptions.Exception_Information (E));
+
+         --  This task is the sole owner of the listeners, so nothing else
+         --  can release them. Left blocked, they hang the tool at exit:
+         --  Listener_Access is library-level, so the environment task
+         --  waits for them.
+
+         Cleanup;
+   end Process_Runner;
 
    ------------------------------------------
    -- Report_Deactivated_Invalid_Signature --
@@ -1904,5 +2104,82 @@ package body GPR2.Build.Actions_Scheduler is
 
       return To_String (Msg);
    end RF_Message;
+
+   -------------------
+   -- Thread_Runner --
+   -------------------
+
+   task body Thread_Runner is
+      UID_Holder            : Actions.Action_Id_Holder.Holder;
+      Act_Holder            : Thread_Action_Holders.Holder;
+      Act_Slot              : Natural;
+      Execution_Return_Code : Integer;
+      Handler               : Collect_Handler;
+      Received_Stop_Signal  : Boolean := False;
+   begin
+      Main_Loop : loop
+         select
+            accept Stop do
+               Received_Stop_Signal := True;
+            end Stop;
+         or
+            accept Execute (UID : Action_Id'Class; Action_Slot : Natural) do
+               UID_Holder.Replace_Element (UID);
+               Act_Slot := Action_Slot;
+               Hooks.Reserve_Slot (Action_Slot);
+
+               Display (UID, Hooks.Tree_Db);
+
+               --  Only the main task calls Execute, serializing Actions
+               --  access.
+
+               Act_Holder.Replace_Element
+                 (Actions.Thread.Object'Class (Hooks.Tree_Db.Action (UID)));
+            end Execute;
+         end select;
+
+         exit Main_Loop when Received_Stop_Signal;
+
+         declare
+            Stdout, Stderr : Unbounded_String;
+            Action         : Actions.Thread.Object'Class :=
+              Act_Holder.Element;
+         begin
+            Execution_Return_Code := Action.Execute (Stdout, Stderr);
+            Handler :=
+              (Status      => Finished,
+               Return_Code => Execution_Return_Code,
+               Stdout      => Stdout,
+               Stderr      => Stderr,
+               UID_Holder  => UID_Holder,
+               Action_Slot => Act_Slot);
+         exception
+            when E : others =>
+               Stderr :=
+                 To_Unbounded_String
+                   (Action.UID.Image
+                    & " "
+                    & Ada.Exceptions.Exception_Information (E));
+               Handler :=
+                 (Status      => Exception_Raised,
+                  Stdout      => Stdout,
+                  Stderr      => Stderr,
+                  UID_Holder  => UID_Holder,
+                  Action_Slot => Act_Slot);
+         end;
+
+         Hooks.Enqueue (Handler);
+      end loop Main_Loop;
+   exception
+      when E : others =>
+         --  The runner died, attempt to trace errors in order to
+         --  investigate potential issues.
+         --  Note that the potential behavior or such an error is the
+         --  action scheduler indefinitely hanging (stuck waiting for this
+         --  runner to properly terminate itself) or finalize issues of
+         --  the underlying tools.
+         Traces.Trace ("!!! Thread_Runner error");
+         Traces.Trace (Ada.Exceptions.Exception_Information (E));
+   end Thread_Runner;
 
 end GPR2.Build.Actions_Scheduler;

@@ -1,0 +1,12 @@
+--  GPR2 uses neither abort statements nor asynchronous select. Saying so lets
+--  the compiler omit the abort defer/undefer pairs around controlled-type
+--  operations.
+
+pragma Restrictions (No_Abort_Statements);
+pragma Restrictions (Max_Asynchronous_Select_Nesting => 0);
+
+--  No task depends on a master other than the environment task: the action
+--  runners are library-level. Saying so lets the compiler omit the master
+--  enter/complete pairs it otherwise emits around every container iteration.
+
+pragma Restrictions (No_Task_Hierarchy);

@@ -1,0 +1,6 @@
+description: Check that a wait exception kills and reaps a running child
+             before stopping its output listeners
+driver: python_script
+timeout: 300
+control:
+  - [SKIP, "'linux' not in env.host.platform", "requires GNU linker wrapping"]

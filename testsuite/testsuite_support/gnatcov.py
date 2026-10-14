@@ -21,7 +21,6 @@ class GNATcov(object):
         :param Testsuite testsuite: Testsuite instance to work with.
         """
         self.level = testsuite.env.options.level
-        self.sid_dir = testsuite.env.options.gnatcov
 
         self.temp_dir = os.path.join(testsuite.env.working_dir, 'gnatcov')
         self.output_dir = testsuite.output_dir

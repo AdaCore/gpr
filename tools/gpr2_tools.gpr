@@ -29,4 +29,9 @@ aggregate project GPR2_Tools is
       "projects/gpr2tools-gprls.gpr",
       "projects/gpr2tools-processes_wrapper.gpr");
 
+   package Builder is
+      for Global_Configuration_Pragmas use
+        Project'Project_Dir & "gpr2_tools_restrictions.adc";
+   end Builder;
+
 end GPR2_Tools;

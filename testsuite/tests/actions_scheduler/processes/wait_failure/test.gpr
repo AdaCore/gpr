@@ -1,0 +1,16 @@
+with "gpr2";
+
+project Test is
+   for Object_Dir use "obj";
+   for Source_Dirs use ("src");
+   for Exec_Dir use ".";
+   for Main use ("test.adb", "child.adb");
+
+   package Compiler is
+      for Switches (others) use ("-g", "-O0");
+   end Compiler;
+   package Linker is
+      for Switches ("test.adb") use
+        ("-Wl,--wrap=gnatcoll__os__process__wait");
+   end Linker;
+end Test;

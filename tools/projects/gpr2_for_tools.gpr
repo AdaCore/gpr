@@ -1,0 +1,10 @@
+--  Only redefines the Obj/Lib dirs to not mix up with standard
+--  libgpr2 builds: this one will be used by the tool so will
+--  carry the runtime restrictions global to the partition
+
+project GPR2_For_Tools extends "../../gpr2.gpr" is
+   for Object_Dir use
+     Build_Root & "/" & Build & "/obj-" & Library_Type & "-tools";
+   for Library_Dir use
+     Build_Root & "/" & Build & "/lib-" & Library_Type & "-tools";
+end GPR2_For_Tools;

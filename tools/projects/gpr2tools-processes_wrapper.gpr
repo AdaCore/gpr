@@ -1,4 +1,3 @@
-with "../../gpr2";
 with "gpr2tools-common";
 
 project GPR2tools.Processes_Wrapper extends "gpr2tools.gpr" is
@@ -8,7 +7,7 @@ project GPR2tools.Processes_Wrapper extends "gpr2tools.gpr" is
    for Object_Dir use GPR2tools.Base_Object_Dir & "/processes_wrapper";
    for Exec_Dir use GPR2tools.Base_Exec_Dir;
 
-   package Builder extends GPR2_Shared.Builder is
+   package Builder extends GPR2tools.Builder is
       for Executable ("processes_wrapper-main.adb") use "processes_wrapper";
    end Builder;
 
