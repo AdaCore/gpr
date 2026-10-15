@@ -1,0 +1,5 @@
+description: >-
+    Diagnose list expressions used for scalar naming exceptions, including
+    singleton, empty, and multi-element lists in active and inactive case
+    alternatives, without failing a precondition.
+driver: python_script

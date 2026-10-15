@@ -1,0 +1,5 @@
+project Test is
+   package Naming is
+      for Body ("test") use ("test_posix.adb");
+   end Naming;
+end Test;
