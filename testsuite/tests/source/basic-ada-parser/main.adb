@@ -1,78 +1,104 @@
-with Ada.Text_IO;
-with Gpr_Parser_Support.Text;     use Gpr_Parser_Support.Text;
-with Gpr_Parser_Support.Slocs;
-with Gpr_Parser.Basic_Ada_Parser; use Gpr_Parser.Basic_Ada_Parser;
-with Gpr_Parser.Analysis;         use Gpr_Parser.Analysis;
-
 with Ada.Command_Line;
+with Ada.Directories;
+with Ada.Streams.Stream_IO;
+with Ada.Text_IO;
+
+with GPR2.Build.Source_Base.Ada_Parser;
 
 procedure Main is
-   use all type Gpr_Parser_Support.Text.Text_Type;
 
    procedure On_Error (Msg : String);
 
    procedure On_No_Body_CB;
 
    procedure Unit_Name_CB
-     (Unit_Name     : String; Separate_From : String := "";
+     (Unit_Name     : String;
+      Separate_From : String := "";
       Generic_Unit  : Boolean);
 
    procedure With_Clause_CB
      (Unit_Name  : String;
       Is_Limited : Boolean);
 
+   --------------
+   -- On_Error --
+   --------------
+
    procedure On_Error (Msg : String) is
    begin
       Ada.Text_IO.Put_Line ("Error during parsing: " & Msg);
    end On_Error;
+
+   --------------------
+   -- On_No_Body_CB --
+   --------------------
 
    procedure On_No_Body_CB is
    begin
       Ada.Text_IO.Put_Line ("No body source file");
    end On_No_Body_CB;
 
+   ------------------
+   -- Unit_Name_CB --
+   ------------------
+
    procedure Unit_Name_CB
-     (Unit_Name     : String; Separate_From : String := "";
-      Generic_Unit  : Boolean)
-   is
+     (Unit_Name     : String;
+      Separate_From : String := "";
+      Generic_Unit  : Boolean) is
    begin
       Ada.Text_IO.Put_Line ("Unit name: " & Unit_Name);
+
       if Separate_From /= "" then
          Ada.Text_IO.Put_Line ("Separate from: " & Separate_From);
       end if;
    end Unit_Name_CB;
 
+   --------------------
+   -- With_Clause_CB --
+   --------------------
+
    procedure With_Clause_CB
      (Unit_Name  : String;
-      Is_Limited : Boolean)
-   is
+      Is_Limited : Boolean) is
    begin
       Ada.Text_IO.Put_Line ("Withed unit name: " & Unit_Name);
    end With_Clause_CB;
 
-   Ctx         : constant Analysis_Context := Create_Context;
 begin
-
    if Ada.Command_Line.Argument_Count /= 1 then
       Ada.Text_IO.Put_Line
         ("Invalid number of arguments. Usage: ./test <file to parse>");
+
       return;
    end if;
 
    declare
-      File : String := Ada.Command_Line.Argument (1);
-      States : Iconv_States := Create ("iso-8859-16", "utf-8");
+      use Ada.Streams, Ada.Streams.Stream_IO;
+
+      File   : constant String := Ada.Command_Line.Argument (1);
+      Size   : constant Natural := Natural (Ada.Directories.Size (File));
+      FD     : Ada.Streams.Stream_IO.File_Type;
+      Raw    : Stream_Element_Array (1 .. Stream_Element_Offset (Size));
+      Last   : Stream_Element_Offset;
+      Buffer : String (1 .. Size);
+
    begin
       Ada.Text_IO.Put_Line ("Loading " & File);
 
-      Parse_Context_Clauses
-        (Filename       => File,
-         Context        => Ctx,
-         States         => States,
+      Open (FD, In_File, File);
+      Read (FD, Raw, Last);
+      Close (FD);
+
+      for J in 1 .. Last loop
+         Buffer (Natural (J)) := Character'Val (Raw (J));
+      end loop;
+
+      GPR2.Build.Source_Base.Ada_Parser.Parse_Context_Clauses
+        (Buffer         => Buffer (1 .. Natural (Last)),
          Log_Error      => On_Error'Access,
          With_Clause_CB => With_Clause_CB'Access,
          Unit_Name_CB   => Unit_Name_CB'Access,
          No_Body_CB     => On_No_Body_CB'Access);
-      Close (States);
    end;
 end Main;

@@ -83,6 +83,38 @@ Loading files-to-parse/protected.adb
 Unit name: My_Protected_Body
 Separate from: Parent_Unit
 
+===== FILE quoted-operators-generic-function.ads=====
+Loading files-to-parse/quoted-operators-generic-function.ads
+Withed unit name: Dependency
+Unit name: Apply_Operators
+
+===== FILE quoted-operators-generic-package.ads=====
+Loading files-to-parse/quoted-operators-generic-package.ads
+Withed unit name: Dependency
+Unit name: Generic_Operators
+
+===== FILE quoted-operators-invalid-generic.ads=====
+Loading files-to-parse/quoted-operators-invalid-generic.ads
+
+===== FILE quoted-operators-invalid-subunit.adb=====
+Loading files-to-parse/quoted-operators-invalid-subunit.adb
+
+===== FILE quoted-operators-invalid.adb=====
+Loading files-to-parse/quoted-operators-invalid.adb
+
+===== FILE quoted-operators-invalid.ads=====
+Loading files-to-parse/quoted-operators-invalid.ads
+
+===== FILE quoted-operators-package.ads=====
+Loading files-to-parse/quoted-operators-package.ads
+Withed unit name: Dependency
+Unit name: Operators
+
+===== FILE quoted-operators-package_body.adb=====
+Loading files-to-parse/quoted-operators-package_body.adb
+Withed unit name: Dependency
+Unit name: Operators
+
 ===== FILE separate.adb=====
 Loading files-to-parse/separate.adb
 Unit name: My_Procedure

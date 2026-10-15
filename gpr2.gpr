@@ -142,7 +142,6 @@ library project GPR2 extends "gpr2_shared.gpr" is
             "GPR2.View_Internal",
             "GPR_Parser",
             "GPR_Parser.Analysis",
-            "GPR_Parser.Basic_Ada_Parser",
             "GPR_Parser.Common",
             "GPR_Parser.Debug",
             "GPR_Parser.Generic_Api",
