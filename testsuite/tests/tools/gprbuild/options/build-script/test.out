@@ -11,7 +11,7 @@ pkg%s
 pkg.ali
 /tree/obj/pkg.ali
 
-$ /bin/bash ./script.sh
+$ /bin/sh ./script.sh
 
 $ tree/main
 Hello there

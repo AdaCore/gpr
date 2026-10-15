@@ -23,8 +23,5 @@ for file in glob.glob("tree/obj/.ada_bind_main-mapping_*.tmp"):
     print("$ cat tree/obj/.ada_bind_main-mapping_*.tmp")
     print(bnr.simple_run(["cat", file], catch_error=True).out)
 
-try:
-    run([os.environ["SHELL"], "./script.sh"])
-except:
-    pass
+run(["/bin/sh", "./script.sh"])
 run([os.path.join("tree", "main")])
