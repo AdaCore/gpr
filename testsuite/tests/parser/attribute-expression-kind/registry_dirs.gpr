@@ -1,0 +1,5 @@
+project Registry_Dirs is
+   --  Processing this scalar value as a directory would fail Filename_Type's
+   --  predicate. The kind error must prevent registry-directory processing.
+   for GPR_Registry_Dirs use "";
+end Registry_Dirs;

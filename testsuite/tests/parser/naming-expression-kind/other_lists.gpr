@@ -1,0 +1,14 @@
+project Other_Lists is
+   Use_Lists := external ("USE_LISTS", "true");
+
+   package Naming is
+      case Use_Lists is
+         when "true" =>
+            for Implementation ("test") use ("test_posix.adb", "test_win.adb");
+            for Spec ("test") use ();
+            for Specification ("test") use ("test.ads");
+         when others =>
+            null;
+      end case;
+   end Naming;
+end Other_Lists;

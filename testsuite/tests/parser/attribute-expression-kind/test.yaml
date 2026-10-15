@@ -1,0 +1,5 @@
+description: >-
+    Validate scalar and list expression kinds before attribute-specific
+    processing, including Target and GPR_Registry_Dirs, while allowing
+    correctly typed attributes and attributes without a registry definition.
+driver: python_script

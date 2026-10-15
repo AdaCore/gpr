@@ -1,0 +1,13 @@
+single_expected.gpr
+attribute "Object_Dir" expects a single value
+attribute "Target" expects a single value
+attribute "Compiler'Local_Configuration_Pragmas" expects a single value
+attribute "Builder'Global_Configuration_Pragmas" expects a single value
+list_expected.gpr
+attribute "Source_Dirs" expects a list of values
+attribute "Source_Files" expects a list of values
+attribute "Compiler'Switches" expects a list of values
+attribute "Naming'Implementation_Exceptions" expects a list of values
+registry_dirs.gpr
+attribute "Gpr_Registry_Dirs" expects a list of values
+Valid scalar, list, and unregistered attributes: OK
