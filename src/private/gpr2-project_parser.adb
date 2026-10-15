@@ -3780,11 +3780,25 @@ package body GPR2.Project_Parser is
                   end;
 
                elsif Is_Name_Exception then
-                  Self.Skip_Src.Insert
-                    (Filename_Type (A.Value.Text),
-                     A.Value,
-                     Position,
-                     Inserted);
+                  declare
+                     --  Inactive naming exceptions may evaluate to an empty
+                     --  filename. Use Filename_Optional locally so the shared
+                     --  filename containers and their consumers can keep
+                     --  requiring nonempty filenames. Active exceptions are
+                     --  checked above; an empty inactive value identifies no
+                     --  source to exclude.
+
+                     Filename : constant Filename_Optional :=
+                                  Filename_Optional (A.Value.Text);
+                  begin
+                     if Filename'Length > 0 then
+                        Self.Skip_Src.Insert
+                          (Filename_Type (Filename),
+                           A.Value,
+                           Position,
+                           Inserted);
+                     end if;
+                  end;
                end if;
             end Create_And_Register_Attribute;
 
