@@ -419,6 +419,27 @@ package body GPR2.Project.Registry.Attribute is
       end case;
    end Is_Case_Sensitive;
 
+   ---------------------
+   -- Is_Unit_Indexed --
+   ---------------------
+
+   function Is_Unit_Indexed (Q_Name : Q_Attribute_Id) return Boolean is
+      C : Attribute_Definitions.Cursor := Store.Find (Q_Name);
+   begin
+      if not Attribute_Definitions.Has_Element (C) then
+         declare
+            Alias : constant Attribute_Aliases.Cursor := Aliases.Find (Q_Name);
+         begin
+            if not Attribute_Aliases.Has_Element (Alias) then
+               return False;
+            end if;
+            C := Store.Find (Attribute_Aliases.Element (Alias));
+         end;
+      end if;
+      return Attribute_Definitions.Has_Element (C)
+        and then Store.Constant_Reference (C).Index_Type = Unit_Index;
+   end Is_Unit_Indexed;
+
    Boolean_Type_Def : Attribute_Type;
 
 begin

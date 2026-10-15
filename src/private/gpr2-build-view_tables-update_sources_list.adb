@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Characters.Handling;
 with Ada.Containers.Doubly_Linked_Lists;
 
 with GPR2.Build.Unit_Info.List;
@@ -558,7 +557,7 @@ package body Update_Sources_List is
    end Krunch;
 
    function Krunch (Unit_Name : Name_Type) return Filename_Type is
-      Buffer : String := Ada.Characters.Handling.To_Lower (String (Unit_Name));
+      Buffer : String := To_Lower (Unit_Name);
       Len    : Natural := Buffer'Last;
    begin
       for J in Buffer'Range loop

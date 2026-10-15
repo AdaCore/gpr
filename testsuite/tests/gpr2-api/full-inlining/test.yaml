@@ -1,0 +1,4 @@
+description: Compile parent and child bodies with full cross-unit inlining
+driver: build_and_run
+project_file: full_inlining
+main: main

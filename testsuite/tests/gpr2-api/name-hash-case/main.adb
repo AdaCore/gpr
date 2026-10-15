@@ -7,9 +7,11 @@
 with Ada.Characters.Handling;
 with Ada.Containers.Indefinite_Hashed_Sets;
 use type Ada.Containers.Hash_Type;
+with Ada.Strings.UTF_Encoding.Strings;
 with Ada.Text_IO;
 
 with GPR2;
+with GPR2.Build.Unit_Info;
 with GPR2.Path_Name;
 
 procedure Main is
@@ -43,7 +45,7 @@ procedure Main is
 
    function Alternating (Name : Optional_Name_Type) return Optional_Name_Type
    is
-      Result : String := String (Name);
+      Result : String := Strings.UTF_Encoding.Strings.Decode (String (Name));
       Up     : Boolean := True;
    begin
       for C of Result loop
@@ -53,7 +55,9 @@ procedure Main is
          Up := not Up;
       end loop;
 
-      return Optional_Name_Type (Result);
+      return Optional_Name_Type
+        (Strings.UTF_Encoding.Strings.Encode
+           (Result, Strings.UTF_Encoding.UTF_8));
    end Alternating;
 
    -----------
@@ -61,13 +65,15 @@ procedure Main is
    -----------
 
    function Lower (Name : Optional_Name_Type) return Optional_Name_Type is
-      Result : String := String (Name);
+      Result : String := Strings.UTF_Encoding.Strings.Decode (String (Name));
    begin
       for C of Result loop
          C := Characters.Handling.To_Lower (C);
       end loop;
 
-      return Optional_Name_Type (Result);
+      return Optional_Name_Type
+        (Strings.UTF_Encoding.Strings.Encode
+           (Result, Strings.UTF_Encoding.UTF_8));
    end Lower;
 
    ------------
@@ -93,13 +99,15 @@ procedure Main is
    -----------
 
    function Upper (Name : Optional_Name_Type) return Optional_Name_Type is
-      Result : String := String (Name);
+      Result : String := Strings.UTF_Encoding.Strings.Decode (String (Name));
    begin
       for C of Result loop
          C := Characters.Handling.To_Upper (C);
       end loop;
 
-      return Optional_Name_Type (Result);
+      return Optional_Name_Type
+        (Strings.UTF_Encoding.Strings.Encode
+           (Result, Strings.UTF_Encoding.UTF_8));
    end Upper;
 
    -----------
@@ -141,14 +149,105 @@ procedure Main is
          & Boolean'Image (GPR2.Hash (Normal) = GPR2.Hash (High)));
    end Check_Bounds;
 
-   --  Latin-1 letters that fold: E acute, A grave, O circumflex, U diaeresis
+   --  Exercise UTF-8 case variants across the hash buffer boundary
 
    Accented : constant Optional_Name_Type :=
                 Optional_Name_Type
-                  (String'(Character'Val (16#C9#), Character'Val (16#E0#),
-                           Character'Val (16#D4#), Character'Val (16#FC#)));
+                  (Strings.UTF_Encoding.Strings.Encode
+                     (String'
+                        (Character'Val (16#C9#), Character'Val (16#E0#),
+                         Character'Val (16#D4#), Character'Val (16#FC#)),
+                      Strings.UTF_Encoding.UTF_8));
 
 begin
+   declare
+      UTF8_Name : constant Name_Type :=
+                    "Foo_" & Character'Val (16#C3#) & Character'Val (16#89#);
+      Expected  : constant String :=
+                    "foo_" & Character'Val (16#C3#) & Character'Val (16#A9#);
+      Path_Name : constant String :=
+                    "foo_" & Character'Val (16#C3#) & Character'Val (16#89#);
+   begin
+      if GPR2.To_Lower (UTF8_Name) /= Expected
+        or else GPR2.To_Lower (Filename_Optional (UTF8_Name)) /= Path_Name
+      then
+         raise Program_Error with "unexpected identifier or path casing";
+      end if;
+
+      if GPR2.To_Lower (Filename_Optional'("")) /= "" then
+         raise Program_Error with "empty filename casing failed";
+      end if;
+   end;
+
+   for Code in 128 .. 255 loop
+      declare
+         C        : constant Character := Character'Val (Code);
+         Name     : constant Name_Type := Name_Type
+           (Strings.UTF_Encoding.Strings.Encode
+              (String'(1 => C), Strings.UTF_Encoding.UTF_8));
+         Expected : constant String :=
+           (if Code = 16#B5# then "μ"
+            else Strings.UTF_Encoding.Strings.Encode
+              (String'(1 => Characters.Handling.To_Lower (C))));
+         Upper    : constant String :=
+           (if Code = 16#B5# then "Μ"
+            elsif Code = 16#FF# then "Ÿ"
+            else Strings.UTF_Encoding.Strings.Encode
+              (String'(1 => Characters.Handling.To_Upper (C))));
+         High     : constant Name_Type
+                      (Positive'Last - Name'Length + 1 .. Positive'Last) :=
+                        Name;
+         Info     : constant Build.Unit_Info.Object := Build.Unit_Info.Create
+           (Unit_Name     => High,
+            Index         => No_Index,
+            Kind          => S_Separate,
+            Separate_Name => "Child_" & Name);
+      begin
+         if GPR2.To_Lower (Name) /= Expected
+           or else GPR2.To_Lower (High) /= Expected
+           or else GPR2.To_Lower (Name_Type (GPR2.To_Lower (Name))) /= Expected
+         then
+            raise Program_Error with "Latin-1 identifier folding failed";
+         end if;
+
+         if GPR2.To_Upper (Name) /= Upper
+           or else GPR2.To_Upper (High) /= Upper
+           or else GPR2.To_Upper (Name_Type (GPR2.To_Upper (Name))) /= Upper
+         then
+            raise Program_Error with "Latin-1 identifier uppercase failed";
+         end if;
+
+         if String (Info.Name) /= Upper
+           or else String (Info.Separate_Name) /= "CHILD_" & Upper
+           or else String (Info.Full_Name) /=
+                     Upper & ".CHILD_" & Upper
+         then
+            raise Program_Error with "Latin-1 unit name folding failed";
+         end if;
+      end;
+   end loop;
+
+   declare
+      Wide_Name : constant Name_Type := "Foo_Ā字𐐨";
+      High      : constant Name_Type
+                    (Positive'Last .. Positive'Last) := "A";
+      Info      : constant Build.Unit_Info.Object := Build.Unit_Info.Create
+        (Unit_Name => Wide_Name, Index => No_Index, Kind => S_Body);
+      No_Body   : constant Build.Unit_Info.Object := Build.Unit_Info.Create
+        (Unit_Name => No_Name, Index => No_Index, Kind => S_No_Body);
+   begin
+      if GPR2.To_Lower (Wide_Name) /= "foo_ā字𐐨"
+        or else GPR2.To_Lower (High) /= "a"
+        or else GPR2.To_Upper (Wide_Name) /= "FOO_Ā字𐐀"
+        or else GPR2.To_Upper (High) /= "A"
+        or else String (Info.Name) /= "FOO_Ā字𐐀"
+        or else No_Body.Name'Length /= 0
+        or else No_Body.Separate_Name'Length /= 0
+      then
+         raise Program_Error with "non-Latin-1 identifier folding failed";
+      end if;
+   end;
+
    Check ("empty          ", "");
    Check ("short          ", "Foo_Bar");
    Check ("accented short ", Accented);

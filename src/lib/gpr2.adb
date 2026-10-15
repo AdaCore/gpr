@@ -8,6 +8,8 @@ with Ada.Directories;
 
 with GNATCOLL.Hash.xxHash;
 
+with GPR2.Unicode;
+
 pragma Warnings (Off, "* is an internal GNAT unit");
 with System.Soft_Links;               use System.Soft_Links;
 pragma Warnings (On, "* is an internal GNAT unit");
@@ -25,12 +27,21 @@ package body GPR2 is
 
    type Fold_Table is array (Character) of Character;
 
-   function Build_Fold_Table return Fold_Table;
+   function Build_Fold_Table
+     (Uppercase : Boolean := False) return Fold_Table;
    --  Not an aggregate: "others => <>" would leave the entries uninitialized
 
    function Equal_CI (Left, Right : String) return Boolean;
-   function Hash_CI (Key : String) return Ada.Containers.Hash_Type;
+   function Equal_Names (Left, Right : String) return Boolean;
+   function Fold_Name
+     (Name       : Optional_Name_Type;
+      ASCII_Fold : Fold_Table;
+      Uppercase  : Boolean := False) return Value_Type with Inline;
+   function Hash_CI
+     (Key : String; Identifiers : Boolean := False)
+      return Ada.Containers.Hash_Type;
    function Less_CI (Left, Right : String) return Boolean;
+   function Less_Names (Left, Right : String) return Boolean;
    --  Ada.Strings.Equal/Hash/Less_Case_Insensitive, folding through Lower
 
    ---------
@@ -39,7 +50,7 @@ package body GPR2 is
 
    overriding function "<" (Left, Right : Optional_Name_Type) return Boolean is
    begin
-      return Less_CI (String (Left), String (Right));
+      return Less_Names (String (Left), String (Right));
    end "<";
 
    overriding function "<" (Left, Right : Filename_Optional) return Boolean is
@@ -62,7 +73,7 @@ package body GPR2 is
 
    overriding function "=" (Left, Right : Optional_Name_Type) return Boolean is
    begin
-      return Equal_CI (String (Left), String (Right));
+      return Equal_Names (String (Left), String (Right));
    end "=";
 
    overriding function "=" (Left, Right : Filename_Optional) return Boolean is
@@ -83,17 +94,25 @@ package body GPR2 is
    -- Build_Fold_Table --
    -----------------------
 
-   function Build_Fold_Table return Fold_Table is
+   function Build_Fold_Table
+     (Uppercase : Boolean := False) return Fold_Table
+   is
       Result : Fold_Table;
    begin
       for C in Character loop
-         Result (C) := Ada.Characters.Handling.To_Lower (C);
+         Result (C) :=
+           (if Uppercase
+            then (if C in 'a' .. 'z'
+                  then Ada.Characters.Handling.To_Upper (C)
+                  else C)
+            else Lower_ASCII (C));
       end loop;
 
       return Result;
    end Build_Fold_Table;
 
    Lower : constant Fold_Table := Build_Fold_Table;
+   Upper : constant Fold_Table := Build_Fold_Table (Uppercase => True);
 
    --------------
    -- Equal_CI --
@@ -114,6 +133,50 @@ package body GPR2 is
 
       return True;
    end Equal_CI;
+
+   -----------------
+   -- Equal_Names --
+   -----------------
+
+   function Equal_Names (Left, Right : String) return Boolean is
+      Len : constant Natural := Natural'Min (Left'Length, Right'Length);
+   begin
+      for J in 0 .. Len - 1 loop
+         declare
+            LC : constant Character := Lower (Left (Left'First + J));
+            RC : constant Character := Lower (Right (Right'First + J));
+         begin
+            if LC /= RC then
+               return
+                 (if LC >= Character'Val (16#80#)
+                     or else RC >= Character'Val (16#80#)
+                  then Unicode.Fold (Left) = Unicode.Fold (Right)
+                  else False);
+            end if;
+         end;
+      end loop;
+      return Left'Length = Right'Length;
+   end Equal_Names;
+
+   ---------------
+   -- Fold_Name --
+   ---------------
+
+   function Fold_Name
+     (Name       : Optional_Name_Type;
+      ASCII_Fold : Fold_Table;
+      Uppercase  : Boolean := False) return Value_Type
+   is
+      Result : String (Name'Range);
+   begin
+      for J in Name'Range loop
+         if Name (J) >= Character'Val (16#80#) then
+            return Unicode.Fold (String (Name), Uppercase);
+         end if;
+         Result (J) := ASCII_Fold (Name (J));
+      end loop;
+      return Result;
+   end Fold_Name;
 
    ---------------------------
    -- Get_Executable_Suffix --
@@ -151,7 +214,7 @@ package body GPR2 is
 
    function Hash (N : Optional_Name_Type) return Ada.Containers.Hash_Type is
    begin
-      return Hash_CI (String (N));
+      return Hash_CI (String (N), Identifiers => True);
    end Hash;
 
    function Hash (Fname : Filename_Optional) return Ada.Containers.Hash_Type is
@@ -174,7 +237,10 @@ package body GPR2 is
    -- Hash_CI --
    -------------
 
-   function Hash_CI (Key : String) return Ada.Containers.Hash_Type is
+   function Hash_CI
+     (Key : String; Identifiers : Boolean := False)
+      return Ada.Containers.Hash_Type
+   is
       use GNATCOLL.Hash.xxHash;
 
       Folded : String (1 .. 256);
@@ -192,6 +258,11 @@ package body GPR2 is
 
       if Key'Length <= Folded'Length then
          for J in 1 .. Key'Length loop
+            if Identifiers
+              and then Key (Key'First + (J - 1)) >= Character'Val (16#80#)
+            then
+               return Hash (Unicode.Fold (Key));
+            end if;
             Folded (J) := Lower (Key (Key'First + (J - 1)));
          end loop;
 
@@ -205,6 +276,11 @@ package body GPR2 is
          Len := Natural'Min (Folded'Length, Key'Last - First + 1);
 
          for J in 1 .. Len loop
+            if Identifiers
+              and then Key (First + (J - 1)) >= Character'Val (16#80#)
+            then
+               return Hash (Unicode.Fold (Key));
+            end if;
             Folded (J) := Lower (Key (First + (J - 1)));
          end loop;
 
@@ -228,8 +304,7 @@ package body GPR2 is
    is
       C          : Name_Maps.Cursor;
       Result     : Natural;
-      Value      : constant String :=
-                     Ada.Characters.Handling.To_Lower (String (Name));
+      Value      : constant String := To_Lower (Name);
    begin
       if Name'Length = 0 then
          return 0;
@@ -310,6 +385,30 @@ package body GPR2 is
 
       return Left'Length < Right'Length;
    end Less_CI;
+
+   ----------------
+   -- Less_Names --
+   ----------------
+
+   function Less_Names (Left, Right : String) return Boolean is
+      Len : constant Natural := Natural'Min (Left'Length, Right'Length);
+   begin
+      for J in 0 .. Len - 1 loop
+         declare
+            LC : constant Character := Lower (Left (Left'First + J));
+            RC : constant Character := Lower (Right (Right'First + J));
+         begin
+            if LC /= RC then
+               return
+                 (if LC >= Character'Val (16#80#)
+                     or else RC >= Character'Val (16#80#)
+                  then Unicode.Fold (Left) < Unicode.Fold (Right)
+                  else LC < RC);
+            end if;
+         end;
+      end loop;
+      return Left'Length < Right'Length;
+   end Less_Names;
 
    -------------------------
    -- Locate_Exec_On_Path --
@@ -400,11 +499,20 @@ package body GPR2 is
       return Result;
    end To_Hex_String;
 
-   -------------------
-   -- To_Lower_Fast --
-   -------------------
+   --------------
+   -- To_Lower --
+   --------------
 
-   function To_Lower_Fast (Name : String) return String is
+   function To_Lower (Name : Optional_Name_Type) return Value_Type is
+   begin
+      return Fold_Name (Name, Lower);
+   end To_Lower;
+
+   --------------------
+   -- To_Lower_ASCII --
+   --------------------
+
+   function To_Lower_ASCII (Name : String) return String is
       Result : String (Name'Range);
    begin
       for J in Name'Range loop
@@ -412,7 +520,7 @@ package body GPR2 is
       end loop;
 
       return Result;
-   end To_Lower_Fast;
+   end To_Lower_ASCII;
 
    --------------
    -- To_Mixed --
@@ -435,6 +543,31 @@ package body GPR2 is
 
       return Result;
    end To_Mixed;
+
+   --------------
+   -- To_Upper --
+   --------------
+
+   function To_Upper (Name : Optional_Name_Type) return Value_Type is
+   begin
+      return Fold_Name (Name, Upper, Uppercase => True);
+   end To_Upper;
+
+   --------------------
+   -- To_Upper_ASCII --
+   --------------------
+
+   function To_Upper_ASCII (Name : String) return String is
+      Result : String (Name'Range) := Name;
+   begin
+      for J in Name'Range loop
+         if Name (J) in 'a' .. 'z' then
+            Result (J) := Character'Val (Character'Pos (Name (J)) - 32);
+         end if;
+      end loop;
+
+      return Result;
+   end To_Upper_ASCII;
 
    -------------
    -- Unquote --

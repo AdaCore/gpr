@@ -95,11 +95,10 @@ package body GPR2.Build.Compilation_Unit is
 
          when S_Separate =>
             declare
-               Up : constant String :=
-                      Characters.Handling.To_Upper (String (Sep_Name));
-               C  : Separate_Maps.Cursor;
+               Name : constant String := To_Upper (Name_Type (Sep_Name));
+               C    : Separate_Maps.Cursor;
             begin
-               Self.Separates.Insert (Name_Type (Up), UL, C, Success);
+               Self.Separates.Insert (Name_Type (Name), UL, C, Success);
             end;
       end case;
    end Add;
@@ -246,8 +245,7 @@ package body GPR2.Build.Compilation_Unit is
       Context : GPR2.Project.View.Object) return Object is
    begin
       return
-        (Name      => To_Unbounded_String
-                        (Characters.Handling.To_Upper (String (Name))),
+        (Name      => To_Unbounded_String (To_Upper (Name)),
          Root_View => Context,
          others    => <>);
    end Create;

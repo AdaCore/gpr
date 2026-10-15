@@ -577,7 +577,7 @@ package body GPR2.Build.Actions.Process.Compile is
                                  if U.Kind /= S_No_Body then
                                     Append
                                       (Content,
-                                       To_Lower_Fast (String (U.Full_Name)));
+                                       To_Lower (U.Full_Name));
                                     Append
                                       (Content,
                                        (if U.Kind = S_Spec
@@ -642,7 +642,7 @@ package body GPR2.Build.Actions.Process.Compile is
                                           or else not U.Has_Part (S_Spec))
                               then
                                  Append
-                                   (Content, To_Lower_Fast (String (U.Name)));
+                                   (Content, To_Lower (U.Name));
                                  Append
                                    (Content,
                                     (if U.Main_Part = S_Spec

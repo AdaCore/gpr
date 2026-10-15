@@ -681,7 +681,7 @@ package body GPR2.Build.Source_Base.Ada_Parser is
          Task_Name      : aliased constant String := "task";
 
          function Text (T : Token) return String
-         is (To_Lower_Fast
+         is (To_Lower_ASCII
                (Buffer (T.Text_First .. T.Text_Last)));
 
          function Name_Without_Whitespaces

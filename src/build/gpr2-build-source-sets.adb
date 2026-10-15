@@ -61,7 +61,7 @@ package body GPR2.Build.Source.Sets is
               Name_Len => BN'Length,
               Path     => Path,
               Basename => (if File_Names_Case_Sensitive then BN
-                           else To_Lower_Fast (BN)));
+                           else To_Lower (Filename_Optional (BN))));
    end Create_Key;
 
    -------------

@@ -109,7 +109,7 @@ package GPR2 is
 
    subtype Name_Type is Optional_Name_Type
      with Dynamic_Predicate => Name_Type'Length > 0;
-   --  A non case sensitive name
+   --  A UTF-8 identifier, compared with RM 2.3 simple case folding
 
    subtype Value_Type is String;
    --  A basic string type (case-sensitive, may be empty)
@@ -120,9 +120,11 @@ package GPR2 is
 
    --  filenames for example.
 
-   function To_Lower_Fast (Name : String) return String with Inline;
-   --  Name lowercased through a static table: same mapping as
-   --  Ada.Characters.Handling.To_Lower, without the per-character call.
+   function To_Lower_ASCII (Name : String) return String with Inline;
+   --  Fold ASCII letters through a static table; preserve non-ASCII bytes
+
+   function To_Upper_ASCII (Name : String) return String with Inline;
+   --  Fold ASCII letters to uppercase; preserve non-ASCII bytes
 
    function Hash (Name : String) return Ada.Containers.Hash_Type;
    --  Case sensitive hash, for names already folded where they need to be
@@ -135,16 +137,23 @@ package GPR2 is
    overriding function "<" (Left, Right : Optional_Name_Type) return Boolean;
    function Hash (N : Optional_Name_Type) return Ada.Containers.Hash_Type;
 
-   function To_Lower (Name : Name_Type) return Value_Not_Empty;
-   --  Convert name to lowercased String. Need to be able to use "in" operator
-   --  because of predefined equality used, see ARM 2012 4.5.2 28.1/4.
+   function To_Lower (Name : Optional_Name_Type) return Value_Type;
+   --  Apply locale-independent Unicode simple case folding (RM 2.3).
+   --  An empty name returns an empty value.
+
+   function To_Upper (Name : Optional_Name_Type) return Value_Type;
+   --  Apply simple folding, preferring uppercase within each fold class.
+   --  An empty name returns an empty value.
 
    type Filename_Optional is new String;
 
    overriding function "=" (Left, Right : Filename_Optional) return Boolean;
    overriding function "<" (Left, Right : Filename_Optional) return Boolean;
 
-   function To_Lower (Name : Filename_Optional) return Value_Not_Empty;
+   function To_Lower (Name : Filename_Optional) return Value_Type;
+   --  Path casing, currently folding ASCII letters only; may return empty.
+   --  TODO: Use CompareStringOrdinal with bIgnoreCase = TRUE for Windows
+   --  filename comparisons; lowercasing alone is insufficient.
 
    subtype Filename_Type is Filename_Optional
      with Dynamic_Predicate => Filename_Type'Length > 0;
@@ -374,11 +383,11 @@ private
    function Get_Tools_Directory return String;
    --  Get the GNAT prefix
 
-   function To_Lower (Name : Name_Type) return Value_Not_Empty is
-     (Ada.Characters.Handling.To_Lower (String (Name)));
+   function Lower_ASCII (C : Character) return Character is
+     (if C in 'A' .. 'Z' then Ada.Characters.Handling.To_Lower (C) else C);
 
-   function To_Lower (Name : Filename_Optional) return Value_Not_Empty is
-     (Ada.Characters.Handling.To_Lower (String (Name)));
+   function To_Lower (Name : Filename_Optional) return Value_Type is
+     (To_Lower_ASCII (String (Name)));
 
    function Has_Directory_Separator (Name : String) return Boolean is
      (for some Char of Name => GNATCOLL.Utils.Is_Directory_Separator (Char));

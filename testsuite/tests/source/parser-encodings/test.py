@@ -58,8 +58,10 @@ for kind, (source, encoding, bom, expected) in sources.items():
     for label, encoding, bom in cases:
         filename = f"{kind}-{label}.adb"
         Path(filename).write_bytes(bom + source.encode(encoding))
-        for mode in ("callback",):
+        for mode in ("callback", "mapped"):
             check(mode, filename, expected)
+        if encoding == "utf-8":
+            check("reader", filename, expected)
 
 separator_sources = {
     "with": (["with", "Café", ".", "Élan", ",", "Other", ";",
@@ -77,8 +79,10 @@ for separator_label, separator in [("vt", "\v"), ("ff", "\f")]:
         for label, encoding, bom in [("latin1", "latin-1", b"")] + encodings:
             filename = f"separators-{kind}-{separator_label}-{label}.adb"
             Path(filename).write_bytes(bom + source.encode(encoding))
-            for mode in ("callback",):
+            for mode in ("callback", "mapped"):
                 check(mode, filename, expected)
+            if encoding == "utf-8":
+                check("reader", filename, expected)
 
 comment_sources = {
     "with": ([
@@ -113,16 +117,16 @@ for ending, newline in [("lf", "\n"), ("cr", "\r"),
         for label, encoding, bom in [("latin1", "latin-1", b"")] + encodings:
             filename = f"comments-{kind}-{ending}-{label}.adb"
             Path(filename).write_bytes(bom + source.encode(encoding))
-            for mode in ("callback",):
+            for mode in ("callback", "mapped"):
                 check(mode, filename, expected)
+            if encoding == "utf-8":
+                check("reader", filename, expected)
 
 for label, encoding, bom in encodings:
     filename = f"ascii-{label}.adb"
     Path(filename).write_bytes(bom + b"".join(
         c.encode(encoding) for c in "procedure Example is begin null; end;"))
     check("mapped", filename, ["unit=Example"])
-    if encoding == "utf-8":
-        check("reader", filename, ["unit=Example"])
 
 for label, data in [
     ("utf16-short", codecs.BOM_UTF16_LE + b"x"),
@@ -140,4 +144,13 @@ for label, data in [
         check(mode, filename, ["ERROR"])
 
 check("reader-error", "unicode-utf8.adb", ["ERROR"])
+tree = Path("tree")
+tree.mkdir()
+source = "procedure Éā字𐐨 is begin null; end Éā字𐐨;"
+(tree / "main.adb").write_bytes(codecs.BOM_UTF8 + source.encode("utf-8"))
+Path("tree.gpr").write_text(
+    'project Tree is for Source_Dirs use ("tree"); '
+    'package Naming is for Body ("éā字𐐨") use "main.adb"; '
+    'end Naming; end Tree;', encoding="utf-8")
+check("tree", "tree.gpr", ["unit=éā字𐐨"])
 print(f"{count} encoding checks passed")

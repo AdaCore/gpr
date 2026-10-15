@@ -177,6 +177,9 @@ package GPR2.Project.Registry.Attribute is
    --  parts are separated by a dot which is mandatory even if the package
    --  name is empty (for a top level attribute).
 
+   function Is_Unit_Indexed (Q_Name : Q_Attribute_Id) return Boolean;
+   --  True for a registered unit-name index, including aliases
+
    function Get (Q_Name : Q_Attribute_Id) return Def
      with Pre => Exists (Q_Name);
    --  Returns the definition data for the given attribute fully qualified name

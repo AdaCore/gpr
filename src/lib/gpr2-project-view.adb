@@ -1529,11 +1529,11 @@ package body GPR2.Project.View is
             end if;
 
             declare
-               Part_Name : constant String := (if Casing = "uppercase"
-                                               then ACH.To_Upper (Unit)
-                                               elsif Casing = "mixedcase"
-                                               then To_Mixed (Unit)
-                                               else ACH.To_Lower (Unit));
+               Part_Name : constant String :=
+                 (if Casing = "uppercase"
+                  then To_Upper (Name_Type (Unit))
+                  elsif Casing = "mixedcase" then To_Mixed (Unit)
+                  else To_Lower (Name_Type (Unit)));
             begin
                Append (SN, Part_Name);
             end;
@@ -2281,7 +2281,7 @@ package body GPR2.Project.View is
             elsif Self.Is_Namespace_Root
               and then Ada.Strings.Fixed.Index (V.Text, "*") > 0
               and then GNATCOLL.Utils.Match
-                (Ada.Characters.Handling.To_Lower (String (Name)),
+                (To_Lower (Name),
                  V.Text)
             then
                return True;
@@ -2297,7 +2297,7 @@ package body GPR2.Project.View is
             elsif Self.Is_Namespace_Root
               and then Ada.Strings.Fixed.Index (V.Text, "*") > 0
               and then GNATCOLL.Utils.Match
-                (Ada.Characters.Handling.To_Lower (String (Name)),
+                (To_Lower (Name),
                  V.Text)
             then
                return True;

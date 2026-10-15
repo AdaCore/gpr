@@ -307,14 +307,13 @@ package body GPR2.Project_Parser is
    is
       Name : ASU.Unbounded_String :=
                ASU.To_Unbounded_String
-                 (Ada.Characters.Conversions.To_String
-                    (Text (Child (Node, First))));
+                 (To_UTF8 (Text (Child (Node, First))));
    begin
       for C in First + 1 .. Last loop
          ASU.Append (Name, Sep);
          ASU.Append
            (Name,
-            Ada.Characters.Conversions.To_String (Text (Child (Node, C))));
+            To_UTF8 (Text (Child (Node, C))));
       end loop;
       return Name_Type (ASU.To_String (Name));
    end Get_Name_Type;
@@ -385,14 +384,13 @@ package body GPR2.Project_Parser is
    function Get_Value_Type
      (Node : Single_Tok_Node'Class) return Value_Type
    is
-      use Ada.Characters.Conversions;
       V      : constant Wide_Wide_String := Text (Node);
       Offset : Natural := 0;
    begin
       if V (V'First) = '"' and then V (V'Last) = '"' then
          Offset := 1;
       end if;
-      return To_String (V (V'First + Offset .. V'Last - Offset));
+      return To_UTF8 (V (V'First + Offset .. V'Last - Offset));
    end Get_Value_Type;
 
    ------------------
@@ -4731,7 +4729,8 @@ package body GPR2.Project_Parser is
 
                            else
 
-                              if To_Lower_Fast (Val.Text) = To_Lower_Fast (Typ)
+                              if To_Lower_ASCII (Val.Text)
+                                = To_Lower_ASCII (Typ)
                               then
                                  Found := True;
 
@@ -4906,7 +4905,8 @@ package body GPR2.Project_Parser is
            (PA.Create
               (Name    => Create_Attr (PRA.Name),
                Value   => Get_Value_Reference
-                            (To_Lower_Fast (To_String (Self.Name)), Sloc),
+                            (To_Lower (Name_Type (To_String (Self.Name))),
+                             Sloc),
                Default => True));
 
          Attrs.Include

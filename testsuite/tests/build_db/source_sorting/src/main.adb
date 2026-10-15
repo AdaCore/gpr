@@ -19,7 +19,7 @@ procedure Main is
    begin
       for S of Sources loop
          UB.Append
-           (Actual, To_Lower_Fast (String (S.Owning_View.Name)) & ":" &
+           (Actual, To_Lower (S.Owning_View.Name) & ":" &
             String (S.Path_Name.Simple_Name) & "|");
       end loop;
       if UB.To_String (Actual) /= Expected then

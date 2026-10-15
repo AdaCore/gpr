@@ -159,6 +159,6 @@ private
    is
      (if Preserve_Case
       then Self.Text
-      else Characters.Handling.To_Lower (Self.Text));
+      else To_Lower_ASCII (Self.Text));
 
 end GPR2.Project.Attribute_Index;

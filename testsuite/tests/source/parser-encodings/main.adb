@@ -84,6 +84,17 @@ procedure Main is
    end Read_Bytes;
 
 begin
+   for Code in 128 .. 255 loop
+      declare
+         Byte : constant String := (1 => Character'Val (Code));
+      begin
+         if To_Upper_ASCII (Byte) /= Byte or else To_Lower_ASCII (Byte) /= Byte
+         then
+            raise Program_Error with "non-ASCII byte changed casing";
+         end if;
+      end;
+   end loop;
+
    if Argument (1) = "tree" then
       declare
          Tree : Project.Tree.Object;
