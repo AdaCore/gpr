@@ -3,13 +3,13 @@ stages:
   - build
   - test
 
-# Don't run CIs on branches without merge requests, except on important branches
-# The latter is important to get automatic comparison on failing tests
+# Run MR pipelines only for protected target branches.
+# Also allow scheduled and manually started pipelines.
 workflow:
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: always
-    - if: $CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_REF_NAME == "master" || $CI_COMMIT_REF_NAME == "main")
+    - if: >-
+        $CI_PIPELINE_SOURCE == "merge_request_event" &&
+        $CI_MERGE_REQUEST_TARGET_BRANCH_PROTECTED == "true"
       when: always
     - if: $CI_PIPELINE_SOURCE == "schedule"
       when: always
