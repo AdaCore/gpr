@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Characters.Conversions;
 with Ada.Containers.Vectors;
 with Ada.Exceptions;
 with Ada.Strings.UTF_Encoding.Strings;
@@ -52,6 +53,10 @@ package body GPR2.Build.Source_Base.Ada_Parser is
 
       type State is limited private;
 
+      function Encoding_Length (Buffer : String; First : Positive)
+                               return Natural;
+      --  Length of a bracket or Hex escape, or zero if absent or malformed
+
       procedure Initialize (Self : out State; Buffer : String);
       --  Buffer must also be passed to Next_Token
 
@@ -79,6 +84,9 @@ package body GPR2.Build.Source_Base.Ada_Parser is
 
       subtype Digit is Character range '0' .. '9';
 
+      subtype Hex_Digit is Character
+        with Static_Predicate => Hex_Digit in Digit | 'a' .. 'f' | 'A' .. 'F';
+
       subtype Letter is Character
         with Static_Predicate =>
           Letter in 'a' .. 'z' | 'A' .. 'Z' | '_'
@@ -95,6 +103,50 @@ package body GPR2.Build.Source_Base.Ada_Parser is
 
       function Keyword (Word : String) return Token_Kind;
       --  Return Word's token kind, ignoring case
+
+      ---------------------
+      -- Encoding_Length --
+      ---------------------
+
+      function Encoding_Length (Buffer : String; First : Positive)
+                               return Natural
+      is
+         Idx : Natural;
+      begin
+         if Buffer (First) = ASCII.ESC then
+            if Buffer'Last - First >= 4
+              and then
+                (for all J in First + 1 .. First + 4 =>
+                   Buffer (J) in Hex_Digit)
+            then
+               return 5;
+            else
+               return 0;
+            end if;
+         end if;
+
+         if Buffer'Last - First < 5
+           or else Buffer (First) /= '['
+           or else Buffer (First + 1) /= '"'
+         then
+            return 0;
+         end if;
+
+         Idx := First + 2;
+         while Idx <= Buffer'Last and then Buffer (Idx) in Hex_Digit loop
+            Idx := Idx + 1;
+         end loop;
+
+         if Idx - First - 2 in 2 | 4 | 6 | 8
+           and then Idx < Buffer'Last
+           and then Buffer (Idx) = '"'
+           and then Buffer (Idx + 1) = ']'
+         then
+            return Idx - First + 2;
+         end if;
+
+         return 0;
+      end Encoding_Length;
 
       --------------
       -- Has_Next --
@@ -281,14 +333,37 @@ package body GPR2.Build.Source_Base.Ada_Parser is
 
                Tok := (Tok_Number, First, Match);
 
-            when Letter =>
-               Idx := First + 1;
+            when Letter | '[' | ASCII.ESC =>
+               Idx := First;
 
-               while Idx <= Last and then S (Idx) in Alphanumeric loop
-                  Idx := Idx + 1;
+               loop
+                  while Idx <= Last and then S (Idx) in Alphanumeric loop
+                     Idx := Idx + 1;
+                  end loop;
+
+                  exit when Idx > Last or else S (Idx) not in '[' | ASCII.ESC;
+
+                  Match := Encoding_Length (S, Idx);
+                  if Match = 0 then
+                     if S (Idx) = ASCII.ESC
+                       or else
+                         (Idx > First
+                          and then Idx < Last
+                          and then S (Idx + 1) = '"')
+                     then
+                        raise Ada.Strings.UTF_Encoding.Encoding_Error
+                          with "invalid wide character encoding in identifier";
+                     end if;
+                     exit;
+                  end if;
+                  Idx := Idx + Match;
                end loop;
 
-               Tok := (Keyword (S (First .. Idx - 1)), First, Idx - 1);
+               if Idx = First then
+                  Tok := (Tok_Failure, First, First);
+               else
+                  Tok := (Keyword (S (First .. Idx - 1)), First, Idx - 1);
+               end if;
 
             when ':' =>
                if First < Last and then S (First + 1) = '=' then
@@ -687,7 +762,7 @@ package body GPR2.Build.Source_Base.Ada_Parser is
          function Name_Without_Whitespaces
            (First_Idx, Last_Idx : Natural;
             Whitespaces         : Token_Vector) return String;
-         --  Return the name with whitespace and comment spans removed
+         --  Remove whitespace/comments and decode character escapes to UTF-8
 
          function Skip_Until
            (Kinds    : Kind_Array;
@@ -721,11 +796,69 @@ package body GPR2.Build.Source_Base.Ada_Parser is
            (First_Idx, Last_Idx : Natural;
             Whitespaces         : Token_Vector) return String
          is
-            Result : String (1 .. Last_Idx - First_Idx + 1);
-            Len    : Natural := 0;
-            Cursor : Natural := First_Idx;
+            Result    : String (1 .. Last_Idx - First_Idx + 1);
+            Len       : Natural := 0;
+            Cursor    : Natural := First_Idx;
+            Non_ASCII : Boolean := False;
 
+            function Decode_Escapes return String;
             procedure Take (From, To : Natural);
+
+            --------------------
+            -- Decode_Escapes --
+            --------------------
+
+            function Decode_Escapes return String is
+               Decoded : Wide_Wide_String (1 .. Len);
+               Length  : Natural := 0;
+               Idx     : Positive := 1;
+               First   : Positive;
+               Span    : Natural;
+            begin
+               loop
+                  First := Idx;
+                  while Idx <= Len
+                    and then Result (Idx) not in '[' | ASCII.ESC
+                  loop
+                     Idx := Idx + 1;
+                  end loop;
+
+                  if Idx > First then
+                     declare
+                        Plain : constant Wide_Wide_String :=
+                          (if UTF8
+                           then Ada.Strings.UTF_Encoding.Wide_Wide_Strings.
+                             Decode (Result (First .. Idx - 1))
+                           else Ada.Characters.Conversions.
+                             To_Wide_Wide_String
+                               (Result (First .. Idx - 1)));
+                     begin
+                        Decoded (Length + 1 .. Length + Plain'Length) := Plain;
+                        Length := Length + Plain'Length;
+                     end;
+                  end if;
+
+                  exit when Idx > Len;
+                  Span := Encoding_Length (Result (1 .. Len), Idx);
+                  if Span = 0 then
+                     raise Ada.Strings.UTF_Encoding.Encoding_Error
+                       with "invalid wide character encoding in identifier";
+                  end if;
+
+                  Length := Length + 1;
+                  First := Idx + (if Result (Idx) = ASCII.ESC then 1 else 2);
+                  Decoded (Length) := Wide_Wide_Character'Val
+                    (Natural'Value
+                       ("16#" & Result
+                          (First .. Idx + Span
+                             - (if Result (Idx) = ASCII.ESC then 1 else 3))
+                        & '#'));
+                  Idx := Idx + Span;
+               end loop;
+
+               return Ada.Strings.UTF_Encoding.Wide_Wide_Strings.Encode
+                 (Decoded (1 .. Length));
+            end Decode_Escapes;
 
             ----------
             -- Take --
@@ -749,27 +882,33 @@ package body GPR2.Build.Source_Base.Ada_Parser is
             Take (Cursor, Last_Idx);
 
             for C of Result (1 .. Len) loop
-               if C >= Character'Val (16#80#) then
-                  if UTF8 then
-                     --  Below we check that the sequence is actual UTF-8:
-                     --  the call to Decode will raise Encoding_Error if not.
-                     declare
-                        Decoded : constant Wide_Wide_String :=
-                          Ada.Strings.UTF_Encoding.Wide_Wide_Strings.Decode
-                            (Result (1 .. Len));
-                        pragma Unreferenced (Decoded);
-                     begin
-                        return Result (1 .. Len);
-                     end;
-                  else
-                     --  Latin-1 to utf8 conversion
-                     return Ada.Strings.UTF_Encoding.Strings.Encode
-                       (Result (1 .. Len));
-                  end if;
+               if C in '[' | ASCII.ESC then
+                  return Decode_Escapes;
+               elsif C >= Character'Val (16#80#) then
+                  Non_ASCII := True;
                end if;
             end loop;
 
-            --  No character above 16#80#, so plain ascii, return immediately.
+            if Non_ASCII then
+               if UTF8 then
+                  --  Below we check that the sequence is actual UTF-8:
+                  --  the call to Decode will raise Encoding_Error if not.
+                  declare
+                     Decoded : constant Wide_Wide_String :=
+                       Ada.Strings.UTF_Encoding.Wide_Wide_Strings.Decode
+                         (Result (1 .. Len));
+                     pragma Unreferenced (Decoded);
+                  begin
+                     return Result (1 .. Len);
+                  end;
+               else
+                  --  Latin-1 to utf8 conversion
+                  return Ada.Strings.UTF_Encoding.Strings.Encode
+                    (Result (1 .. Len));
+               end if;
+            end if;
+
+            --  Plain ASCII needs no conversion
             return Result (1 .. Len);
          end Name_Without_Whitespaces;
 

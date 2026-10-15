@@ -27,6 +27,8 @@ package GPR2.Build.Source_Base.Ada_Parser is
    --  Report with clauses, the unit name and pragma No_Body through callbacks.
    --  Parse only the first unit header; multi-unit sources are unsupported.
    --  Buffer is Latin-1 unless a BOM specifies UTF-8, UTF-16 or UTF-32.
+   --  Bracket escapes and GNAT Hex escapes (ESC + four hex digits) are
+   --  recognized in identifiers.
    --  Unit names passed to callbacks are UTF-8.
 
 end GPR2.Build.Source_Base.Ada_Parser;

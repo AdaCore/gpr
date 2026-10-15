@@ -63,6 +63,87 @@ for kind, (source, encoding, bom, expected) in sources.items():
         if encoding == "utf-8":
             check("reader", filename, expected)
 
+bracket_names = [
+    ("short", 'Caf["E9"]', "Café"),
+    ("four", '["00C9"]t["00e9"]', "Été"),
+    ("six", '["010428"]', "𐐨"),
+    ("eight", '["00010428"]', "𐐨"),
+    ("adjacent", '["00E9"]["0100"]["5B57"]', "éĀ字"),
+    ("ascii", 'C["0061"]fe', "Cafe"),
+    ("mixed-latin1", 'Café["0100"]', "CaféĀ"),
+    ("mixed-unicode", 'Ā["00E9"]𐐨', "Āé𐐨"),
+]
+hex_names = [
+    ("short", 'Caf\x1b00e9', "Café"),
+    ("start", '\x1b00C9te', "Éte"),
+    ("greek", '\x1b03B1lpha', "αlpha"),
+    ("wide", '\x1b5B57', "字"),
+    ("adjacent", '\x1b00E9\x1b0100\x1b5B57', "éĀ字"),
+    ("ascii", 'C\x1b0061fe', "Cafe"),
+    ("mixed-latin1", 'Café\x1b0100', "CaféĀ"),
+    ("mixed-brackets", '\x1b00C9["0100"]', "ÉĀ"),
+]
+encoded_names = ([('brackets', *name) for name in bracket_names]
+                 + [('hex', *name) for name in hex_names])
+for notation, kind, name, decoded in encoded_names:
+    cases = [
+        ("with", f'with {name} -- ["not hex"] \x1bGGGG\n'
+         ' . ["5B57"], Other; '
+         'procedure Example is begin null; end;',
+         ["unit=Example", f"with={decoded}.字", "with=Other"]),
+        ("unit", f'package body {name} . ["0100"] is end;',
+         [f"unit={decoded}.Ā"]),
+        ("separate", f'separate ({name} . ["5B57"]) '
+         'procedure ["00C9"] is begin null; end;',
+         ["unit=É", f"parent={decoded}.字"]),
+    ]
+    if notation == "hex":
+        cases.append(("simple-unit", f'procedure {name} is begin null; end;',
+                      [f"unit={decoded}"]))
+    for context, source, expected in cases:
+        for label, encoding, bom in [("latin1", "latin-1", b"")] + encodings:
+            try:
+                data = source.encode(encoding)
+            except UnicodeEncodeError:
+                continue
+            filename = f"{notation}-{kind}-{context}-{label}.adb"
+            Path(filename).write_bytes(bom + data)
+            for mode in ("callback", "mapped"):
+                check(mode, filename, expected)
+            if encoding == "utf-8":
+                check("reader", filename, expected)
+
+for label, digits in [
+    ("empty", ""),
+    ("one", "0"),
+    ("two", "00"),
+    ("three", "000"),
+    ("hex", "00GG"),
+    ("last-digit", "123G"),
+    ("high-surrogate", "D800"),
+    ("low-surrogate", "DEAD"),
+]:
+    for position, prefix in [("start", ""), ("middle", "Bad")]:
+        filename = f"hex-invalid-{label}-{position}.adb"
+        Path(filename).write_bytes(f"procedure {prefix}\x1b{digits}".encode())
+        for mode in ("callback", "mapped", "reader"):
+            check(mode, filename, ["ERROR"])
+
+for label, name in [
+    ("empty", 'Bad[""]'),
+    ("odd", 'Bad["123"]'),
+    ("long", 'Bad["123456789"]'),
+    ("hex", 'Bad["GGGG"]'),
+    ("unclosed", 'Bad["00E9"'),
+    ("surrogate", 'Bad["DEAD"]'),
+    ("range", 'Bad["00110000"]'),
+    ("overflow", 'Bad["FFFFFFFF"]'),
+]:
+    filename = f"brackets-invalid-{label}.adb"
+    Path(filename).write_text(f"procedure {name} is end;", encoding="utf-8")
+    for mode in ("callback", "mapped", "reader"):
+        check(mode, filename, ["ERROR"])
+
 separator_sources = {
     "with": (["with", "Café", ".", "Élan", ",", "Other", ";",
               "procedure", "Été", "is begin null; end Été;"],
