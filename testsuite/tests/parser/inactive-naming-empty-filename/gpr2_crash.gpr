@@ -1,0 +1,15 @@
+project Gpr2_Crash is
+   Ext_File := external ("EXT_FILE", "");
+
+   for Main use ("main.adb");
+   for Object_Dir use "obj";
+
+   package Naming is
+      case Ext_File is
+         when "" =>
+            null;
+         when others =>
+            for Body ("Ext") use Ext_File;
+      end case;
+   end Naming;
+end Gpr2_Crash;
