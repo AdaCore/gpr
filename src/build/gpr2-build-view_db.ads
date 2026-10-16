@@ -184,7 +184,7 @@ package GPR2.Build.View_Db is
    function Has_Runtime_Overrides (Self : Object) return Boolean
      with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Units;
    --  Whether visible sources belong to runtime-overriding units in the
-   --  view's namespace. Cached until sources are refreshed.
+   --  view's namespace. Computed when sources are refreshed.
 
    function Runtime_Dependencies
      (Self         : Object;

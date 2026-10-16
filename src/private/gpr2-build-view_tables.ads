@@ -202,10 +202,9 @@ private package GPR2.Build.View_Tables is
       --  Cache for Visible_Source, dropped when the tree's source
       --  generation changes.
 
-      Runtime_Override_Units    : Runtime_Override_Maps.Map;
-      Runtime_Overrides_Cached : Boolean := False;
-      Runtime_Overrides_Gen    : Natural := 0;
+      Runtime_Override_Units : Runtime_Override_Maps.Map;
       --  Visible runtime overrides by basename, shared by the view's binders.
+      --  Rebuilt after source refreshes; read-only during action execution.
 
       Visible_Source_Closure : GPR2.Project.View.Vector.Object;
       --  The list of views to consider during source lookup: the current view
@@ -277,6 +276,9 @@ private package GPR2.Build.View_Tables is
      (Data           : View_Data_Ref;
       Messages       : in out GPR2.Log.Object;
       Matching_Units : Boolean := True);
+
+   procedure Update_Runtime_Overrides (Data : View_Data_Ref);
+   --  Rebuild runtime dependency lookup after all affected views are refreshed
 
    View_Base_For : access function
                      (Data : View_Data) return View_Db.Object;

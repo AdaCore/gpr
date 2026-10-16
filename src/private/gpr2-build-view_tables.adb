@@ -1747,6 +1747,54 @@ package body GPR2.Build.View_Tables is
       end;
    end Unit_Dependencies;
 
+   ------------------------------
+   -- Update_Runtime_Overrides --
+   ------------------------------
+
+   procedure Update_Runtime_Overrides (Data : View_Data_Ref) is
+   begin
+      Data.Runtime_Override_Units.Clear;
+
+      if Data.Tree_Db.Source_Option < Sources_Units
+        or else Data.View.Namespace_Roots.Is_Empty
+      then
+         return;
+      end if;
+
+      declare
+         Root : constant View_Data_Ref :=
+                  Get_Data
+                    (Data.Tree_Db, Data.View.Namespace_Roots.First_Element);
+         Ambiguous : Boolean;
+      begin
+         for File of Root.Runtime_Override_Files loop
+            declare
+               Src : constant Build.Source.Object :=
+                       Visible_Source (Data, Simple_Name (File), Ambiguous);
+               Units : Containers.Name_Set;
+            begin
+               if Src.Is_Defined and then Src.Has_Units then
+                  for U of Src.Units loop
+                     if U.Kind in S_Spec | S_Body
+                       and then U.Name'Length > 0
+                       and then Root.CUs.Contains (Name_Type (U.Name))
+                       and then Root.CUs.Constant_Reference
+                         (Name_Type (U.Name)).Overridden_From_Runtime
+                     then
+                        Units.Include (Name_Type (U.Name));
+                     end if;
+                  end loop;
+               end if;
+
+               if not Units.Is_Empty then
+                  Data.Runtime_Override_Units.Insert
+                    (Simple_Name (File), Units);
+               end if;
+            end;
+         end loop;
+      end;
+   end Update_Runtime_Overrides;
+
    package body Update_Sources_List is separate;
 
    --------------------
