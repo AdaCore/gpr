@@ -1,0 +1,3 @@
+description: >
+    Naming-only source loading avoids reads and preserves priority on refresh
+driver: basic

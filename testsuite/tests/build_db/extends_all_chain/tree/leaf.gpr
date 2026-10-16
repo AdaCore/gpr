@@ -1,0 +1,4 @@
+project Leaf is
+   for Source_Dirs use ("leaf");
+   for Object_Dir use "obj-leaf";
+end Leaf;

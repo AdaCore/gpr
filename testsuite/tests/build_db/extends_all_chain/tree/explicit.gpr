@@ -1,0 +1,5 @@
+project Explicit extends "external.gpr" is
+   for Source_Dirs use ("root");
+   for Object_Dir use "obj-explicit";
+   for Externally_Built use "false";
+end Explicit;

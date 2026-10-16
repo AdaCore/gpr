@@ -141,7 +141,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 --- create body src/pkg.adb
 --- create spec src/pkg2.ads
 --- create separate src/pkg-sub.adb
---- Refresh list of sources
+--- Refresh list of sources through view
 pkg2.ads: warning: unit name "PKG" does not match source name. The source will be ignored.
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
@@ -162,7 +162,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
      sep. SUB: src/pkg-sub.adb (from view Extending)
 -----------------------------------
 --- create separate ext/pkg-sub.adb
---- Refresh list of sources
+--- Refresh list of sources through view
 pkg2.ads: warning: unit name "PKG" does not match source name. The source will be ignored.
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
@@ -183,7 +183,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
      sep. SUB: ext/pkg-sub.adb (from view Extending)
 -----------------------------------
 --- rm ext/pkg-sub.adb
---- Refresh list of sources
+--- Refresh list of sources through view
 pkg2.ads: warning: unit name "PKG" does not match source name. The source will be ignored.
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
@@ -204,7 +204,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
      sep. SUB: src/pkg-sub.adb (from view Extending)
 -----------------------------------
 --- rm src/pkg-sub.adb
---- Refresh list of sources
+--- Refresh list of sources through view
 pkg2.ads: warning: unit name "PKG" does not match source name. The source will be ignored.
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
@@ -223,7 +223,7 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
 -----------------------------------
 --- rm src/pkg.adb
 --- rm src/pkg2.ads
---- Refresh list of sources
+--- Refresh list of sources through view
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
@@ -237,7 +237,22 @@ extending.gpr:3:30: warning: there are no sources of language "C" in this projec
      spec: src/pkg.ads (from view Extending)
 -----------------------------------
 --- create body ext/pkg.adb
---- Refresh list of sources
+--- Refresh list of sources through view
+extending.gpr:3:30: warning: there are no sources of language "C" in this project
+-----------------------------------
+* Sources:
+ - sources of Base extended by Extending
+   - src/pkg.ads (spec)
+ - sources of Extending
+   - ext/pkg.adb (body)
+   - src/pkg.ads (spec)
+* Compilation units:
+ - units of Extending
+   - PKG
+     spec: src/pkg.ads (from view Extending)
+     body: ext/pkg.adb (from view Extending)
+-----------------------------------
+--- Loading project extending.gpr
 extending.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
@@ -282,7 +297,31 @@ extending2.gpr:3:30: warning: there are no sources of language "C" in this proje
 --- create spec src2/pkg2.ads
 --- create body src2/pkg2.adb
 --- rm src2/pkg.ads
---- Refresh list of sources
+--- Refresh list of sources through view
+extending2.gpr:3:30: warning: there are no sources of language "C" in this project
+-----------------------------------
+* Sources:
+ - sources of Base extended by Extending2
+   - src/pkg.adb (body)
+   - src/pkg.ads (spec)
+ - sources of Base2 extended by Extending2
+   - src2/pkg2.adb (body)
+   - src2/pkg2.ads (spec)
+ - sources of Extending2
+   - src/pkg.adb (body)
+   - src/pkg.ads (spec)
+   - src2/pkg2.adb (body)
+   - src2/pkg2.ads (spec)
+* Compilation units:
+ - units of Extending2
+   - PKG
+     spec: src/pkg.ads (from view Extending2)
+     body: src/pkg.adb (from view Extending2)
+   - PKG2
+     spec: src2/pkg2.ads (from view Extending2)
+     body: src2/pkg2.adb (from view Extending2)
+-----------------------------------
+--- Loading project extending2.gpr
 extending2.gpr:3:30: warning: there are no sources of language "C" in this project
 -----------------------------------
 * Sources:
