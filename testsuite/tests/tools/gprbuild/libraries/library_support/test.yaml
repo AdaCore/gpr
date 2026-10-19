@@ -1,2 +1,3 @@
 description: Library_Support attribute handling test
 driver: python_script
+timeout: 800
