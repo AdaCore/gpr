@@ -3528,6 +3528,10 @@ package body GPR2.Project_Parser is
             function Create_Index return PAI.Object;
             --  Create index with "at" part if exists
 
+            function Check_Value_Kind (Single : Boolean) return Boolean;
+            --  Check the expression kind against the registered attribute
+            --  definition and report a diagnostic if it does not match.
+
             procedure Create_And_Register_Attribute
               (Index  : PAI.Object;
                Values : Containers.Source_Value_List;
@@ -3553,11 +3557,34 @@ package body GPR2.Project_Parser is
             use PRA;
 
             Is_Name_Exception : constant Boolean :=
-              N_Id
-              in Naming.Spec.Attr
-               | Naming.Specification.Attr
-               | Naming.Body_N.Attr
-               | Naming.Implementation.Attr;
+              Q_Name
+              in Naming.Spec
+               | Naming.Specification
+               | Naming.Body_N
+               | Naming.Implementation;
+
+            ----------------------
+            -- Check_Value_Kind --
+            ----------------------
+
+            function Check_Value_Kind (Single : Boolean) return Boolean is
+            begin
+               if PRA.Exists (Q_Name)
+                 and then Single /= (PRA.Get (Q_Name).Value = PRA.Single)
+               then
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level   => Message.Critical_Error,
+                        Sloc    => Source_Reference.Object (Id),
+                        Message => "attribute """ & Image (Q_Name)
+                                   & """ expects "
+                                   & (if Single then "a list of values"
+                                      else "a single value")));
+                  return False;
+               end if;
+
+               return True;
+            end Check_Value_Kind;
 
             -----------------------------------
             -- Create_And_Register_Attribute --
@@ -3780,11 +3807,25 @@ package body GPR2.Project_Parser is
                   end;
 
                elsif Is_Name_Exception then
-                  Self.Skip_Src.Insert
-                    (Filename_Type (A.Value.Text),
-                     A.Value,
-                     Position,
-                     Inserted);
+                  declare
+                     --  Inactive naming exceptions may evaluate to an empty
+                     --  filename. Use Filename_Optional locally so the shared
+                     --  filename containers and their consumers can keep
+                     --  requiring nonempty filenames. Active exceptions are
+                     --  checked above; an empty inactive value identifies no
+                     --  source to exclude.
+
+                     Filename : constant Filename_Optional :=
+                                  Filename_Optional (A.Value.Text);
+                  begin
+                     if Filename'Length > 0 then
+                        Self.Skip_Src.Insert
+                          (Filename_Type (Filename),
+                           A.Value,
+                           Position,
+                           Inserted);
+                     end if;
+                  end;
                end if;
             end Create_And_Register_Attribute;
 
@@ -3864,14 +3905,27 @@ package body GPR2.Project_Parser is
 
                else
                   for V of Values.Indexed_Values.Values loop
-                     Create_And_Register_Attribute
-                       (Index  => V.Index,
-                        Values => V.Values,
-                        Single => V.Single);
+                     --  A full associative array expression carries a value
+                     --  kind for each entry, rather than for the array itself.
+
+                     if Check_Value_Kind (V.Single) then
+                        Create_And_Register_Attribute
+                          (Index  => V.Index,
+                           Values => V.Values,
+                           Single => V.Single);
+                     end if;
                   end loop;
                end if;
 
             elsif Values /= No_Values then
+               --  Validate before constructing the attribute or performing
+               --  special processing, which may access a scalar value. A kind
+               --  error must also prevent GPR_Registry_Dirs processing below.
+
+               if not Check_Value_Kind (Values.Single) then
+                  return;
+               end if;
+
                if I_Sloc.Is_Defined and then PRA.Exists (Q_Name) then
                   I_Sloc.Set_Case
                     (PRA.Is_Case_Sensitive
@@ -3889,7 +3943,7 @@ package body GPR2.Project_Parser is
             --  the GPR registry which may be used in the rest of the project.
 
 
-            if Get_Name_Type (Name) = "gpr_registry_dirs" then
+            if Q_Name = PRA.GPR_Registry_Dirs then
                Handle_GPR_Registry_Dirs (Node);
             end if;
          end Parse_Attribute_Decl;
@@ -4493,12 +4547,14 @@ package body GPR2.Project_Parser is
                                            Get_Name_Type
                                              (Name.As_Single_Tok_Node);
                      N_Id              : constant Attribute_Id := +N_Str;
+                     Q_Name            : constant Q_Attribute_Id :=
+                                           (Pack_Name, N_Id);
                      Is_Name_Exception : constant Boolean :=
-                                           N_Id
-                                           in Naming.Spec.Attr
-                                            | Naming.Specification.Attr
-                                            | Naming.Body_N.Attr
-                                            | Naming.Implementation.Attr;
+                                           Q_Name
+                                           in Naming.Spec
+                                            | Naming.Specification
+                                            | Naming.Body_N
+                                            | Naming.Implementation;
                   begin
                      if Is_Name_Exception then
                         Parse_Attribute_Decl (Node.As_Attribute_Decl);
@@ -4555,30 +4611,11 @@ package body GPR2.Project_Parser is
          --  checks if there's no critical error.
 
          else
-            --  Check value kind
+            --  The value kind was checked before attribute construction.
 
             Def := PRA.Get (Q_Name);
 
-            if Def.Value /= A.Kind then
-               if Def.Value = PRA.Single then
-                  Tree.Log_Messages.Append
-                    (Message.Create
-                       (Level => Message.Critical_Error,
-                        Sloc  => Source_Reference.Object (A),
-                        Message => "attribute """ & Image (Q_Name) &
-                                   """ expects a single value"));
-               else
-                  Tree.Log_Messages.Append
-                    (Message.Create
-                       (Level => Message.Critical_Error,
-                        Sloc  => Source_Reference.Object (A),
-                        Message => "attribute """ & Image (Q_Name) &
-                                   """ expects a list of values"));
-               end if;
-
-               Include := False;
-
-            elsif Def.Value = PRA.Single
+            if Def.Value = PRA.Single
               and then Def.Empty_Value in PRA.Error | PRA.Ignore
               and then Length (A.Value.Unchecked_Text) = 0
             then

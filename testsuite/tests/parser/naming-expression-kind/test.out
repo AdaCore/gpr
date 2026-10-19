@@ -1,0 +1,10 @@
+test.gpr
+attribute "Naming'Body" expects a single value
+other_lists.gpr -XUSE_LISTS=true
+attribute "Naming'Implementation" expects a single value
+attribute "Naming'Spec" expects a single value
+attribute "Naming'Specification" expects a single value
+other_lists.gpr -XUSE_LISTS=false
+attribute "Naming'Implementation" expects a single value
+attribute "Naming'Spec" expects a single value
+attribute "Naming'Specification" expects a single value

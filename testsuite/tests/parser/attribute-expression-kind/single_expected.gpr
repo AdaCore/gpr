@@ -1,0 +1,12 @@
+project Single_Expected is
+   for Object_Dir use ("obj");
+   for Target use ("native");
+
+   package Compiler is
+      for Local_Configuration_Pragmas use ("config.adc");
+   end Compiler;
+
+   package Builder is
+      for Global_Configuration_Pragmas use ();
+   end Builder;
+end Single_Expected;

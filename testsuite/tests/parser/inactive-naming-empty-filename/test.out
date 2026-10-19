@@ -1,0 +1,8 @@
+EXT_FILE unset: OK
+EXT_FILE empty: OK
+EXT_FILE nonempty: OK
+Inactive empty filenames: OK
+empty filename not allowed for attribute "Naming'Body"
+empty filename not allowed for attribute "Naming'Implementation"
+empty filename not allowed for attribute "Naming'Spec"
+empty filename not allowed for attribute "Naming'Specification"

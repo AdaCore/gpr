@@ -1,0 +1,5 @@
+description: >-
+    Regression for issue 950: ignore an empty naming exception in an inactive
+    case alternative, accept a nonempty active exception, and reject empty
+    active exceptions for Body, Implementation, Spec, and Specification.
+driver: python_script

@@ -1,0 +1,18 @@
+project Valid is
+   for Object_Dir use "obj";
+   for Source_Dirs use (".");
+   for Main use ("main.adb");
+
+   package Compiler is
+      for Switches ("Ada") use ("-g");
+   end Compiler;
+
+   --  Unregistered attributes have no declared value kind. In particular,
+   --  User_Package.Body is unrelated to the scalar Naming.Body attribute.
+   package User_Package is
+      for Scalar_Attribute use "one";
+      for List_Attribute use ("one", "two");
+      for Body ("main") use ("main.adb");
+      for GPR_Registry_Dirs use "";
+   end User_Package;
+end Valid;
