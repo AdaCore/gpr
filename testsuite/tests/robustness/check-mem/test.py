@@ -39,9 +39,11 @@ first_final = False
 
 #  Run driver 2 times
 for r in range(0, 2):
-    BuilderAndRunner().call([EXEC, str(r * 2 + 1)])
+    #  This executable uses libgmem to record allocations for gnatmem: run it
+    #  directly, without adding Valgrind's instrumentation.
+    BuilderAndRunner().direct_call([EXEC, str(r * 2 + 1)])
     with open("run%d.out" % r, "w+") as ofn:
-        subprocess.call(["gnatmem", "-t", "0", EXEC], stdout=ofn)
+        subprocess.check_call(["gnatmem", "-t", "0", EXEC], stdout=ofn)
         ofn.seek(0)
         for line in ofn:
             if line[0:8] == "   Final":

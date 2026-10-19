@@ -11,7 +11,10 @@ from testsuite_support.builder_and_runner import BuilderAndRunner
 from testsuite_support.tools import GPRBUILD, GPRCONFIG
 
 bnr = BuilderAndRunner()
-runtime = Path(bnr.check_output(["gcc", "-print-file-name=adainclude"]).out.strip())
+
+# Query gcc directly: it is not a GPR2 tool, so it must not run under valgrind/gnatcov
+runtime = Path(bnr.simple_run(["gcc", "-print-file-name=adainclude"]).out.strip())
+
 for directory in ("src", "override"):
     Path(directory).mkdir()
 for extension in ("ads", "adb"):
