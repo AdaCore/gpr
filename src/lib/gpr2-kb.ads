@@ -186,6 +186,22 @@ package GPR2.KB is
              or else Messages.Has_Error or else Self.Has_Error;
    --  Creates configuration string
 
+   function Configuration
+     (Self                 : in out Object;
+      Settings             : Project.Configuration.Description_Set;
+      Target               : Name_Type;
+      Messages             : in out GPR2.Log.Object;
+      Toolchain_Status     : out Project.Configuration.Toolchain_Status_Kind;
+      Fallback             : Boolean := False;
+      Environment          : GPR2.Environment.Object :=
+                               GPR2.Environment.Process_Environment;
+      Unknown_Lang_Warning : Boolean := False)
+      return Ada.Strings.Unbounded.Unbounded_String
+     with Pre  => Self.Is_Defined,
+          Post => Configuration'Result /= Null_Unbounded_String
+             or else Messages.Has_Error or else Self.Has_Error;
+   --  Same as above, also returning the result of toolchain discovery
+
    procedure Release (Self : in out Object)
      with Pre  => Self.Is_Defined,
           Post => Self = Undefined;

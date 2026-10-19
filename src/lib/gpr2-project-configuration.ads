@@ -32,6 +32,20 @@ package GPR2.Project.Configuration is
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
 
+   type Toolchain_Status_Kind is (Unknown, Found, Not_Found);
+   --  Result of toolchain discovery. Found means that a compatible compiler
+   --  selection was found for all requested languages known to the knowledge
+   --  base and requiring a compiler, after any permitted target fallback.
+   --  Not_Found means that a required compiler or compatible selection could
+   --  not be found. Unknown means that discovery was not performed or its
+   --  result could not be established.
+
+   function Toolchain_Status (Self : Object) return Toolchain_Status_Kind;
+   --  Returns the result of toolchain discovery, independently of errors
+   --  encountered while generating or loading the configuration project.
+   --  Returns Unknown for Undefined, configurations loaded from a file, and
+   --  configurations with no known language requiring a compiler.
+
    function Has_Messages (Self : Object) return Boolean;
    --  Returns whether some messages are present for this configuration
 
@@ -190,6 +204,7 @@ private
       Project            : GPR2.Project_Parser.Object;
       Conf               : GPR2.Project.View.Object;
       Descriptions       : Configuration.Descriptions.Vector;
+      Toolchain          : Toolchain_Status_Kind := Unknown;
 
       --  Cache
       Cache              : Cache_Refcount.Ref;
@@ -207,6 +222,9 @@ private
 
    function Has_Error (Self : Object) return Boolean is
       (Self.Messages.Has_Error);
+
+   function Toolchain_Status (Self : Object) return Toolchain_Status_Kind is
+     (Self.Toolchain);
 
    Default_Description : constant Description_Set (1 .. 1) :=
                            (1 => (Language => Ada_Language,

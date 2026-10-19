@@ -147,30 +147,33 @@ package body GPR2.Project.Configuration is
             if Normalized = "unknown" then
                Configuration_String :=
                  Base.Configuration
-                   (Settings    => Settings_Local,
-                    Target      => GPR2.KB.Default_Target,
-                    Messages    => Result.Messages,
-                    Fallback    => True,
-                    Environment => Environment);
+                   (Settings         => Settings_Local,
+                    Target           => GPR2.KB.Default_Target,
+                    Messages         => Result.Messages,
+                    Toolchain_Status => Result.Toolchain,
+                    Fallback         => True,
+                    Environment      => Environment);
             else
                Configuration_String :=
                  Base.Configuration
-                   (Settings    => Settings_Local,
-                    Target      => Normalized,
-                    Messages    => Result.Messages,
-                    Fallback    => True,
-                    Environment => Environment);
+                   (Settings         => Settings_Local,
+                    Target           => Normalized,
+                    Messages         => Result.Messages,
+                    Toolchain_Status => Result.Toolchain,
+                    Fallback         => True,
+                    Environment      => Environment);
             end if;
          end;
 
       else
          Configuration_String :=
            Base.Configuration
-             (Settings    => Settings_Local,
-              Target      => Target,
-              Messages    => Result.Messages,
-              Fallback    => False,
-              Environment => Environment);
+             (Settings         => Settings_Local,
+              Target           => Target,
+              Messages         => Result.Messages,
+              Toolchain_Status => Result.Toolchain,
+              Fallback         => False,
+              Environment      => Environment);
       end if;
 
       if Configuration_String /= Null_Unbounded_String then

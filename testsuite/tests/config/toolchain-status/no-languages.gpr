@@ -1,0 +1,3 @@
+project No_Languages is
+   for Languages use ();
+end No_Languages;
