@@ -1,0 +1,3 @@
+project Missing is
+   for Required_Toolchain_Version ("Ada") use "missing-version";
+end Missing;

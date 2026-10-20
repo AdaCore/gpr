@@ -208,6 +208,11 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined and then Self.Has_Configuration;
    --  Returns the configuration project for the given tree
 
+   function Toolchain_Status
+     (Self : Object) return Project.Configuration.Toolchain_Status_Kind;
+   --  Returns the configuration's toolchain discovery result, including after
+   --  a failed load. Returns Unknown if no configuration is available.
+
    function Has_Runtime_Project (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if a runtime project is loaded on this tree
@@ -559,6 +564,12 @@ private
 
    function Configuration (Self : Object) return Project.Configuration.Object
    is (Self.Tree.Configuration);
+
+   function Toolchain_Status
+     (Self : Object) return Project.Configuration.Toolchain_Status_Kind
+   is (if Self.Is_Defined and then Self.Has_Configuration
+       then Self.Configuration.Toolchain_Status
+       else Project.Configuration.Unknown);
 
    function Has_Runtime_Project (Self : Object) return Boolean is
       (Self.Tree.Has_Runtime_Project);

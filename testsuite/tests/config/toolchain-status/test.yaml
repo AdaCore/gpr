@@ -1,0 +1,4 @@
+description: Query toolchain discovery independently of project loading
+driver: build_and_run
+project_file: test
+main: main

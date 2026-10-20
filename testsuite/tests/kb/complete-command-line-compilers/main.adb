@@ -43,18 +43,21 @@ procedure Main is
       Expected_String_Parts : Unbounded_String_Array)
    is
       Config_Log : Log.Object;
+      Status     : GPC.Toolchain_Status_Kind;
    begin
       declare
          Conf : String := To_String (KB.Configuration
-                      (Settings => Descriptions,
-                       Target    => Target,
-                       Messages  => Config_Log,
-                       Fallback  => Fallback));
+                      (Settings         => Descriptions,
+                       Target           => Target,
+                       Messages         => Config_Log,
+                       Toolchain_Status => Status,
+                       Fallback         => Fallback));
 
          Result : Boolean := True;
       begin
 
          Ada.Text_IO.Put_Line ("=== " & Test_Title & " ===");
+         Ada.Text_IO.Put_Line ("Toolchain status: " & Status'Image);
 
          if Config_Log.Has_Error then
             Result := False;
@@ -138,6 +141,45 @@ begin
    begin
       Test ("Missing compiler with fallback", KB, Descriptions,
             "fake-target-0", True, Expected_Strings);
+   end;
+
+   declare
+      Descriptions : GPC.Description_Set :=
+        (1 => GPC.Create
+           (Language => +"Ada",
+            Runtime  => "missing-runtime",
+            Name     => "FAKE-ADA-COMPILER-1"));
+      Expected_Strings : Unbounded_String_Array :=
+        (1 => To_Unbounded_String ("fake-target-1"));
+   begin
+      Test ("Missing runtime", KB, Descriptions,
+            "fake-target-1", False, Expected_Strings);
+   end;
+
+   declare
+      Descriptions : GPC.Description_Set :=
+        (1 => GPC.Create (Language => +"Project File"));
+      Expected_Strings : Unbounded_String_Array (1 .. 0);
+   begin
+      Test ("Language requiring no compiler", KB, Descriptions,
+            "fake-target-1", False, Expected_Strings);
+   end;
+
+   declare
+      Descriptions : GPC.Description_Set :=
+        (1 => GPC.Create
+           (Language => +"Ada",
+            Runtime  => "runtime-A",
+            Name     => "FAKE-ADA-COMPILER-1"),
+         2 => GPC.Create
+           (Language => +"C",
+            Runtime  => "runtime-A",
+            Name     => "MISSING-C-COMPILER"));
+      Expected_Strings : Unbounded_String_Array :=
+        (1 => To_Unbounded_String ("fake-target-1"));
+   begin
+      Test ("Partially matched configuration", KB, Descriptions,
+            "fake-target-1", False, Expected_Strings);
    end;
 
    declare

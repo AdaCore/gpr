@@ -40,14 +40,15 @@ package body GPR2.KB is
    --  configuration.
 
    procedure Complete_Command_Line_Compilers
-     (Self            : in out Object;
-      On_Target       : Name_Type;
-      Filters         : Compiler_Lists.List;
-      Compilers       : in out Compiler_Lists.List;
-      Selected_Target : in out Unbounded_String;
-      Fallback        : Boolean;
-      Errors          : out Log.Object;
-      Environment     : GPR2.Environment.Object);
+     (Self             : in out Object;
+      On_Target        : Name_Type;
+      Filters          : Compiler_Lists.List;
+      Compilers        : in out Compiler_Lists.List;
+      Selected_Target  : in out Unbounded_String;
+      Fallback         : Boolean;
+      Toolchain_Status : out Project.Configuration.Toolchain_Status_Kind;
+      Errors           : out Log.Object;
+      Environment      : GPR2.Environment.Object);
    --  In batch mode, the configuration descriptions indicate what compilers
    --  should be selected. Each of these descriptions selects the first
    --  matching compiler available, and all descriptions must match a compiler.
@@ -59,6 +60,8 @@ package body GPR2.KB is
    --  with the full information for all compilers in Filters.
    --  If any of the required compilers cannot be found corresponding
    --  diagnostic is passed through Errors.
+   --  Toolchain_Status reports whether all required compilers were found, or
+   --  Unknown if no compiler was required.
    --  If no set of compatible compilers was found raises
    --  No_Compatible_Compilers.
 
@@ -496,6 +499,7 @@ package body GPR2.KB is
       Compilers        : in out Compiler_Lists.List;
       Selected_Target  : in out Unbounded_String;
       Fallback         : Boolean;
+      Toolchain_Status : out Project.Configuration.Toolchain_Status_Kind;
       Errors           : out Log.Object;
       Environment      : GPR2.Environment.Object)
    is
@@ -697,6 +701,7 @@ package body GPR2.KB is
       Found_All_Fallback : Boolean := True;
 
    begin
+      Toolchain_Status := Project.Configuration.Unknown;
       Iterator.Filters := Filters;
       Selected_Target  := To_Unbounded_String (String (On_Target));
 
@@ -877,6 +882,12 @@ package body GPR2.KB is
          end if;
       end if;
 
+      if not Filters.Is_Empty then
+         Toolchain_Status :=
+           (if Found_All then Project.Configuration.Found
+            else Project.Configuration.Not_Found);
+      end if;
+
       Splice (Target => Compilers,
               Before => Compiler_Lists.No_Element,
               Source => Iterator.Compilers);
@@ -897,6 +908,30 @@ package body GPR2.KB is
       Unknown_Lang_Warning : Boolean := False)
       return Ada.Strings.Unbounded.Unbounded_String
    is
+      Status : Project.Configuration.Toolchain_Status_Kind;
+   begin
+      return Self.Configuration
+        (Settings             => Settings,
+         Target               => Target,
+         Messages             => Messages,
+         Toolchain_Status     => Status,
+         Fallback             => Fallback,
+         Environment          => Environment,
+         Unknown_Lang_Warning => Unknown_Lang_Warning);
+   end Configuration;
+
+   function Configuration
+     (Self                 : in out Object;
+      Settings             : Project.Configuration.Description_Set;
+      Target               : Name_Type;
+      Messages             : in out GPR2.Log.Object;
+      Toolchain_Status     : out Project.Configuration.Toolchain_Status_Kind;
+      Fallback             : Boolean := False;
+      Environment          : GPR2.Environment.Object :=
+                               GPR2.Environment.Process_Environment;
+      Unknown_Lang_Warning : Boolean := False)
+      return Ada.Strings.Unbounded.Unbounded_String
+   is
       use Project.Configuration;
 
       Filters              : Compiler_Lists.List;
@@ -908,6 +943,7 @@ package body GPR2.KB is
       Configuration_String : Unbounded_String;
 
    begin
+      Toolchain_Status := Unknown;
       for Setting of Settings loop
          if Is_Language_With_No_Compiler (Self, Language (Setting)) then
             Compilers.Append (Create_Filter (Self, Setting));
@@ -936,10 +972,15 @@ package body GPR2.KB is
             Compilers        => Compilers,
             Selected_Target  => Selected_Target,
             Fallback         => Fallback,
+            Toolchain_Status => Toolchain_Status,
             Errors           => Messages,
             Environment      => Environment);
       exception
-         when No_Compatible_Compilers | Invalid_KB =>
+         when No_Compatible_Compilers =>
+            Toolchain_Status := Not_Found;
+            return Null_Unbounded_String;
+         when Invalid_KB =>
+            Toolchain_Status := Unknown;
             return Null_Unbounded_String;
       end;
 

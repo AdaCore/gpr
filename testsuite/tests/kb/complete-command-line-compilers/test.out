@@ -1,23 +1,45 @@
 === Missing compiler without fallbacks ===
+Toolchain status: NOT_FOUND
 kb: info: can't find a toolchain for the following configuration: language 'Ada', target 'fake-target-0', runtime 'runtime-A', name 'FAKE-ADA-COMPILER-1'
 
 OK
 
 === Missing compiler with fallback ===
+Toolchain status: FOUND
+
+OK
+
+=== Missing runtime ===
+Toolchain status: NOT_FOUND
+kb: info: can't find a toolchain for the following configuration: language 'Ada', target 'fake-target-1', runtime 'missing-runtime', name 'FAKE-ADA-COMPILER-1'
+
+OK
+
+=== Language requiring no compiler ===
+Toolchain status: UNKNOWN
+
+OK
+
+=== Partially matched configuration ===
+Toolchain status: NOT_FOUND
+kb: info: can't find a toolchain for the following configuration: language 'C', target 'fake-target-1', runtime 'runtime-A', name 'MISSING-C-COMPILER'
 
 OK
 
 === Unknown language ===
+Toolchain status: UNKNOWN
 kb: hint: unknown language 'Unknown_Language'
 
 OK
 
 === Incompatible configurations ===
+Toolchain status: NOT_FOUND
 kb: error: no set of compatible compilers was found
 
 KO
 
 === Resolvable configuration incompatibility ===
+Toolchain status: FOUND
 
 OK
 
