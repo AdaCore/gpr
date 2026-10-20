@@ -135,10 +135,12 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
          Links_Library : Boolean := False;
          --  Whether a library built by GPR is linked
 
-         Options_From_Ada_Binder : GPR2.Containers.Value_List :=
+         Additional_Link_Options : GPR2.Containers.Value_List :=
            Self.Binder_Opts;
-         --  What the libraries recorded they need, extracted from the ones
-         --  built elsewhere and read below from the ones built here
+         --  Contains options coming from the Ada binder that have been stored
+         --  in libraries, as well as Linker.Linker_Options attribute values
+         --  coming from the imported project if the current view is a
+         --  standard project.
 
          function Is_Archive (Path : GPR2.Path_Name.Object) return Boolean;
          --  Whether Path names a static library, as "-lstatic=" can only
@@ -211,17 +213,49 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
                      --  built one had it extracted from its archive, one
                      --  built here still has its link action.
 
-                     if Self.Tree.Has_Predecessor (Input)
-                       and then Self.Tree.Predecessor (Input)
-                                  in Link.Object'Class
-                     then
-                        for Opt of Link.Object'Class
-                                     (Self.Tree.Predecessor (Input))
-                                     .Options_From_Binder
-                        loop
-                           Options_From_Ada_Binder.Append
-                             (Value_Type (Opt));
-                        end loop;
+                     if Self.Tree.Has_Predecessor (Input) then
+                        declare
+                           Predecessor :
+                             constant access Actions.Object'Class :=
+                               Self.Tree.Predecessor_Reference (Input)
+                                 .Element.all'Access;
+                        begin
+                           if Predecessor.all in Link.Object'Class then
+                              declare
+                                 Link_Predecessor : constant access
+                                   Link.Object'Class :=
+                                     Link.Object'Class
+                                       (Predecessor.all)'Access;
+                              begin
+                                 for Opt of
+                                   Link_Predecessor.Options_From_Binder
+                                 loop
+                                    Additional_Link_Options.Append
+                                      (Value_Type (Opt));
+                                 end loop;
+
+                                 if not Self.Ctxt.Is_Library then
+                                    for C of
+                                      Link_Predecessor.View.Closure (True)
+                                    loop
+                                       declare
+                                          Opt : constant
+                                            Project.Attribute.Object :=
+                                              C.Attribute
+                                                (PRA.Linker.Linker_Options);
+                                       begin
+                                          if Opt.Is_Defined then
+                                             for Val of Opt.Values loop
+                                                Additional_Link_Options.Append
+                                                  (Value_Type (Val.Text));
+                                             end loop;
+                                          end if;
+                                       end;
+                                    end loop;
+                                 end if;
+                              end;
+                           end if;
+                        end;
                      end if;
 
                      --  On Windows, the C runtime is normally
@@ -274,7 +308,7 @@ package body GPR2.Build.Actions.Process.Cargo_Build is
             end if;
          end loop;
 
-         for Raw of Options_From_Ada_Binder loop
+         for Raw of Additional_Link_Options loop
             declare
                --  A trailing backslash has ld escape the rest of the command
                --  line when the argument also holds a space, so drop it.
