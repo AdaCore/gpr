@@ -1,0 +1,7 @@
+library project Leaf is
+   for Source_Dirs use ("leaf/src");
+   for Object_Dir use "leaf/obj";
+   for Library_Dir use "leaf/lib";
+   for Library_Name use "leaf";
+   for Library_Kind use "static";
+end Leaf;

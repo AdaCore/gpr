@@ -1,0 +1,3 @@
+encapsulated library linked: True
+contained dependency linked again: False
+result: 42

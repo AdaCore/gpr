@@ -1,0 +1,2 @@
+description: An encapsulated static Ada library does not propagate its imported library to the executable link
+driver: python_script

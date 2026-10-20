@@ -2285,6 +2285,7 @@ package body GPR2.Build.Actions_Population is
       end Add_Deps;
 
       Current : GPR2.Project.View.Object;
+      use all type GPR2.Project.Standalone_Library_Kind;
 
    begin
       for V of Closure loop
@@ -2306,10 +2307,17 @@ package body GPR2.Build.Actions_Population is
 
             if Current.Is_Static_Library then
                Static_Lib_Closure.Include (Current.Id);
-               Static_Lib_Closure.Union
-                 (Cache.Element (Current.Id).Static_Libs_Deps);
-               Shared_Lib_Closure.Union
-                 (Cache.Element (Current.Id).Shared_Libs_Deps);
+
+               --  A static encapsulated library contains all the resolved
+               --  dependencies in the archive, so the closure should not
+               --  be updated with them.
+
+               if Current.Library_Standalone /= Encapsulated then
+                  Static_Lib_Closure.Union
+                    (Cache.Element (Current.Id).Static_Libs_Deps);
+                  Shared_Lib_Closure.Union
+                    (Cache.Element (Current.Id).Shared_Libs_Deps);
+               end if;
 
             else
                Shared_Lib_Closure.Include (Current.Id);
