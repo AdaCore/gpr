@@ -87,6 +87,29 @@ begin
    Text_IO.Put_Line ("G: " & String (PV.Name));
    Text_IO.Put_Line ("H: " & String (Path_Name.Relative_Path (FH, TH)));
 
+   --  A directory base must be created as a directory, with or without a
+   --  trailing separator. A file base uses its containing directory, even
+   --  if its name refers to an existing directory.
+
+   declare
+      From : constant Filename_Type :=
+               Filename_Type (Directories.Current_Directory);
+      Target : constant Path_Name.Object :=
+                 Path_Name.Create_File (From & Dir_Sep & "basename");
+   begin
+      Assert
+        (String (Target.Relative_Path (Path_Name.Create_Directory (From))),
+         "basename");
+      Assert
+        (String (Target.Relative_Path
+           (Path_Name.Create_Directory (From & Dir_Sep))),
+         "basename");
+      Assert
+        (String (Target.Relative_Path
+           (Path_Name.Create_File (From & Dir_Sep))),
+         String (Path_Name.Simple_Name (From)) & Dir_Sep & "basename");
+   end;
+
    if On_Windows then
       Assert (String (W1.Relative_Path (W2)), "." & Dir_Sep);
       Assert (String (W1.Relative_Path (W3)), W1.String_Value);

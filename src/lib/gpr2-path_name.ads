@@ -194,9 +194,9 @@ package GPR2.Path_Name is
    function Relative_Path (Self, From : Object) return Filename_Type
      with Pre  => Self.Is_Defined and then From.Is_Defined,
           Post => Relative_Path'Result'Length > 0;
-   --  Returns the relative pathname which corresponds to Self when
-   --  starting from directory From. Note that the relative pathname is
-   --  actually given by Relative_Path'Result.Name.
+   --  Returns the pathname of Self relative to From's directory part.
+   --  If From is a directory, its full path is used as the base; if From
+   --  is a file, its containing directory is used instead.
 
    function Common_Prefix (Self, Path : Object) return Object
      with Pre  => Self.Is_Defined and then Path.Is_Defined,
