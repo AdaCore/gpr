@@ -1,0 +1,5 @@
+description:
+    Check runtime availability with a missing runtime directory (issue 698)
+driver: build_and_run
+project_file: test
+main: main

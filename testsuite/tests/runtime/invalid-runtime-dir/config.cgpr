@@ -1,0 +1,3 @@
+configuration project Config is
+   for Runtime_Dir ("Ada") use "dir";
+end Config;
