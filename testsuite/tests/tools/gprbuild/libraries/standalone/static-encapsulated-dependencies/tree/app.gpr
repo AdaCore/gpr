@@ -1,0 +1,8 @@
+with "bundle.gpr";
+
+project App is
+   for Source_Dirs use ("app/src");
+   for Object_Dir use "app/obj";
+   for Exec_Dir use ".";
+   for Main use ("main.adb");
+end App;

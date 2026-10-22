@@ -1,0 +1,11 @@
+with "leaf.gpr";
+
+library project Bundle is
+   for Source_Dirs use ("bundle/src");
+   for Object_Dir use "bundle/obj";
+   for Library_Dir use "bundle/lib";
+   for Library_Name use "bundle";
+   for Library_Kind use "static";
+   for Library_Interface use ("Bundle");
+   for Library_Standalone use "encapsulated";
+end Bundle;

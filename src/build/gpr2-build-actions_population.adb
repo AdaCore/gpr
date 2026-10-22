@@ -110,13 +110,19 @@ package body GPR2.Build.Actions_Population is
 
    package Library_Map is
       function Order_Libs
-        (Static_Libs : View_Ids.Set.Set;
-         Cache       : View_Id_Library_Map.Map;
-         Has_Cycle   : out Boolean) return Library_Vector.Vector;
-      --  This tries to perform a topological sort of the static libraries
-      --  given in Static_Libs according to the library map computed with the
-      --  action DAG population. If unsolvable (cycle in the dependencies),
-      --  then Has_Cycle is set and a flat list is returned.
+        (Root_Libs : View_Ids.Set.Set;
+         Cache     : View_Id_Library_Map.Map;
+         Has_Cycle : out Boolean) return Library_Vector.Vector;
+      --  Order only Root_Libs, using their static and shared dependencies to
+      --  determine the order between members of that set. If the dependency
+      --  graph has a cycle, set Has_Cycle and return the libraries in map
+      --  order instead.
+
+      procedure Append_Missing
+        (Ordered_Libs    : in out Library_Vector.Vector;
+         Additional_Libs : View_Ids.Set.Set;
+         Cache           : View_Id_Library_Map.Map);
+      --  Append libraries not already in Ordered_Libs
 
    private
 
@@ -271,8 +277,8 @@ package body GPR2.Build.Actions_Population is
 
       procedure Initialize
         (Self : out Map;
-         Static_Libs : View_Ids.Set.Set;
-         Cache       : View_Id_Library_Map.Map);
+         Root_Libs : View_Ids.Set.Set;
+         Cache     : View_Id_Library_Map.Map);
 
       -------------------
       -- Add_Successor --
@@ -290,6 +296,29 @@ package body GPR2.Build.Actions_Population is
             Self.DAG.Add_Predecessor (Succ, From);
          end if;
       end Add_Successor;
+
+      --------------------
+      -- Append_Missing --
+      --------------------
+
+      procedure Append_Missing
+        (Ordered_Libs    : in out Library_Vector.Vector;
+         Additional_Libs : View_Ids.Set.Set;
+         Cache           : View_Id_Library_Map.Map)
+      is
+         Seen : View_Ids.Set.Set;
+      begin
+         for Lib of Ordered_Libs loop
+            Seen.Include (Lib.View.Id);
+         end loop;
+
+         for Id of Additional_Libs loop
+            if not Seen.Contains (Id) then
+               Ordered_Libs.Append (Cache.Element (Id));
+               Seen.Include (Id);
+            end if;
+         end loop;
+      end Append_Missing;
 
       -------------
       -- Include --
@@ -315,24 +344,28 @@ package body GPR2.Build.Actions_Population is
 
       procedure Initialize
         (Self : out Map;
-         Static_Libs : View_Ids.Set.Set;
-         Cache       : View_Id_Library_Map.Map) is
+         Root_Libs : View_Ids.Set.Set;
+         Cache     : View_Id_Library_Map.Map) is
       begin
-         for Id of Static_Libs loop
+         --  Create every node before adding edges
+
+         for Id of Root_Libs loop
+            Self.Include (Cache.Element (Id));
+         end loop;
+
+         for Id of Root_Libs loop
             declare
                Lib : constant LH.Object :=
                        Cache.Element (Id);
                Sub : LH.Object;
             begin
-               Self.Include (Lib);
-
                for V_Id of Lib.Static_Libs_Deps.Union
                  (Lib.Shared_Libs_Deps)
                loop
-                  Sub := Cache.Element (V_Id);
-
-                  Self.Include (Sub);
-                  Self.Add_Successor (Lib.View, Sub.View);
+                  if Root_Libs.Contains (V_Id) then
+                     Sub := Cache.Element (V_Id);
+                     Self.Add_Successor (Lib.View, Sub.View);
+                  end if;
                end loop;
             end;
          end loop;
@@ -343,13 +376,13 @@ package body GPR2.Build.Actions_Population is
       ----------------
 
       function Order_Libs
-        (Static_Libs : View_Ids.Set.Set;
-         Cache       : View_Id_Library_Map.Map;
-         Has_Cycle   : out Boolean) return Library_Vector.Vector
+        (Root_Libs : View_Ids.Set.Set;
+         Cache     : View_Id_Library_Map.Map;
+         Has_Cycle : out Boolean) return Library_Vector.Vector
       is
          Self : Map;
       begin
-         Self.Initialize (Static_Libs, Cache);
+         Self.Initialize (Root_Libs, Cache);
 
          return Self.Serialize (Has_Cycle);
       end Order_Libs;
@@ -595,14 +628,9 @@ package body GPR2.Build.Actions_Population is
 
       Tree_Db.Reporter.Report
         (Message.Create
-           (Message.Critical_Error,
-            "project " & String (View.Name) & " is built by Cargo and "
-            & "cannot link against Ada library " & String (Dep.Name)
-            & ", which is not encapsulated: Cargo is handed the library "
-            & "file alone, without the elaboration code and the Ada "
-            & "runtime a GPR link would add; declare "
-            & "Library_Standalone as ""encapsulated"" in "
-            & String (Dep.Path_Name.Simple_Name),
+           (Message.Non_Critical_Error,
+            String (Dep.Name) & " needs to be encapsulated to be imported by "
+            & String (View.Name),
             Source_Reference.Create (View.Path_Name.Value, 0, 0)));
 
       return False;
@@ -1185,10 +1213,7 @@ package body GPR2.Build.Actions_Population is
       end if;
 
       Sorted_Libs := Library_Map.Order_Libs (Static_Libs, Cache, Has_Cycle);
-
-      for Id of Shared_Libs loop
-         Sorted_Libs.Append (Cache.Element (Id));
-      end loop;
+      Library_Map.Append_Missing (Sorted_Libs, Shared_Libs, Cache);
 
       for Lib of Sorted_Libs loop
          if not Check_Linkable_By_Cargo (Tree_Db, View, Lib.View) then
@@ -1763,10 +1788,7 @@ package body GPR2.Build.Actions_Population is
 
          Sorted_Libs :=
            Library_Map.Order_Libs (Static_Libs, Libs_Cache, Has_Cycle);
-
-         for Id of Shared_Libs loop
-            Sorted_Libs.Append (Libs_Cache.Element (Id));
-         end loop;
+         Library_Map.Append_Missing (Sorted_Libs, Shared_Libs, Libs_Cache);
 
          --  Check non-Ada sources: we create an intermedidate library for
          --  those sources so that the final link only picks up the actually
@@ -2290,6 +2312,7 @@ package body GPR2.Build.Actions_Population is
       end Add_Deps;
 
       Current : GPR2.Project.View.Object;
+      use all type GPR2.Project.Standalone_Library_Kind;
 
    begin
       for V of Closure loop
@@ -2311,10 +2334,17 @@ package body GPR2.Build.Actions_Population is
 
             if Current.Is_Static_Library then
                Static_Lib_Closure.Include (Current.Id);
-               Static_Lib_Closure.Union
-                 (Cache.Element (Current.Id).Static_Libs_Deps);
-               Shared_Lib_Closure.Union
-                 (Cache.Element (Current.Id).Shared_Libs_Deps);
+
+               --  A static encapsulated library contains all the resolved
+               --  dependencies in the archive, so the closure should not
+               --  be updated with them.
+
+               if Current.Library_Standalone /= Encapsulated then
+                  Static_Lib_Closure.Union
+                    (Cache.Element (Current.Id).Static_Libs_Deps);
+                  Shared_Lib_Closure.Union
+                    (Cache.Element (Current.Id).Shared_Libs_Deps);
+               end if;
 
             else
                Shared_Lib_Closure.Include (Current.Id);
