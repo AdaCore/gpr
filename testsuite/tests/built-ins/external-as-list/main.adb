@@ -1,9 +1,12 @@
 with Ada.Directories;
+with Ada.Environment_Variables;
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
 with GPR2.Context;
+with GPR2.Environment;
 with GPR2.Options;
+with GPR2.Project.External;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
@@ -16,6 +19,12 @@ procedure Main is
    use GPR2.Project;
 
    procedure Display (Prj : Project.View.Object; Full : Boolean := True);
+
+   procedure Test_Environment;
+   --  Check environment lookup, overrides, and fallback after Set_Context
+
+   procedure Test_References;
+   --  Check repeated references and preservation of explicit external types
 
    -------------
    -- Display --
@@ -54,11 +63,82 @@ procedure Main is
       end if;
    end Display;
 
+   ----------------------
+   -- Test_Environment --
+   ----------------------
+
+   procedure Test_Environment is
+      Prj : Project.Tree.Object;
+      Opt : Options.Object;
+      Env : GPR2.Environment.Object := GPR2.Environment.Process_Environment;
+      Ctx : Context.Object;
+
+      procedure Load (Label : String);
+
+      procedure Load (Label : String) is
+      begin
+         Text_IO.Put_Line (Label);
+         Prj.Unload;
+         if Prj.Load
+           (Opt, Absent_Dir_Error => No_Error, Environment => Env)
+         then
+            Display (Prj.Root_Project);
+         end if;
+      end Load;
+
+   begin
+      Ada.Environment_Variables.Clear ("SWITCHES");
+      Opt.Add_Switch (Options.P, "demo.gpr");
+      Load ("Undefined environment variable");
+
+      Env.Insert ("SWITCHES", "");
+      Load ("Empty environment variable");
+
+      Env.Insert ("SWITCHES", "-O2,-g");
+      Load ("Environment value");
+
+      Opt.Add_Switch (Options.X, "SWITCHES=-gnatv");
+      Load ("Command line overrides environment");
+
+      Ctx.Insert ("SWITCHES", "-O0");
+      Text_IO.Put_Line ("Context overrides environment");
+      if Prj.Set_Context (Ctx) then
+         Display (Prj.Root_Project);
+      end if;
+
+      Ctx.Clear;
+      Text_IO.Put_Line ("Empty context falls back to environment");
+      if Prj.Set_Context (Ctx) then
+         Display (Prj.Root_Project);
+      end if;
+   end Test_Environment;
+
+   ---------------------
+   -- Test_References --
+   ---------------------
+
+   procedure Test_References is
+      Prj : Project.Tree.Object;
+      Opt : Options.Object;
+
+   begin
+      Text_IO.Put_Line ("Repeated and typed external references");
+      Opt.Add_Switch (Options.P, "references.gpr");
+      if Prj.Load (Opt, Absent_Dir_Error => No_Error) then
+         for Ext of Project.External.Externals (Prj, Root_Only => True) loop
+            Text_IO.Put_Line (Ext.Name & " typed=" & Ext.Is_Typed'Img);
+         end loop;
+      end if;
+   end Test_References;
+
    Prj : Project.Tree.Object;
    Opt : Options.Object;
    Ctx : Context.Object;
 
 begin
+   Test_Environment;
+   Test_References;
+
    Opt.Add_Switch (Options.P, "demo.gpr");
    Opt.Add_Switch (Options.X, "SWITCHES=-O2,-g");
    if Prj.Load (Opt, Absent_Dir_Error => No_Error) then

@@ -1,3 +1,25 @@
+Undefined environment variable
+Demo     K_STANDARD
+V:   VAR ->
+Empty environment variable
+Demo     K_STANDARD
+V:   VAR ->
+Environment value
+Demo     K_STANDARD
+V:   VAR -> "-O2" "-g"
+Command line overrides environment
+Demo     K_STANDARD
+V:   VAR -> "-gnatv"
+Context overrides environment
+Demo     K_STANDARD
+V:   VAR -> "-O0"
+Empty context falls back to environment
+Demo     K_STANDARD
+V:   VAR -> "-O2" "-g"
+Repeated and typed external references
+GPR2_TEST_LIST_ONLY typed=FALSE
+GPR2_TEST_MODE_AFTER typed=TRUE
+GPR2_TEST_MODE_BEFORE typed=TRUE
 Demo     K_STANDARD
 V:   VAR -> "-O2" "-g"
 Demo     K_STANDARD

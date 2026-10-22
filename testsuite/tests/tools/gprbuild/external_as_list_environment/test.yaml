@@ -1,0 +1,2 @@
+description: External_As_List must read compiler switches from the environment
+driver: python_script

@@ -1,0 +1,12 @@
+project References is
+   type Mode_Type is ("debug", "release");
+
+   List_Before := External_As_List ("GPR2_TEST_MODE_BEFORE", ",");
+   Typed_Before := External (Mode_Type, "GPR2_TEST_MODE_BEFORE", "debug");
+
+   Typed_After := External (Mode_Type, "GPR2_TEST_MODE_AFTER", "debug");
+   List_After := External_As_List ("GPR2_TEST_MODE_AFTER", ",");
+
+   List_Only := External_As_List ("GPR2_TEST_LIST_ONLY", ",");
+   Repeated := External_As_List ("GPR2_TEST_LIST_ONLY", ",");
+end References;
