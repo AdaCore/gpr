@@ -13,7 +13,7 @@ lexer gpr_lexer {
         @symbol() Identifier <- p"[_a-zA-Z][_a-zA-Z0-9]*"
         @symbol() All <- no_case("all")
 
-        # Ada Keywords
+        # Keywords
         @symbol() Abstract <- no_case("abstract")
         @symbol() At <- no_case("at")
         @symbol() Case <- no_case("case")
@@ -24,8 +24,6 @@ lexer gpr_lexer {
         @symbol() Null <- no_case("null")
         @symbol() Others <- no_case("others")
         @symbol() Package <- no_case("package")
-        @symbol() Pragma <- no_case("pragma")
-        @symbol() Private <- no_case("private")
         @symbol() Renames <- no_case("renames")
         @symbol() Type <- no_case("type")
         @symbol() Use <- no_case("use")

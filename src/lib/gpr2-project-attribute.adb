@@ -6,6 +6,21 @@
 
 package body GPR2.Project.Attribute is
 
+   ----------------------
+   -- Case_Aware_Index --
+   ----------------------
+
+   function Case_Aware_Index (Self : Object) return Value_At_Pos is
+      package PRA renames GPR2.Project.Registry.Attribute;
+
+      Result : Value_At_Pos := Create
+        (Self.Index, At_Pos_Or (Self.Index, No_Index));
+   begin
+      Result.Is_Identifier := Self.Has_Index
+        and then PRA.Is_Unit_Indexed (Self.Name.Id);
+      return Result;
+   end Case_Aware_Index;
+
    ------------
    -- Create --
    ------------

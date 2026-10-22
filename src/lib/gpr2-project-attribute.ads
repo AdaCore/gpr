@@ -189,13 +189,21 @@ package GPR2.Project.Attribute is
 private
 
    type Value_At_Pos (Length : Natural) is record
-      Value  : Value_Type (1 .. Length);
-      At_Pos : Unit_Index := No_Index;
+      Value         : Value_Type (1 .. Length);
+      At_Pos        : Unit_Index := No_Index;
+      Is_Identifier : Boolean := False;
    end record;
 
    function "<" (Left, Right : Value_At_Pos) return Boolean is
-     (Left.Value < Right.Value
-      or else (Left.Value = Right.Value and then Left.At_Pos < Right.At_Pos));
+     --  Query keys inherit the identifier semantics of stored unit keys.
+     (if Left.Is_Identifier or else Right.Is_Identifier then
+        Optional_Name_Type (Left.Value) < Optional_Name_Type (Right.Value)
+        or else
+          (Optional_Name_Type (Left.Value) = Optional_Name_Type (Right.Value)
+           and then Left.At_Pos < Right.At_Pos)
+      else Left.Value < Right.Value
+        or else
+          (Left.Value = Right.Value and then Left.At_Pos < Right.At_Pos));
 
    function Create
      (Index          : Attribute_Index.Object;
@@ -210,12 +218,9 @@ private
       From_Config : Boolean := False;
    end record;
 
-   function Case_Aware_Index (Self : Object) return Value_At_Pos is
-     (Create
-        (Index          => Self.Index,
-         Default_At_Pos => At_Pos_Or (Self.Index, No_Index)));
-   --  Returns Index in lower case if index is case insensitive, returns as is
-   --  otherwise.
+   function Case_Aware_Index (Self : Object) return Value_At_Pos;
+   --  Build a key using the index's case policy, with RM simple case folding
+   --  for unit-name comparisons
 
    Undefined : constant Object := (Attr_Values.Undefined with others => <>);
 

@@ -17,7 +17,7 @@ package GPR2.Build.Unit_Info is
       Separate_Name : Optional_Name_Type := No_Name;
       Dependencies  : GPR2.Containers.Name_Set :=
                         GPR2.Containers.Name_Type_Set.Empty_Set;
-      Parsed        : Boolean := False) return Object;
+      Parsed        : Boolean := False) return Object with Inline;
 
    function Is_Defined (Self : Object) return Boolean;
 
@@ -81,26 +81,6 @@ private
    --  Structure used to describe the unit(s) contained in the source.
    --  The corresponding Compilation Unit can be retrieved from the main
    --  tree_db object.
-
-   function Create
-     (Unit_Name      : Optional_Name_Type;
-      Index          : Unit_Index;
-      Kind           : Unit_Kind;
-      Separate_Name  : Optional_Name_Type := No_Name;
-      Dependencies   : GPR2.Containers.Name_Set :=
-                         GPR2.Containers.Name_Type_Set.Empty_Set;
-      Parsed         : Boolean := False) return Object
-   is (Name_Len       => Unit_Name'Length,
-       Separate_Len   => Separate_Name'Length,
-       Kind           => Kind,
-       Index          => Index,
-       Is_Parsed      => Parsed,
-       Name           => Optional_Name_Type (Ada.Characters.Handling.To_Upper
-                                               (String (Unit_Name))),
-       Separate_Name  => Optional_Name_Type
-                           (Ada.Characters.Handling.To_Upper
-                              (String (Separate_Name))),
-       Dependencies   => Dependencies);
 
    Undefined : constant Object := (0, 0, others => <>);
 

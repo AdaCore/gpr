@@ -1,0 +1,2 @@
+description: Read failures leave Ada sources unparsed without escaping Compute
+driver: python_script

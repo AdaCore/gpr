@@ -329,8 +329,15 @@ package body GPR2.Project.Attribute.Set is
             return
               (Iter.Name = No_Attribute
                or else A.Name.Id.Attr = Iter.Name)
-              and then (not Iter.Index.Is_Defined
-                        or else A.Index = Iter.Index)
+              and then
+                (not Iter.Index.Is_Defined
+                 or else A.Index = Iter.Index
+                 or else
+                   (A.Has_Index
+                    and then Registry.Attribute.Is_Unit_Indexed (A.Name.Id)
+                    and then A.Index.Is_Others = Iter.Index.Is_Others
+                    and then Optional_Name_Type (A.Index.Text)
+                      = Optional_Name_Type (Iter.Index.Text)))
               and then (Iter.With_Defaults or else not A.Is_Default);
          end;
       end if;

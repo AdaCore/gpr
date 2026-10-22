@@ -4,7 +4,6 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
-with Ada.Characters.Handling;
 with Ada.Containers.Doubly_Linked_Lists;
 
 with GPR2.Build.Unit_Info.List;
@@ -558,7 +557,7 @@ package body Update_Sources_List is
    end Krunch;
 
    function Krunch (Unit_Name : Name_Type) return Filename_Type is
-      Buffer : String := Ada.Characters.Handling.To_Lower (String (Unit_Name));
+      Buffer : String := To_Lower (Unit_Name);
       Len    : Natural := Buffer'Last;
    begin
       for J in Buffer'Range loop
@@ -629,7 +628,6 @@ package body Update_Sources_List is
       Ada_Naming_Exceptions : Source_Path_To_Attribute_List.Map;
       Attr                  : Project.Attribute.Object;
 
-      Parser_State          : GPR2.Build.Source_Base.Ada_Parser.Parser_State;
 
       -----------------------
       -- Data_Has_Basename --
@@ -1001,7 +999,6 @@ package body Update_Sources_List is
 
                   Build.Source_Base.Ada_Parser.Compute
                     (File_Reader      => Tree.File_Reader,
-                     State            => Parser_State,
                      Data             => Source,
                      Get_Withed_Units =>
                        Data.Tree_Db.Source_Option >= Sources_Units,
@@ -1107,7 +1104,6 @@ package body Update_Sources_List is
             then
                Build.Source_Base.Ada_Parser.Compute
                  (File_Reader      => Tree.File_Reader,
-                  State            => Parser_State,
                   Data             => Source,
                   Get_Withed_Units =>
                     Data.Tree_Db.Source_Option >= Sources_Units,
@@ -1205,7 +1201,6 @@ package body Update_Sources_List is
 
       --  Check new or updated sources
 
-      Parser_State := GPR2.Build.Source_Base.Ada_Parser.Create_New_State;
 
       for F of Data.Src_Files loop
          declare
@@ -1244,7 +1239,6 @@ package body Update_Sources_List is
                         if not Src_Ref.Has_Naming_Exception then
                            Source_Base.Ada_Parser.Compute
                              (File_Reader      => Tree.File_Reader,
-                              State            => Parser_State,
                               Data             => Src_Ref,
                               Get_Withed_Units =>
                                 Data.Tree_Db.Source_Option >= Sources_Units,
@@ -1257,7 +1251,6 @@ package body Update_Sources_List is
          end;
       end loop;
 
-      GPR2.Build.Source_Base.Ada_Parser.Close (Parser_State);
 
       --  All source changes have been processed: now resolve potential
       --  visibility issues
