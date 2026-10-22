@@ -129,7 +129,8 @@ Compiler selection (batch mode)
 
 ``--fallback-targets``
   When no compiler is found for the requested target, also search for
-  toolchains recorded as fallbacks, such as a compatible native target of
+  toolchains recorded as fallbacks in the knowledge base (see
+  :ref:`Target_Normalization`), such as a compatible native target of
   a different architecture.
 
 
@@ -188,7 +189,8 @@ qualifier, ``.cgpr`` extension). It defines:
 - ``package Linker`` - linker driver and default flags.
 - ``package Binder`` - binder driver (for Ada).
 - ``package Archive_Builder`` - archiver command.
-- Top-level attributes - ``Target``, ``Canonical_Target``,
+- Top-level attributes - ``Target`` (the target as requested),
+  ``Canonical_Target`` (its canonical name, see :ref:`Target_Normalization`),
   ``Runtime_Library_Dir``, ``Object_Generated``, ``Library_Support``,
   ``Shared_Library_Prefix``, ``Shared_Library_Suffix``, and related
   platform attributes.
