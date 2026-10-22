@@ -1,0 +1,6 @@
+project List is
+   for Languages use ("C");
+   for Source_Dirs use ();
+   for Archive_Builder_Transient_Options use
+     ("-T", "--custom-option", "argument with spaces");
+end List;

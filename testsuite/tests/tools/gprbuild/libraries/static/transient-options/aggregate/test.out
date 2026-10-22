@@ -1,0 +1,47 @@
+default options
+[Archive] libchecked.a (lib.gpr): 0
+  --thin: False -T: False
+[C Compile] main.c (app.gpr): 0
+[C Compile] value.c (part.gpr): 0
+[Link] main (app.gpr): 0
+thin archive: False
+result: 42
+thin archive
+[Archive] libchecked.a (lib.gpr): 0
+  --thin: True -T: False
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] value.c (part.gpr): SKIPPED
+[Link] main (app.gpr): 0
+thin archive: True
+result: 42
+unchanged build
+[Archive] libchecked.a (lib.gpr): SKIPPED
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] value.c (part.gpr): SKIPPED
+[Link] main (app.gpr): SKIPPED
+thin archive: True
+member changed
+[Archive] libchecked.a (lib.gpr): 0
+  --thin: True -T: False
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] value.c (part.gpr): 0
+[Link] main (app.gpr): 0
+thin archive: True
+archive bytes unchanged: True
+result: 43
+legacy option
+[Archive] libchecked.a (lib.gpr): 0
+  --thin: False -T: True
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] value.c (part.gpr): SKIPPED
+[Link] main (app.gpr): SKIPPED
+thin archive: True
+result: 43
+empty options
+[Archive] libchecked.a (lib.gpr): 0
+  --thin: False -T: False
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] value.c (part.gpr): SKIPPED
+[Link] main (app.gpr): 0
+thin archive: False
+result: 43

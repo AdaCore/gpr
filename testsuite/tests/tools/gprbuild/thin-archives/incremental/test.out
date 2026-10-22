@@ -1,0 +1,60 @@
+initial thin archive
+[Archive] libapp.a (app.gpr): 0
+[C Compile] main.c (app.gpr): 0
+[C Compile] member.c (foreign.gpr): 0
+[C Compile] second.c (app.gpr): 0
+[C Compile] unused.c (foreign.gpr): 0
+[Link] main (app.gpr): 0
+  member on command: False
+  unused on command: False
+[Link] second (app.gpr): 0
+  member on command: False
+  unused on command: False
+thin archive: True
+main: 1
+second: 1
+unchanged build
+[Archive] libapp.a (app.gpr): SKIPPED
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] member.c (foreign.gpr): SKIPPED
+[C Compile] second.c (app.gpr): SKIPPED
+[C Compile] unused.c (foreign.gpr): SKIPPED
+[Link] main (app.gpr): SKIPPED
+[Link] second (app.gpr): SKIPPED
+missing executable
+[Archive] libapp.a (app.gpr): SKIPPED
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] member.c (foreign.gpr): SKIPPED
+[C Compile] second.c (app.gpr): SKIPPED
+[C Compile] unused.c (foreign.gpr): SKIPPED
+[Link] main (app.gpr): 0
+  member on command: False
+  unused on command: False
+[Link] second (app.gpr): SKIPPED
+main: 1
+second: 1
+unchanged build after relinking
+[Archive] libapp.a (app.gpr): SKIPPED
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] member.c (foreign.gpr): SKIPPED
+[C Compile] second.c (app.gpr): SKIPPED
+[C Compile] unused.c (foreign.gpr): SKIPPED
+[Link] main (app.gpr): SKIPPED
+[Link] second (app.gpr): SKIPPED
+same-size member changed
+[Archive] libapp.a (app.gpr): 0
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] member.c (foreign.gpr): 0
+[C Compile] second.c (app.gpr): SKIPPED
+[C Compile] unused.c (foreign.gpr): SKIPPED
+[Link] main (app.gpr): 0
+  member on command: False
+  unused on command: False
+[Link] second (app.gpr): 0
+  member on command: False
+  unused on command: False
+member size unchanged: True
+member symbols unchanged: True
+archive bytes unchanged: True
+main: 2
+second: 2

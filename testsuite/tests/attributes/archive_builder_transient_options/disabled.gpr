@@ -1,0 +1,5 @@
+project Disabled is
+   for Languages use ("C");
+   for Source_Dirs use ();
+   for Archive_Builder_Transient_Options use ();
+end Disabled;

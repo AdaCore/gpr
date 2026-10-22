@@ -1,0 +1,45 @@
+mode: default
+[Archive] libapp.a (app.gpr): 0
+archive options: []
+[C Compile] main.c (app.gpr): 0
+[C Compile] member.c (foreign.gpr): 0
+[C Compile] unused.c (foreign.gpr): 0
+[Link] main (app.gpr): 0
+thin archive: False
+result: 1
+mode: multiple
+[Archive] libapp.a (app.gpr): 0
+archive options: ['--thin', '-D']
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] member.c (foreign.gpr): SKIPPED
+[C Compile] unused.c (foreign.gpr): SKIPPED
+[Link] main (app.gpr): 0
+thin archive: True
+result: 1
+mode: legacy
+[Archive] libapp.a (app.gpr): 0
+archive options: ['-T']
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] member.c (foreign.gpr): SKIPPED
+[C Compile] unused.c (foreign.gpr): SKIPPED
+[Link] main (app.gpr): SKIPPED
+thin archive: True
+result: 1
+mode: normal
+[Archive] libapp.a (app.gpr): 0
+archive options: []
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] member.c (foreign.gpr): SKIPPED
+[C Compile] unused.c (foreign.gpr): SKIPPED
+[Link] main (app.gpr): 0
+thin archive: False
+result: 1
+mode: other
+[Archive] libapp.a (app.gpr): 0
+archive options: ['-D']
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] member.c (foreign.gpr): SKIPPED
+[C Compile] unused.c (foreign.gpr): SKIPPED
+[Link] main (app.gpr): 0
+thin archive: False
+result: 1

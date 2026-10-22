@@ -495,6 +495,31 @@ begin
         "Options passed to the archive builder when appending files to an "
       & "existing archive.");
 
+   --  Archive_Builder_Transient_Options
+   Set_Attribute_Description
+     (Key         => PRA.Archive_Builder_Transient_Options,
+      Description =>
+        "Options passed to the archive builder for all archives, including "
+      & "static libraries and archives created when linking executables. "
+      & "They follow the normal archive builder options and precede the "
+      & "archive filename, in the order given. Values are passed to the "
+      & "archive builder without validation. For GNU tools, ""--thin"" or "
+      & """-T"" enables thin archives, which reference the original object "
+      & "files instead "
+      & "of copying their contents. These archives are intended for use "
+      & "within the build tree: the referenced objects must remain "
+      & "available at the recorded paths. GPRinstall copies the archive "
+      & "without bundling the referenced objects or rewriting their paths. "
+      & "Absolute member paths still depend on the original build tree; "
+      & "relative member paths can break when the archive is moved. An "
+      & "installed thin archive is therefore not self-contained and may "
+      & "stop linking when the build tree is cleaned or moved. Disable "
+      & "these options and rebuild before installing or distributing a "
+      & "self-contained static library. Use ""-T"" with older tools that "
+      & "do not support ""--thin"". No options are used by default. A project "
+      & "declaration replaces the configured options; an empty list "
+      & "disables them.");
+
    --  Archive_Indexer
    Set_Attribute_Description
      (Key         => PRA.Archive_Indexer,

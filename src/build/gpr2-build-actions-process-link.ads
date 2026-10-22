@@ -153,7 +153,6 @@ private
      and Link_Options_Consumer.Object with record
       Is_Library     : Boolean := False;
       Is_Static      : Boolean := False;
-      In_Obj         : Boolean := False;
 
       Executable     : Artifacts.Files.Object;
       --  Executable produced by the linker
@@ -163,6 +162,12 @@ private
 
       Library        : Artifacts.Library.Object;
       --  Library produced by the linker
+
+      Signature_Only_Objects : Tree_Db.Artifact_Sets.Set;
+      --  Objects that may be referenced through archive inputs. Actions using
+      --  transient archive options populate this set on completion, including
+      --  when skipped. These objects contribute to the signature, not to the
+      --  command line.
 
       Mapping_File : Ada.Strings.Unbounded.Unbounded_String :=
         Null_Unbounded_String;
@@ -198,6 +203,10 @@ private
    overriding
    procedure Compute_Signature
      (Self : in out Object; Check_Checksums : Boolean);
+
+   function Has_Transient_Archive_Options
+     (Self : Object'Class) return Boolean;
+   --  Whether this action creates an archive with transient options
 
    overriding function Extended (Self : Object) return Object is
      (raise Internal_Error with "This action is not extending");

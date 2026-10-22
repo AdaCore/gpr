@@ -1,0 +1,4 @@
+description: Thin intermediate archives - incremental
+driver: python_script
+control:
+  - [SKIP, "env.host.os.name != 'linux'", "requires GNU ar and nm"]

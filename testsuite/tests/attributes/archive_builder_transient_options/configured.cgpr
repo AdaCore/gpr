@@ -1,0 +1,3 @@
+configuration project Configured is
+   for Archive_Builder_Transient_Options use ("--thin");
+end Configured;

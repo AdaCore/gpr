@@ -1043,6 +1043,15 @@ begin
       Is_Allowed_In         => Everywhere,
       Inherit_From_Extended => Not_Inherited);
 
+   --  archive_builder_transient_options
+   Add
+     (Name                  => Archive_Builder_Transient_Options,
+      Index_Type            => No_Index,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
+
    --  archive_indexer
    Add
      (Name                  => Archive_Indexer,

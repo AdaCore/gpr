@@ -458,6 +458,17 @@ package body GPR2.Build.Actions.Process.Link is
                end if;
             end loop;
 
+            declare
+               Options : constant Project.Attribute.Object :=
+                 Self.View.Attribute (PRA.Archive_Builder_Transient_Options);
+            begin
+               if Options.Is_Defined then
+                  for Option of Options.Values loop
+                     Cmd_Line.Add_Argument (Option.Text);
+                  end loop;
+               end if;
+            end;
+
             Cmd_Line.Add_Argument (Self.Output.Path);
          end;
 
@@ -978,6 +989,12 @@ package body GPR2.Build.Actions.Process.Link is
          end if;
       end loop;
 
+      for Obj of Self.Signature_Only_Objects loop
+         if not Self.Signature.Add_Input (Obj, Check_Checksums) then
+            return;
+         end if;
+      end loop;
+
       for Lib of Self.Library_Dependencies loop
          if Lib.Is_Static
            and then not Self.Signature.Add_Input (Lib, Check_Checksums)
@@ -1474,6 +1491,25 @@ package body GPR2.Build.Actions.Process.Link is
       end if;
    end Handle_Export_File;
 
+   -----------------------------------
+   -- Has_Transient_Archive_Options --
+   -----------------------------------
+
+   function Has_Transient_Archive_Options
+     (Self : Object'Class) return Boolean is
+   begin
+      if not Self.Is_Static_Library then
+         return False;
+      end if;
+
+      declare
+         Attr : constant Project.Attribute.Object :=
+           Self.View.Attribute (PRA.Archive_Builder_Transient_Options);
+      begin
+         return Attr.Is_Defined and then not Attr.Values.Is_Empty;
+      end;
+   end Has_Transient_Archive_Options;
+
    ----------------
    -- Initialize --
    ----------------
@@ -1540,7 +1576,6 @@ package body GPR2.Build.Actions.Process.Link is
                Self.Ctxt       := Context;
                Self.Is_Library := True;
                Self.Is_Static  := True;
-               Self.In_Obj     := True;
                Self.Library    := Artifacts.Library.Create_Static
                  (Context.Object_Directory.Compose (Library_Filename));
             end;
@@ -1629,7 +1664,6 @@ package body GPR2.Build.Actions.Process.Link is
 
       return Units;
    end Interface_Units;
-
 
    --------------------------
    -- Library_Dependencies --
@@ -1788,6 +1822,27 @@ package body GPR2.Build.Actions.Process.Link is
       Stderr : Unbounded_String := Null_Unbounded_String) return Boolean
    is
    begin
+      if Self.Has_Transient_Archive_Options then
+         --  The options may produce an archive that references its objects.
+         --  Track the members without interpreting archiver-specific options.
+         --  Members may be added during binding, so forward the complete
+         --  set once the archive is ready. Do this for skipped archives
+         --  too: each build needs to populate its consumers' signatures.
+
+         declare
+            Members : constant Tree_Db.Artifact_Sets.Set :=
+              Self.Embedded_Objects;
+            Consumers : Tree_Db.Actions_List'Class :=
+              Self.Tree.Successors (Self.Output);
+         begin
+            for Act of Consumers loop
+               if Act in Object'Class then
+                  Object'Class (Act).Signature_Only_Objects.Union (Members);
+               end if;
+            end loop;
+         end;
+      end if;
+
       if Status /= Success then
          return True;
       end if;

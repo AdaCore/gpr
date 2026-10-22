@@ -1,0 +1,64 @@
+default options
+[Ada Bind] checked (lib.gpr): 0
+[Ada Compile] pkg.adb (lib.gpr): 0
+[Ada Post-Bind] b__checked.adb (lib.gpr): 0
+[Archive] libchecked.a (lib.gpr): 0
+  --thin: False -T: False
+[C Compile] main.c (app.gpr): 0
+[Library-Files-Copy] Lib (lib.gpr): 0
+[Link-Options-Insert] o__checked.o (lib.gpr): 0
+[Link] main (app.gpr): 0
+[Partial Link] p__checked.o (lib.gpr): 0
+  --thin: False -T: False
+thin archive: False
+result: 42
+thin archive
+[Ada Bind] checked (lib.gpr): SKIPPED
+[Ada Compile] pkg.adb (lib.gpr): SKIPPED
+[Ada Post-Bind] b__checked.adb (lib.gpr): SKIPPED
+[Archive] libchecked.a (lib.gpr): 0
+  --thin: True -T: False
+[C Compile] main.c (app.gpr): SKIPPED
+[Library-Files-Copy] Lib (lib.gpr): SKIPPED
+[Link-Options-Insert] o__checked.o (lib.gpr): SKIPPED
+[Link] main (app.gpr): 0
+[Partial Link] p__checked.o (lib.gpr): SKIPPED
+thin archive: True
+result: 42
+unchanged build
+[Ada Bind] checked (lib.gpr): SKIPPED
+[Ada Compile] pkg.adb (lib.gpr): SKIPPED
+[Ada Post-Bind] b__checked.adb (lib.gpr): SKIPPED
+[Archive] libchecked.a (lib.gpr): SKIPPED
+[C Compile] main.c (app.gpr): SKIPPED
+[Library-Files-Copy] Lib (lib.gpr): SKIPPED
+[Link-Options-Insert] o__checked.o (lib.gpr): SKIPPED
+[Link] main (app.gpr): SKIPPED
+[Partial Link] p__checked.o (lib.gpr): SKIPPED
+thin archive: True
+legacy option
+[Ada Bind] checked (lib.gpr): SKIPPED
+[Ada Compile] pkg.adb (lib.gpr): SKIPPED
+[Ada Post-Bind] b__checked.adb (lib.gpr): SKIPPED
+[Archive] libchecked.a (lib.gpr): 0
+  --thin: False -T: True
+[C Compile] main.c (app.gpr): SKIPPED
+[Library-Files-Copy] Lib (lib.gpr): SKIPPED
+[Link-Options-Insert] o__checked.o (lib.gpr): SKIPPED
+[Link] main (app.gpr): SKIPPED
+[Partial Link] p__checked.o (lib.gpr): SKIPPED
+thin archive: True
+result: 42
+empty options
+[Ada Bind] checked (lib.gpr): SKIPPED
+[Ada Compile] pkg.adb (lib.gpr): SKIPPED
+[Ada Post-Bind] b__checked.adb (lib.gpr): SKIPPED
+[Archive] libchecked.a (lib.gpr): 0
+  --thin: False -T: False
+[C Compile] main.c (app.gpr): SKIPPED
+[Library-Files-Copy] Lib (lib.gpr): SKIPPED
+[Link-Options-Insert] o__checked.o (lib.gpr): SKIPPED
+[Link] main (app.gpr): 0
+[Partial Link] p__checked.o (lib.gpr): SKIPPED
+thin archive: False
+result: 42
