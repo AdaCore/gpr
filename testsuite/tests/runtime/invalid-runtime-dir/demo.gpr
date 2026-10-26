@@ -1,0 +1,4 @@
+project Demo is
+   for Languages use ("Ada");
+   for Source_Dirs use ();
+end Demo;

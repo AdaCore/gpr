@@ -250,6 +250,13 @@ package body GPR2.Tree_Internal is
 
          RTD := Path_Name.Create_Directory (Filename_Type (Attr.Value.Text));
 
+         if not RTD.Exists then
+            Self.Error
+              ("runtime directory """ & Attr.Value.Text & """ does not exist",
+               Attr);
+            return Project.View.Undefined;
+         end if;
+
          RTS_View := View_Builder.Create
            (Project_Dir => RTD,
             Name        => "runtime",
