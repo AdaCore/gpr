@@ -1,5 +1,5 @@
 description:
-    Check the external_as_list built-in
+    Check external_as_list splitting, environment lookup, and registration
 driver: build_and_run
 project_file: external_aslist
 main: main

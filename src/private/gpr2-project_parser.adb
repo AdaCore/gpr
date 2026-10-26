@@ -744,6 +744,13 @@ package body GPR2.Project_Parser is
                Name : Name_Type);
             --  Check that default/alternative parameters has the proper type
 
+            procedure Register_External
+              (Name  : External_Name_Type;
+               Exprs : Term_List_List;
+               Typ   : Identifier_List := No_Identifier_List);
+            --  Register an external reference and preserve its type and source
+            --  location, including when the same name is referenced again.
+
             --------------------------------------
             -- Parse_External_As_List_Reference --
             --------------------------------------
@@ -753,12 +760,6 @@ package body GPR2.Project_Parser is
             is
                Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
             begin
-               --  Note that this routine is only validating the syntax
-               --  of the external_as_list built-in. It does not add the
-               --  variable referenced by the built-in as dependencies
-               --  as an external_as_list result cannot be used in a
-               --  case statement.
-
                if Exprs.Is_Null or else Exprs.Children_Count = 0 then
                   Project.Messages.Append
                     (GPR2.Message.Create
@@ -814,6 +815,9 @@ package body GPR2.Project_Parser is
                               Message =>
                                 "external_as_list variable name must not "
                                 & "be empty"));
+
+                     else
+                        Register_External (External_Name_Type (Var), Exprs);
                      end if;
                   end;
 
@@ -915,26 +919,8 @@ package body GPR2.Project_Parser is
                                 "external type must be a type reference"));
 
                      else
-                        if not Project.Externals.Contains
-                                 (External_Name_Type (Var))
-                        then
-                           Project.Externals.Insert
-                             (Key      => External_Name_Type (Var),
-                              New_Item => External_List_Package.Empty_Vector);
-                        end if;
-
-                        declare
-                           Ext :
-                             constant Externals_Map_Package.Reference_Type :=
-                               Project.Externals.Reference
-                                 (External_Name_Type (Var));
-                        begin
-                           Ext.Append
-                             (External'
-                                (Type_Node  => Typ,
-                                 Source_Ref =>
-                                   Get_Source_Reference (Filename, Exprs)));
-                        end;
+                        Register_External
+                          (External_Name_Type (Var), Exprs, Typ);
 
                         declare
                            Node : Gpr_Node := Exprs.Last_Child;
@@ -1162,6 +1148,33 @@ package body GPR2.Project_Parser is
                           String (Name) & " accepts only two parameters"));
                end if;
             end Parse_Two_Parameter_Reference;
+
+            -----------------------
+            -- Register_External --
+            -----------------------
+
+            procedure Register_External
+              (Name  : External_Name_Type;
+               Exprs : Term_List_List;
+               Typ   : Identifier_List := No_Identifier_List)
+            is
+            begin
+               if not Project.Externals.Contains (Name) then
+                  Project.Externals.Insert
+                    (Key      => Name,
+                     New_Item => External_List_Package.Empty_Vector);
+               end if;
+
+               declare
+                  Ext : constant Externals_Map_Package.Reference_Type :=
+                          Project.Externals.Reference (Name);
+               begin
+                  Ext.Append
+                    (External'
+                       (Type_Node  => Typ,
+                        Source_Ref => Get_Source_Reference (Filename, Exprs)));
+               end;
+            end Register_External;
 
             Function_Name : constant Name_Type :=
                               Get_Name_Type (F_Function_Name (N));

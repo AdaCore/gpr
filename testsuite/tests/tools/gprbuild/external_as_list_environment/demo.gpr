@@ -1,0 +1,9 @@
+project Demo is
+   for Main use ("main.adb");
+   for Object_Dir use "obj";
+
+   package Compiler is
+      for Default_Switches ("Ada") use
+         External_As_List ("GNATMAKE_SWITCHES", " ");
+   end Compiler;
+end Demo;
