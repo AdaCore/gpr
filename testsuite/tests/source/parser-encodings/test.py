@@ -23,11 +23,15 @@ encodings = [
 ]
 
 count = 0
+checks = []
+
 
 def check(mode, filename, expected):
+    checks.append((mode, filename, expected))
+
+
+def validate(mode, filename, expected, lines):
     global count
-    bnr.run(["./main", mode, filename], output="run.out")
-    lines = Path("run.out").read_text(encoding="utf-8").splitlines()
     # Compute also registers the parent of each withed child unit.
 
     def dependency_case(line):
@@ -234,4 +238,22 @@ Path("tree.gpr").write_text(
     'package Naming is for Body ("éā字𐐨") use "main.adb"; '
     'end Naming; end Tree;', encoding="utf-8")
 check("tree", "tree.gpr", ["unit=éā字𐐨"])
+
+# Run the full matrix in one process to amortize Valgrind initialization.
+Path("cases.txt").write_text("".join(
+    f"{mode}\n{filename}\n" for mode, filename, _ in checks), encoding="utf-8")
+result = bnr.run(["./main", "batch", "cases.txt"], output="run.out")
+assert result.status == 0, f"batch command exited with status {result.status}"
+output = iter(Path("run.out").read_text(encoding="utf-8").splitlines())
+for mode, filename, expected in checks:
+    lines = []
+    for line in output:
+        if line == "END":
+            break
+        lines.append(line)
+    else:
+        raise AssertionError((mode, filename, "missing result terminator", lines))
+    validate(mode, filename, expected, lines)
+remaining = list(output)
+assert not remaining, remaining
 print(f"{count} encoding checks passed")
