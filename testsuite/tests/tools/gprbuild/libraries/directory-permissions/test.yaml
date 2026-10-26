@@ -1,0 +1,4 @@
+description: Dynamic library ALI directory has mode 0755 with umask 022
+driver: python_script
+control:
+- [SKIP, "'windows' in env.host.platform", "Requires POSIX directory permissions and umask"]
