@@ -22,6 +22,8 @@ procedure Main is
 
    function Read_Bytes (Filename : String) return String;
 
+   procedure Check_Case (Mode, Filename : String);
+
    procedure On_Error (Message : String);
    procedure On_Unit
      (Unit_Name : String; Separate_From : String; Generic_Unit : Boolean);
@@ -83,6 +85,81 @@ procedure Main is
       return Buffer (1 .. Natural (Last));
    end Read_Bytes;
 
+   ----------------
+   -- Check_Case --
+   ----------------
+
+   procedure Check_Case (Mode, Filename : String) is
+   begin
+      if Mode = "tree" then
+         declare
+            Tree : Project.Tree.Object;
+            Opts : Options.Object;
+         begin
+            Opts.Add_Switch (Options.P, Filename);
+            if not Tree.Load
+              (Opts, True, Reporter.Console.Create (Reporter.Quiet))
+            then
+               raise Program_Error with "project load failed";
+            end if;
+            Tree.Update_Sources (Sources_Units);
+            for Source of Tree.Root_Project.Sources loop
+               declare
+                  Unit : constant Build.Compilation_Unit.Object :=
+                    Tree.Root_Project.Own_Unit (Name_Type (Source.Unit.Name));
+               begin
+                  if not Unit.Is_Defined then
+                     raise Program_Error with "Unicode unit lookup failed";
+                  end if;
+                  Put_Line ("unit=" & String (Unit.Name));
+               end;
+            end loop;
+         end;
+      elsif Mode = "callback" then
+         declare
+            Bytes : constant String := Read_Bytes (Filename);
+            Slice : String (9 .. Bytes'Length + 8) := Bytes;
+         begin
+            Build.Source_Base.Ada_Parser.Parse_Context_Clauses
+              (Slice, On_Error'Access, On_With'Access, On_Unit'Access);
+         end;
+      else
+         declare
+            Source : Build.Source_Base.Object'Class := Build.Source_Base.Create
+              (Filename         => Path_Name.Create_File
+                                     (Filename_Type (Filename)),
+               Language         => Ada_Language,
+               Kind             => S_Body,
+               Timestamp        => Ada.Calendar.Clock,
+               Tree_Db          => null,
+               Naming_Exception => False,
+               Source_Dir_Idx   => 1,
+               From_Src_Subdirs => False);
+            Ref     : File_Readers.File_Reader_Reference :=
+                        File_Readers.No_File_Reader_Reference;
+            Success : Boolean;
+         begin
+            if Mode in "reader" | "reader-error" then
+               Ref := Test_Reader.Create (Mode = "reader-error");
+            end if;
+            Build.Source_Base.Ada_Parser.Compute (Ref, Source, True, Success);
+            if Success then
+               if Source.Unit.Separate_Name /= "" then
+                  Put_Line ("unit=" & String (Source.Unit.Separate_Name));
+                  Put_Line ("parent=" & String (Source.Unit.Name));
+               else
+                  Put_Line ("unit=" & String (Source.Unit.Name));
+               end if;
+               for Name of Source.Unit.Dependencies loop
+                  Put_Line ("with=" & String (Name));
+               end loop;
+            else
+               Put_Line ("ERROR");
+            end if;
+         end;
+      end if;
+   end Check_Case;
+
 begin
    for Code in 128 .. 255 loop
       declare
@@ -95,71 +172,23 @@ begin
       end;
    end loop;
 
-   if Argument (1) = "tree" then
+   if Argument (1) = "batch" then
       declare
-         Tree : Project.Tree.Object;
-         Opts : Options.Object;
+         Cases : File_Type;
       begin
-         Opts.Add_Switch (Options.P, Argument (2));
-         if not Tree.Load
-           (Opts, True, Reporter.Console.Create (Reporter.Quiet))
-         then
-            raise Program_Error with "project load failed";
-         end if;
-         Tree.Update_Sources (Sources_Units);
-         for Source of Tree.Root_Project.Sources loop
+         Open (Cases, In_File, Argument (2));
+         while not End_Of_File (Cases) loop
             declare
-               Unit : constant Build.Compilation_Unit.Object :=
-                 Tree.Root_Project.Own_Unit (Name_Type (Source.Unit.Name));
+               Mode     : constant String := Get_Line (Cases);
+               Filename : constant String := Get_Line (Cases);
             begin
-               if not Unit.Is_Defined then
-                  raise Program_Error with "Unicode unit lookup failed";
-               end if;
-               Put_Line ("unit=" & String (Unit.Name));
+               Check_Case (Mode, Filename);
+               Put_Line ("END");
             end;
          end loop;
-      end;
-   elsif Argument (1) = "callback" then
-      declare
-         Bytes : constant String := Read_Bytes (Argument (2));
-         Slice : String (9 .. Bytes'Length + 8) := Bytes;
-      begin
-         Build.Source_Base.Ada_Parser.Parse_Context_Clauses
-           (Slice, On_Error'Access, On_With'Access, On_Unit'Access);
+         Close (Cases);
       end;
    else
-      declare
-         Source : Build.Source_Base.Object'Class := Build.Source_Base.Create
-           (Filename         => Path_Name.Create_File
-                                  (Filename_Type (Argument (2))),
-            Language         => Ada_Language,
-            Kind             => S_Body,
-            Timestamp        => Ada.Calendar.Clock,
-            Tree_Db          => null,
-            Naming_Exception => False,
-            Source_Dir_Idx   => 1,
-            From_Src_Subdirs => False);
-         Ref     : File_Readers.File_Reader_Reference :=
-                     File_Readers.No_File_Reader_Reference;
-         Success : Boolean;
-      begin
-         if Argument (1) in "reader" | "reader-error" then
-            Ref := Test_Reader.Create (Argument (1) = "reader-error");
-         end if;
-         Build.Source_Base.Ada_Parser.Compute (Ref, Source, True, Success);
-         if Success then
-            if Source.Unit.Separate_Name /= "" then
-               Put_Line ("unit=" & String (Source.Unit.Separate_Name));
-               Put_Line ("parent=" & String (Source.Unit.Name));
-            else
-               Put_Line ("unit=" & String (Source.Unit.Name));
-            end if;
-            for Name of Source.Unit.Dependencies loop
-               Put_Line ("with=" & String (Name));
-            end loop;
-         else
-            Put_Line ("ERROR");
-         end if;
-      end;
+      Check_Case (Argument (1), Argument (2));
    end if;
 end Main;
