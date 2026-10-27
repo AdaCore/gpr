@@ -538,15 +538,23 @@ package body GPR2.Build.ALI_Parser is
       begin
          --  Skip checksum
 
-         while F (I) not in ' ' | ASCII.HT | ASCII.LF loop
+         while I <= F'Last
+           and then F (I) not in ' ' | ASCII.HT | ASCII.LF
+         loop
             I := I + 1;
          end loop;
-
-         I := I + 1;
 
          --  Read flags
 
          while I < F'Last loop
+            while I < F'Last
+              and then F (I) in ' ' | ASCII.HT | ASCII.LF
+            loop
+               I := I + 1;
+            end loop;
+
+            exit when I >= F'Last;
+
             case F (I) is
                when 'B' =>
                   case F (I + 1) is
