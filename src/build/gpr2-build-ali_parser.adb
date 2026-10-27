@@ -265,6 +265,10 @@ package body GPR2.Build.ALI_Parser is
                return;
             end if;
 
+            if Header not in ASCII.CR | ASCII.LF then
+               return;
+            end if;
+
          else
             Header := File.Current_Char;
 
