@@ -78,13 +78,11 @@ def build_gnat_bootstrap():
         "aws-lib",
         "aws-tools",
         "aunit",
-        "gnatformat",
         "libadalang-tools",
         "gnat",
     ]
     for pkg in gnat_pkgs:
-        qual = {"edge": True} if pkg == "gnatformat" else None
-        anod_build(pkg, qualifier=qual)
+        anod_build(pkg)
 
 
 def build_libgpr2_users():
