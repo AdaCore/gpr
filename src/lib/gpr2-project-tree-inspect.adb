@@ -240,7 +240,6 @@ package body GPR2.Project.Tree.Inspect is
 
          Prj     : constant JSON_Value := Create_Object;
          F_Prj   : constant JSON_Value := Create_Object;
-         C_Array : JSON_Array;
          P_Array : JSON_Array;
          A_Array : JSON_Array;
 
@@ -354,15 +353,38 @@ package body GPR2.Project.Tree.Inspect is
          --  Imported
 
          if View.Has_Imports then
-            for I of View.Imports loop
-               Append (C_Array, Create (View_Id (I)));
+            declare
+               Imp_Arr : JSON_Array;
+            begin
 
-               if All_Projects then
-                  Parse_Project (Prjs, I, View);
+               for I of View.Imports loop
+                  Append (Imp_Arr, Create (View_Id (I)));
+
+                  if All_Projects then
+                     Parse_Project (Prjs, I, View);
+                  end if;
+               end loop;
+
+               if not Is_Empty (Imp_Arr) then
+                  Set_Field (F_Prj, "imports", Imp_Arr);
                end if;
-            end loop;
+            end;
 
-            Set_Field (F_Prj, "imports", C_Array);
+            declare
+               Lim_Arr : JSON_Array;
+            begin
+               for I of View.Limited_Imports loop
+                  Append (Lim_Arr, Create (View_Id (I)));
+
+                  if All_Projects then
+                     Parse_Project (Prjs, I, View);
+                  end if;
+               end loop;
+
+               if not Is_Empty (Lim_Arr) then
+                  Set_Field (F_Prj, "limited-imports", Lim_Arr);
+               end if;
+            end;
          end if;
 
          --  Aggregated
