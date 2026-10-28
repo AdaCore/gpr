@@ -53,9 +53,12 @@ package body GPR2.Build.ALI_Parser is
    package IO is
 
       function Get_Token
-        (File : in out GB.Reader; EOL : out Boolean) return String;
+        (File      : in out GB.Reader;
+         EOL       : out Boolean;
+         Until_EOL : Boolean := False) return String;
       --  Return next token available. The result is "" if LF or EOF are
-      --  encountered before being able to read a token.
+      --  encountered before being able to read a token. With Until_EOL,
+      --  an unquoted token includes spaces and tabs up to the line end.
 
       procedure Next_Line (File : in out GB.Reader; Header : out Character);
       --  Skip to the next (non-empty) line and sets Header.
@@ -76,7 +79,9 @@ package body GPR2.Build.ALI_Parser is
       ---------------
 
       function Get_Token
-        (File : in out GB.Reader; EOL : out Boolean) return String
+        (File      : in out GB.Reader;
+         EOL       : out Boolean;
+         Until_EOL : Boolean := False) return String
       is
          subtype End_Of_Line is Character
          with
@@ -196,7 +201,7 @@ package body GPR2.Build.ALI_Parser is
                end if;
 
                --  Two consecutive space means end of token
-               if C = ' ' then
+               if C = ' ' and then not Until_EOL then
                   if Previous_Token_Is_Space then
                      Last := Last - 1;
                      EOL := False;
@@ -209,7 +214,9 @@ package body GPR2.Build.ALI_Parser is
                   Previous_Token_Is_Space := False;
                end if;
 
-               if C in Delimiter then
+               if C in Delimiter
+                 and then (not Until_EOL or else C in End_Of_Line)
+               then
                   EOL := C in End_Of_Line;
                   exit;
                end if;
@@ -536,7 +543,8 @@ package body GPR2.Build.ALI_Parser is
          S : constant String := IO.Get_Token (Reader, EOL)
          with Unreferenced;
          --  Source
-         F : constant String := IO.Get_Token (Reader, EOL);
+         F : constant String :=
+           IO.Get_Token (Reader, EOL, Until_EOL => True);
          --  Checksum & flags
          I : Positive := F'First;
       begin
