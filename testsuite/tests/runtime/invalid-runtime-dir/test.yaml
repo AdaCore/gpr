@@ -1,5 +1,6 @@
 description:
-    Check runtime availability with a missing runtime directory (issue 698)
+    Check runtime availability with missing or invalid runtime directories
+    and supported runtime layouts
 driver: build_and_run
 project_file: test
 main: main

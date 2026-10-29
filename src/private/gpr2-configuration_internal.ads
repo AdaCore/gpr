@@ -11,6 +11,10 @@ with GPR2.Project.Configuration;
 
 package GPR2.Configuration_Internal is
 
+   function Check_Runtime_Dir (Dir : Path_Name.Object) return Boolean;
+   --  Checks for runtime source and object directories, or the corresponding
+   --  ada_source_path and ada_object_path files.
+
    procedure Resolve_Runtime_Dir
      (Descriptor   : in out GPR2.Project.Configuration.Description;
       Project_Path : GPR2.Path_Name.Object;
