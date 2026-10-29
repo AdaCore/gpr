@@ -1449,6 +1449,12 @@ package body GPR2.Build.Actions_Population is
          end;
       end loop;
 
+      --  A limited-import cycle can lead back to this library. Its own
+      --  output must never become an input of its link action.
+
+      Self.Static_Libs_Deps.Exclude (View.Id);
+      Self.Shared_Libs_Deps.Exclude (View.Id);
+
       SAL_Closure :=
         SAL_Closure or else Has_SAL or else View.Is_Library_Standalone;
 
