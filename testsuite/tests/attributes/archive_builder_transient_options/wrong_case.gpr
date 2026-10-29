@@ -1,0 +1,5 @@
+project Wrong_Case is
+   for Languages use ("C");
+   for Source_Dirs use ();
+   for Archive_Builder_Transient_Options use ("-t");
+end Wrong_Case;

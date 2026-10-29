@@ -269,6 +269,9 @@ package GPR2.Project.Registry.Attribute is
    Archive_Builder_Append_Option    : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"archive_builder_append_option");
+   Archive_Builder_Transient_Options : constant Q_Attribute_Id :=
+                                        (Project_Level_Scope,
+                                         +"archive_builder_transient_options");
    Archive_Indexer                  : constant Q_Attribute_Id :=
                                         (Project_Level_Scope,
                                          +"archive_indexer");

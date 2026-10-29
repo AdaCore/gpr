@@ -1,0 +1,14 @@
+absent/empty: undefined
+absent/configured: --thin
+base/configured: -T
+legacy/configured: -T
+disabled/configured: empty
+extending/empty: undefined
+extending/configured: --thin
+indexed/empty: rejected
+scalar/empty: rejected
+list/empty: -T --custom-option argument with spaces
+empty_list/empty: empty
+invalid/empty: --thni
+wrong_case/empty: -t
+absent/invalid: --thni

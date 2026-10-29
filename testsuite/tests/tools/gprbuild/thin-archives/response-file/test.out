@@ -1,0 +1,20 @@
+mode: normal
+[Archive] libapp.a (app.gpr): 0
+  thin option: False
+  response file: True
+[C Compile] main.c (app.gpr): 0
+[C Compile] member.c (foreign.gpr): 0
+[C Compile] unused.c (foreign.gpr): 0
+[Link] main (app.gpr): 0
+thin archive: False
+result: 1
+mode: thin
+[Archive] libapp.a (app.gpr): 0
+  thin option: True
+  response file: True
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] member.c (foreign.gpr): SKIPPED
+[C Compile] unused.c (foreign.gpr): SKIPPED
+[Link] main (app.gpr): 0
+thin archive: True
+result: 1

@@ -1,0 +1,5 @@
+project Foreign is
+   for Languages use ("C");
+   for Source_Dirs use ("foreign-src");
+   for Object_Dir use "foreign-obj";
+end Foreign;

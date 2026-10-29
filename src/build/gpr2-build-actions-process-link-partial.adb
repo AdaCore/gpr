@@ -135,6 +135,12 @@ package body GPR2.Build.Actions.Process.Link.Partial is
          end if;
       end loop;
 
+      for Obj of Self.Signature_Only_Objects loop
+         if not Self.Signature.Add_Input (Obj, Check_Checksums) then
+            return;
+         end if;
+      end loop;
+
       for Lib of Self.Library_Dependencies loop
          if not Self.Signature.Add_Input (Lib, Check_Checksums) then
             return;

@@ -1,0 +1,4 @@
+description: Transient archive options and incremental linking for aggregate static libraries
+driver: python_script
+control:
+  - [SKIP, "env.host.os.name != 'linux'", "requires GNU ar"]

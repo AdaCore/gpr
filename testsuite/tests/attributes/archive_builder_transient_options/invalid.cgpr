@@ -1,0 +1,3 @@
+configuration project Invalid is
+   for Archive_Builder_Transient_Options use ("--thni");
+end Invalid;

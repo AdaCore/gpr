@@ -1,0 +1,30 @@
+initial thin archive
+[Archive] libapp.a (app.gpr): 0
+[C Compile] main.c (app.gpr): 0
+[C Compile] member.c (foreign.gpr): 0
+[C Compile] unused.c (foreign.gpr): 0
+[Link] main (app.gpr): 0
+result: 1
+member added
+[Archive] libapp.a (app.gpr): 0
+[C Compile] extra.c (foreign.gpr): 0
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] member.c (foreign.gpr): SKIPPED
+[C Compile] unused.c (foreign.gpr): SKIPPED
+[Link] main (app.gpr): 0
+result: 1
+member removed
+[Archive] libapp.a (app.gpr): 0
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] member.c (foreign.gpr): SKIPPED
+[C Compile] unused.c (foreign.gpr): SKIPPED
+[Link] main (app.gpr): 0
+result: 1
+missing referenced object
+[Archive] libapp.a (app.gpr): SKIPPED
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] member.c (foreign.gpr): 0
+[C Compile] unused.c (foreign.gpr): SKIPPED
+[Link] main (app.gpr): SKIPPED
+result: 1
+member regenerated: True

@@ -1,0 +1,23 @@
+custom options
+[Archive] libapp.a (app.gpr): 0
+[C Compile] main.c (app.gpr): 0
+[C Compile] member.c (foreign.gpr): 0
+[C Compile] unused.c (foreign.gpr): 0
+[Link] main (app.gpr): 0
+result: 1
+thin archive: True
+unchanged build
+[Archive] libapp.a (app.gpr): SKIPPED
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] member.c (foreign.gpr): SKIPPED
+[C Compile] unused.c (foreign.gpr): SKIPPED
+[Link] main (app.gpr): SKIPPED
+result: 1
+member changed
+[Archive] libapp.a (app.gpr): 0
+[C Compile] main.c (app.gpr): SKIPPED
+[C Compile] member.c (foreign.gpr): 0
+[C Compile] unused.c (foreign.gpr): SKIPPED
+[Link] main (app.gpr): 0
+result: 2
+archive bytes unchanged: True
