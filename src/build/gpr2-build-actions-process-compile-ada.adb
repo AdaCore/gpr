@@ -159,6 +159,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
             return False;
 
          elsif Self.Tree.Build_Options.No_Indirect_Imports
+           and then not CU_View.Is_Runtime
            and then not Self.View.Imports.Contains (CU_View)
            and then not Self.View.Limited_Imports.Contains (CU_View)
          then

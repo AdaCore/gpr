@@ -122,6 +122,8 @@ private package GPR2.View_Internal is
       --  List of imported views
       Limited_Imports   : Project_View_Store.Map;
       --  List of limited imported views
+      Has_Runtime_Dependency : Boolean := False;
+      --  Whether this view depends on the tree's Ada runtime project
       Agg_Libraries     : GPR2.View_Ids.Set.Set;
       --  List of aggregate libraries that use this view
       Aggregated        : Project_Vector.Vector;

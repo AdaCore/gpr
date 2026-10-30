@@ -640,6 +640,14 @@ package body GPR2.Tree_Internal is
 
             if Kind (I_Imported) or else Kind (I_Recursive) then
                For_Imports (View);
+
+               if View_Internal.Get_RO (View).Has_Runtime_Dependency then
+                  if Kind (I_Recursive) then
+                     For_Project (Self.Runtime_Project);
+                  else
+                     Append (Self.Runtime_Project);
+                  end if;
+               end if;
             end if;
 
             --  Handle extended if any
@@ -3526,7 +3534,7 @@ package body GPR2.Tree_Internal is
       if not Self.Pre_Conf_Mode then
          if not Has_Critical_Error then
             for View of Self.Ordered_Views loop
-               --  Finally add a dependency over the runtime view if the view*
+               --  Finally add a dependency over the runtime view if the view
                --  has Ada language
 
                declare
@@ -3540,11 +3548,8 @@ package body GPR2.Tree_Internal is
                     and then
                       (Self.Root_Project.Kind /= K_Aggregate
                        or else Data.Context = Aggregate)
-                    and then
-                      not Data.Limited_Imports.Contains (Self.Runtime.Name)
                   then
-                     Data.Limited_Imports.Insert
-                       (Self.Runtime.Name, Self.Runtime);
+                     Data.Has_Runtime_Dependency := True;
 
                      for Root of Data.Root_Views loop
                         View_Internal.Get_RW (Self.Runtime).Root_Views.Include

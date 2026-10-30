@@ -1240,6 +1240,10 @@ package body GPR2.Project.View is
             Add (Imp);
          end loop;
 
+         if View_Internal.Get_RO (V).Has_Runtime_Dependency then
+            Add (V.Tree.Runtime_Project);
+         end if;
+
          if V.Is_Extending then
             --  Even when Included_Extended is set, we need to walk through
             --  them to retrieve their imports.
