@@ -1,0 +1,15 @@
+library project Ada_Bridge is
+   for Source_Dirs use ("ada/src");
+   for Object_Dir use "ada/obj";
+   for Library_Dir use "ada/lib";
+   for Library_Name use "ada_bridge";
+   for Library_Kind use "static";
+   for Library_Interface use ("Ada_Bridge");
+   for Library_Standalone use "encapsulated";
+
+   package Linker is
+      for Linker_Options use
+        (Project'Project_Dir
+         & "linker_option_provider/lib/liblinker_option_probe.a");
+   end Linker;
+end Ada_Bridge;

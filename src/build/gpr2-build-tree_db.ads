@@ -303,6 +303,10 @@ package GPR2.Build.Tree_Db is
      (Self     : Object;
       Artifact : Artifacts.Object'Class) return Actions.Object'Class;
 
+   function Predecessor_Reference
+     (Self     : aliased in out Object;
+      Artifact : Artifacts.Object'Class) return Action_Reference_Type;
+
    -------------------------
    -- Temp files handling --
    -------------------------
@@ -592,6 +596,11 @@ private
      (Self     : Object;
       Artifact : Artifacts.Object'Class) return Actions.Object'Class
    is (Self.Actions (Self.Predecessor (Artifact)));
+
+   function Predecessor_Reference
+     (Self     : aliased in out Object;
+      Artifact : Artifacts.Object'Class) return Action_Reference_Type
+   is (Self.Action_Id_To_Reference (Self.Predecessor (Artifact)));
 
    function Successors
      (Self     : Object;

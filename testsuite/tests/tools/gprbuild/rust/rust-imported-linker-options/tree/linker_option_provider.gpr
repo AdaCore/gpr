@@ -1,0 +1,8 @@
+library project Linker_Option_Provider is
+   for Languages use ("C");
+   for Source_Dirs use ("linker_option_provider");
+   for Object_Dir use "linker_option_provider/obj";
+   for Library_Dir use "linker_option_provider/lib";
+   for Library_Name use "linker_option_probe";
+   for Library_Kind use "static";
+end Linker_Option_Provider;
