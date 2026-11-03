@@ -1,0 +1,12 @@
+project List_Expected is
+   for Source_Dirs use ".";
+   for Source_Files use "main.adb";
+
+   package Compiler is
+      for Switches ("Ada") use "-g";
+   end Compiler;
+
+   package Naming is
+      for Implementation_Exceptions ("C") use "test.c";
+   end Naming;
+end List_Expected;

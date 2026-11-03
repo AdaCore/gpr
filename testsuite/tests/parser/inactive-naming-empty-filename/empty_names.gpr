@@ -1,0 +1,18 @@
+project Empty_Names is
+   Enable_Empty_Naming := external ("ENABLE_EMPTY_NAMING", "false");
+
+   for Main use ("main.adb");
+   for Object_Dir use "obj_empty_names";
+
+   package Naming is
+      case Enable_Empty_Naming is
+         when "true" =>
+            for Body ("Ext") use "";
+            for Implementation ("Ext") use "";
+            for Spec ("Ext") use "";
+            for Specification ("Ext") use "";
+         when others =>
+            null;
+      end case;
+   end Naming;
+end Empty_Names;
