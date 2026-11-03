@@ -35,11 +35,11 @@ package body GPR2.Project.Tree.Inspect is
       Display_Packages          : Boolean := False;
       Display_Variables         : Boolean := False)
    is
-      O_Array : GPR2.Containers.Value_Set;
+      Object_Search_Paths : GPR2.Containers.Value_Set;
       --  Object search-paths, global array with all project's object
       --  directories and the possible runtime object directory.
 
-      S_Array : GPR2.Containers.Value_Set;
+      Source_Search_Paths : GPR2.Containers.Value_Set;
       --  Sources search-paths, global array with all project's sources
       --  directories.
 
@@ -122,7 +122,7 @@ package body GPR2.Project.Tree.Inspect is
          function Attributes
            (Atts : Project.Attribute.Set.Object) return JSON_Array
          is
-            A_Array : JSON_Array;
+            Attr_Array : JSON_Array;
          begin
             for A of Atts loop
                declare
@@ -153,11 +153,11 @@ package body GPR2.Project.Tree.Inspect is
                         end;
                   end case;
 
-                  Append (A_Array, Att);
+                  Append (Attr_Array, Att);
                end;
             end loop;
 
-            return A_Array;
+            return Attr_Array;
          end Attributes;
 
          -----------
@@ -167,7 +167,7 @@ package body GPR2.Project.Tree.Inspect is
          function Types
            (Typs : Project.Typ.Set.Object) return JSON_Array
          is
-            T_Array : JSON_Array;
+            Type_Array : JSON_Array;
          begin
             for T of Typs loop
                declare
@@ -185,11 +185,11 @@ package body GPR2.Project.Tree.Inspect is
                      Set_Field (Typ, "values", Values);
                   end;
 
-                  Append (T_Array, Typ);
+                  Append (Type_Array, Typ);
                end;
             end loop;
 
-            return T_Array;
+            return Type_Array;
          end Types;
 
          ---------------
@@ -199,7 +199,7 @@ package body GPR2.Project.Tree.Inspect is
          function Variables
            (Vars : Project.Variable.Set.Object) return JSON_Array
          is
-            V_Array : JSON_Array;
+            Variable_Array : JSON_Array;
          begin
             for V of Vars loop
                declare
@@ -231,18 +231,17 @@ package body GPR2.Project.Tree.Inspect is
                         end;
                   end case;
 
-                  Append (V_Array, Var);
+                  Append (Variable_Array, Var);
                end;
             end loop;
 
-            return V_Array;
+            return Variable_Array;
          end Variables;
 
-         Prj     : constant JSON_Value := Create_Object;
-         F_Prj   : constant JSON_Value := Create_Object;
-         C_Array : JSON_Array;
-         P_Array : JSON_Array;
-         A_Array : JSON_Array;
+         Prj          : constant JSON_Value := Create_Object;
+         F_Prj        : constant JSON_Value := Create_Object;
+         Parent_Array : JSON_Array;
+         Agg_Array    : JSON_Array;
 
       begin
          if Handled.Contains (View) then
@@ -263,14 +262,14 @@ package body GPR2.Project.Tree.Inspect is
          Set_Field (Prj, "is-externally-built", View.Is_Externally_Built);
 
          declare
-            L_Array : JSON_Array;
+            Lang_Array : JSON_Array;
          begin
             for Language of View.Language_Ids loop
-               Append (L_Array, Create (String (Name (Language))));
+               Append (Lang_Array, Create (String (Name (Language))));
             end loop;
 
-            if not Is_Empty (L_Array) then
-               Set_Field (Prj, "languages", L_Array);
+            if not Is_Empty (Lang_Array) then
+               Set_Field (Prj, "languages", Lang_Array);
             end if;
          end;
 
@@ -279,14 +278,15 @@ package body GPR2.Project.Tree.Inspect is
               (Prj, "object-directory",
                String (View.Object_Directory.Dir_Name));
 
-            O_Array.Include (String (View.Object_Directory.Dir_Name));
+            Object_Search_Paths.Include
+              (String (View.Object_Directory.Dir_Name));
 
             if View.Kind in With_Source_Dirs_Kind then
                declare
                   Src_Array : GPR2.Containers.Value_Set;
                begin
                   for S of View.Source_Directories loop
-                     S_Array.Include (S.String_Value);
+                     Source_Search_Paths.Include (S.String_Value);
                      Src_Array.Include (S.String_Value);
                   end loop;
 
@@ -346,37 +346,60 @@ package body GPR2.Project.Tree.Inspect is
          --  Imported by
 
          if Parent.Is_Defined then
-            Append (P_Array, Create (View_Id (Parent)));
+            Append (Parent_Array, Create (View_Id (Parent)));
 
-            Set_Field (F_Prj, "imported-by", P_Array);
+            Set_Field (F_Prj, "imported-by", Parent_Array);
          end if;
 
          --  Imported
 
          if View.Has_Imports then
-            for I of View.Imports loop
-               Append (C_Array, Create (View_Id (I)));
+            declare
+               Imp_Arr : JSON_Array;
+            begin
 
-               if All_Projects then
-                  Parse_Project (Prjs, I, View);
+               for I of View.Imports loop
+                  Append (Imp_Arr, Create (View_Id (I)));
+
+                  if All_Projects then
+                     Parse_Project (Prjs, I, View);
+                  end if;
+               end loop;
+
+               if not Is_Empty (Imp_Arr) then
+                  Set_Field (F_Prj, "imports", Imp_Arr);
                end if;
-            end loop;
+            end;
 
-            Set_Field (F_Prj, "imports", C_Array);
+            declare
+               Lim_Arr : JSON_Array;
+            begin
+               for I of View.Limited_Imports loop
+                  Append (Lim_Arr, Create (View_Id (I)));
+
+                  if All_Projects then
+                     Parse_Project (Prjs, I, View);
+                  end if;
+               end loop;
+
+               if not Is_Empty (Lim_Arr) then
+                  Set_Field (F_Prj, "limited-imports", Lim_Arr);
+               end if;
+            end;
          end if;
 
          --  Aggregated
 
          if View.Qualifier in Aggregate_Kind then
             for A of View.Aggregated (Recursive => False) loop
-               Append (A_Array, Create (View_Id (A)));
+               Append (Agg_Array, Create (View_Id (A)));
 
                if All_Projects then
                   Parse_Project (Prjs, A, View);
                end if;
             end loop;
 
-            Set_Field (F_Prj, "aggregated", A_Array);
+            Set_Field (F_Prj, "aggregated", Agg_Array);
          end if;
 
          declare
@@ -390,7 +413,7 @@ package body GPR2.Project.Tree.Inspect is
               or else Display_Everything
             then
                declare
-                  P_Array : JSON_Array := Empty_Array;
+                  Package_Array : JSON_Array := Empty_Array;
                begin
                   for P of View.Packages
                     (With_Defaults => False,
@@ -428,7 +451,7 @@ package body GPR2.Project.Tree.Inspect is
                                     Set_Field
                                       (Pck, "attributes", Attributes_Array);
                                     Attributes_Array := Empty_Array;
-                                    Append (P_Array, Pck);
+                                    Append (Package_Array, Pck);
                                  end if;
                               end if;
                            end;
@@ -436,8 +459,8 @@ package body GPR2.Project.Tree.Inspect is
                      end;
                   end loop;
 
-                  if not Is_Empty (P_Array) then
-                     Set_Field (F_Prj, "packages", P_Array);
+                  if not Is_Empty (Package_Array) then
+                     Set_Field (F_Prj, "packages", Package_Array);
                   end if;
                end;
             end if;
@@ -579,11 +602,11 @@ package body GPR2.Project.Tree.Inspect is
       -----------------
 
       function Tree_Object return JSON_Value is
-         Result_Object  : constant JSON_Value := Create_Object;
-         Root_Object    : constant JSON_Value := Create_Object;
-         Stat           : constant JSON_Value := Create_Object;
-         P_Array        : JSON_Array;
-         Runtime_Object : constant JSON_Value := Create_Object;
+         Result_Object     : constant JSON_Value := Create_Object;
+         Root_Object       : constant JSON_Value := Create_Object;
+         Stat              : constant JSON_Value := Create_Object;
+         Search_Path_Array : JSON_Array;
+         Runtime_Object    : constant JSON_Value := Create_Object;
       begin
          --  Some stats about the tree
 
@@ -593,32 +616,34 @@ package body GPR2.Project.Tree.Inspect is
          --  Project search paths
 
          for P of Tree.Project_Search_Paths loop
-            Append (P_Array, Create (String (P.Dir_Name)));
+            Append (Search_Path_Array, Create (String (P.Dir_Name)));
          end loop;
 
-         Set_Field (Result_Object, "project-search-paths", P_Array);
+         Set_Field (Result_Object, "project-search-paths", Search_Path_Array);
 
          if Tree.Has_Runtime_Project then
-            O_Array.Include
+            Object_Search_Paths.Include
               (String (Tree.Runtime_Project.Object_Directory.Dir_Name));
 
             for S of Tree.Runtime_Project.Source_Directories loop
-               S_Array.Include (String (S.Dir_Name));
+               Source_Search_Paths.Include (String (S.Dir_Name));
             end loop;
          end if;
 
          --  Object search paths
 
-         if not O_Array.Is_Empty then
+         if not Object_Search_Paths.Is_Empty then
             Set_Field
-              (Result_Object, "object-search-paths", To_JSON_Array (O_Array));
+              (Result_Object, "object-search-paths",
+               To_JSON_Array (Object_Search_Paths));
          end if;
 
          --  Source search path
 
-         if not S_Array.Is_Empty then
+         if not Source_Search_Paths.Is_Empty then
             Set_Field
-              (Result_Object, "source-search-paths", To_JSON_Array (S_Array));
+              (Result_Object, "source-search-paths",
+               To_JSON_Array (Source_Search_Paths));
          end if;
 
          --  The root project data
@@ -661,15 +686,15 @@ package body GPR2.Project.Tree.Inspect is
 
    begin
       declare
-         P_Array : JSON_Array;
+         Projects_Array : JSON_Array;
       begin
-         Parse_Project (Prjs   => P_Array,
+         Parse_Project (Prjs   => Projects_Array,
                         View   => Tree.Root_Project,
                         Parent => Project.View.Undefined);
 
          Set_Field (JSON_Res, "info", Info_Object);
          Set_Field (JSON_Res, "tree", Tree_Object);
-         Set_Field (JSON_Res, "projects", P_Array);
+         Set_Field (JSON_Res, "projects", Projects_Array);
       end;
    end Inspect_Project_JSON_Output;
 

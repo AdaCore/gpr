@@ -373,15 +373,34 @@ is
                                     Indent (3, Image (I_View));
                                  end if;
                               end loop;
+
+                              for I of I_View.Limited_Imports loop
+                                 if I.Id = View.Id then
+                                    if First_Import then
+                                       Indent (2, "Imported-by        : ");
+                                       First_Import := False;
+                                    end if;
+
+                                    Indent (3, Image (I_View) & " (limited)");
+                                 end if;
+                              end loop;
                            end if;
                         end;
                      end loop;
                   end;
 
-                  if View.Has_Imports then
+                  if not View.Imports.Is_Empty then
                      Indent (2, "Imports           : ");
 
                      for I of View.Imports loop
+                        Indent (3, Image (I));
+                     end loop;
+                  end if;
+
+                  if not View.Limited_Imports.Is_Empty then
+                     Indent (2, "Limited imports   : ");
+
+                     for I of View.Limited_Imports loop
                         Indent (3, Image (I));
                      end loop;
                   end if;

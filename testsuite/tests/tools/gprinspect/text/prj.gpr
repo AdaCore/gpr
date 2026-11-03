@@ -1,4 +1,6 @@
 --  Test extends/extends all
+limited with "limited_project.gpr";
+
 project Prj extends all "base" is
 
    for Object_Dir use "obj2";

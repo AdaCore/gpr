@@ -13,7 +13,7 @@
 +--------------------------------------+
 |       Project Tree Information       |
 +--------------------------------------+
-* Project count        :  7
+* Project count        :  8
 * Project search paths :
     - <filtered-out>
 * Object search paths  :
@@ -90,6 +90,34 @@
           - Values : 
              - "yes"
              - "no"
+
+* Limited_Project ($<cwd>/limited_project.gpr) [ abstract project ]
+    - Project file      : <cwd>/limited_project.gpr
+    - Project directory : <cwd>/
+    - Imported-by        : 
+       - Prj ($<cwd>/prj.gpr) (limited)
+    - Attributes        : 
+       - Archive_Prefix [ SINGLE ]
+          - Value : "lib"
+       - Disable_Linking [ SINGLE ]
+          - Value : "false"
+       - Exec_Dir [ SINGLE ]
+          - Value : "."
+       - Externally_Built [ SINGLE ]
+          - Value : "false"
+       - Library_Kind [ SINGLE ]
+          - Value : "static"
+       - Library_Standalone [ SINGLE ]
+          - Value : "no"
+       - Name [ SINGLE ]
+          - Value : "limited_project"
+       - Object_Dir [ SINGLE ]
+          - Value : "."
+       - Project_Dir [ SINGLE ]
+          - Value : "<cwd>/"
+       - Source_Dirs [ LIST ]
+          - Values : 
+    - Packages          :
 
 * runtime (!runtime) [ standard project ]
     - Project file      : <gcc>/lib/gcc/(host)/(gcc-version)/runtime.gpr
@@ -250,6 +278,8 @@
        - Base ($<cwd>/base.gpr>$<cwd>/prj.gpr)
        - Lib ($<cwd>/lib.gpr>$<cwd>/prj.gpr)
        - Shared ($<cwd>/shared.gpr>$<cwd>/prj.gpr)
+    - Limited imports   : 
+       - Limited_Project ($<cwd>/limited_project.gpr)
     - Attributes        : 
        - Archive_Prefix [ SINGLE ]
           - Value : "lib"
@@ -337,6 +367,74 @@
         {
           "kind": "single",
           "name": "Exec_Dir",
+          "value": "."
+        },
+        {
+          "kind": "single",
+          "name": "Externally_Built",
+          "value": "false"
+        },
+        {
+          "kind": "single",
+          "name": "Library_Kind",
+          "value": "static"
+        },
+        {
+          "kind": "single",
+          "name": "Library_Standalone",
+          "value": "no"
+        },
+        {
+          "kind": "single",
+          "name": "Name",
+          "value": "limited_project"
+        },
+        {
+          "kind": "single",
+          "name": "Object_Dir",
+          "value": "."
+        },
+        {
+          "kind": "single",
+          "name": "Project_Dir",
+          "value": "<cwd>/"
+        },
+        {
+          "kind": "list",
+          "name": "Source_Dirs",
+          "values": [
+          ]
+        }
+      ],
+      "imported-by": [
+        "$<cwd>/prj.gpr"
+      ],
+      "project": {
+        "directory": "<cwd>/",
+        "file-name": "<cwd>/limited_project.gpr",
+        "id": "$<cwd>/limited_project.gpr",
+        "is-externally-built": false,
+        "kind": "abstract",
+        "name": "Limited_Project",
+        "qualifier": "abstract",
+        "simple-name": "limited_project.gpr"
+      }
+    },
+    {
+      "attributes": [
+        {
+          "kind": "single",
+          "name": "Archive_Prefix",
+          "value": "lib"
+        },
+        {
+          "kind": "single",
+          "name": "Disable_Linking",
+          "value": "false"
+        },
+        {
+          "kind": "single",
+          "name": "Exec_Dir",
           "value": "obj2"
         },
         {
@@ -381,6 +479,9 @@
       ],
       "imported-by": [
         "$<cwd>/agg.gpr"
+      ],
+      "limited-imports": [
+        "$<cwd>/limited_project.gpr"
       ],
       "packages": [
         {
@@ -628,7 +729,7 @@
       "<cwd>/src2"
     ],
     "stats": {
-      "project-count": 3
+      "project-count": 4
     },
     "target": "(host)"
   }
