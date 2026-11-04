@@ -1,0 +1,10 @@
+limited with "q.gpr";
+
+library project P is
+   for Languages use ("Ada");
+   for Source_Dirs use ("srcp");
+   for Object_Dir use "obj/p";
+   for Library_Name use "p";
+   for Library_Dir use "lib/p";
+   for Library_Kind use "relocatable";
+end P;

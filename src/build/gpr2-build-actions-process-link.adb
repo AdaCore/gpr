@@ -56,6 +56,17 @@ package body GPR2.Build.Actions.Process.Link is
    function Depends_On_Partial_Link (Self : Object) return Boolean;
    --  Returns true if a partial linking output is used by this link action
 
+   -------------------------------
+   -- Add_Cyclic_Shared_Library --
+   -------------------------------
+
+   procedure Add_Cyclic_Shared_Library
+     (Self    : in out Object;
+      Library : Artifacts.Library.Object) is
+   begin
+      Self.Cyclic_Shared_Libraries.Append (Library);
+   end Add_Cyclic_Shared_Library;
+
    ----------------------------------
    -- Add_Mapping_File_To_Cmd_Line --
    ----------------------------------
@@ -1678,6 +1689,7 @@ package body GPR2.Build.Actions.Process.Link is
                Result.Append (Artifacts.Library.Object (Input));
             end if;
          end loop;
+         Result.Append (Self.Cyclic_Shared_Libraries);
       end return;
    end Library_Dependencies;
 
