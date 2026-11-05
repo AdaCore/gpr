@@ -1,0 +1,4 @@
+description: Dependency cycle between two static libraries
+driver: build_and_run
+project_file: app.gpr
+main: obj/app/main

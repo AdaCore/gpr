@@ -1,0 +1,2 @@
+description: A shared library dependency cycle fails at link time
+driver: python_script

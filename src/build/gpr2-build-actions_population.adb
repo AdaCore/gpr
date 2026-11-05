@@ -1449,6 +1449,12 @@ package body GPR2.Build.Actions_Population is
          end;
       end loop;
 
+      --  A limited-import cycle can lead back to this library. Its own
+      --  output must never become an input of its link action.
+
+      Self.Static_Libs_Deps.Exclude (View.Id);
+      Self.Shared_Libs_Deps.Exclude (View.Id);
+
       SAL_Closure :=
         SAL_Closure or else Has_SAL or else View.Is_Library_Standalone;
 
@@ -1624,6 +1630,24 @@ package body GPR2.Build.Actions_Population is
                   Tree_Db.Add_Input
                     (Self.Initial_Link_Action.UID,
                      Sublib.Cargo_Metadata_Act.UID_Artifact);
+               elsif not Self.Final_Link_Action.Is_Static_Library
+                 and then not Sublib.Final_Link_Action.Is_Static_Library
+                 and then Sublib.View.Closure
+                   (Include_Extended   => True,
+                    Include_Aggregated => True).Contains (View)
+               then
+                  --  Do not create a DAG dependency between the two shared
+                  --  links to prevent a cycle, but keep the -L/-l options.
+                  --  This behavior is the same as with gprbuild1, an error
+                  --  will be raised during the link, except if the dependency
+                  --  is provided manually.
+
+                  Link.Object'Class
+                    (Tree_Db.Action_Id_To_Reference
+                       (Self.Initial_Link_Action.UID).Element.all)
+                    .Add_Cyclic_Shared_Library
+                      (Artifacts.Library.Object
+                         (Sublib.Final_Link_Action.Output));
                else
                   Tree_Db.Add_Input
                     (Self.Initial_Link_Action.UID,

@@ -61,6 +61,12 @@ package GPR2.Build.Actions.Process.Link is
    --  Mark the action as having a library dependency circle requiring the use
    --  of --start-group --end-group as linker option
 
+   procedure Add_Cyclic_Shared_Library
+     (Self    : in out Object;
+      Library : Artifacts.Library.Object);
+   --  Keep a shared library on the link command line without making its
+   --  production a prerequisite. Used for mutually dependent shared libraries.
+
    function Is_Library (Self : Object'Class) return Boolean;
 
    function Is_Static_Library (Self : Object) return Boolean;
@@ -168,6 +174,9 @@ private
       --  transient archive options populate this set on completion, including
       --  when skipped. These objects contribute to the signature, not to the
       --  command line.
+
+      Cyclic_Shared_Libraries : Artifacts.Library.Vectors.Vector;
+      --  Shared library options that do not impose an execution dependency
 
       Mapping_File : Ada.Strings.Unbounded.Unbounded_String :=
         Null_Unbounded_String;
