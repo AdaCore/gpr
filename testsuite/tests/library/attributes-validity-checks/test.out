@@ -15,11 +15,9 @@ libprj1_not_standalone.gpr:7:08: warning: attribute "Library_Symbol_File" is onl
 libprj1_not_standalone.gpr:6:08: warning: attribute "Library_Symbol_Policy" is only used in standalone libraries
 libprj1_not_standalone.gpr:3:23: warning: object directory "obj" not found
 libprj1_not_standalone.gpr:5:39: warning: library directory "libprj1_not_standalone.lib" not found
-libprj1_not_standalone.gpr:5:39: warning: library ALI directory "libprj1_not_standalone.lib" not found
 libprj1_standalone_auto_init_not_supported.gpr
 libprj1_standalone_auto_init_not_supported.gpr: warning: attribute Library_Auto_Init can not be set to true if Library_Auto_Init_Supported is false
 libprj1_standalone_auto_init_not_supported.gpr:3:39: warning: library directory "libprj1_standalone_auto_init_not_supported.lib" not found
-libprj1_standalone_auto_init_not_supported.gpr:3:39: warning: library ALI directory "libprj1_standalone_auto_init_not_supported.lib" not found
 libprj1_standalone_auto_init_not_supported.gpr:9:50: warning: library src directory "libprj1_standalone_auto_init_not_supported.lib.src" not found
 aggrprj1.gpr
 aggrprj1.gpr:8:08: warning: attribute "Library_Ali_Dir" cannot be used in aggregate projects

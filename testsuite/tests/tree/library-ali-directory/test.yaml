@@ -1,0 +1,4 @@
+description: Check messages raised for default or explicit library ALI directories
+driver: build_and_run
+project_file: test
+main: test
