@@ -340,18 +340,15 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
             begin
                for Input of Tree.Artifacts_Database.Inputs (Act.UID) loop
                   if Input in GPR2.Build.Artifacts.Source_Files.Object'Class
-                    and then (GPR2.Build.Artifacts.Source_Files.Object'Class
-                                (Input)
-                                .Path
-                                .Simple_Name
-                              = Source_Path.Simple_Name
-                              or else GPR2
-                                        .Build
-                                        .Artifacts
-                                        .Source_Files
-                                        .Object'Class (Input)
-                                        .Path
-                                      = Source_Path)
+                    and then
+                      (GPR2.Build.Artifacts.Source_Files.Object'Class (Input)
+                         .Path
+                         .Simple_Name
+                       = Source_Path.Simple_Name
+                       or else
+                         GPR2.Build.Artifacts.Source_Files.Object'Class (Input)
+                           .Path
+                         = Source_Path)
                   then
                      Traces.Trace ("Found compile action: " & Act.UID.Image);
                      return Act;
