@@ -1,0 +1,18 @@
+library project Lib is
+   type Ali_Mode is ("default", "same", "different");
+   Mode : Ali_Mode := external ("ALI_MODE", "default");
+
+   for Languages use ("Ada");
+   for Object_Dir use ".";
+   for Library_Name use "sample";
+   for Library_Dir use "missing-lib";
+
+   case Mode is
+      when "default" =>
+         null;
+      when "same" =>
+         for Library_ALI_Dir use "missing-lib";
+      when "different" =>
+         for Library_ALI_Dir use "missing-ali";
+   end case;
+end Lib;

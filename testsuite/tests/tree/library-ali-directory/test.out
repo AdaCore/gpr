@@ -1,0 +1,16 @@
+default / WARNING
+lib.gpr:8:24: warning: library directory "missing-lib" not found
+same / WARNING
+lib.gpr:8:24: warning: library directory "missing-lib" not found
+lib.gpr:14:34: warning: library ALI directory "missing-lib" not found
+different / WARNING
+lib.gpr:8:24: warning: library directory "missing-lib" not found
+lib.gpr:16:34: warning: library ALI directory "missing-ali" not found
+default / ERROR
+lib.gpr:8:24: error: library directory "missing-lib" not found
+same / ERROR
+lib.gpr:8:24: error: library directory "missing-lib" not found
+lib.gpr:14:34: error: library ALI directory "missing-lib" not found
+different / ERROR
+lib.gpr:8:24: error: library directory "missing-lib" not found
+lib.gpr:16:34: error: library ALI directory "missing-ali" not found

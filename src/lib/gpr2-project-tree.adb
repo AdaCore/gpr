@@ -671,7 +671,12 @@ package body GPR2.Project.Tree is
                      "library",
                      V.Attribute (PRA.Library_Dir));
 
-                  if V.Language_Ids.Contains (Ada_Language) then
+                  --  The default ALI directory is the library directory,
+                  --  which has already been checked. Only explicit value
+                  --  is checked separately.
+                  if V.Language_Ids.Contains (Ada_Language)
+                    and then not V.Attribute (PRA.Library_Ali_Dir).Is_Default
+                  then
                      Ensure
                        (V.Library_Ali_Directory,
                         "library ALI",
