@@ -99,6 +99,31 @@ package body GPR2.Build.Command_Line is
       return Result;
    end Create;
 
+   ---------------------------------
+   -- Filter_Conflicting_Switches --
+   ---------------------------------
+
+   procedure Filter_Conflicting_Switches
+     (Self    : in out Object;
+      Switch1 : String;
+      Switch2 : String)
+   is
+      Seen : Boolean := False;
+   begin
+      for J in reverse Self.Cmd_Line.First_Index .. Self.Cmd_Line.Last_Index
+      loop
+         if Self.Cmd_Line (J) = Switch1
+           or else Self.Cmd_Line (J) = Switch2
+         then
+            if Seen then
+               Self.Remove (J);
+            else
+               Seen := True;
+            end if;
+         end if;
+      end loop;
+   end Filter_Conflicting_Switches;
+
    -------------------------------
    -- Filter_Duplicate_Switches --
    -------------------------------
