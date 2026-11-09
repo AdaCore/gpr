@@ -1,0 +1,2 @@
+description: Explicit compilation of orphan subunits reports compiler errors
+driver: python_script

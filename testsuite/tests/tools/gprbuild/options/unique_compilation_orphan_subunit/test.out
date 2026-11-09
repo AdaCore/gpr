@@ -1,0 +1,13 @@
+$ gprbuild -Pprj.gpr -c -u parent-child.adb
+"obj" created
+[Ada Compile]     parent-child.adb
+parent-child.adb:1:11: error: file "parent.adb" not found
+[Ada Compile] parent-child.adb (prj.gpr) failed.
+exit status: 4
+$ gprbuild -Pprj.gpr -c -u parent-child-nested.adb
+[Ada Compile]     parent-child-nested.adb
+parent-child.adb:1:11: error: file "parent.adb" not found
+parent-child.adb:1:11: error: "Parent.Child.Nested (body)" depends on "Parent.Child (body)"
+parent-child.adb:1:11: error: "Parent.Child (body)" depends on "Parent (body)"
+[Ada Compile] parent-child-nested.adb (prj.gpr) failed.
+exit status: 4
