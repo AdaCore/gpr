@@ -130,6 +130,10 @@ private package GPR2.Build.View_Tables is
      (Simple_Name, Visible_Source_Result, Hash, "=");
    --  See View_Data.Visible_Src_Cache
 
+   package Runtime_Override_Maps is new Ada.Containers.Indefinite_Hashed_Maps
+     (Simple_Name, Containers.Name_Set, Hash, "=",
+      Containers.Name_Type_Set."=");
+
    package Basename_Source_List_Maps is new
      Ada.Containers.Indefinite_Hashed_Maps
        (Simple_Name, Source_Proxy_Sets.Set, Hash, "=", Source_Proxy_Sets."=");
@@ -198,6 +202,10 @@ private package GPR2.Build.View_Tables is
       --  Cache for Visible_Source, dropped when the tree's source
       --  generation changes.
 
+      Runtime_Override_Units : Runtime_Override_Maps.Map;
+      --  Visible runtime overrides by basename, shared by the view's binders.
+      --  Rebuilt after source refreshes; read-only during action execution.
+
       Visible_Source_Closure : GPR2.Project.View.Vector.Object;
       --  The list of views to consider during source lookup: the current view
       --  and its dependencies recursively, together with the extended
@@ -220,6 +228,10 @@ private package GPR2.Build.View_Tables is
             --  Note: Compilation units are stored in root projects: for
             --  aggregate projects, each root project has its own list
             --  to prevent clashes between independant subtrees.
+
+            Runtime_Override_Files : Containers.Filename_Set;
+            --  Original and replacement basenames of runtime overrides.
+            --  Retained across refreshes; cache lookup checks visibility.
 
             Separates : Name_Maps.Map;
             --  Map of separates to their declaring unit. Note that the
@@ -264,6 +276,9 @@ private package GPR2.Build.View_Tables is
      (Data           : View_Data_Ref;
       Messages       : in out GPR2.Log.Object;
       Matching_Units : Boolean := True);
+
+   procedure Update_Runtime_Overrides (Data : View_Data_Ref);
+   --  Rebuild runtime dependency lookup after all affected views are refreshed
 
    View_Base_For : access function
                      (Data : View_Data) return View_Db.Object;

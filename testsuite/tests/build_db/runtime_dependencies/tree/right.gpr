@@ -1,0 +1,4 @@
+project Right is
+   for Source_Dirs use ("right");
+   for Object_Dir use "obj-right";
+end Right;

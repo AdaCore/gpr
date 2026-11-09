@@ -70,6 +70,11 @@ package GPR2.Build.Tree_Db is
    --  To be called whenever the sources visible from a view change. This is
    --  tree-wide: a view resolves names against its whole closure.
 
+   procedure Update_Runtime_Overrides (Self : Object)
+     with Pre => Self.Is_Defined;
+   --  Recompute runtime overrides for all views after refreshing sources.
+   --  A per-view update can also change the overrides visible to other views.
+
    --  VIEW DATABASE LOOKUP:
 
    function View_Database

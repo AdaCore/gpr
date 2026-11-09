@@ -149,6 +149,13 @@ package body GPR2.Build.View_Db is
       return not Ref (Self).Own_CUs.Is_Empty;
    end Has_Own_Units;
 
+   ---------------------------
+   -- Has_Runtime_Overrides --
+   ---------------------------
+
+   function Has_Runtime_Overrides (Self : Object) return Boolean is
+     (not Ref (Self).Runtime_Override_Units.Is_Empty);
+
    ----------------------------
    -- Has_Source_Of_Language --
    ----------------------------
@@ -254,6 +261,28 @@ package body GPR2.Build.View_Db is
       return Res;
    end Own_Units;
 
+   --------------------------
+   -- Runtime_Dependencies --
+   --------------------------
+
+   function Runtime_Dependencies
+     (Self         : Object;
+      Dependencies : Containers.Filename_Set) return Containers.Name_Set
+   is
+      Data : constant View_Data_Ref := Ref (Self);
+   begin
+      return Result : Containers.Name_Set do
+         for C in Data.Runtime_Override_Units.Iterate loop
+            if Dependencies.Contains
+              (Filename_Type (Runtime_Override_Maps.Key (C)))
+            then
+               Result.Union
+                 (Data.Runtime_Override_Units.Constant_Reference (C));
+            end if;
+         end loop;
+      end return;
+   end Runtime_Dependencies;
+
    ---------------------------
    -- Set_Interface_Closure --
    ---------------------------
@@ -303,6 +332,7 @@ package body GPR2.Build.View_Db is
       Messages : in out GPR2.Log.Object) is
    begin
       View_Tables.Refresh (Ref (Self), Messages);
+      Self.Tree_Db.Update_Runtime_Overrides;
    end Update;
 
    -------------------

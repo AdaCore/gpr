@@ -1085,6 +1085,7 @@ package body GPR2.Build.Tree_Db is
             end if;
          end loop;
       end if;
+      Self.Update_Runtime_Overrides;
    end Refresh;
 
    ----------------------
@@ -1228,6 +1229,17 @@ package body GPR2.Build.Tree_Db is
          Self.Create_View_Dbs;
       end if;
    end Unload;
+
+   ------------------------------
+   -- Update_Runtime_Overrides --
+   ------------------------------
+
+   procedure Update_Runtime_Overrides (Self : Object) is
+   begin
+      for Db of Self.Build_Dbs loop
+         View_Tables.Update_Runtime_Overrides (View_Tables.Get_Ref (Db));
+      end loop;
+   end Update_Runtime_Overrides;
 
 begin
 

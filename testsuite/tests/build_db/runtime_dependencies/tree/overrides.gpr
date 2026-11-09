@@ -1,0 +1,7 @@
+project Overrides is
+   for Source_Dirs use ("overrides");
+   for Object_Dir use "obj-overrides";
+   package Naming is
+      for Body ("System.Concat_3") use "concat_override.adb";
+   end Naming;
+end Overrides;
