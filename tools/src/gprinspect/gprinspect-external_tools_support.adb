@@ -101,10 +101,12 @@ package body GPRinspect.External_Tools_Support is
             OS_Lib.Free (Exec_Name);
             Args_Vector.Append (GPR2.Options.Print_GPR_Registry_Option);
 
+            --  Diagnostics must not become part of the JSON response.
+
             Output := GNATCOLL.OS.Process.Run
               (Args   => Args_Vector,
                Stdin  => GNATCOLL.OS.Process.FS.Null_FD,
-               Stderr => GNATCOLL.OS.Process.FS.To_Stdout,
+               Stderr => GNATCOLL.OS.Process.FS.Null_FD,
                Status => Dummy);
 
             if Dummy = 0 then
@@ -114,8 +116,9 @@ package body GPRinspect.External_Tools_Support is
          exception
             when E : others =>
                Ada.Text_IO.Put_Line
-                 ("Warning: Cannot import attribute registry from " & Tool_Name
-                  & " : " & Ada.Exceptions.Exception_Information (E));
+                 (Ada.Text_IO.Standard_Error,
+                  "Warning: Cannot import attribute registry from " & Tool_Name
+                  & " : " & Ada.Exceptions.Exception_Message (E));
          end;
       end if;
 
