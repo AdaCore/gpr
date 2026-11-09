@@ -1,0 +1,11 @@
+abstract project Settings is
+   for Languages use ("C");
+
+   type Object_Layout is ("separate", "shared");
+   Layout : Object_Layout := external ("OBJECT_LAYOUT", "separate");
+
+   package Compiler is
+      for Driver ("C") use external ("SINGLE_COMPILE_WRAPPER", "gcc");
+      for Driver ("Ada") use external ("SINGLE_COMPILE_WRAPPER", "gcc");
+   end Compiler;
+end Settings;

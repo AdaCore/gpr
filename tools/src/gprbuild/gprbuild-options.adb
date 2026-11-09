@@ -80,9 +80,9 @@ package body GPRbuild.Options is
       --  BUILD
       Parser.Add_Argument
         (Build_Group,
-         Create (Name   => "--single-compiler-per-obj-dir",
-                 Help   => "For compatibility reason only",
-                 Hidden => True));
+         Create (Name => "--single-compile-per-obj-dir",
+                 Help => "No simultaneous compilations for the same " &
+                         "object directory"));
       Parser.Add_Argument
         (Build_Group,
          Create (Name           => "--build-script",
@@ -522,6 +522,9 @@ package body GPRbuild.Options is
       elsif Arg = "--no-sal-binding" then
          Result.Build_Options.No_SAL_Binding := True;
 
+      elsif Arg = "--single-compile-per-obj-dir" then
+         Result.PM_Options.Single_Compile_Per_Obj_Dir := True;
+
       elsif Arg = "--restricted-to-languages" then
          Result.Build_Options.Restricted_To_Languages.Clear;
          declare
@@ -739,7 +742,6 @@ package body GPRbuild.Options is
         or else Arg = "-s"
         or else Arg = "-x"
         or else Arg = "--complete-output"
-        or else Arg = "--single-compiler-per-obj-dir"
         or else Arg = "-vl"
         or else Arg = "-vm"
       then

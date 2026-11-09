@@ -8,6 +8,7 @@ pragma Warnings (Off);
 with System.Multiprocessors;
 pragma Warnings (On);
 
+with Ada.Containers.Hashed_Maps;
 with Ada.Containers.Indefinite_Holders;
 with Ada.Containers.Synchronized_Queue_Interfaces;
 with Ada.Containers.Unbounded_Synchronized_Queues;
@@ -24,7 +25,9 @@ with GNATCOLL.Traces;
 
 with GPR2.Build.Actions.Process;
 with GPR2.Build.Actions.Thread;
+with GPR2.Build.Actions.Process.Compile;
 with GPR2.Build.Actions.Process.Link;
+with GPR2.Build.Actions.Process.Post_Bind;
 with GPR2.Build.Response_Files;
 with GPR2.Build.Tree_Db;
 with GPR2.Reporter;
@@ -797,13 +800,24 @@ package body GPR2.Build.Actions_Scheduler is
       --  Only in the latter case may new nodes appear via Post_Execution.
       Active_Actions     : Natural := 0;
 
+      package Directory_Slot_Maps is new Ada.Containers.Hashed_Maps
+        (Key_Type        => Path_Name.Object,
+         Element_Type    => Positive,
+         Hash            => Path_Name.Hash,
+         Equivalent_Keys => Path_Name."=");
+
+      Busy_Directories : Directory_Slot_Maps.Map;
+      --  Map reserved compilation directories to their owning slots.
+      --  Only the main task accesses it.
+
       type Slot_Entry is record
-         Is_Free : Boolean := True;
+         Is_Free         : Boolean := True;
+         Compilation_Dir : Path_Name.Object;
       end record;
 
       type Serialized_Slot_Array is array (1 .. Max_Jobs) of Slot_Entry;
 
-      Serialized_Slot : Serialized_Slot_Array := (others => (Is_Free => True));
+      Serialized_Slot : Serialized_Slot_Array := (others => <>);
       --  Unique slot identifier array to ensure that each action has
       --  exclusive access to a slot. A slot has several purposes:
       --  - Each slot has one dedicated thread runner as well as one process
@@ -811,8 +825,26 @@ package body GPR2.Build.Actions_Scheduler is
       --  - Each slot ID can be used by actions. For instance, it is used
       --    to compute the naming of temporary mapping files for compile
       --    actions.
+      --  - Each compiler slot remembers its working directory so its entry
+      --    in Busy_Directories can be removed when the slot is released.
       --  Note: this variable does not need shared protection as all accesses
       --  are serialized through the main task.
+
+      Deferred_Nodes : GDG.Node_Set;
+      --  Ready nodes whose compilation directory is busy. The graph iterator
+      --  has marked them as visiting, so it will not return them again.
+
+      function Compilation_Directory
+        (Action : Actions.Object'Class) return Path_Name.Object;
+      --  Directory to reserve for a compiler action, or Undefined if the
+      --  action is not subject to the per-directory restriction.
+
+      function Directory_Available (Node : GDG.Node_Id) return Boolean;
+      --  Whether the node's compilation directory is free
+
+      function Next_Available_Node (Node : out GDG.Node_Id) return Boolean;
+      --  Retry deferred nodes and iterate past busy directories. Like the
+      --  graph iterator, return No_Node while waiting for running actions.
 
       function Nb_Active_Actions return Integer
       is (Active_Actions);
@@ -919,6 +951,24 @@ package body GPR2.Build.Actions_Scheduler is
          end Signal;
       end Collect_Signal;
 
+      ---------------------------
+      -- Compilation_Directory --
+      ---------------------------
+
+      function Compilation_Directory
+        (Action : Actions.Object'Class) return Path_Name.Object is
+      begin
+         if Options.Single_Compile_Per_Obj_Dir
+           and then
+             (Action in Actions.Process.Compile.Object'Class
+              or else Action in Actions.Process.Post_Bind.Object'Class)
+         then
+            return Action.Working_Directory;
+         else
+            return Path_Name.Undefined;
+         end if;
+      end Compilation_Directory;
+
       ----------------------
       -- Dead_Runner_Slot --
       ----------------------
@@ -939,6 +989,20 @@ package body GPR2.Build.Actions_Scheduler is
 
          return 0;
       end Dead_Runner_Slot;
+
+      -------------------------
+      -- Directory_Available --
+      -------------------------
+
+      function Directory_Available (Node : GDG.Node_Id) return Boolean is
+         Directory : constant Path_Name.Object :=
+           Compilation_Directory
+             (Tree_Db.Action_Id_To_Reference
+                (Context.Actions (Node)).Element.all);
+      begin
+         return not Directory.Is_Defined
+           or else not Busy_Directories.Contains (Directory);
+      end Directory_Available;
 
       -------------------------
       -- Drain_Collect_Queue --
@@ -1085,6 +1149,51 @@ package body GPR2.Build.Actions_Scheduler is
          end if;
       end Initialize_Script_FD;
 
+      -------------------------
+      -- Next_Available_Node --
+      -------------------------
+
+      function Next_Available_Node (Node : out GDG.Node_Id) return Boolean is
+         More_Nodes : Boolean;
+      begin
+         if not Options.Single_Compile_Per_Obj_Dir then
+            return Context.Graph.Next (Node);
+         end if;
+
+         Node := GDG.No_Node;
+
+         for Candidate of Deferred_Nodes loop
+            if Directory_Available (Candidate) then
+               Node := Candidate;
+               exit;
+            end if;
+         end loop;
+
+         if Node /= GDG.No_Node then
+            Deferred_Nodes.Delete (Node);
+            return True;
+         end if;
+
+         loop
+            More_Nodes := Context.Graph.Next (Node);
+
+            if Node = GDG.No_Node then
+               --  Even if the graph iterator is exhausted, deferred work
+               --  must be retried after its directory is released. In
+               --  particular, a failed compiler with -k must not end the
+               --  iteration while independent compilations are deferred.
+
+               return More_Nodes or else not Deferred_Nodes.Is_Empty;
+            end if;
+
+            if Directory_Available (Node) then
+               return True;
+            end if;
+
+            Deferred_Nodes.Include (Node);
+         end loop;
+      end Next_Available_Node;
+
       ------------------
       -- Release_Slot --
       ------------------
@@ -1093,8 +1202,17 @@ package body GPR2.Build.Actions_Scheduler is
       begin
          if Action_Slot in Serialized_Slot'Range then
             if not Serialized_Slot (Action_Slot).Is_Free then
+               if Serialized_Slot (Action_Slot).Compilation_Dir.Is_Defined then
+                  pragma Assert
+                    (Busy_Directories.Element
+                       (Serialized_Slot (Action_Slot).Compilation_Dir)
+                     = Action_Slot);
+                  Busy_Directories.Delete
+                    (Serialized_Slot (Action_Slot).Compilation_Dir);
+               end if;
+
                Active_Actions := Active_Actions - 1;
-               Serialized_Slot (Action_Slot) := (Is_Free => True);
+               Serialized_Slot (Action_Slot) := (others => <>);
             end if;
          end if;
       end Release_Slot;
@@ -1134,7 +1252,7 @@ package body GPR2.Build.Actions_Scheduler is
       begin
          pragma Assert (Serialized_Slot (Action_Slot).Is_Free);
          Active_Actions := Active_Actions + 1;
-         Serialized_Slot (Action_Slot) := (Is_Free => False);
+         Serialized_Slot (Action_Slot).Is_Free := False;
       end Reserve_Slot;
 
       ----------------------------
@@ -1283,7 +1401,7 @@ package body GPR2.Build.Actions_Scheduler is
             end if;
 
             begin
-               if Status /= Pending and then not Context.Graph.Next (Node)
+               if Status /= Pending and then not Next_Available_Node (Node)
                then
                   Traces.Trace ("End of iteration: status /= pending " &
                                 "and no more nodes available");
@@ -1367,6 +1485,17 @@ package body GPR2.Build.Actions_Scheduler is
 
                if Status = Ready_To_Run then
                   if Act_Ref.Pre_Execution then
+                     Serialized_Slot (Action_Slot).Compilation_Dir :=
+                       Compilation_Directory (Act_Ref.Element.all);
+
+                     if Serialized_Slot (Action_Slot)
+                          .Compilation_Dir.Is_Defined
+                     then
+                        Busy_Directories.Insert
+                          (Serialized_Slot (Action_Slot).Compilation_Dir,
+                           Action_Slot);
+                     end if;
+
                      if Is_Proc_Action then
                         Execute_Process_Runner (Action_Slot, UID);
                      else

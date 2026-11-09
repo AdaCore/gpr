@@ -1,0 +1,6 @@
+with "a.gpr", "b.gpr";
+
+project Parallel is
+   for Source_Dirs use ();
+   for Object_Dir use "obj/parallel";
+end Parallel;

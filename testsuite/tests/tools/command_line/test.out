@@ -61,6 +61,8 @@ Build control switches:
            Do not replay the warnings of skipped actions
  --restricted-to-languages=<lang1>,<lang2>,...
            Restrict the languages of the sources
+ --single-compile-per-obj-dir
+           No simultaneous compilations for the same object directory
  --temp-dir=[os|obj]
            Determinte where temporary files should be located. Either in the
            object directory of the owning project or the default system
@@ -426,6 +428,8 @@ Build control switches:
            Do not replay the warnings of skipped actions
  --restricted-to-languages=<lang1>,<lang2>,...
            Restrict the languages of the sources
+ --single-compile-per-obj-dir
+           No simultaneous compilations for the same object directory
  --temp-dir=[os|obj]
            Determinte where temporary files should be located. Either in the
            object directory of the owning project or the default system

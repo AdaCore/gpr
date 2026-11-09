@@ -1,0 +1,10 @@
+project A extends "settings.gpr" is
+   for Source_Dirs use ("src/a");
+
+   case Layout is
+      when "separate" =>
+         for Object_Dir use "obj/a";
+      when "shared" =>
+         for Object_Dir use "obj/shared";
+   end case;
+end A;

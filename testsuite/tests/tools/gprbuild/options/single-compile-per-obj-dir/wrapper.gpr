@@ -1,0 +1,6 @@
+project Wrapper is
+   for Source_Dirs use ("wrapper");
+   for Object_Dir use "wrapper/obj";
+   for Exec_Dir use "wrapper";
+   for Main use ("compiler_wrapper.adb");
+end Wrapper;

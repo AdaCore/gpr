@@ -1,0 +1,10 @@
+single directory: OK
+incremental build: OK
+forced rebuild: OK
+parallel directories: OK
+shared directory: OK
+Builder switch: OK
+keep going after failure: OK
+Ada and binder compilations: OK
+default parallelism: OK
+jobserver: OK
