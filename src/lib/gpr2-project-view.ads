@@ -60,7 +60,7 @@ package GPR2.Project.View is
 
    function Compare (Left, Right : Object) return Comparison_Result
      with Pre => Left.Is_Defined and then Right.Is_Defined;
-   --  Compare view IDs without copying them.
+   --  Compare view IDs without copying them
 
    function "<" (Left, Right : Object) return Boolean;
    --  Ordering a project object to be able to build an ordered map for example

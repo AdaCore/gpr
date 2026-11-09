@@ -25,7 +25,7 @@ begin
       A.Assert (not (V < V));
    end loop;
 
-   --  Equal IDs from independent trees must compare equal.
+   --  Equal IDs from independent trees must compare equal
    TGPR.Load_With_No_Errors (Other_Tree, "./data/root_project.gpr");
    for Left of Tree.Ordered_Views loop
       for Right of Other_Tree.Ordered_Views loop
