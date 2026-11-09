@@ -1,3 +1,28 @@
+Missing runtime directory
 Loaded: FALSE
 Has runtime: FALSE
 config.cgpr:2:08: error: runtime directory "dir" does not exist
+Unrelated directory
+Loaded: FALSE
+Has runtime: FALSE
+config.cgpr:2:08: error: invalid runtime directory "dir"
+Runtime not requested
+Loaded: TRUE
+Has runtime: FALSE
+Missing runtime sources
+Loaded: FALSE
+Has runtime: FALSE
+config.cgpr:2:08: error: invalid runtime directory "dir"
+Missing runtime objects
+Loaded: FALSE
+Has runtime: FALSE
+config.cgpr:2:08: error: invalid runtime directory "dir"
+Standard runtime
+Loaded: TRUE
+Has runtime: TRUE
+Runtime source path
+Loaded: TRUE
+Has runtime: TRUE
+Runtime path files
+Loaded: TRUE
+Has runtime: TRUE

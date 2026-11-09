@@ -23,6 +23,7 @@ with GPR2.Build.ALI_Parser;
 pragma Warnings (Off, ".* is not referenced");
 with GPR2.Build.Source.Sets;
 pragma Warnings (On, ".* is not referenced");
+with GPR2.Configuration_Internal;
 with GPR2.Project_Parser;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
@@ -254,6 +255,11 @@ package body GPR2.Tree_Internal is
             Self.Error
               ("runtime directory """ & Attr.Value.Text & """ does not exist",
                Attr);
+            return Project.View.Undefined;
+
+         elsif not Configuration_Internal.Check_Runtime_Dir (RTD) then
+            Self.Error
+              ("invalid runtime directory """ & Attr.Value.Text & """", Attr);
             return Project.View.Undefined;
          end if;
 

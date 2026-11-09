@@ -1,3 +1,5 @@
 configuration project Config is
    for Runtime_Dir ("Ada") use "dir";
+   for Target use "not_a_target";
+   for Runtime ("Ada") use "not_a_runtime";
 end Config;

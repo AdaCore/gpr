@@ -12,6 +12,27 @@ with GPR2.Source_Reference;
 
 package body GPR2.Configuration_Internal is
 
+   -----------------------
+   -- Check_Runtime_Dir --
+   -----------------------
+
+   function Check_Runtime_Dir (Dir : Path_Name.Object) return Boolean is
+      Adalib_Dir     : constant Path_Name.Object :=
+                         Path_Name.Create_Directory ("adalib", Dir.Value);
+      Adainclude_Dir : constant Path_Name.Object :=
+                         Path_Name.Create_Directory
+                           ("adainclude", Dir.Value);
+      AOP_File       : constant Path_Name.Object :=
+                         Path_Name.Create_File
+                           ("ada_object_path", Dir.Value);
+      ASP_File       : constant Path_Name.Object :=
+                         Path_Name.Create_File
+                           ("ada_source_path", Dir.Value);
+   begin
+      return (Adalib_Dir.Exists or else AOP_File.Exists)
+        and then (Adainclude_Dir.Exists or else ASP_File.Exists);
+   end Check_Runtime_Dir;
+
    -------------------------
    -- Resolve_Runtime_Dir --
    -------------------------
@@ -23,34 +44,10 @@ package body GPR2.Configuration_Internal is
       Message      : out GPR2.Message.Object)
    is
 
-      function Check_Runtime_Dir (Dir : Path_Name.Object) return Boolean;
-      --  Checks if Dir can be a runtime directory
-
       function Locate_Runtime
         (Dir : Filename_Optional; Path : String) return Path_Name.Object;
       --  Returns runtime DIR directory resolved against Path or Undefined
       --  if nothing is found.
-
-      -----------------------
-      -- Check_Runtime_Dir --
-      -----------------------
-
-      function Check_Runtime_Dir (Dir : Path_Name.Object) return Boolean is
-         Adalib_Dir     : constant Path_Name.Object :=
-                            Path_Name.Create_Directory ("adalib", Dir.Value);
-         Adainclude_Dir : constant Path_Name.Object :=
-                            Path_Name.Create_Directory
-                              ("adainclude", Dir.Value);
-         AOP_File       : constant Path_Name.Object :=
-                            Path_Name.Create_File
-                              ("ada_object_path", Dir.Value);
-         ASP_File       : constant Path_Name.Object :=
-                            Path_Name.Create_File
-                              ("ada_source_path", Dir.Value);
-      begin
-         return (Adalib_Dir.Exists or else AOP_File.Exists)
-           and then (Adainclude_Dir.Exists or else ASP_File.Exists);
-      end Check_Runtime_Dir;
 
       --------------------
       -- Locate_Runtime --
