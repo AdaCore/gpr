@@ -1,4 +1,6 @@
 with Ada.Command_Line;
+with Ada.Environment_Variables;
+with Ada.Text_IO;
 with GNAT.OS_Lib;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Registry.Attribute;
@@ -10,7 +12,18 @@ procedure gnatcheck is
    Check_Attribute : constant GPR2.Q_Attribute_Id :=
                        (Check_Package, +"Check_Test");
    Options : GPR2.Options.Object;
+   Response : constant String :=
+     Ada.Environment_Variables.Value ("GPRINSPECT_TEST_OUTPUT", "valid");
 begin
+   Ada.Text_IO.Put_Line
+     (Ada.Text_IO.Standard_Error, "gnatcheck: error: test diagnostic");
+   if Response = "empty" then
+      return;
+   elsif Response = "invalid" then
+      Ada.Text_IO.Put_Line ("invalid json");
+      return;
+   end if;
+
    GPR2.Project.Registry.Pack.Add
      (Name     => Check_Package,
       Projects => GPR2.Project.Registry.Pack.Everywhere);

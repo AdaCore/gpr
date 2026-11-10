@@ -1,3 +1,4 @@
 description:
-    Test GPRinspect tool (check, prove, ...) packages support
+    Test GPRinspect tool (check, prove, ...) packages support, including stderr
+    diagnostics with valid, empty or invalid registry JSON on stdout.
 driver: python_script

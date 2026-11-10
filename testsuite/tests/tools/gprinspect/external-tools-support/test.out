@@ -103,3 +103,64 @@
        - Codepeer
        - Prove
 
+['gprinspect', '-Ptest', '--packages', '--attributes']
+    - Packages          :
+       - Check_Test
+          - Check_Test'Check_Test [ SINGLE ]
+             - Value : ""
+       - Prove_Test
+          - Prove_Test'Prove_Test [ SINGLE ]
+             - Value : ""
+       - Check
+       - Codepeer
+       - Prove
+       - Test
+
+['gprinspect', '-Ptest', '--packages', '--attributes']
+    - Packages          :
+       - Check
+          - Check'Default_Switches [ LIST ]
+             - Index value : "Ada"
+             - Values :
+                - "--rules"
+                - "my_rules.txt"
+          - Check'Switches [ LIST ]
+             - Index value : "test.adb"
+             - Values :
+                - ""
+       - Codepeer
+          - Codepeer'File_Patterns [ LIST ]
+             - Values :
+                - "*.ad?"
+       - Prove_Test
+          - Prove_Test'Prove_Test [ SINGLE ]
+             - Value : ""
+       - Prove
+       - Check_Test
+       - Test
+
+Warning: Cannot import attribute registry from gnatcheck : value expected (got DOC_END)
+['gprinspect', '-Ptest', '--packages', '--attributes']
+    - Packages          :
+       - Check
+          - Check'Default_Switches [ LIST ]
+             - Index value : "Ada"
+             - Values :
+                - "--rules"
+                - "my_rules.txt"
+          - Check'Switches [ LIST ]
+             - Index value : "test.adb"
+             - Values :
+                - ""
+       - Codepeer
+          - Codepeer'File_Patterns [ LIST ]
+             - Values :
+                - "*.ad?"
+       - Prove_Test
+          - Prove_Test'Prove_Test [ SINGLE ]
+             - Value : ""
+       - Prove
+       - Check_Test
+       - Test
+
+Warning: Cannot import attribute registry from gnatcheck : unexpected character 'i'
