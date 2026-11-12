@@ -1,0 +1,4 @@
+Scheduler_Error, Stop_On_Fail=True: FAILED
+Scheduler_Error, Stop_On_Fail=False: FAILED
+Unexpected_Exception, Stop_On_Fail=True: FAILED
+Unexpected_Exception, Stop_On_Fail=False: FAILED
