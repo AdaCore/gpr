@@ -18,9 +18,9 @@ enumerating sources:
 
 ``Sources_Only``
   Source files are enumerated and unit names are inferred from
-  filenames according to the naming scheme. Unit information may be
-  inaccurate for Ada (ambiguity between body and separate, krunched
-  filenames).
+  filenames according to the naming scheme and naming exceptions. Unit
+  information may be inaccurate for Ada (ambiguity between body and
+  separate, krunched filenames).
 
 ``Sources_Units``
   Unit information is resolved accurately by parsing ALI files (when
