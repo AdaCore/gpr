@@ -137,9 +137,9 @@ package GPR2.Project.View is
 
    function Extended (Self : Object) return Set.Object
      with Pre => Self.Is_Defined and then Self.Is_Extending;
-   --  Returns the extended projects
-   --  In case of simple extension, this will contain only one view, but in
-   --  case of extends all, the views of the subtree are returned.
+   --  Returns the views directly extended by Self
+   --  For extends all, includes implicitly extended imports, excluding
+   --  externally built imports and ancestors extended by another view.
 
    function Extended_Root (Self : Object) return Object
      with Pre => Self.Is_Defined and then Self.Is_Extending;
