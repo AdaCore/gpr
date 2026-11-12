@@ -3,6 +3,7 @@ with GPR2.Build.Actions;
 with GPR2.Build.Signature;
 with GPR2.Options;
 with GPR2.Project.Tree;
+with GPR2.View_Ids;
 with External_Action;
 with Test_Assert; use Test_Assert;
 
@@ -49,6 +50,25 @@ begin
    end if;
 
    Init_Actions;
+
+   declare
+      use GPR2.Build.Actions;
+      use type GPR2.View_Ids.View_Id;
+
+      function Same (L, R : Action_Id'Class) return Boolean renames
+        GPR2.Build.Actions."=";
+
+      Ids : GPR2.Build.Actions.Action_Id_Sets.Set;
+   begin
+      A.Assert (Same (Lib1_Action.UID, Lib1_Action.UID));
+      A.Assert (not Same (Lib1_Action.UID, Lib2_Action.UID));
+      A.Assert ((Lib1_Action.UID < Lib2_Action.UID) =
+                  (Lib1_Action.View.Id < Lib2_Action.View.Id));
+      Ids.Include (Lib1_Action.UID);
+      Ids.Include (Lib2_Action.UID);
+      Ids.Include (Lib1_Action.UID);
+      A.Assert (Natural (Ids.Length) = 2);
+   end;
 
    --  Test view getter and setter
 

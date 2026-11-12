@@ -29,6 +29,8 @@ with GNAT.OS_Lib;
 
 package body GPR2.Build.Actions.Process.Compile is
 
+   use type GPR2.View_Ids.View_Id;
+
    Traces : constant GNATCOLL.Traces.Trace_Handle :=
               GNATCOLL.Traces.Create
                 ("GPR.BUILD.ACTIONS.COMPILE",

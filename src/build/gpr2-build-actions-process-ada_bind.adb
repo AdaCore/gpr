@@ -36,6 +36,7 @@ with GPR2.Project.View.Vector;
 pragma Warnings (On);
 with GPR2.Project.Tree;
 with GPR2.Source_Reference;
+with GPR2.View_Ids;
 
 package body GPR2.Build.Actions.Process.Ada_Bind is
 
@@ -44,6 +45,7 @@ package body GPR2.Build.Actions.Process.Ada_Bind is
                 ("GPR.BUILD.ACTIONS.PROCESS.ADA_BIND", GNATCOLL.Traces.Off);
 
    use GNAT;
+   use type GPR2.View_Ids.View_Id;
 
    package PRA renames GPR2.Project.Registry.Attribute;
    package PAI renames GPR2.Project.Attribute_Index;
