@@ -1,0 +1,2 @@
+description: Check fatal status for exceptions caught while preparing actions
+driver: python_script
