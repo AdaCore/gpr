@@ -1,0 +1,5 @@
+forced_fifo: exit 7, executable False
+forced_fifo_json: exit 7, executable False
+fifo_fallback: exit 0, executable True
+no_jobserver: exit 0, executable True
+dry_run: exit 0, executable False

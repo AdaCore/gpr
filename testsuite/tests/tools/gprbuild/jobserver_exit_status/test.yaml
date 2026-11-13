@@ -1,0 +1,2 @@
+description: Check exit status when the scheduler rejects a jobserver protocol
+driver: python_script

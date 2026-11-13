@@ -1349,6 +1349,7 @@ package body GPR2.Build.Actions_Scheduler is
          Tree_Db.Reporter.Report
            ("error: jobserver fifo protocol not supported, please use "
             & "--jobserver-style=pipe on your make command");
+         Context.Status := Failed;
          return;
       end if;
 
@@ -1486,12 +1487,14 @@ package body GPR2.Build.Actions_Scheduler is
             exception
                when E : Actions_Scheduler_Error =>
                   pragma Annotate (Xcov, Exempt_On, "defensive code");
+                  Context.Status     := Failed;
                   End_Of_Iteration   := True;
                   End_Due_To_Failure := True;
                   Tree_Db.Reporter.Report
                     ("Fatal error: " & Ada.Exceptions.Exception_Message (E),
                      To_Stderr => True);
                when E : others =>
+                  Context.Status     := Failed;
                   End_Of_Iteration   := True;
                   End_Due_To_Failure := True;
                   Tree_Db.Reporter.Report
