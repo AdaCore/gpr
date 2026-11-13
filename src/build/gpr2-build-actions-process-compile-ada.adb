@@ -556,7 +556,8 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
               (Compile.Create
                  (Main_Src => Loc.Source.Simple_Name,
                   Lang     => Ada_Language,
-                  View     => Src.Owning_View))
+                  View     => (if Src.Owning_View.Is_Defined
+                               then Src.Owning_View else Loc.View)))
               with Index    => Loc.Index,
                    CU       => Src,
                    UL       => Loc);
@@ -641,23 +642,28 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
          end if;
       end Resolve_Location;
 
-      View    : constant GPR2.Project.View.Object := Src.Owning_View;
+      Loc     : constant BCU.Unit_Location := Resolve_Location;
+      --  An orphan subunit has no owning view. Use its source view so that
+      --  explicit compilation can report the missing parent.
+
+      View    : constant GPR2.Project.View.Object :=
+                  (if Src.Owning_View.Is_Defined
+                   then Src.Owning_View else Loc.View);
       No_Obj  : constant Boolean :=
                   (View.Is_Library and then View.Is_Externally_Built)
                     or else View.Is_Runtime;
       Attr    : GPR2.Project.Attribute.Object;
       Closure : GPR2.Project.View.Set.Object;
 
-      Loc     : constant BCU.Unit_Location := Resolve_Location;
    begin
       --  Ensure the object wasn't previously initialized prior to this call
       Self := Undefined;
 
-      Self.Ctxt := Src.Owning_View;
+      Self.Ctxt := View;
       Self.Lang := Ada_Language;
       Self.CU   := Src;
       Self.UL   := Loc;
-      Self.Src  := Src.Owning_View.Source (Loc.Source.Simple_Name);
+      Self.Src  := View.Source (Loc.Source.Simple_Name);
 
       --  ??? For Standalone libraries, we should probably not lookup for
       --  previous compilation artifacts, since we need to amend the ali
