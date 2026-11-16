@@ -70,7 +70,7 @@ package GPRls.Options is
 
    function Gnatdist (Self : Object) return Boolean;
 
-   function Hide_Status (Self : Object) return Boolean;
+   function Print_Status (Self : Object) return Boolean;
 
    procedure Print (Self : Object);
 
@@ -94,7 +94,7 @@ private
       Source_Parser         : Boolean := False;
       Gnatdist              : Boolean := False;
       Project_Parsing_Verbosity  : Integer := -1;
-      Hide_Status        : Boolean := False;
+      Print_Status          : Boolean := False;
       Args                  : GPR2.Containers.Value_Set;
    end record;
 
@@ -146,8 +146,8 @@ private
    function Gnatdist (Self : Object) return Boolean is
      (Self.Gnatdist);
 
-   function Hide_Status (Self : Object) return Boolean is
-     (Self.Hide_Status);
+   function Print_Status (Self : Object) return Boolean is
+     (Self.Selective_Output = All_Outputs or else Self.Print_Status);
 
    Empty_Options : constant Object :=
                      (GPRtools.Options.Empty_Options with others => <>);

@@ -209,7 +209,7 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
          Print_File_Artifact
            (Action.Object_File,
             Signature,
-            not Opt.Hide_Status,
+            Opt.Print_Status,
             Displayed_Paths,
             Offset);
          Offset := Offset + 1;
@@ -234,7 +234,7 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
                Print_File_Artifact
                  (GPR2.Build.Artifacts.Source_Files.Object (Artifact),
                   Signature,
-                  not Opt.Hide_Status,
+                  Opt.Print_Status,
                   Displayed_Paths,
                   Offset);
             end if;
@@ -247,7 +247,7 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
                Print_File_Artifact
                  (GPR2.Build.Artifacts.Source_Files.Create (Dep),
                   Signature,
-                  not Opt.Hide_Status,
+                  Opt.Print_Status,
                   Displayed_Paths,
                   Offset);
             end loop;
@@ -260,7 +260,7 @@ function GPRls.Main return Ada.Command_Line.Exit_Status is
                Print_File_Artifact
                  (GPR2.Build.Artifacts.Source_Files.Create (Dep),
                   Signature,
-                  not Opt.Hide_Status,
+                  Opt.Print_Status,
                   Displayed_Paths,
                   Offset,
                   Opt.Hide_Runtime_Directory);

@@ -139,8 +139,8 @@ package body GPRls.Options is
       elsif Arg = "--source-parser" then
          Result.Source_Parser := True;
 
-      elsif Arg = "--hide-status" then
-         Result.Hide_Status := True;
+      elsif Arg = "--status" then
+         Result.Print_Status := True;
 
       elsif Arg = "-V" then
          Result.Gnatdist := True;
@@ -328,9 +328,9 @@ package body GPRls.Options is
       Parser.Add_Argument
         (Ls_Group,
          Create
-           ("--hide-status",
+           ("--status",
             Help =>
-              "Do not print artifact status (OK, DIF, MISSING)"));
+              "Print artifact status (OK, DIF, MISSING)"));
       Parser.Add_Argument
         (Ls_Group, Create ("-V", Help => "", Hidden => True));
 
