@@ -330,7 +330,7 @@ package body GPRls.Options is
          Create
            ("--hide-status",
             Help =>
-              "Do not print artifact status (OK, DIF)"));
+              "Do not print artifact status (OK, DIF, MISSING)"));
       Parser.Add_Argument
         (Ls_Group, Create ("-V", Help => "", Hidden => True));
 
