@@ -52,13 +52,19 @@ package body GPR2.Build.ALI_Parser is
 
    package IO is
 
+      type Token_Mode is
+        (Whitespace_Separated, Double_Space_Separated, Rest_Of_Line);
+
       function Get_Token
-        (File      : in out GB.Reader;
-         EOL       : out Boolean;
-         Until_EOL : Boolean := False) return String;
-      --  Return next token available. The result is "" if LF or EOF are
-      --  encountered before being able to read a token. With Until_EOL,
-      --  an unquoted token includes spaces and tabs up to the line end.
+        (File : in out GB.Reader;
+         EOL  : out Boolean;
+         Mode : Token_Mode := Whitespace_Separated) return String;
+      --  Return the next token. Mode controls unquoted token delimiters:
+      --    Whitespace_Separated: a space, tab, or line end.
+      --    Double_Space_Separated: two spaces, a tab, or line end.
+      --    Rest_Of_Line: line end only.
+      --  Quoted tokens retain spaces and tabs regardless of Mode. Return ""
+      --  when the line ends before a token starts. Set EOL at line end or EOF.
 
       procedure Next_Line (File : in out GB.Reader; Header : out Character);
       --  Skip to the next (non-empty) line and sets Header.
@@ -79,17 +85,17 @@ package body GPR2.Build.ALI_Parser is
       ---------------
 
       function Get_Token
-        (File      : in out GB.Reader;
-         EOL       : out Boolean;
-         Until_EOL : Boolean := False) return String
+        (File : in out GB.Reader;
+         EOL  : out Boolean;
+         Mode : Token_Mode := Whitespace_Separated) return String
       is
          subtype End_Of_Line is Character
-         with
-           Static_Predicate => End_Of_Line in ASCII.CR | ASCII.LF | ASCII.EOT;
+           with Static_Predicate =>
+             End_Of_Line in ASCII.CR | ASCII.LF | ASCII.EOT;
          subtype Delimiter is Character
-         with Static_Predicate => Delimiter in ASCII.HT | End_Of_Line;
+           with Static_Predicate => Delimiter in ASCII.HT | End_Of_Line;
          subtype Delimiter_Or_Space is Character
-         with Static_Predicate => Delimiter_Or_Space in Delimiter | ' ';
+           with Static_Predicate => Delimiter_Or_Space in Delimiter | ' ';
 
          function Get_Quoted_Word return String;
          function Get_Word return String;
@@ -197,11 +203,13 @@ package body GPR2.Build.ALI_Parser is
          begin
             loop
                if not GB.Next (File, C) then
+                  EOL := True;
                   return GB.Token (File, First, Last);
                end if;
 
-               --  Two consecutive space means end of token
-               if C = ' ' and then not Until_EOL then
+               --  Older ALIs delimit unquoted filenames with two spaces
+
+               if Mode = Double_Space_Separated and then C = ' ' then
                   if Previous_Token_Is_Space then
                      Last := Last - 1;
                      EOL := False;
@@ -214,8 +222,11 @@ package body GPR2.Build.ALI_Parser is
                   Previous_Token_Is_Space := False;
                end if;
 
-               if C in Delimiter
-                 and then (not Until_EOL or else C in End_Of_Line)
+               if (Mode = Whitespace_Separated
+                   and then C in Delimiter_Or_Space)
+                 or else
+                   (Mode = Double_Space_Separated and then C in Delimiter)
+                 or else (Mode = Rest_Of_Line and then C in End_Of_Line)
                then
                   EOL := C in End_Of_Line;
                   exit;
@@ -235,10 +246,12 @@ package body GPR2.Build.ALI_Parser is
          Read_Token :
          loop
             if not GB.Next (File, C) then
+               EOL := True;
                return "";
             end if;
 
-            if C = ASCII.LF then
+            if C in End_Of_Line then
+               EOL := True;
                return "";
             end if;
 
@@ -319,7 +332,7 @@ package body GPR2.Build.ALI_Parser is
 
    function Parse (Self : in out Object) return Boolean is
       procedure Parse_Dep (Reader : in out GB.Reader);
-      --  Parse a D line to extract the source
+      --  Parse a D line to extract the source and unit part, when available
 
       procedure Parse_With (Reader : in out GB.Reader);
       --  Parse the source file name of the current dependency line
@@ -339,13 +352,52 @@ package body GPR2.Build.ALI_Parser is
          end if;
 
          declare
-            Source_File : constant String := IO.Get_Token (Reader, EOL);
+            Source_File : constant String :=
+              IO.Get_Token (Reader, EOL, Mode => IO.Double_Space_Separated);
          begin
             if Source_File = "" then
                raise Scan_ALI_Error with "missed dependency source file";
             end if;
 
-            Self.Dependencies.Include (Filename_Type (Source_File));
+            GPR2.Build.Dependencies.Include
+              (Self.Dependencies, Filename_Type (Source_File));
+
+            if EOL or else IO.Get_Token (Reader, EOL) = "" then
+               raise Scan_ALI_Error with "missing dependency timestamp";
+            end if;
+
+            if EOL or else IO.Get_Token (Reader, EOL) = "" then
+               raise Scan_ALI_Error with "missing dependency checksum";
+            end if;
+
+            if EOL then
+               return;
+            end if;
+
+            declare
+               Unit_Name : constant String := IO.Get_Token (Reader, EOL);
+            begin
+               if Unit_Name = "" then
+                  return;
+               elsif Unit_Name'Length < 3
+                 or else Unit_Name (Unit_Name'Last) not in 's' | 'b'
+                 or else Unit_Name (Unit_Name'Last - 1) /= '%'
+               then
+                  --  Older ALI formats may omit the unit kind or use a
+                  --  separate-unit name. Keep the filename dependency.
+                  return;
+               end if;
+
+               GPR2.Build.Dependencies.Include
+                 (Self.Dependencies, Filename_Type (Source_File),
+                  (Name_Length => Unit_Name'Length - 2,
+                   Name        =>
+                     Name_Type
+                       (Unit_Name (Unit_Name'First .. Unit_Name'Last - 2)),
+                   Part        =>
+                     (if Unit_Name (Unit_Name'Last) = 's'
+                      then S_Spec else S_Body)));
+            end;
          end;
       end Parse_Dep;
 
@@ -435,7 +487,8 @@ package body GPR2.Build.ALI_Parser is
 
                when 'L' =>
                   declare
-                     Value : constant String := IO.Get_Token (Reader, EOL);
+                     Value : constant String :=
+                       IO.Get_Token (Reader, EOL, Mode => IO.Rest_Of_Line);
                   begin
                      Self.Linker_Options.Append (Value);
                   end;
@@ -450,7 +503,8 @@ package body GPR2.Build.ALI_Parser is
 
                when 'V' =>
                   declare
-                     Version : constant String := IO.Get_Token (Reader, EOL);
+                     Version : constant String :=
+                       IO.Get_Token (Reader, EOL, Mode => IO.Rest_Of_Line);
                      Start   : Natural;
                   begin
                      for J in Version'Range loop
@@ -540,11 +594,12 @@ package body GPR2.Build.ALI_Parser is
 
       --  Read the flags at end of line
       declare
-         S : constant String := IO.Get_Token (Reader, EOL)
+         S : constant String :=
+           IO.Get_Token (Reader, EOL, Mode => IO.Double_Space_Separated)
          with Unreferenced;
          --  Source
          F : constant String :=
-           IO.Get_Token (Reader, EOL, Until_EOL => True);
+           IO.Get_Token (Reader, EOL, Mode => IO.Rest_Of_Line);
          --  Checksum & flags
          I : Positive := F'First;
       begin
@@ -713,7 +768,8 @@ package body GPR2.Build.ALI_Parser is
          end if;
 
          if In_Switches then
-            Result.Append (IO.Get_Token (Reader, EOL));
+            Result.Append
+              (IO.Get_Token (Reader, EOL, Mode => IO.Rest_Of_Line));
          end if;
       end loop;
 

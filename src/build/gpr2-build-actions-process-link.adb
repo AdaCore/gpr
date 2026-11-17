@@ -16,6 +16,7 @@ with GNATCOLL.OS.Stat;
 with GNATCOLL.Traces;
 with GNATCOLL.Utils;
 
+with GPR2.Build.Dependencies;
 with GPR2.Build.Actions.Process.Post_Bind;
 with GPR2.Build.Actions.Thread.Lib_Copy;
 with GPR2.Build.Actions.Process.Compile.Ada;
@@ -355,7 +356,8 @@ package body GPR2.Build.Actions.Process.Link is
                begin
                   if Comp.ALI_Is_Parsed
                     and then
-                      Comp.ALI_Dependencies.Contains ("s-osinte.ads")
+                      GPR2.Build.Dependencies.Filenames.Contains
+                        (Comp.ALI_Dependencies, "s-osinte.ads")
                   then
                      Libgnarl := True;
 

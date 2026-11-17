@@ -5,6 +5,7 @@
 --
 
 --  limited with GPR2.Build.Compilation_Input.Sets;
+with GPR2.Build.Dependencies;
 with GPR2.Build.Source;
 with GPR2.Build.Source_Base.Vectors;
 with GPR2.Build.Compilation_Unit.Maps;
@@ -188,7 +189,7 @@ package GPR2.Build.View_Db is
 
    function Runtime_Dependencies
      (Self         : Object;
-      Dependencies : Containers.Filename_Set) return Containers.Name_Set
+      Dependencies : GPR2.Build.Dependencies.Set) return Containers.Name_Set
      with Pre => Self.Is_Defined and then Self.Source_Option >= Sources_Units;
    --  Runtime-overriding units named by simple ALI dependency filenames.
 

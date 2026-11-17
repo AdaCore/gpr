@@ -78,7 +78,7 @@ procedure Main is
                      & String (Comp.Intf_Ali_File.Path.Simple_Name));
 
                   for D of Comp.Dependencies loop
-                     Text_IO.Put_Line ("    depends on " & String (D));
+                     Text_IO.Put_Line ("    depends on " & String (D.Filename));
                   end loop;
                end if;
             end;

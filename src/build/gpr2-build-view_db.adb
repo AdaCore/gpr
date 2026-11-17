@@ -267,14 +267,14 @@ package body GPR2.Build.View_Db is
 
    function Runtime_Dependencies
      (Self         : Object;
-      Dependencies : Containers.Filename_Set) return Containers.Name_Set
+      Dependencies : GPR2.Build.Dependencies.Set) return Containers.Name_Set
    is
       Data : constant View_Data_Ref := Ref (Self);
    begin
       return Result : Containers.Name_Set do
          for C in Data.Runtime_Override_Units.Iterate loop
-            if Dependencies.Contains
-              (Filename_Type (Runtime_Override_Maps.Key (C)))
+            if GPR2.Build.Dependencies.Filenames.Contains
+              (Dependencies, Filename_Type (Runtime_Override_Maps.Key (C)))
             then
                Result.Union
                  (Data.Runtime_Override_Units.Constant_Reference (C));

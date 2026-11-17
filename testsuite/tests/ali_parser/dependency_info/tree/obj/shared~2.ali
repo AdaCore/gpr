@@ -1,0 +1,23 @@
+V "GNAT Lib v28.20261115"
+M P W=b
+A -gnatA
+A -gnateI2
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U multi%b		shared.ada		00000000 NE OO SU
+
+U multi%s		shared.ada		2c39a31f EE NE OO SU
+
+D shared.ada		20261117121854 2c39a31f multi%s
+D shared.ada		20261117121854 2c39a31f multi%b
+D system.ads		20261110014302 e2b7c99d system%s
+G a e
+G c Z s b [multi standard 1 11 none]
+X 1 shared.ada
+1U11*Multi 2|3b11 6l5 6t10
+
