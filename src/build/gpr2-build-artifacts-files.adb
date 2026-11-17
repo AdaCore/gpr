@@ -16,8 +16,9 @@ package body GPR2.Build.Artifacts.Files is
    begin
       if not On_Windows then
          --  A backslash is a valid character in a Unix file name
-
+         pragma Warnings (Off, "this code can never be*");
          return Path;
+         pragma Warnings (On, "this code can never be*");
       end if;
 
       --  Store '/' separators, to avoid escaping them in the JSON.
@@ -45,8 +46,10 @@ package body GPR2.Build.Artifacts.Files is
       pragma Unreferenced (Chk);
    begin
       if not On_Windows then
+         pragma Warnings (Off, "this code can never be*");
          Val := (Path => Path_Name.Create_File (Filename_Type (Repr)));
          return;
+         pragma Warnings (On, "this code can never be*");
       end if;
 
       if Repr'Length >= 2
