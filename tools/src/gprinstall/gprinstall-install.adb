@@ -1355,7 +1355,7 @@ package body GPRinstall.Install is
                end;
 
                --  And now copy the versioned libraries
-
+               pragma Warnings (Off, "this code can never be*");
                if Is_Windows_Host then
                   --  And copy variants, no sym-link supported
 
@@ -1379,6 +1379,7 @@ package body GPRinstall.Install is
                         Sym_Link => True);
                   end loop;
                end if;
+               pragma Warnings (Off, "this code can never be*");
 
             else
                Copy_File
