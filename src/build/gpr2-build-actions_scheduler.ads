@@ -66,6 +66,10 @@ package GPR2.Build.Actions_Scheduler is
       --  Number of jobs to execute in parallel. 0 will autodetect the
       --  number of CPUs available and use that value.
 
+      Single_Compile_Per_Obj_Dir : Boolean := False;
+      --  Allow only one compilation at a time in each object directory,
+      --  including the compilation of binder-generated sources.
+
       Script_File : Path_Name.Object;
       --  When defined, it indicates a file where we will store the commands
       --  that have been executed during the run.

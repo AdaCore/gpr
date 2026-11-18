@@ -1,0 +1,7 @@
+description: |
+    Serialize actual compilations per object directory, including shared
+    directories and binder-generated sources, while preserving parallelism
+    across directories and obeying the make jobserver. Check Builder switches,
+    skipped and forced compilations, and deferred jobs after a compiler failure.
+driver: python_script
+timeout: 300

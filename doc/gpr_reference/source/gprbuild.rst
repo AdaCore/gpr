@@ -167,6 +167,14 @@ Build behavior
   requested, with actual parallelism capped by what the jobserver makes
   available.
 
+``--single-compile-per-obj-dir``
+  Allow only one compilation at a time in each object directory, including
+  compilation of Ada binder-generated sources. Compilations in different
+  directories can still run in parallel within the limits set by ``-j``
+  and the jobserver. The restriction also applies when several projects
+  share the same object directory. This switch may also be specified in
+  package ``Builder``.
+
 ``-k``
   Keep executing independent actions after a failure. Actions that depend on
   a failed action are skipped.

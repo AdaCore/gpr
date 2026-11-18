@@ -65,10 +65,13 @@ package body GPR2.Build.Jobserver_Protocol.Semaphore is
 
    overriding
    function Initialize (Param : String) return Object is
+      --  OpenSemaphoreA requires a NUL-terminated name; passing an Ada string's
+      --  address does not add a terminator.
+      Name   : constant String := Param & ASCII.NUL;
       Result : Object;
    begin
       Traces.Trace ("opening a semaphore protocol for " & Param);
-      Result.Handle := Open_Semaphore (16#1F0003#, False, Param'Address);
+      Result.Handle := Open_Semaphore (16#1F0003#, False, Name'Address);
       return Result;
    end Initialize;
 
