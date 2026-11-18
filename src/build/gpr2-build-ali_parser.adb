@@ -21,30 +21,11 @@ package body GPR2.Build.ALI_Parser is
    Traces : constant GT.Trace_Handle :=
      GT.Create ("GPR.BUILD.ALI_PARSER", GNATCOLL.Traces.Off);
 
-   type Unit_Attribute_Kind is
-     (Elaborate_Body_Desirable, --  BD
-      Body_Needed_For_SAL,      --  BN
-      Dynamic_Elab,             --  DE
-      Elaborate_Body,           --  EB
-      Set_Elab_Entity,          --  EE
-      Is_Generic,               --  GE
-      Init_Scalars,             --  IS
-      No_Elab,                  --  NE
-      Has_Finalizer,            --  PF
-      Preelab,                  --  PR
-      Pure,                     --  PU
-      RCI,                      --  RC
-      Remote_Types,             --  RT
-      Has_RACW,                 --  RA
-      Serious_Errors,           --  SE
-      Shared_Passive);          --  SP
-
-   type Unit_Attribute_Set is array (Unit_Attribute_Kind) of Boolean
-   with Default_Component_Value => False;
-
    type Unit_Header is record
-      SB         : Spec_Body;
-      Attributes : Unit_Attribute_Set;
+      Name       : Unbounded_String;
+      Part       : Spec_Body;
+      Kind       : Library_Unit_Kind := Unknown;
+      Attributes : Unit_Attributes := (others => False);
    end record;
 
    function Parse_Unit_Header
@@ -495,10 +476,19 @@ package body GPR2.Build.ALI_Parser is
 
                when 'U' =>
                   Header := Parse_Unit_Header (Reader, EOL);
-                  Cur_SB := Header.SB;
+                  Cur_SB := Header.Part;
+
+                  Self.Units.Append
+                    (Unit_Info'
+                       (Name_Length => Length (Header.Name),
+                        Name        => Name_Type (To_String (Header.Name)),
+                        Part        => Header.Part,
+                        Kind        => Header.Kind,
+                        Attributes  => Header.Attributes));
 
                   if Cur_SB = U_Spec then
-                     Self.Needs_Body := Header.Attributes (Body_Needed_For_SAL);
+                     Self.Needs_Body :=
+                       Header.Attributes (Body_Needed_For_SAL);
                   end if;
 
                when 'V' =>
@@ -563,7 +553,7 @@ package body GPR2.Build.ALI_Parser is
    function Parse_Unit_Header
      (Reader : in out GB.Reader; EOL : in out Boolean) return Unit_Header
    is
-      R : Unit_Header;
+      R : Unit_Header := (others => <>);
    begin
       if not GB.Check (Reader, " ") then
          raise Scan_ALI_Error
@@ -586,10 +576,13 @@ package body GPR2.Build.ALI_Parser is
          end if;
 
          if Unit_Name (Unit_Name'Last) = 's' then
-            R.SB := U_Spec;
+            R.Part := U_Spec;
          else
-            R.SB := U_Body;
+            R.Part := U_Body;
          end if;
+
+         R.Name := To_Unbounded_String
+           (Unit_Name (Unit_Name'First .. Unit_Name'Last - 2));
       end;
 
       --  Read the attributes at end of line
@@ -694,6 +687,9 @@ package body GPR2.Build.ALI_Parser is
                      when 'U' =>
                         R.Attributes (Pure) := True;
 
+                     when 'K' =>
+                        R.Kind := Is_Package;
+
                      when others =>
                         null;
                   end case;
@@ -720,6 +716,9 @@ package body GPR2.Build.ALI_Parser is
 
                      when 'P' =>
                         R.Attributes (Shared_Passive) := True;
+
+                     when 'U' =>
+                        R.Kind := Is_Subprogram;
 
                      when others =>
                         null;
