@@ -1034,84 +1034,54 @@ package body GPR2.Build.Actions.Process.Compile is
       use GPR2.Build.Signature;
    begin
       if Self.Dep_File.Is_Defined then
-         declare
-            Deps : constant GPR2.Build.Dependencies.Set := Self.Dependencies;
-         begin
-            if Deps.Is_Empty then
-               if Check_Checksums then
-                  Self.Tree.Reporter.Report
-                    ("file """ & Self.Dep_File.Path.String_Value &
-                       """ is missing or is wrongly formatted",
-                     To_Stderr => True,
-                     Level     => GPR2.Message.Important);
+         for Dep of Self.Dependencies loop
+            declare
+               Ambiguous : Boolean;
+               Src       : constant GPR2.Build.Source.Object :=
+                 Self.Ctxt.Visible_Source
+                   (Path_Name.Simple_Name (Dep.Filename), Ambiguous);
+               Path      : GPR2.Path_Name.Object;
+            begin
+               if not Ambiguous and then Src.Is_Defined then
+                  Path := Src.Path_Name;
+               elsif (Self.Global_Config_File.Is_Defined
+                      and then
+                        Dep.Filename = Self.Global_Config_File.Simple_Name)
+                 or else
+                   (Self.Local_Config_File.Is_Defined
+                    and then Dep.Filename = Self.Local_Config_File.Simple_Name)
+               then
+                  Traces.Trace
+                    ("config file reported as dependency, "
+                     & "ignoring : "
+                     & String (Dep.Filename));
+               else
+                  Path :=
+                    GPR2.Path_Name.Create_File
+                      (Dep.Filename,
+                       (if Self.Inh_From.Is_Defined
+                        then Self.Inh_From.Object_Directory.Value
+                        else Self.View.Object_Directory.Value));
                end if;
 
-               --  Dependency file parsing went wrong, at least put the direct
-               --  source as an input.
-               if not Self.Signature.Add_Input
-                 (Artifacts.Source_Files.Create (Self.Src.Path_Name))
-                 and then Check_Checksums
+               if not Path.Exists then
+                  Traces.Trace
+                    ("Compute_Signature: cannot find dependency "
+                     & String (Dep.Filename));
+
+                  if Check_Checksums then
+                     Self.Signature.Clear;
+                     return;
+                  end if;
+
+               elsif not Self.Signature.Add_Input
+                           (Artifacts.Source_Files.Create (Path),
+                            Check_Checksums)
                then
                   return;
                end if;
-
-               --  This actions should be done no matter what since the
-               --  dependencies states are unknown.
-               Self.Force := True;
-               Self.Signature.Invalidate;
-            end if;
-
-            for Dep of Deps loop
-               declare
-                  Ambiguous : Boolean;
-                  Src       : constant GPR2.Build.Source.Object :=
-                                Self.Ctxt.Visible_Source
-                                  (Path_Name.Simple_Name (Dep.Filename),
-                                   Ambiguous);
-                  Path      : GPR2.Path_Name.Object;
-               begin
-                  if not Ambiguous and then Src.Is_Defined then
-                     Path := Src.Path_Name;
-                  elsif (Self.Global_Config_File.Is_Defined
-                         and then Dep.Filename =
-                           Self.Global_Config_File.Simple_Name)
-                    or else
-                      (Self.Local_Config_File.Is_Defined
-                       and then Dep.Filename =
-                         Self.Local_Config_File.Simple_Name)
-                  then
-                     Traces.Trace
-                       ("config file reported as dependency, " &
-                          "ignoring : " & String (Dep.Filename));
-                  else
-                     Path :=
-                       GPR2.Path_Name.Create_File
-                         (Dep.Filename,
-                          (if Self.Inh_From.Is_Defined
-                           then Self.Inh_From.Object_Directory.Value
-                           else Self.View.Object_Directory.Value));
-                  end if;
-
-                  if not Path.Exists then
-                     Traces.Trace
-                       ("Compute_Signature: cannot find dependency " &
-                          String (Dep.Filename));
-
-                     if Check_Checksums then
-                        Self.Signature.Clear;
-                        return;
-                     end if;
-
-                  elsif not Self.Signature.Add_Input
-                    (Artifacts.Source_Files.Create (Path),
-                     Check_Checksums)
-                  then
-                     return;
-                  end if;
-               end;
-            end loop;
-         end;
-
+            end;
+         end loop;
       else
          --  No dependency file, so just add the input source
          if not Self.Signature.Add_Input
