@@ -1,0 +1,29 @@
+V "GNAT Lib v28.20261115"
+M P W=b
+A -gnatA
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U main%b main.adb		84a0fffd NE OO SU
+W multi%s shared.ada		shared~2.ali
+W quoted%s file with spaces.ads	file with spaces.ali
+
+D main.adb		20261117121854 088b5e1c main%b
+D shared.ada		20261117121854 2c39a31f multi%s
+D file with spaces.ads  20261117121854 a01202fe quoted%s
+D system.ads		20261110014302 e2b7c99d system%s
+G a e
+G c Z b b [main standard 4 11 none]
+G r c none [main standard 4 11 none] [multi standard 1 11 none]
+X 1 main.adb
+4U11*Main 4b11 9l5 9t9
+X 2 shared.ada
+1U11*Multi 1|1w6 7s7
+X 3 file with spaces.ads
+1K9*Quoted 1|2w6 6r7 3|3e11
+2i4*Value{integer} 1|6r14
+

@@ -1035,7 +1035,7 @@ package body GPR2.Build.Actions.Process.Compile is
    begin
       if Self.Dep_File.Is_Defined then
          declare
-            Deps : constant GPR2.Containers.Filename_Set := Self.Dependencies;
+            Deps : constant GPR2.Build.Dependencies.Set := Self.Dependencies;
          begin
             if Deps.Is_Empty then
                if Check_Checksums then
@@ -1066,25 +1066,27 @@ package body GPR2.Build.Actions.Process.Compile is
                   Ambiguous : Boolean;
                   Src       : constant GPR2.Build.Source.Object :=
                                 Self.Ctxt.Visible_Source
-                                  (Path_Name.Simple_Name (Dep),
+                                  (Path_Name.Simple_Name (Dep.Filename),
                                    Ambiguous);
                   Path      : GPR2.Path_Name.Object;
                begin
                   if not Ambiguous and then Src.Is_Defined then
                      Path := Src.Path_Name;
                   elsif (Self.Global_Config_File.Is_Defined
-                         and then Dep = Self.Global_Config_File.Simple_Name)
+                         and then Dep.Filename =
+                           Self.Global_Config_File.Simple_Name)
                     or else
                       (Self.Local_Config_File.Is_Defined
-                       and then Dep = Self.Local_Config_File.Simple_Name)
+                       and then Dep.Filename =
+                         Self.Local_Config_File.Simple_Name)
                   then
                      Traces.Trace
                        ("config file reported as dependency, " &
-                          "ignoring : " & String (Dep));
+                          "ignoring : " & String (Dep.Filename));
                   else
                      Path :=
                        GPR2.Path_Name.Create_File
-                         (Dep,
+                         (Dep.Filename,
                           (if Self.Inh_From.Is_Defined
                            then Self.Inh_From.Object_Directory.Value
                            else Self.View.Object_Directory.Value));
@@ -1093,7 +1095,7 @@ package body GPR2.Build.Actions.Process.Compile is
                   if not Path.Exists then
                      Traces.Trace
                        ("Compute_Signature: cannot find dependency " &
-                          String (Dep));
+                          String (Dep.Filename));
 
                      if Check_Checksums then
                         Self.Signature.Clear;
@@ -1199,12 +1201,12 @@ package body GPR2.Build.Actions.Process.Compile is
    ------------------
 
    function Dependencies
-     (Self : in out Object) return Containers.Filename_Set
+     (Self : in out Object) return GPR2.Build.Dependencies.Set
    is
       All_Deps : GPR2.Containers.Filename_Set;
    begin
       if not Self.Dep_File.Is_Defined then
-         return Containers.Empty_Filename_Set;
+         return GPR2.Build.Dependencies.Sets.Empty_Set;
       end if;
 
       if not GPR2.Build.Makefile_Parser.Dependencies
@@ -1214,10 +1216,14 @@ package body GPR2.Build.Actions.Process.Compile is
            ("Failed to parse dependencies from the dependency "
             & "file " & Self.Dep_File.Path.String_Value);
 
-         return Containers.Empty_Filename_Set;
+         return GPR2.Build.Dependencies.Sets.Empty_Set;
       end if;
 
-      return All_Deps;
+      return Result : GPR2.Build.Dependencies.Set do
+         for Filename of All_Deps loop
+            GPR2.Build.Dependencies.Include (Result, Filename);
+         end loop;
+      end return;
    end Dependencies;
 
    --------------
@@ -1461,7 +1467,7 @@ package body GPR2.Build.Actions.Process.Compile is
          declare
             Src      : constant GPR2.Build.Source.Object :=
                          Self.Ctxt.Visible_Source
-                           (Path_Name.Simple_Name (Path));
+                           (Path_Name.Simple_Name (Path.Filename));
             Root_Dir : constant Path_Name.Object :=
                          Self.Ctxt.Tree.Root_Project.Dir_Name;
             use type GPR2.Project.View.Object;

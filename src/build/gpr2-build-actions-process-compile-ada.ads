@@ -6,6 +6,7 @@
 
 with Ada.Containers.Hashed_Sets;
 
+with GPR2.Build.Dependencies;
 with GPR2.Build.ALI_Parser;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Compilation_Unit;
@@ -109,7 +110,7 @@ package GPR2.Build.Actions.Process.Compile.Ada is
    with Inline, Pre => Self.ALI_Is_Parsed;
 
    function ALI_Dependencies
-     (Self : Object) return GPR2.Containers.Filename_Set
+     (Self : Object) return GPR2.Build.Dependencies.Set
    with Inline, Pre => Self.ALI_Is_Parsed;
 
    function ALI_Linker_Options
@@ -124,7 +125,7 @@ package GPR2.Build.Actions.Process.Compile.Ada is
    --  Returns True if parsing succeeded, False otherwise.
 
    overriding function Dependencies
-     (Self : in out Object) return GPR2.Containers.Filename_Set;
+     (Self : in out Object) return GPR2.Build.Dependencies.Set;
    --  Fetch dependencies from a .ali dependency file with an ALI parser
 
    overriding function Extended (Self : Object) return Object;
@@ -242,7 +243,7 @@ private
    is (Self.ALI_Object.Withed_From_Body);
 
    function ALI_Dependencies
-     (Self : Object) return GPR2.Containers.Filename_Set
+     (Self : Object) return GPR2.Build.Dependencies.Set
    is (Self.ALI_Object.Dependencies);
 
    function ALI_Linker_Options

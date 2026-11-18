@@ -1,6 +1,5 @@
 with Ada.Text_IO;
 with GPR2.Build.ALI_Parser;
-with GPR2.Containers;
 with GPR2.Path_Name;
 with GNATCOLL.Traces;
 
@@ -9,7 +8,6 @@ procedure Main is
    -- Print dependencies name
 
    procedure Test (ALI_File : GPR2.Filename_Type) is
-      Dep_Names : GPR2.Containers.Filename_Set;
       ALI       : GPR2.Build.ALI_Parser.Object;
       use GPR2;
    begin
@@ -19,7 +17,7 @@ procedure Main is
         (GPR2.Path_Name.Create_File (ALI_File));
       if ALI.Parse then
          for Dep of ALI.Dependencies loop
-            Ada.Text_IO.Put_Line (String (Dep));
+            Ada.Text_IO.Put_Line (String (Dep.Filename));
          end loop;
       else
          Ada.Text_IO.Put_Line ("Failed to parse dependencies");

@@ -406,7 +406,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
       end;
 
       declare
-         Deps : constant GPR2.Containers.Filename_Set := Self.Dependencies;
+         Deps : constant GPR2.Build.Dependencies.Set := Self.Dependencies;
       begin
          if Deps.Is_Empty then
             Self.Signature.Invalidate;
@@ -420,31 +420,36 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
             --  names while the other types of dependency can be simple names
             --  or full path.
 
-            if Dep in Simple_Name then
+            if Dep.Filename in Simple_Name then
                declare
                   Src : constant GPR2.Build.Source.Object :=
-                          Self.View.Visible_Source (Dep);
+                          Self.View.Visible_Source (Dep.Filename);
                begin
                   if not Src.Is_Defined then
                      if (Self.Global_Config_Pragmas.Is_Defined
-                         and then Dep = Self.Global_Config_Pragmas.Simple_Name)
+                         and then Dep.Filename =
+                            Self.Global_Config_Pragmas.Simple_Name)
                        or else
                          (Self.Local_Config_Pragmas.Is_Defined
-                          and then Dep = Self.Local_Config_Pragmas.Simple_Name)
+                          and then Dep.Filename =
+                            Self.Local_Config_Pragmas.Simple_Name)
                        or else
                          (Self.Global_Config_File.Is_Defined
-                          and then Dep = Self.Global_Config_File.Simple_Name)
+                          and then Dep.Filename =
+                          Self.Global_Config_File.Simple_Name)
                        or else
                          (Self.Local_Config_File.Is_Defined
-                          and then Dep = Self.Local_Config_File.Simple_Name)
+                          and then Dep.Filename =
+                          Self.Local_Config_File.Simple_Name)
                        or else
                          (not Self.CLI_Config_File.Is_Empty
                           and then (for some CF of Self.CLI_Config_File =>
-                                          Dep = CF.Simple_Name))
+                                          Dep.Filename = CF.Simple_Name))
                      then
                         Traces.Trace
                           ("configuration pragmas or config file reported "
-                           & "as dependency, ignoring : " & String (Dep));
+                           & "as dependency, ignoring : "
+                           & String (Dep.Filename));
                      else
                         --  A dependency that is either a preprocessor data
                         --  file or a symbol definition file. The ALI names it
@@ -456,7 +461,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
 
                         Traces.Trace
                           ("Compute_Signature: cannot find dependency " &
-                             String (Dep));
+                             String (Dep.Filename));
 
                         if Check_Checksums then
                            Self.Signature.Invalidate;
@@ -478,7 +483,8 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
                --  dependency.
 
                if not Self.Signature.Add_Input
-                 (Artifacts.Files.Create (Path_Name.Create_File (Dep)),
+                 (Artifacts.Files.Create
+                    (Path_Name.Create_File (Dep.Filename)),
                   Check_Checksums)
                then
                   return;
@@ -571,7 +577,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
    ------------------
 
    overriding function Dependencies
-     (Self : in out Object) return Containers.Filename_Set
+     (Self : in out Object) return GPR2.Build.Dependencies.Set
    is
    begin
       if not Self.ALI_Object.Parse then
@@ -579,7 +585,7 @@ package body GPR2.Build.Actions.Process.Compile.Ada is
             ("Failed to parse dependencies from the ALI file " &
              Self.ALI_Object.Path_Name.String_Value);
 
-         return Containers.Empty_Filename_Set;
+         return GPR2.Build.Dependencies.Sets.Empty_Set;
       end if;
 
       return Self.ALI_Object.Dependencies;

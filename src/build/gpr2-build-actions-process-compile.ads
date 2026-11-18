@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Build.Dependencies;
 with GPR2.Build.Artifacts.Files;
 with GPR2.Build.Artifacts.Object_File;
 with GPR2.Build.Source;
@@ -61,7 +62,7 @@ package GPR2.Build.Actions.Process.Compile is
       Cmd_Line       : in out GPR2.Build.Command_Line.Object);
 
    function Dependencies
-     (Self : in out Object) return GPR2.Containers.Filename_Set;
+     (Self : in out Object) return GPR2.Build.Dependencies.Set;
    --  Fetch dependencies from a .d dependency file with a makefile parser
 
    overriding function State (Self : Object) return Actions.Action_State;

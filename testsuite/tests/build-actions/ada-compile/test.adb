@@ -127,10 +127,10 @@ begin
    end;
 
    Assert ((for all Dep of Ada_Comp.Dependencies =>
-              (Path_Name.Simple_Name (Dep) = "pkg.ads" or else
-               Path_Name.Simple_Name (Dep) = "pkg.adb" or else
-               Path_Name.Simple_Name (Dep) = "main.adb" or else
-               Path_Name.Simple_Name (Dep) = "system.ads")),
+              (Path_Name.Simple_Name (Dep.Filename) = "pkg.ads" or else
+               Path_Name.Simple_Name (Dep.Filename) = "pkg.adb" or else
+               Path_Name.Simple_Name (Dep.Filename) = "main.adb" or else
+               Path_Name.Simple_Name (Dep.Filename) = "system.ads")),
            "Check dependencies");
 
    return A.Report;

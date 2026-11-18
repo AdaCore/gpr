@@ -1,6 +1,7 @@
 with Ada.Directories;
 with Ada.Text_IO;
 
+with GPR2.Build.Dependencies;
 with GPR2.Build.View_Db;
 with GPR2.Containers;
 with GPR2.Log;
@@ -34,10 +35,10 @@ function Test return Integer is
       First  : Optional_Name_Type := "";
       Second : Optional_Name_Type := "")
    is
-      Dependencies : Containers.Filename_Set;
+      Dependencies : Build.Dependencies.Set;
       Expected     : Containers.Name_Set;
    begin
-      Dependencies.Include (File);
+      Build.Dependencies.Include (Dependencies, File);
       if First'Length > 0 then
          Expected.Include (Name_Type (First));
       end if;

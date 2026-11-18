@@ -530,7 +530,7 @@ begin
                            Source_Path :=
                              View.Source_Path
                                (Name            =>
-                                  GPR2.Path_Name.Simple_Name (Dep),
+                                  GPR2.Path_Name.Simple_Name (Dep.Filename),
                                 Allow_Spec_File => True,
                                 Allow_Unit_Name => False);
                            if Source_Path /= GPR2.Path_Name.Undefined then

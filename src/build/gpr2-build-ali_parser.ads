@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with GPR2.Build.Dependencies;
 with GPR2.Containers;
 with GPR2.Path_Name;
 
@@ -38,10 +39,9 @@ package GPR2.Build.ALI_Parser is
    with Pre => Self.Is_Defined;
    --  Path the the ali file represented by Self
 
-   function Dependencies (Self : Object) return GPR2.Containers.Filename_Set
+   function Dependencies (Self : Object) return GPR2.Build.Dependencies.Set
    with Pre => Self.Is_Parsed;
-   --  Parse the dependency file names and store them in the provided
-   --  'Dep_Names' vector. Returns True upon success.
+   --  Return dependencies grouped by source filename
 
    function Withed_From_Spec (Self : Object) return GPR2.Containers.Name_Set
    with Pre => Self.Is_Parsed;
@@ -80,7 +80,7 @@ private
    type Object is tagged record
       Path           : GPR2.Path_Name.Object;
       Is_Parsed      : Boolean := False;
-      Dependencies   : GPR2.Containers.Filename_Set;
+      Dependencies   : GPR2.Build.Dependencies.Set;
       --  The list of sources this unit depends on
       Spec_Imports   : GPR2.Containers.Name_Set;
       --  The list of units imported by the spec
@@ -109,7 +109,7 @@ private
    function Is_Parsed (Self : Object) return Boolean
    is (Self.Is_Parsed);
 
-   function Dependencies (Self : Object) return GPR2.Containers.Filename_Set
+   function Dependencies (Self : Object) return GPR2.Build.Dependencies.Set
    is (Self.Dependencies);
 
    function Withed_From_Spec (Self : Object) return GPR2.Containers.Name_Set

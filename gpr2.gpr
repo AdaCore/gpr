@@ -55,6 +55,7 @@ library project GPR2 extends "gpr2_shared.gpr" is
             "GPR2.Build.Artifacts.Source_Files",
             "GPR2.Build.Command_Line",
             "GPR2.Build.Compilation_Unit",
+            "GPR2.Build.Dependencies",
             "GPR2.Build.Compilation_Unit.Maps",
             "GPR2.Build.External_Options",
             "GPR2.Build.Jobserver",
