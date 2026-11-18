@@ -21,7 +21,7 @@ package body GPR2.Build.ALI_Parser is
    Traces : constant GT.Trace_Handle :=
      GT.Create ("GPR.BUILD.ALI_PARSER", GNATCOLL.Traces.Off);
 
-   type Unit_Flags_Kind is
+   type Unit_Attribute_Kind is
      (Elaborate_Body_Desirable, --  BD
       Body_Needed_For_SAL,      --  BN
       Dynamic_Elab,             --  DE
@@ -39,16 +39,16 @@ package body GPR2.Build.ALI_Parser is
       Serious_Errors,           --  SE
       Shared_Passive);          --  SP
 
-   type Unit_Flags_Set is array (Unit_Flags_Kind) of Boolean
+   type Unit_Attribute_Set is array (Unit_Attribute_Kind) of Boolean
    with Default_Component_Value => False;
 
-   type Unit_Flags_Part is record
-      SB    : Spec_Body;
-      Flags : Unit_Flags_Set;
+   type Unit_Header is record
+      SB         : Spec_Body;
+      Attributes : Unit_Attribute_Set;
    end record;
 
-   function Parse_Flags
-     (Reader : in out GB.Reader; EOL : in out Boolean) return Unit_Flags_Part;
+   function Parse_Unit_Header
+     (Reader : in out GB.Reader; EOL : in out Boolean) return Unit_Header;
 
    package IO is
 
@@ -460,7 +460,7 @@ package body GPR2.Build.ALI_Parser is
       declare
          Reader : GB.Reader := GB.Open (Self.Path.String_Value);
          Word   : Character := ASCII.NUL;
-         Flags  : Unit_Flags_Part;
+         Header : Unit_Header;
       begin
 
          --  Clear the object, to remove potential obsolete values
@@ -494,11 +494,11 @@ package body GPR2.Build.ALI_Parser is
                   end;
 
                when 'U' =>
-                  Flags := Parse_Flags (Reader, EOL);
-                  Cur_SB := Flags.SB;
+                  Header := Parse_Unit_Header (Reader, EOL);
+                  Cur_SB := Header.SB;
 
                   if Cur_SB = U_Spec then
-                     Self.Needs_Body := Flags.Flags (Body_Needed_For_SAL);
+                     Self.Needs_Body := Header.Attributes (Body_Needed_For_SAL);
                   end if;
 
                when 'V' =>
@@ -556,14 +556,14 @@ package body GPR2.Build.ALI_Parser is
          return False;
    end Parse;
 
-   -----------------
-   -- Parse_Flase --
-   -----------------
+   -----------------------
+   -- Parse_Unit_Header --
+   -----------------------
 
-   function Parse_Flags
-     (Reader : in out GB.Reader; EOL : in out Boolean) return Unit_Flags_Part
+   function Parse_Unit_Header
+     (Reader : in out GB.Reader; EOL : in out Boolean) return Unit_Header
    is
-      R : Unit_Flags_Part;
+      R : Unit_Header;
    begin
       if not GB.Check (Reader, " ") then
          raise Scan_ALI_Error
@@ -592,7 +592,7 @@ package body GPR2.Build.ALI_Parser is
          end if;
       end;
 
-      --  Read the flags at end of line
+      --  Read the attributes at end of line
       declare
          S : constant String :=
            IO.Get_Token (Reader, EOL, Mode => IO.Double_Space_Separated)
@@ -600,7 +600,7 @@ package body GPR2.Build.ALI_Parser is
          --  Source
          F : constant String :=
            IO.Get_Token (Reader, EOL, Mode => IO.Rest_Of_Line);
-         --  Checksum & flags
+         --  Checksum & attributes
          I : Positive := F'First;
       begin
          --  Skip checksum
@@ -611,7 +611,7 @@ package body GPR2.Build.ALI_Parser is
             I := I + 1;
          end loop;
 
-         --  Read flags
+         --  Read attributes
 
          while I < F'Last loop
             while I < F'Last
@@ -626,10 +626,10 @@ package body GPR2.Build.ALI_Parser is
                when 'B' =>
                   case F (I + 1) is
                      when 'N' =>
-                        R.Flags (Body_Needed_For_SAL) := True;
+                        R.Attributes (Body_Needed_For_SAL) := True;
 
                      when 'D' =>
-                        R.Flags (Elaborate_Body_Desirable) := True;
+                        R.Attributes (Elaborate_Body_Desirable) := True;
 
                      when others =>
                         null;
@@ -638,7 +638,7 @@ package body GPR2.Build.ALI_Parser is
                when 'D' =>
                   case F (I + 1) is
                      when 'E' =>
-                        R.Flags (Dynamic_Elab) := True;
+                        R.Attributes (Dynamic_Elab) := True;
 
                      when others =>
                         null;
@@ -647,10 +647,10 @@ package body GPR2.Build.ALI_Parser is
                when 'E' =>
                   case F (I + 1) is
                      when 'B' =>
-                        R.Flags (Elaborate_Body) := True;
+                        R.Attributes (Elaborate_Body) := True;
 
                      when 'E' =>
-                        R.Flags (Set_Elab_Entity) := True;
+                        R.Attributes (Set_Elab_Entity) := True;
 
                      when others =>
                         null;
@@ -659,7 +659,7 @@ package body GPR2.Build.ALI_Parser is
                when 'G' =>
                   case F (I + 1) is
                      when 'E' =>
-                        R.Flags (Is_Generic) := True;
+                        R.Attributes (Is_Generic) := True;
 
                      when others =>
                         null;
@@ -668,7 +668,7 @@ package body GPR2.Build.ALI_Parser is
                when 'I' =>
                   case F (I + 1) is
                      when 'S' =>
-                        R.Flags (Init_Scalars) := True;
+                        R.Attributes (Init_Scalars) := True;
 
                      when others =>
                         null;
@@ -677,7 +677,7 @@ package body GPR2.Build.ALI_Parser is
                when 'N' =>
                   case F (I + 1) is
                      when 'E' =>
-                        R.Flags (No_Elab) := True;
+                        R.Attributes (No_Elab) := True;
 
                      when others =>
                         null;
@@ -686,13 +686,13 @@ package body GPR2.Build.ALI_Parser is
                when 'P' =>
                   case F (I + 1) is
                      when 'F' =>
-                        R.Flags (Has_Finalizer) := True;
+                        R.Attributes (Has_Finalizer) := True;
 
                      when 'R' =>
-                        R.Flags (Preelab) := True;
+                        R.Attributes (Preelab) := True;
 
                      when 'U' =>
-                        R.Flags (Pure) := True;
+                        R.Attributes (Pure) := True;
 
                      when others =>
                         null;
@@ -701,13 +701,13 @@ package body GPR2.Build.ALI_Parser is
                when 'R' =>
                   case F (I + 1) is
                      when 'A' =>
-                        R.Flags (Has_RACW) := True;
+                        R.Attributes (Has_RACW) := True;
 
                      when 'C' =>
-                        R.Flags (RCI) := True;
+                        R.Attributes (RCI) := True;
 
                      when 'T' =>
-                        R.Flags (Remote_Types) := True;
+                        R.Attributes (Remote_Types) := True;
 
                      when others =>
                         null;
@@ -716,10 +716,10 @@ package body GPR2.Build.ALI_Parser is
                when 'S' =>
                   case F (I + 1) is
                      when 'E' =>
-                        R.Flags (Serious_Errors) := True;
+                        R.Attributes (Serious_Errors) := True;
 
                      when 'P' =>
-                        R.Flags (Shared_Passive) := True;
+                        R.Attributes (Shared_Passive) := True;
 
                      when others =>
                         null;
@@ -734,7 +734,7 @@ package body GPR2.Build.ALI_Parser is
       end;
 
       return R;
-   end Parse_Flags;
+   end Parse_Unit_Header;
 
    -----------
    -- Reset --
