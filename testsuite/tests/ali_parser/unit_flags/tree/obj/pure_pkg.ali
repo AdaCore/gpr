@@ -1,0 +1,18 @@
+V "GNAT Lib v28.20261115"
+A -gnatA
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U pure_pkg%s		pure_pkg.ads		3733f7c3 NE OO PU PK
+
+D pure_pkg.ads		20261117152742 3733f7c3 pure_pkg%s
+D system.ads		20261110014302 e2b7c99d system%s
+G a e
+X 1 pure_pkg.ads
+1K9*Pure_Pkg 4l5 4e13
+3i4*Value{integer}
+

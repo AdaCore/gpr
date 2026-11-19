@@ -1,0 +1,18 @@
+V "GNAT Lib v28.20261115"
+A -gnatA
+A -mtune=generic
+A -march=x86-64
+P ZX
+
+RN
+RV NO_IMPLEMENTATION_PRAGMAS
+
+U preelab_pkg%s		preelab_pkg.ads		8ee0e402 NE OO PR PK
+
+D preelab_pkg.ads	20261117152742 8ee0e402 preelab_pkg%s
+D system.ads		20261110014302 e2b7c99d system%s
+G a e
+X 1 preelab_pkg.ads
+1K9*Preelab_Pkg 4l5 4e16
+3i4*Value{integer}
+

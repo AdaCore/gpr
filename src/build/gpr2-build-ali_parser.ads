@@ -4,6 +4,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-Exception
 --
 
+with Ada.Containers.Indefinite_Vectors;
+
 with GPR2.Build.Dependencies;
 with GPR2.Containers;
 with GPR2.Path_Name;
@@ -11,6 +13,51 @@ with GPR2.Path_Name;
 package GPR2.Build.ALI_Parser is
 
    type Spec_Body is (U_Spec, U_Body);
+
+   type Library_Unit_Kind is (Unknown, Is_Package, Is_Subprogram);
+
+   type Unit_Attribute is
+     (Elaborate_Body_Desirable, --  BD
+      Body_Needed_For_SAL,      --  BN
+      Dynamic_Elab,             --  DE
+      Elaborate_Body,           --  EB
+      Set_Elab_Entity,          --  EE
+      Is_Generic,               --  GE
+      Init_Scalars,             --  IS
+      No_Elab,                  --  NE
+      Has_Finalizer,            --  PF
+      Preelab,                  --  PR
+      Pure,                     --  PU
+      RCI,                      --  RC
+      Remote_Types,             --  RT
+      Has_RACW,                 --  RA
+      Serious_Errors,           --  SE
+      Shared_Passive);          --  SP
+
+   type Unit_Attributes is array (Unit_Attribute) of Boolean
+     with Default_Component_Value => False;
+
+   type Unit_Info (Name_Length : Natural) is record
+      Name       : Name_Type (1 .. Name_Length);
+      --  Unit name from the U record, without the %s or %b suffix
+
+      Part       : Spec_Body;
+      --  Specification or body, as identified by the unit name suffix
+
+      Kind       : Library_Unit_Kind := Unknown;
+      --  Package or subprogram, as identified by the PK or SU attribute.
+      --  Unknown when neither attribute is recorded.
+
+      Attributes : Unit_Attributes := (others => False);
+      --  Attributes recorded for this unit part; unrecorded attributes
+      --  remain False
+   end record;
+   --  Information from one ALI unit record, identifying its name and part
+
+   package Unit_Info_Vectors is new Ada.Containers.Indefinite_Vectors
+     (Positive, Unit_Info);
+
+   subtype Unit_Info_Vector is Unit_Info_Vectors.Vector;
 
    type Object is tagged private;
    --  Object used to store the information extracted from .ali files
@@ -29,6 +76,11 @@ package GPR2.Build.ALI_Parser is
 
    function Is_Parsed (Self : Object) return Boolean;
    --  Returns true when a valid ali file has been parsed.
+
+   function Units (Self : Object) return Unit_Info_Vector
+     with Pre => Self.Is_Parsed;
+   --  Return the unit records found in the ALI, in file order. Only parts
+   --  described by a U record are included.
 
    procedure Reset (Self : in out Object)
      with Pre  => Self.Is_Defined,
@@ -81,7 +133,7 @@ private
       Path           : GPR2.Path_Name.Object;
       Is_Parsed      : Boolean := False;
       Dependencies   : GPR2.Build.Dependencies.Set;
-      --  The list of sources this unit depends on
+      --  Current unit dependencies
       Spec_Imports   : GPR2.Containers.Name_Set;
       --  The list of units imported by the spec
       Body_Imports   : GPR2.Containers.Name_Set;
@@ -96,6 +148,8 @@ private
       Linker_Options : GPR2.Containers.Value_List;
       --  Contains the list of pragma Linker_Option present in the source, if
       --  any.
+      Units          : Unit_Info_Vector;
+      --  Units information
    end record;
 
    Undefined : constant Object := (others => <>);
@@ -108,6 +162,9 @@ private
 
    function Is_Parsed (Self : Object) return Boolean
    is (Self.Is_Parsed);
+
+   function Units (Self : Object) return Unit_Info_Vector
+   is (Self.Units);
 
    function Dependencies (Self : Object) return GPR2.Build.Dependencies.Set
    is (Self.Dependencies);
