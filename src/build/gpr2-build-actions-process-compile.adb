@@ -1034,6 +1034,11 @@ package body GPR2.Build.Actions.Process.Compile is
       use GPR2.Build.Signature;
    begin
       if Self.Dep_File.Is_Defined then
+         if not Self.Signature.Add_Output (Self.Dep_File, Check_Checksums)
+         then
+            return;
+         end if;
+
          for Dep of Self.Dependencies loop
             declare
                Ambiguous : Boolean;
@@ -1093,13 +1098,6 @@ package body GPR2.Build.Actions.Process.Compile is
       end if;
 
       if Self.Obj_File.Is_Defined then
-         if Self.Dep_File.Is_Defined
-           and then not Self.Signature.Add_Output
-                          (Self.Dep_File, Check_Checksums)
-         then
-            return;
-         end if;
-
          if not Self.Signature.Add_Output (Self.Obj_File, Check_Checksums) then
             return;
          end if;
