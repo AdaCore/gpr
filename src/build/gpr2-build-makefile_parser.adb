@@ -422,6 +422,8 @@ package body GPR2.Build.Makefile_Parser is
       Reader      : GB.Reader := GB.Open (String (Makefile.Value));
       Header      : Character := ASCII.NUL;
       EOF         : Boolean   := False;
+      Has_Object  : Boolean   := False;
+      Parsed_Deps : GPR2.Containers.Filename_Set;
 
       function Is_Time_Stamp (S : String) return Boolean;
       --  Return True if S has the format of a Timestamp
@@ -457,6 +459,7 @@ package body GPR2.Build.Makefile_Parser is
                                IO.Next_Object (Reader, Header);
             begin
                if Object_Name /= "" then
+                  Has_Object := True;
 
                   --  Check Object_Name coherence with the Path_Name.Object of
                   --  the corresponding object file.
@@ -500,7 +503,7 @@ package body GPR2.Build.Makefile_Parser is
                               raise Scan_Makefile_Error with
                                 "invalid dependency file '" & Token & ''';
                            else
-                              Dep_Names.Include (Filename_Type (Token));
+                              Parsed_Deps.Include (Filename_Type (Token));
                            end if;
                         end;
                      end if;
@@ -512,7 +515,12 @@ package body GPR2.Build.Makefile_Parser is
          end case;
       end loop;
 
+      if not Has_Object or else Parsed_Deps.Is_Empty then
+         raise Scan_Makefile_Error with "missing target or dependencies";
+      end if;
+
       GB.Finalize (Reader);
+      Dep_Names.Union (Parsed_Deps);
 
       return True;
 

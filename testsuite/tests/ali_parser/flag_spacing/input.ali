@@ -2,3 +2,4 @@ V "GNAT Lib v27.20260922"
 P
 RN
 U pkg%s	pkg.ads	12345678  NE	PK  BN
+D pkg.ads  20260922000000 12345678 pkg%s

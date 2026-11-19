@@ -1,0 +1,1 @@
+wrong.o: main.c
