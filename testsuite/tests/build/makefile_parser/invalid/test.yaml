@@ -1,0 +1,2 @@
+description: Reject invalid C dependency files in normal and strict modes
+driver: basic

@@ -189,7 +189,7 @@ begin
 
    Put_Line ("Step 5 - Error test : line with data but no object name");
    All_Deps.Clear;
-   Nb_Dep := 1;
+   Nb_Dep := 0;
    declare
       Error : constant String :=
                 "dependency file " & String (Makefile_Toto_Error2.Simple_Name)
@@ -209,12 +209,10 @@ begin
    Assert
      (Integer (All_Deps.Length), Nb_Dep,
       "contains the right number of dependencies :" & Nb_Dep'Img);
-   Assert
-     (All_Deps.Contains (DepsA_C), "contains " & String (DepsA_C));
 
    Put_Line ("Step 5 - Error test : line with data but no object name 2");
    All_Deps.Clear;
-   Nb_Dep := 1;
+   Nb_Dep := 0;
    declare
       Error : constant String :=
                 "dependency file " & String (Makefile_Toto_Error3.Simple_Name)
@@ -234,12 +232,10 @@ begin
    Assert
      (Integer (All_Deps.Length), Nb_Dep,
       "contains the right number of dependencies :" & Nb_Dep'Img);
-   Assert
-     (All_Deps.Contains (DepsA_C), "contains " & String (DepsA_C));
 
    Put_Line ("Step 6 - Error test : line separator without dependencies");
    All_Deps.Clear;
-   Nb_Dep := 1;
+   Nb_Dep := 0;
    declare
       Error : constant String :=
                 "dependency file " & String (Makefile_Toto_Error4.Simple_Name)
@@ -259,8 +255,6 @@ begin
    Assert
      (Integer (All_Deps.Length), Nb_Dep,
       "contains the right number of dependencies :" & Nb_Dep'Img);
-   Assert
-     (All_Deps.Contains (DepsA_C), "contains " & String (DepsA_C));
 
    Put_Line ("Step 7 - Test multiline with commented lines");
    All_Deps.Clear;

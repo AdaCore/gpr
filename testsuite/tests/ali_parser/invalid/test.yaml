@@ -1,0 +1,2 @@
+description: Reject invalid ALI records and incomplete dependency files
+driver: basic

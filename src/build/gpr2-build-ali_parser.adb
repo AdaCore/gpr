@@ -527,6 +527,10 @@ package body GPR2.Build.ALI_Parser is
             end case;
          end loop;
 
+         if Self.Dependencies.Is_Empty then
+            raise Scan_ALI_Error with "no dependency records in ALI file";
+         end if;
+
          GB.Finalize (Reader);
          Self.Is_Parsed := True;
          return True;
@@ -536,10 +540,12 @@ package body GPR2.Build.ALI_Parser is
             (Traces,
                "ALI parser error: " & Ada.Exceptions.Exception_Message (E));
             GB.Finalize (Reader);
+            Self.Reset;
             return False;
       end;
    exception
       when GB.Invalid_Reader =>
+         Self.Reset;
          GNATCOLL.Traces.Trace
               (Traces, "File " & Self.Path.String_Value & " is invalid," &
                " aborting parsing");
