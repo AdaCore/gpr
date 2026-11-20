@@ -20,7 +20,11 @@ dump
 create_body Foo src2/foo.adb
 remove src1/foo.ads
 remove src1/foo.adb
-refresh
+refresh_view
+dump
+
+# A refresh must recover the same sources as a fresh load.
+load agglib.gpr
 dump
 
 # do the same with multi-unit source
@@ -43,4 +47,7 @@ create_spec Foo src1/foo.ads
 create_body Foo src1/foo.adb
 remove src3/source.ada
 refresh
+dump
+# Check that removed multi-unit sources leave no stale unit entries.
+load agglib_multi.gpr
 dump

@@ -6,8 +6,6 @@
 
 with Ada.Containers.Hashed_Maps;
 with Ada.Containers.Indefinite_Hashed_Maps;
-with Ada.Containers.Indefinite_Hashed_Sets;
-with Ada.Containers.Indefinite_Ordered_Sets;
 
 with GNATCOLL.Refcount;
 
@@ -21,73 +19,21 @@ with GPR2.Build.Compilation_Unit;
 with GPR2.Build.Compilation_Unit.Maps;
 with GPR2.Build.Source_Base;
 with GPR2.Build.Source;
-with GPR2.View_Ids;
 
 limited with GPR2.Build.View_Db;
 limited with GPR2.Build.Tree_Db;
 
 private package GPR2.Build.View_Tables is
 
-   use type Ada.Containers.Hash_Type;
-
    subtype With_View_Db is GPR2.Project_Kind
      with Static_Predicate =>
        With_View_Db not in K_Aggregate | K_Configuration;
 
-   --  generic file object: can represent any file found on the filesystem
-
-   type File_Info (Path_Len : Natural) is record
-      Stamp   : Ada.Calendar.Time;
-      --  Modification time at the moment we've read the source dir
-      Dir_Idx : Natural;
-      --  Index in the Source_Dirs attribute that designes the subdir this
-      --  source belongs to.
-      Path    : Filename_Optional (1 .. Path_Len);
-      --  Full path to the file
-   end record;
-
-   overriding function "=" (F1, F2 : File_Info) return Boolean is
-     (F1.Path = F2.Path);
-
-   function "<" (F1, F2 : File_Info) return Boolean is
-      (F1.Path < F2.Path);
-
-   function Hash (F : File_Info) return Ada.Containers.Hash_Type is
-      (GPR2.Hash (F.Path));
-
-   package File_Info_Maps is new Ada.Containers.Indefinite_Hashed_Maps
-     (Simple_Name, File_Info, Hash, "=");
-
-   package File_Sets is new Ada.Containers.Indefinite_Ordered_Sets
-     (File_Info);
-
-   package Basename_Sets is new Ada.Containers.Indefinite_Hashed_Sets
-     (Simple_Name, Hash, "=");
-
    package Name_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (Name_Type, Name_Type, Hash, "=");
 
-   --  Source handling:
-   --  The sources in the Database are updated by delta comparison with
-   --  the previous list of sources, to speed up the load of a project from
-   --  an existing database.
-   --
-   --  To handle efficiently such update, and handle properly the visibility
-   --  of the sources, as well as ensuring data consistency accross views,
-   --  the following structures are used:
-   --  * Self.Src_Files: this is the simplest structure as it just represents
-   --    the file entries in the various source directories declared in the
-   --    view. This list is used to know files deleted/modified/added between
-   --    two updates of the database.
-   --  * Self.Src_Infos: the view's own sources (e.g. sources found in the
-   --    view's source directories. The values contain various information
-   --    such as source language, kind, etc. This is the only table that has
-   --    this information: all other tables will contain references to this
-   --    table.
-   --  * Self.Sources: indexed by simple names, points to the actual source
-   --    info object for each simple name.
-   --  * Self.Hidden_Sources: indexed by simple names, points to a list of
-   --    sources that are not visible (because of overloading or errors).
+   --  Own source metadata is collected first. Sources and Basenames then
+   --  describe the view after project extension and visibility resolution.
 
    package Src_Info_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (Filename_Optional, Build.Source_Base.Object,
@@ -105,13 +51,6 @@ private package GPR2.Build.View_Tables is
    end record;
 
    No_Proxy : constant Source_Proxy := (Path_Len => 0, others => <>);
-
-   function Hash (Proxy : Source_Proxy) return Ada.Containers.Hash_Type
-     is (GPR2.Hash (Proxy.Path_Name) + View_Ids.Hash (Proxy.View.Id));
-
-   package Source_Proxy_Sets is new Ada.Containers.Indefinite_Hashed_Sets
-     (Source_Proxy, Hash, "=");
-   --  A set of source reference
 
    package Filename_Source_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (Filename_Type, Source_Proxy, Hash, "=");
@@ -134,11 +73,6 @@ private package GPR2.Build.View_Tables is
      (Simple_Name, Containers.Name_Set, Hash, "=",
       Containers.Name_Type_Set."=");
 
-   package Basename_Source_List_Maps is new
-     Ada.Containers.Indefinite_Hashed_Maps
-       (Simple_Name, Source_Proxy_Sets.Set, Hash, "=", Source_Proxy_Sets."=");
-   --  Basename to source reference list
-
    package Compilation_Unit_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (Name_Type, Compilation_Unit.Object, Hash, "=", Compilation_Unit."=");
 
@@ -152,8 +86,6 @@ private package GPR2.Build.View_Tables is
       GPR2."=",
       GPR2.Project.View.Set."=");
 
-   package Source_Set renames GPR2.Containers.Filename_Type_Set;
-
    type View_Data (Is_Root : Boolean) is record
       --  Static data:
 
@@ -165,31 +97,17 @@ private package GPR2.Build.View_Tables is
       --  Dynamic data
 
       Sources         : Filename_Source_Maps.Map;
-      --  Sources to take into account for View after visibility is resolved.
+      --  Own and inherited sources, including hidden sources.
       Basenames       : Basename_Source_Maps.Map;
-      --  Sources by basename
-      Overloaded_Srcs : Basename_Source_List_Maps.Map;
-      --  Keeps track of source overloading, to reassess source visibility or
-      --  erroneous cases when a source is added or removed.
+      --  Visible sources by basename
       Src_Infos       : Src_Info_Maps.Map;
       --  Sources identified in the source directories of the view, indexed
       --  by their full names.
-      Src_Files       : File_Sets.Set;
-      --  raw list of files found in the source directories, used to check
-      --  updates
       Langs_Usage     : Sources_By_Langs_Maps.Map;
       --  Indicates the number of sources per language. Allows detecting
       --  unused languages.
-      Listed_Sources   : Source_Set.Set;
-      --  content of Source_Files and Source_List_File attributes
-      Excluded_Sources : Containers.Source_Path_To_Sloc.Map;
-      --  content of Excluded_Source_Files and Excluded_Source_List_File
-      --  attributes.
-      No_Sources        : Boolean := False;
-      --  set to True when Source_Dirs or Source_Files is explicitly set to
-      --  an empty list.
       Actually_Excluded : Basename_Source_Maps.Map;
-      --  list of excluded_sources items that matched at least one source
+      --  Excluded files found during source loading, used by compiler mapping
 
       Own_CUs         : Unit_Maps.Map;
       --  The compilation units whose main unit belongs to the table's view
@@ -231,7 +149,7 @@ private package GPR2.Build.View_Tables is
 
             Runtime_Override_Files : Containers.Filename_Set;
             --  Original and replacement basenames of runtime overrides.
-            --  Retained across refreshes; cache lookup checks visibility.
+            --  Visibility is checked when caching unit names.
 
             Separates : Name_Maps.Map;
             --  Map of separates to their declaring unit. Note that the
@@ -246,36 +164,19 @@ private package GPR2.Build.View_Tables is
 
    subtype View_Data_Ref is Data_Refs.Reference_Type;
 
-   procedure Check_Source_Lists
-     (Data     : View_Data_Ref;
-      Messages : in out GPR2.Log.Object);
-   --  Check the attributes Source_File_List, Source_Files,
-   --  Excluded_Source_File_List and Excluded_Source_Files and fill the
-   --  corresponding structures in Data.
-   --  To be called before refreshing the sources.
-
-   procedure Add_Source
-     (Data               : View_Data_Ref;
-      View_Owner         : GPR2.Project.View.Object;
-      Path               : Filename_Type;
-      Extended_View      : GPR2.Project.View.Object;
-      Resolve_Visibility : Boolean := False;
-      Messages           : in out GPR2.Log.Object)
-     with Inline;
-
-   procedure Remove_Source
-     (Data               : View_Data_Ref;
-      View_Owner         : GPR2.Project.View.Object;
-      Path               : Filename_Type;
-      Extended_View      : GPR2.Project.View.Object;
-      Resolve_Visibility : Boolean := False;
-      Messages           : in out GPR2.Log.Object)
-     with Inline;
-
-   procedure Refresh
+   procedure Load_Sources
      (Data           : View_Data_Ref;
       Messages       : in out GPR2.Log.Object;
       Matching_Units : Boolean := True);
+   --  Load and validate sources, recursively loading extended views
+
+   procedure Reset_Sources (Data : View_Data_Ref);
+   --  Clear source tables before a full refresh, retaining the view DB.
+
+   procedure Resolve_Separates
+     (Data     : View_Data_Ref;
+      Messages : in out GPR2.Log.Object);
+   --  Resolve nested separates after all units have been registered.
 
    procedure Update_Runtime_Overrides (Data : View_Data_Ref);
    --  Rebuild runtime dependency lookup after all affected views are refreshed

@@ -1238,10 +1238,10 @@ package body GPR2.Project.View is
          end if;
 
          if V.Is_Extending then
-            --  Even when Included_Extended is set, we need to walk through
-            --  them to retrieve their imports.
+            --  Visit the full subtree to preserve import search order,
+            --  including imports that are not implicitly extended.
 
-            for Ext of V.Extended loop
+            for Ext of View_Internal.Get_RO (V).Extended loop
                Add (Ext);
             end loop;
          end if;
@@ -1462,7 +1462,18 @@ package body GPR2.Project.View is
 
    function Extended (Self : Object) return Set.Object is
    begin
-      return View_Internal.Get_RO (Self).Extended;
+      --  The internal Extended field includes the whole extends all subtree.
+      --  Filter here so callers only see views directly extended by Self:
+      --  externally built imports are not implicitly extended, and indirect
+      --  ancestors are extended by an intermediate view.
+
+      return Result : Set.Object do
+         for View of View_Internal.Get_RO (Self).Extended loop
+            if View.Is_Extended and then View.Extending = Self then
+               Result.Include (View);
+            end if;
+         end loop;
+      end return;
    end Extended;
 
    -------------------
@@ -2193,7 +2204,7 @@ package body GPR2.Project.View is
          return True;
       end if;
 
-      for Ext of Def.Extended loop
+      for Ext of Self.Extended loop
          if Ext = Object (Parent) then
             return True;
          end if;

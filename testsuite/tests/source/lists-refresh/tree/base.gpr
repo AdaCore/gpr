@@ -1,0 +1,5 @@
+project Base is
+   for Source_Dirs use ("base");
+   for Source_Files use ("inherited.ads");
+   for Object_Dir use "obj-base";
+end Base;

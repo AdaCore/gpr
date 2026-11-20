@@ -1,0 +1,4 @@
+project Middle extends "leaf.gpr" is
+   for Source_Dirs use ("middle");
+   for Object_Dir use "obj-middle";
+end Middle;

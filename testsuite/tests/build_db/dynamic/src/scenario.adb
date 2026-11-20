@@ -7,6 +7,7 @@ with GPR2.Path_Name;
 with GPR2.Build.Tree_Db;
 with GPR2.Build.View_Db;
 with GPR2.Build.Source.Sets;
+with GPR2.Log;
 with GPR2.Options;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
@@ -29,6 +30,9 @@ package body Scenario is
 
    Tok_Refresh : constant XString := To_XString ("refresh");
    --  Refresh the build db
+
+   Tok_Refresh_View : constant XString := To_XString ("refresh_view");
+   --  Refresh through the view API
 
    Tok_Dump    : constant XString := To_XString ("dump");
    --  Refresh the build db
@@ -121,6 +125,16 @@ package body Scenario is
                   Ada.Text_IO.Put_Line
                     ("--- Refresh list of sources");
                   Tree.Update_Sources;
+
+               elsif Cmd = Tok_Refresh_View then
+                  Ada.Text_IO.Put_Line
+                    ("--- Refresh list of sources through view");
+                  declare
+                     Messages : GPR2.Log.Object;
+                  begin
+                     Tree.Root_Project.View_Db.Update (Messages);
+                     Tree.Reporter.Report (Messages, Warn_If_Errors => True);
+                  end;
 
                elsif Cmd = Tok_Dump then
                   Ada.Text_IO.Put_Line ("-----------------------------------");

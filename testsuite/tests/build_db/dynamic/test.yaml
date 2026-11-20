@@ -1,5 +1,6 @@
 description:
-    test how the build database handles sources dynamically
+    test tree and view source refresh, including inherited sources,
+    recovery after unit conflicts and agreement with a fresh load
 driver: build_and_run
 project_file: prj
 main: main

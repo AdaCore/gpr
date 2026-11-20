@@ -914,45 +914,38 @@ package body GPR2.Build.Tree_Db is
      (Self           : in out Object;
       Option         : Source_Info_Option;
       Messages       : out GPR2.Log.Object;
-      Matching_Units : Boolean := True) is
+      Matching_Units : Boolean := True)
+   is
+      Views : constant Project.View.Vector.Object := Self.Tree.Ordered_Views;
    begin
       Self.Src_Option := Option;
 
-      --  Invalidate the interface closure caches: they depend on the sources
-      --  of the view and of its aggregated views.
-
-      for V of Self.Tree.Ordered_Views loop
+      Self.Invalidate_Source_Caches;
+      for V of Views loop
          if V.Kind in GPR2.Build.View_Tables.With_View_Db then
-            declare
-               Db : constant View_Tables.View_Data_Ref :=
-                      View_Tables.Get_Data (Self.Self, V);
-            begin
-               Db.Interface_Closure.Clear;
-               Db.Interface_Closure_Computed := False;
-            end;
+            View_Tables.Reset_Sources (View_Tables.Get_Data (Self.Self, V));
          end if;
       end loop;
 
-      --  Refresh each tree's views
+      --  Load extension chains before resolving separates
 
-      for V of Self.Tree.Ordered_Views loop
-         if V.Kind in With_Source_Dirs_Kind then
-            View_Tables.Check_Source_Lists
-              (View_Tables.Get_Data (Self.Self, V), Messages);
+      for V of Views loop
+         if V.Kind in With_Source_Dirs_Kind and then not V.Is_Extended then
+            View_Tables.Load_Sources
+              (View_Tables.Get_Data (Self.Self, V), Messages, Matching_Units);
          end if;
       end loop;
 
-      for V of Self.Tree.Ordered_Views loop
+      for V of Views loop
          if V.Kind in With_Object_Dir_Kind then
-            View_Tables.Refresh
-              (View_Tables.Get_Data
-                (Self.Self, V), Messages, Matching_Units);
+            View_Tables.Resolve_Separates
+              (View_Tables.Get_Data (Self.Self, V), Messages);
          end if;
       end loop;
 
       --  Do a set of checks for tree/view validity/errors
 
-      for V of Self.Tree.Ordered_Views loop
+      for V of Views loop
          if V.Kind in With_Source_Dirs_Kind
            and then not V.Is_Runtime
            and then not V.Is_Externally_Built
@@ -1015,7 +1008,7 @@ package body GPR2.Build.Tree_Db is
             end if;
          end loop;
 
-         for V of Self.Tree.Ordered_Views loop
+         for V of Views loop
             if V.Kind in GPR2.Build.View_Tables.With_View_Db then
                declare
                   use GPR2.Containers;

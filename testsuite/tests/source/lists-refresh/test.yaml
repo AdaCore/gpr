@@ -1,0 +1,3 @@
+description: >
+    Source lists are reread on refresh and resolved exclusions remain available
+driver: basic

@@ -1,0 +1,7 @@
+project Root extends "base.gpr" is
+   for Source_Dirs use ("first", "second");
+   for Object_Dir use "obj-root";
+   package Naming is
+      for Spec ("Renamed") use "exception.ads";
+   end Naming;
+end Root;

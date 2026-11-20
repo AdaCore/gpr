@@ -1,2 +1,3 @@
 p.gpr:2:08: error: source list file /this_file_does_not_exist.txt not found
+p.gpr: warning: there are no sources of language "Ada" in this project
 p2.gpr:2:08: error: excluded source list file /this_file_does_not_exist2.txt not found

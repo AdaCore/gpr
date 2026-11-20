@@ -57,6 +57,7 @@ package GPR2.Build.Tree_Db is
       Messages       : out GPR2.Log.Object;
       Matching_Units : Boolean := True)
      with Pre => Self.Is_Defined;
+   --  Reload sources and rebuild source and unit tables in dependency order
 
    function Source_Option (Self : Object) return Optional_Source_Info_Option;
 
