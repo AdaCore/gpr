@@ -36,16 +36,6 @@ def build():
     anod_build("libgpr2")
 
 
-def build_debug():
-    "Build gpr2 in debug mode, to detect warnings as errors"
-    # force install of gpr2 dependencies, else they're rebuilt since we have
-    # the gpr2 repo as external vcs
-    anod_install("gpr2")
-    anod_install("libgpr2", qualifier={"bare": True})
-    anod_install("gpr2-doc")
-    anod_build("gpr2", qualifier={"dbg": True})
-
-
 # Below is the checking of builds that depend on us: we have two tests for that
 # * build_gnat_bootstrap, the check that with current modifications gnat still
 #   builds. On linux this check is activated by default, but not on windows as
@@ -109,6 +99,11 @@ def build_libgpr2_bindings():
 def test_gpr2():
     test_install()
     anod_test("gpr2", qualifier={"rust": True})
+
+
+def test_gpr2_dbg():
+    anod_install("gprbuild")
+    anod_test("gpr2", qualifier={"rust": True, "dbg": True})
 
 
 def test_gpr2_cov():

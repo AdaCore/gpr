@@ -35,6 +35,9 @@ include:
   ###############
 
   # regular build
+  # Note: only build on linux by default: windows will do a build & test with
+  # the dbg qualifier, so the regular build is manual and optional, only
+  # needed for the build_gnat_bootstrap windows job.
   - component: $CI_SERVER_FQDN/eng/gitlab-templates/build@~latest
     inputs:
       job-name: build
@@ -42,23 +45,11 @@ include:
       save-component: true
       cpus: 16
       disk: 80
+      needs: []
       windows: true
       windows-cpus: 8
       windows-mem: 16
-      needs: []
       windows-needs: []
-      rules:
-        - allow_failure: false
-
-  # debug build
-  - component: $CI_SERVER_FQDN/eng/gitlab-templates/build@~latest
-    inputs:
-      job-name: build_debug
-      anod-args: run build_debug
-      save-component: false
-      cpus: 16
-      disk: 80
-      needs: ["build:linux"]
       rules:
         - allow_failure: false
 
@@ -115,10 +106,22 @@ include:
       disk: 80
       save-anod-logs: true
       needs: ["build:linux"]
+      artifacts: ["xunit-*.xml"]
+      rules:
+        - allow_failure: true
+
+  # gpr2 build + testsuite with debug mode
+  - component: $CI_SERVER_FQDN/eng/gitlab-templates/test@~latest
+    inputs:
+      job-name: build_test_gpr2_debug
+      anod-args: run test_gpr2_dbg
+      disk: 80
+      save-anod-logs: true
+      linux: false
       windows: true
       windows-cpus: 8
       windows-mem: 16
-      windows-needs: ["build:windows"]
+      windows-needs: []
       artifacts: ["xunit-*.xml"]
       rules:
         - allow_failure: true
@@ -236,6 +239,11 @@ check_testsuite:
     ls -A1 $CI_PROJECT_DIR/testsuite/tests/*/test.yaml > /dev/null 2>&1 && (echo "Error: test detected at toplevel"; exit 1) || echo "OK: no test at the toplevel of the testsuite"
 
 # Make some jobs optional
+
+build:windows:
+  when: manual
+  rules:
+    - allow_failure: true
 
 # on windows, considering the machines we have for the CI (the fast-startup
 # ones have only 2 CPUs), the testsuites may take a long time to run, so
